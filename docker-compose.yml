@@ -1,0 +1,50 @@
+
+services:
+  # --- DỊCH VỤ 1: DATABASE (POSTGRESQL) ---
+  db:
+    image: postgres:15-alpine
+    container_name: junkio_db
+    environment:
+      POSTGRES_USER: admin        # Tên đăng nhập DB
+      POSTGRES_PASSWORD: password123 # Mật khẩu DB
+      POSTGRES_DB: expense_tracker_db # Tên Database
+    ports:
+      - "5432:5432" # Cho phép máy ngoài truy cập vào DB qua cổng 5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data # Lưu dữ liệu vĩnh viễn, tắt Docker không mất
+
+  # --- DỊCH VỤ 2: BACKEND (NODEJS) ---
+  api:
+    build: ./backend # Dựng từ Dockerfile trong thư mục backend
+    container_name: junkio_api
+    ports:
+      - "5000:5000"
+    environment:
+      # LƯU Ý: Host không phải là 'localhost' mà là tên service 'db'
+      DB_HOST: db 
+      DB_USER: admin
+      DB_PASS: password123
+      DB_NAME: expense_tracker_db
+      PORT: 5000
+    depends_on:
+      - db # Chỉ chạy khi Database đã khởi động xong
+    volumes:
+      - ./backend:/app # Map code máy thật vào container để sửa code là cập nhật ngay
+      - /app/node_modules # Giữ nguyên node_modules của container
+
+  # --- DỊCH VỤ 3: FRONTEND (REACT) ---
+  web:
+    build: ./frontend # Dựng từ Dockerfile trong thư mục frontend
+    container_name: junkio_web
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:5000 # API Backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - api
+
+volumes:
+  postgres_data: # Khai báo nơi lưu dữ liệu DB

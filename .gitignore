@@ -1,0 +1,14 @@
+# Bỏ qua thư mục
+node_modules/
+/backend/node_modules/
+/frontend/node_modules/
+
+# Bỏ qua dữ liệu Database 
+postgres_data/
+
+# Bỏ qua file môi trường (chứa mật khẩu)
+.env
+
+# Bỏ qua file hệ thống
+.DS_Store
+Thumbs.db
