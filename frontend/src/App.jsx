@@ -1,44 +1,51 @@
-import { useState, useEffect } from 'react'
+import { useEffect } from "react"
+import { useDispatch, useSelector } from "react-redux"
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
+import { login } from "@/features/auth/authSlice"
+import { setWallets } from "@/features/wallets/walletSlice"
+import { setTransactions } from "@/features/transactions/transactionSlice"
+import { generateMockData } from "@/utils/seeder"
+import { MainLayout } from "@/components/layout/MainLayout"
+import { Dashboard } from "@/pages/Dashboard"
+import { Transactions } from "@/pages/Transactions"
+import { Family } from "@/pages/Family"
+import { Reports } from "@/pages/Reports"
 
 function App() {
-  const [backendMessage, setBackendMessage] = useState('Đang kết nối Backend...')
-  const [count, setCount] = useState(0)
+  const dispatch = useDispatch()
+  const { isAuthenticated } = useSelector(state => state.auth)
+  const { transactions } = useSelector(state => state.transactions)
 
-  // Gọi API thử ngay khi mở trang
   useEffect(() => {
-    fetch('http://localhost:5000/') // Gọi về Backend đang chạy port 5000
-      .then(response => response.text())
-      .then(data => setBackendMessage(data))
-      .catch(err => setBackendMessage('❌ Không kết nối được Backend: ' + err.message))
-  }, [])
+    // 1. Mock Login
+    if (!isAuthenticated) {
+      const mockUser = { id: 'u-1', name: 'Demo User', email: 'demo@junkio.com' }
+      dispatch(login(mockUser))
+
+      // 2. Seed Data if empty
+      if (transactions.length === 0) {
+        console.log("Seeding data...")
+        const data = generateMockData(mockUser.id)
+        dispatch(setWallets(data.wallets))
+        dispatch(setTransactions(data.transactions))
+      }
+    }
+  }, [dispatch, isAuthenticated, transactions.length])
 
   return (
-    <div style={{ textAlign: 'center', marginTop: '50px', fontFamily: 'Arial' }}>
-      {/* Phần 1: Kiểm tra giao diện React */}
-      <h1>🚀 Junkio Expense Tracker</h1>
-      <h2 style={{ color: 'green' }}>Frontend (React) đã hoạt động!</h2>
-      
-      {/* Phần 2: Kiểm tra chức năng tương tác (State) */}
-      <div style={{ padding: '20px', border: '1px solid #ccc', display: 'inline-block', borderRadius: '10px' }}>
-        <p>Thử bấm nút để kiểm tra tính năng tương tác:</p>
-        <button 
-          onClick={() => setCount(count + 1)}
-          style={{ padding: '10px 20px', fontSize: '16px', cursor: 'pointer', backgroundColor: '#646cff', color: 'white', border: 'none', borderRadius: '5px' }}
-        >
-          Số lần bấm: {count}
-        </button>
-      </div>
-
-      <br /><br />
-
-      {/* Phần 3: Kiểm tra kết nối Backend */}
-      <div style={{ marginTop: '20px', color: '#555' }}>
-        <h3>Trạng thái Backend:</h3>
-        {/* Render nội dung HTML trả về từ Backend */}
-        <div dangerouslySetInnerHTML={{ __html: backendMessage }} />
-      </div>
-    </div>
+    <Router>
+      <MainLayout>
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/transactions" element={<Transactions />} />
+          <Route path="/family" element={<Family />} />
+          <Route path="/reports" element={<Reports />} />
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </MainLayout>
+    </Router>
   )
 }
 
-export default App
+export default App;
