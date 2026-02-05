@@ -8,8 +8,12 @@ import { generateMockData } from "@/utils/seeder"
 import { MainLayout } from "@/components/layout/MainLayout"
 import { Dashboard } from "@/pages/Dashboard"
 import { Transactions } from "@/pages/Transactions"
+import { Wallets } from "@/pages/Wallets"
 import { Family } from "@/pages/Family"
 import { Reports } from "@/pages/Reports"
+
+import { runRecurringEngine } from "@/utils/recurringEngine"
+import { store } from "@/store" // We need the store instance for the engine
 
 function App() {
   const dispatch = useDispatch()
@@ -24,11 +28,17 @@ function App() {
 
       // 2. Seed Data if empty
       if (transactions.length === 0) {
-        console.log("Seeding data...")
         const data = generateMockData(mockUser.id)
         dispatch(setWallets(data.wallets))
         dispatch(setTransactions(data.transactions))
       }
+    }
+
+    // 3. Run Recurring Checks (Safe to run multiple times as it checks dates)
+    if (isAuthenticated) {
+      // We pass the store instance directly so the engine can dispatch
+      // In a real app we might use a middleware or a thunk, but this is a simple "Lazy Check"
+      // runRecurringEngine(store)
     }
   }, [dispatch, isAuthenticated, transactions.length])
 
@@ -38,6 +48,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/transactions" element={<Transactions />} />
+          <Route path="/wallets" element={<Wallets />} />
           <Route path="/family" element={<Family />} />
           <Route path="/reports" element={<Reports />} />
           {/* Fallback */}

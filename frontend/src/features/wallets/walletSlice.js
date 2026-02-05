@@ -34,9 +34,23 @@ const walletSlice = createSlice({
             if (wallet) {
                 wallet.balance = (parseFloat(wallet.balance) + parseFloat(amount)).toFixed(2);
             }
+        },
+        increaseBalance: (state, action) => {
+            const { id, amount } = action.payload;
+            const wallet = state.wallets.find(w => w.id === id);
+            if (wallet) {
+                wallet.balance = (parseFloat(wallet.balance) + parseFloat(amount)).toFixed(2);
+            }
+        },
+        decreaseBalance: (state, action) => {
+            const { id, amount } = action.payload;
+            const wallet = state.wallets.find(w => w.id === id);
+            if (wallet) {
+                wallet.balance = (parseFloat(wallet.balance) - parseFloat(amount)).toFixed(2);
+            }
         }
     },
 });
 
-export const { setWallets, addWallet, updateWalletBalance } = walletSlice.actions;
+export const { setWallets, addWallet, updateWalletBalance, increaseBalance, decreaseBalance } = walletSlice.actions;
 export default walletSlice.reducer;

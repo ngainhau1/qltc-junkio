@@ -4,13 +4,24 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { addFamily, setActiveFamily } from "@/features/families/familySlice"
-import { Users, Plus } from "lucide-react"
+import { Users, Plus, ArrowRight } from "lucide-react"
+import { simplifyDebts } from "@/utils/debtSimplification"
+import { formatCurrency } from "@/lib/utils"
 
 export function Family() {
     const dispatch = useDispatch()
     const { families, activeFamilyId } = useSelector(state => state.families)
     const { user } = useSelector(state => state.auth)
     const [newFamilyName, setNewFamilyName] = useState("")
+
+    // --- Mock Debt State (Local for demo) ---
+    const [mockExpenses, setMockExpenses] = useState([
+        { id: 1, paidBy: 'Alice', splitAmong: ['Alice', 'Bob', 'Charlie'], amount: 300000, desc: 'Dinner' },
+        { id: 2, paidBy: 'Bob', splitAmong: ['Alice', 'Bob'], amount: 100000, desc: 'Taxi' },
+        { id: 3, paidBy: 'Charlie', splitAmong: ['Bob', 'Charlie'], amount: 500000, desc: 'Groceries' },
+    ])
+
+    const [settlements, setSettlements] = useState([])
 
     const handleCreateFamily = (e) => {
         e.preventDefault()
@@ -24,6 +35,11 @@ export function Family() {
         }
         dispatch(addFamily(newFamily))
         setNewFamilyName("")
+    }
+
+    const runSimplification = () => {
+        const results = simplifyDebts(mockExpenses)
+        setSettlements(results)
     }
 
     return (
@@ -93,6 +109,59 @@ export function Family() {
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Debt Demo Section */}
+            <div className="grid gap-6 md:grid-cols-2">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Debt Demo: Shared Expenses</CardTitle>
+                        <CardDescription>Mock data to test simplification.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-3">
+                            {mockExpenses.map(t => (
+                                <div key={t.id} className="text-sm border-b pb-2">
+                                    <p className="font-medium">{t.desc}</p>
+                                    <p className="text-muted-foreground">{t.paidBy} paid {formatCurrency(t.amount)} for {t.splitAmong.join(', ')}</p>
+                                </div>
+                            ))}
+                            <Button onClick={runSimplification} className="w-full mt-4">
+                                Optimize Debts (Splitwise Logic)
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Optimized Settlements</CardTitle>
+                        <CardDescription>Who needs to pay whom.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {settlements.length === 0 ? (
+                            <div className="text-muted-foreground text-sm italic">Run algorithm to see results...</div>
+                        ) : (
+                            <div className="space-y-3">
+                                {settlements.map((s, idx) => (
+                                    <div key={idx} className="flex items-center justify-between p-3 bg-green-50 text-green-800 rounded-md">
+                                        <div className="flex items-center gap-2 font-medium">
+                                            <span>{s.from}</span>
+                                            <ArrowRight className="h-4 w-4" />
+                                            <span>{s.to}</span>
+                                        </div>
+                                        <div className="font-bold">{formatCurrency(s.amount)}</div>
+                                    </div>
+                                ))}
+                                <p className="text-xs text-muted-foreground pt-4 text-center">
+                                    Transactions minimized using Greedy Algorithm.
+                                </p>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+            </div>
+
+
         </div>
     )
 }
