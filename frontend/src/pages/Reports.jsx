@@ -34,30 +34,38 @@ export function Reports() {
         .reduce((sum, t) => sum + t.amount, 0)
 
     const summaryData = [
-        { name: 'Income', amount: incomeTotal },
-        { name: 'Expense', amount: expenseTotal }
+        { name: 'Thu Nhập', amount: incomeTotal },
+        { name: 'Chi Tiêu', amount: expenseTotal }
     ]
 
-    // 2. Prepare Data for Pie Chart (Expense by Category)
-    // Since we don't have real category names yet (just IDs like 'cat-1'), we'll group by category_id
-    const categoryDataMap = transactions
+    // 2. Prepare Data for Donut Chart (Expense by Category - Top 5 + Others)
+    const categoryData = transactions
         .filter(t => t.type === 'EXPENSE')
         .reduce((acc, t) => {
             const cat = t.category_id || 'Uncategorized'
-            acc[cat] = (acc[cat] || 0) + t.amount
+            if (!acc[cat]) {
+                // In a real app we would lookup category name from ID
+                // For now we map static IDs to names if possible or use ID
+                acc[cat] = { name: cat, value: 0 }
+            }
+            acc[cat].value += t.amount
             return acc
         }, {})
 
-    const categoryData = Object.keys(categoryDataMap).map(key => ({
-        name: key,
-        value: categoryDataMap[key]
-    }))
+    // Sort and Aggregate
+    let sortedCategories = Object.values(categoryData).sort((a, b) => b.value - a.value)
+
+    if (sortedCategories.length > 5) {
+        const top5 = sortedCategories.slice(0, 5)
+        const othersValue = sortedCategories.slice(5).reduce((sum, c) => sum + c.value, 0)
+        sortedCategories = [...top5, { name: 'Khác', value: othersValue }]
+    }
 
     return (
         <div className="space-y-6">
             <header>
-                <h1 className="text-3xl font-bold tracking-tight">Reports & Visualization</h1>
-                <p className="text-muted-foreground">Gain insights into your spending habits.</p>
+                <h1 className="text-3xl font-bold tracking-tight">Báo Cáo & Thống Kê</h1>
+                <p className="text-muted-foreground">Hiểu rõ hơn về thói quen chi tiêu của bạn.</p>
             </header>
 
             <div className="grid gap-6 md:grid-cols-2">
@@ -65,47 +73,50 @@ export function Reports() {
                 {/* Income vs Expense Bar Chart */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>Income vs Expense</CardTitle>
-                        <CardDescription>Financial summary of current data.</CardDescription>
+                        <CardTitle>Thu và Chi</CardTitle>
+                        <CardDescription>Tổng hợp tài chính dựa trên dữ liệu hiện tại.</CardDescription>
                     </CardHeader>
                     <CardContent className="h-[300px]">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={summaryData}>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="name" />
-                                <YAxis />
-                                <Tooltip formatter={(value) => formatCurrency(value)} />
-                                <Legend />
-                                <Bar dataKey="amount" fill="#8884d8" name="Amount" />
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                <XAxis dataKey="name" axisLine={false} tickLine={false} />
+                                <YAxis axisLine={false} tickLine={false} tickFormatter={(v) => `${v / 1000000}M`} />
+                                <Tooltip
+                                    formatter={(value) => formatCurrency(value)}
+                                    cursor={{ fill: 'transparent' }}
+                                />
+                                <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                                <Bar dataKey="amount" fill="#3b82f6" name="Số Tiền" radius={[4, 4, 0, 0]} barSize={50} />
                             </BarChart>
                         </ResponsiveContainer>
                     </CardContent>
                 </Card>
 
-                {/* Category Pie Chart */}
+                {/* Category Donut Chart */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>Expenses by Category</CardTitle>
-                        <CardDescription>Where your money is going.</CardDescription>
+                        <CardTitle>Chi Tiêu Theo Danh Mục</CardTitle>
+                        <CardDescription>Top 5 danh mục chi tiêu nhiều nhất.</CardDescription>
                     </CardHeader>
                     <CardContent className="h-[300px]">
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                                 <Pie
-                                    data={categoryData}
+                                    data={sortedCategories}
                                     cx="50%"
                                     cy="50%"
-                                    labelLine={false}
-                                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                                    innerRadius={60}
                                     outerRadius={80}
-                                    fill="#8884d8"
+                                    paddingAngle={5}
                                     dataKey="value"
                                 >
-                                    {categoryData.map((entry, index) => (
+                                    {sortedCategories.map((entry, index) => (
                                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                     ))}
                                 </Pie>
                                 <Tooltip formatter={(value) => formatCurrency(value)} />
+                                <Legend layout="vertical" verticalAlign="middle" align="right" />
                             </PieChart>
                         </ResponsiveContainer>
                     </CardContent>

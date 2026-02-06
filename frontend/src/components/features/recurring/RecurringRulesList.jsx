@@ -9,12 +9,19 @@ export function RecurringRulesList({ onEdit }) {
     const { rules } = useSelector(state => state.recurring)
     const dispatch = useDispatch()
 
+    const frequencyMap = {
+        'DAILY': 'Hàng Ngày',
+        'WEEKLY': 'Hàng Tuần',
+        'MONTHLY': 'Hàng Tháng',
+        'YEARLY': 'Hàng Năm'
+    }
+
     if (rules.length === 0) {
         return (
             <div className="text-center py-10 text-muted-foreground">
                 <Clock className="mx-auto h-12 w-12 opacity-20 mb-3" />
-                <p>No recurring rules set up yet.</p>
-                <p className="text-sm">Create a rule to automate your regular expenses.</p>
+                <p>Chưa có lịch định kỳ nào.</p>
+                <p className="text-sm">Tạo lịch để tự động hóa các khoản chi thường xuyên.</p>
             </div>
         )
     }
@@ -31,13 +38,13 @@ export function RecurringRulesList({ onEdit }) {
                             <div>
                                 <h3 className="font-semibold flex items-center gap-2">
                                     {rule.name}
-                                    {!rule.active && <span className="text-xs bg-muted px-2 py-0.5 rounded text-muted-foreground">Paused</span>}
+                                    {!rule.active && <span className="text-xs bg-muted px-2 py-0.5 rounded text-muted-foreground">Đã tạm dừng</span>}
                                 </h3>
                                 <p className="text-sm text-muted-foreground">
-                                    {formatCurrency(rule.amount)} • {rule.frequency}
+                                    {formatCurrency(rule.amount)} • {frequencyMap[rule.frequency] || rule.frequency}
                                 </p>
                                 <p className="text-xs text-muted-foreground">
-                                    Next due: {new Date(rule.nextDueDate).toLocaleDateString()}
+                                    Đến hạn: {new Date(rule.nextDueDate).toLocaleDateString('vi-VN')}
                                 </p>
                             </div>
                         </div>
@@ -47,7 +54,7 @@ export function RecurringRulesList({ onEdit }) {
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => dispatch(toggleRule(rule.id))}
-                                title={rule.active ? "Pause Rule" : "Activate Rule"}
+                                title={rule.active ? "Tạm dừng" : "Kích hoạt"}
                             >
                                 {rule.active ? <Power className="h-4 w-4 text-green-600" /> : <PowerOff className="h-4 w-4 text-muted-foreground" />}
                             </Button>
@@ -56,7 +63,7 @@ export function RecurringRulesList({ onEdit }) {
                                 size="icon"
                                 className="text-red-500 hover:text-red-600 hover:bg-red-50"
                                 onClick={() => {
-                                    if (confirm('Delete this recurring rule?')) {
+                                    if (confirm('Bạn có chắc muốn xóa lịch này không?')) {
                                         dispatch(deleteRule(rule.id))
                                     }
                                 }}

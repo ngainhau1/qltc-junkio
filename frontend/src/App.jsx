@@ -1,19 +1,23 @@
 import { useEffect } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
+import { Toaster, toast } from 'sonner'
 import { login } from "@/features/auth/authSlice"
 import { setWallets } from "@/features/wallets/walletSlice"
 import { setTransactions } from "@/features/transactions/transactionSlice"
-import { generateMockData } from "@/utils/seeder"
+import { addFamily } from "@/features/families/familySlice"
+// import { generateMockData } from "@/utils/seeder" // Replaced by FakerService
+import { FakerService } from "@/services/fakerService"
 import { MainLayout } from "@/components/layout/MainLayout"
 import { Dashboard } from "@/pages/Dashboard"
 import { Transactions } from "@/pages/Transactions"
 import { Wallets } from "@/pages/Wallets"
 import { Family } from "@/pages/Family"
 import { Reports } from "@/pages/Reports"
+import { GlobalAddTransactionModal } from "@/components/features/transactions/GlobalAddTransactionModal"
 
-import { runRecurringEngine } from "@/utils/recurringEngine"
-import { store } from "@/store" // We need the store instance for the engine
+import { runRecurringEngine } from "@/services/recurringService"
+import { store } from "@/store"
 
 function App() {
   const dispatch = useDispatch()
@@ -28,9 +32,16 @@ function App() {
 
       // 2. Seed Data if empty
       if (transactions.length === 0) {
-        const data = generateMockData(mockUser.id)
+        // Use FakerService instead of simple seeder
+        const data = FakerService.initData(mockUser.id)
+
         dispatch(setWallets(data.wallets))
         dispatch(setTransactions(data.transactions))
+
+        // Also seed family
+        if (data.family) {
+          dispatch(addFamily(data.family))
+        }
       }
     }
 
@@ -38,12 +49,18 @@ function App() {
     if (isAuthenticated) {
       // We pass the store instance directly so the engine can dispatch
       // In a real app we might use a middleware or a thunk, but this is a simple "Lazy Check"
-      // runRecurringEngine(store)
+      const count = runRecurringEngine(store)
+      if (count > 0) {
+        toast.success(`Đã tự động tạo ${count} giao dịch định kỳ đến hạn.`, {
+          duration: 5000,
+        })
+      }
     }
   }, [dispatch, isAuthenticated, transactions.length])
 
   return (
     <Router>
+      <Toaster position="top-right" richColors />
       <MainLayout>
         <Routes>
           <Route path="/" element={<Dashboard />} />
@@ -54,6 +71,7 @@ function App() {
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        <GlobalAddTransactionModal />
       </MainLayout>
     </Router>
   )

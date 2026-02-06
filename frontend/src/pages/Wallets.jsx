@@ -1,16 +1,21 @@
+import { useState } from "react"
 import { useSelector } from "react-redux"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { formatCurrency } from "@/lib/utils"
 import { Wallet } from "lucide-react"
+import { Modal } from "@/components/ui/modal"
+import { WalletForm } from "@/components/features/wallets/WalletForm"
 
 export function Wallets() {
     const { wallets } = useSelector(state => state.wallets)
+    const [isAddWalletOpen, setIsAddWalletOpen] = useState(false)
 
     return (
+
         <div className="space-y-6">
             <header>
-                <h1 className="text-3xl font-bold tracking-tight">Wallets</h1>
-                <p className="text-muted-foreground">Manage your funding sources.</p>
+                <h1 className="text-3xl font-bold tracking-tight">Ví Của Tôi</h1>
+                <p className="text-muted-foreground">Quản lý nguồn tiền của bạn.</p>
             </header>
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -32,13 +37,24 @@ export function Wallets() {
                     </Card>
                 ))}
 
-                {/* Add Wallet Card Placeholder */}
-                <Card className="flex items-center justify-center border-dashed cursor-pointer hover:bg-muted/50 transition-colors min-h-[150px]">
+                {/* Add Wallet Card */}
+                <Card
+                    className="flex items-center justify-center border-dashed cursor-pointer hover:bg-muted/50 transition-colors min-h-[150px]"
+                    onClick={() => setIsAddWalletOpen(true)}
+                >
                     <div className="text-center text-muted-foreground">
-                        <p className="font-medium">+ Add New Wallet</p>
+                        <p className="font-medium">+ Thêm Ví Mới</p>
                     </div>
                 </Card>
             </div>
+
+            <Modal
+                isOpen={isAddWalletOpen}
+                onClose={() => setIsAddWalletOpen(false)}
+                title="Thêm Ví Mới"
+            >
+                <WalletForm onSuccess={() => setIsAddWalletOpen(false)} />
+            </Modal>
         </div>
     )
 }

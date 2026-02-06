@@ -17,21 +17,7 @@ import { createSlice } from "@reduxjs/toolkit"
 */
 
 const initialState = {
-    rules: [
-        // Mock Rule
-        {
-            id: 'rule-mock-1',
-            name: 'Internet Bill',
-            amount: 350000,
-            type: 'EXPENSE',
-            frequency: 'MONTHLY',
-            startDate: new Date().toISOString(),
-            nextDueDate: new Date().toISOString(), // Due immediately for testing
-            walletId: 'w-1',
-            categoryId: 'cat-bills',
-            active: true
-        }
-    ]
+    rules: []
 }
 
 const recurringSlice = createSlice({
