@@ -14,6 +14,9 @@ import {
     Cell
 } from 'recharts'
 import { formatCurrency } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { Download, FileText } from "lucide-react"
+import { exportToPDF, exportToCSV } from "@/services/exportService"
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 
@@ -63,9 +66,19 @@ export function Reports() {
 
     return (
         <div className="space-y-6">
-            <header>
-                <h1 className="text-3xl font-bold tracking-tight">Báo Cáo & Thống Kê</h1>
-                <p className="text-muted-foreground">Hiểu rõ hơn về thói quen chi tiêu của bạn.</p>
+            <header className="flex justify-between items-center">
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight">Báo Cáo & Thống Kê</h1>
+                    <p className="text-muted-foreground">Hiểu rõ hơn về thói quen chi tiêu của bạn.</p>
+                </div>
+                <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={() => exportToPDF(transactions, "Báo Cáo Tài Chính")}>
+                        <FileText className="mr-2 h-4 w-4" /> PDF
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => exportToCSV(transactions)}>
+                        <Download className="mr-2 h-4 w-4" /> CSV
+                    </Button>
+                </div>
             </header>
 
             <div className="grid gap-6 md:grid-cols-2">
