@@ -1,6 +1,7 @@
 import { useEffect } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
+import { Toaster, toast } from 'sonner'
 import { login } from "@/features/auth/authSlice"
 import { setWallets } from "@/features/wallets/walletSlice"
 import { setTransactions } from "@/features/transactions/transactionSlice"
@@ -48,12 +49,18 @@ function App() {
     if (isAuthenticated) {
       // We pass the store instance directly so the engine can dispatch
       // In a real app we might use a middleware or a thunk, but this is a simple "Lazy Check"
-      runRecurringEngine(store)
+      const count = runRecurringEngine(store)
+      if (count > 0) {
+        toast.success(`Đã tự động tạo ${count} giao dịch định kỳ đến hạn.`, {
+          duration: 5000,
+        })
+      }
     }
   }, [dispatch, isAuthenticated, transactions.length])
 
   return (
     <Router>
+      <Toaster position="top-right" richColors />
       <MainLayout>
         <Routes>
           <Route path="/" element={<Dashboard />} />

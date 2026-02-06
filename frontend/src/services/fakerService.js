@@ -120,27 +120,86 @@ export const FakerService = {
             // Randomly pick a wallet
             const walletId = faker.helpers.arrayElement(walletIds);
 
+            const amount = parseFloat(faker.finance.amount({ min: 10000, max: 2000000, dec: 0 }));
+
             // If wallet is family wallet, pick a random member as payer (user_id)
             let userId = user.id;
+            let shares = [];
+
             if (walletId === familyWalletId) {
                 userId = faker.helpers.arrayElement(memberIds);
+
+                // Split logic: Equal split for simplicity
+                const splitAmount = amount / memberIds.length;
+                shares = memberIds.map(mId => ({
+                    id: faker.string.uuid(),
+                    user_id: mId,
+                    amount: splitAmount,
+                    status: 'PENDING'
+                }));
             }
 
             transactions.push({
                 id: faker.string.uuid(),
-                amount: parseFloat(faker.finance.amount({ min: 10000, max: 2000000, dec: 0 })),
+                amount: amount,
                 date: date.toISOString(),
                 description: isExpense ? faker.commerce.productName() : 'Lương / Thưởng',
                 type: isExpense ? 'EXPENSE' : 'INCOME',
                 wallet_id: walletId,
                 category_id: faker.helpers.arrayElement(categoryIds),
                 user_id: userId,
+                shares: shares.length > 0 ? shares : undefined,
                 // Additional metadata for filtering
                 monthKey: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
             });
         }
         transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-        return { user, family, wallets, categories, transactions };
+        // Generate Recurring Rules
+        const recurringRules = []
+        // 1. Rent (Monthly)
+        recurringRules.push({
+            id: faker.string.uuid(),
+            name: 'Tiền Thuê Nhà',
+            amount: 5000000,
+            type: 'EXPENSE',
+            frequency: 'MONTHLY',
+            startDate: faker.date.past().toISOString(),
+            nextDueDate: new Date().toISOString(), // Due now for testing
+            walletId: walletIds[0], // Use first wallet
+            categoryId: categoryIds[0], // Use first category
+            active: true
+        })
+
+        // 2. Internet (Monthly)
+        recurringRules.push({
+            id: faker.string.uuid(),
+            name: 'Internet FPT',
+            amount: 300000,
+            type: 'EXPENSE',
+            frequency: 'MONTHLY',
+            startDate: faker.date.past().toISOString(),
+            nextDueDate: faker.date.future().toISOString(), // Due later
+            walletId: walletIds[0],
+            categoryId: categoryIds[2],
+            active: true
+        })
+
+        // 3. Salary (Monthly Income)
+        recurringRules.push({
+            id: faker.string.uuid(),
+            name: 'Lương Cơ Bản',
+            amount: 20000000,
+            type: 'INCOME',
+            frequency: 'MONTHLY',
+            startDate: faker.date.past().toISOString(),
+            nextDueDate: new Date().toISOString(), // Due now
+            walletId: walletIds[1] || walletIds[0],
+            categoryId: categoryIds[4], // Salary category
+            active: true
+        })
+
+
+        return { user, family, wallets, categories, transactions, recurringRules };
     }
 };

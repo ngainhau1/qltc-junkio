@@ -73,4 +73,5 @@ export const runRecurringEngine = (store) => {
     if (newTransactionsCount > 0) {
         console.log(`Recurring Engine: Generated ${newTransactionsCount} transactions.`)
     }
+    return newTransactionsCount
 }
