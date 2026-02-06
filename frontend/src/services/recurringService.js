@@ -1,8 +1,9 @@
+
 import { addTransaction } from "@/features/transactions/transactionSlice"
 import { updateRuleNextDueDate } from "@/features/recurring/recurringSlice"
 import { decreaseBalance, increaseBalance } from "@/features/wallets/walletSlice"
 
-const calculateNextDate = (date, frequency) => {
+export const getNextDueDate = (date, frequency) => {
     const next = new Date(date)
     switch (frequency) {
         case 'DAILY':
@@ -62,7 +63,7 @@ export const runRecurringEngine = (store) => {
             newTransactionsCount++
 
             // 3. Calculate Next Date
-            nextDue = calculateNextDate(nextDue, rule.frequency)
+            nextDue = getNextDueDate(nextDue, rule.frequency)
             store.dispatch(updateRuleNextDueDate({
                 ruleId: rule.id,
                 nextDate: nextDue.toISOString()

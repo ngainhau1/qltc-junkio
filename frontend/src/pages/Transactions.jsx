@@ -3,12 +3,19 @@ import { useSelector } from "react-redux"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { formatCurrency } from "@/lib/utils"
 import { ArrowUpRight, ArrowDownLeft, Plus, History, Repeat } from "lucide-react"
 import { RecurringRulesList } from "@/components/features/recurring/RecurringRulesList"
 import { RecurringRuleForm } from "@/components/features/recurring/RecurringRuleForm"
 import { Modal } from "@/components/ui/modal"
 import { VirtualizedTransactionList } from "@/components/features/transactions/VirtualizedTransactionList"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Download, FileText, FileSpreadsheet } from "lucide-react"
+import { exportToCSV, exportToPDF } from "@/services/exportService"
 
 export function Transactions() {
     const { transactions } = useSelector(state => state.transactions)
@@ -35,11 +42,29 @@ export function Transactions() {
                     <h1 className="text-3xl font-bold tracking-tight">Giao Dịch</h1>
                     <p className="text-muted-foreground">Quản lý chi tiêu & lập lịch định kỳ.</p>
                 </div>
-                {activeTab === 'recurring' && (
-                    <Button onClick={() => setIsAddRuleOpen(true)}>
-                        <Plus className="mr-2 h-4 w-4" /> Thêm Lịch
-                    </Button>
-                )}
+                <div className="flex gap-2">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline">
+                                <Download className="mr-2 h-4 w-4" /> Xuất Dữ Liệu
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                            <DropdownMenuItem onClick={() => exportToPDF(filteredTransactions)}>
+                                <FileText className="mr-2 h-4 w-4" /> Xuất PDF
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => exportToCSV(filteredTransactions)}>
+                                <FileSpreadsheet className="mr-2 h-4 w-4" /> Xuất CSV (Excel)
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    {activeTab === 'recurring' && (
+                        <Button onClick={() => setIsAddRuleOpen(true)}>
+                            <Plus className="mr-2 h-4 w-4" /> Thêm Lịch
+                        </Button>
+                    )}
+                </div>
             </header>
 
             {/* Tabs Toggle */}
