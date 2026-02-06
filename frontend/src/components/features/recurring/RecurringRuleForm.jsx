@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { addRule } from "@/features/recurring/recurringSlice"
-import { runRecurringEngine } from "@/utils/recurringEngine"
+import { runRecurringEngine } from "@/services/recurringService"
 import { store } from "@/store"
 import { formatCurrency } from "@/lib/utils"
 
@@ -59,10 +59,10 @@ export function RecurringRuleForm({ onSuccess }) {
     return (
         <form onSubmit={formik.handleSubmit} className="space-y-4">
             <div>
-                <label className="text-sm font-medium mb-1 block">Rule Name</label>
+                <label className="text-sm font-medium mb-1 block">Tên Lịch</label>
                 <Input
                     name="name"
-                    placeholder="e.g. Monthly Rent"
+                    placeholder="vd: Tiền Thuê Nhà"
                     value={formik.values.name}
                     onChange={formik.handleChange}
                     className={formik.errors.name ? "border-red-500" : ""}
@@ -72,7 +72,7 @@ export function RecurringRuleForm({ onSuccess }) {
 
             <div className="grid grid-cols-2 gap-4">
                 <div>
-                    <label className="text-sm font-medium mb-1 block">Amount</label>
+                    <label className="text-sm font-medium mb-1 block">Số Tiền</label>
                     <Input
                         name="amount"
                         type="number"
@@ -82,36 +82,36 @@ export function RecurringRuleForm({ onSuccess }) {
                     />
                 </div>
                 <div>
-                    <label className="text-sm font-medium mb-1 block">Type</label>
+                    <label className="text-sm font-medium mb-1 block">Loại</label>
                     <select
                         name="type"
                         className="w-full border rounded-md h-10 px-3 text-sm bg-background"
                         value={formik.values.type}
                         onChange={formik.handleChange}
                     >
-                        <option value="EXPENSE">Expense</option>
-                        <option value="INCOME">Income</option>
+                        <option value="EXPENSE">Chi Tiêu</option>
+                        <option value="INCOME">Thu Nhập</option>
                     </select>
                 </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
                 <div>
-                    <label className="text-sm font-medium mb-1 block">Frequency</label>
+                    <label className="text-sm font-medium mb-1 block">Tần Suất</label>
                     <select
                         name="frequency"
                         className="w-full border rounded-md h-10 px-3 text-sm bg-background"
                         value={formik.values.frequency}
                         onChange={formik.handleChange}
                     >
-                        <option value="DAILY">Daily</option>
-                        <option value="WEEKLY">Weekly</option>
-                        <option value="MONTHLY">Monthly</option>
-                        <option value="YEARLY">Yearly</option>
+                        <option value="DAILY">Hàng Ngày</option>
+                        <option value="WEEKLY">Hàng Tuần</option>
+                        <option value="MONTHLY">Hàng Tháng</option>
+                        <option value="YEARLY">Hàng Năm</option>
                     </select>
                 </div>
                 <div>
-                    <label className="text-sm font-medium mb-1 block">Start Date</label>
+                    <label className="text-sm font-medium mb-1 block">Ngày Bắt Đầu</label>
                     <Input
                         name="startDate"
                         type="date"
@@ -122,7 +122,7 @@ export function RecurringRuleForm({ onSuccess }) {
             </div>
 
             <div>
-                <label className="text-sm font-medium mb-1 block">Wallet</label>
+                <label className="text-sm font-medium mb-1 block">Ví</label>
                 <select
                     name="walletId"
                     className="w-full border rounded-md h-10 px-3 text-sm bg-background"
@@ -136,7 +136,7 @@ export function RecurringRuleForm({ onSuccess }) {
             </div>
 
             <div className="pt-4 flex justify-end gap-2">
-                <Button type="submit" className="w-full">Create Rule</Button>
+                <Button type="submit" className="w-full">Tạo Lịch</Button>
             </div>
         </form>
     )

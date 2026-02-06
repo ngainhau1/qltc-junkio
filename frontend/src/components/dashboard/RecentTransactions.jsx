@@ -1,45 +1,33 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { formatCurrency } from "@/lib/utils"
-import { ArrowUpRight, ArrowDownLeft, ShoppingBag, Utensils, Zap, Bus } from "lucide-react"
-
-// Helper to get icon based on category (mock logic)
-const getCategoryIcon = (categoryName) => {
-    if (categoryName?.includes('Food')) return Utensils
-    if (categoryName?.includes('Shopping')) return ShoppingBag
-    if (categoryName?.includes('Utilities')) return Zap
-    if (categoryName?.includes('Transportation')) return Bus
-    return ArrowRightLeft
-}
+import { ArrowUpRight, ArrowDownLeft } from "lucide-react"
 
 export function RecentTransactions({ transactions }) {
     const recent = transactions.slice(0, 5)
 
     return (
-        <Card className="col-span-1">
+        <Card className="col-span-1 shadow-md border-muted/40 h-full">
             <CardHeader>
-                <CardTitle>Recent Transactions</CardTitle>
+                <CardTitle className="text-xl font-bold">Giao Dịch Gần Đây</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="space-y-8">
+                <div className="space-y-6">
                     {recent.map(t => {
-                        // const Icon = getCategoryIcon('Food') // Placeholder logic as we don't have category names in transaction object directly yet, only ID. 
-                        // Wait, seeder puts description. We can use that or type.
-
                         return (
-                            <div key={t.id} className="flex items-center">
-                                <div className={`flex h-9 w-9 items-center justify-center rounded-full border ${t.type === 'INCOME' ? 'bg-green-100 border-green-200' : 'bg-red-100 border-red-200'}`}>
+                            <div key={t.id} className="flex items-center group cursor-pointer hover:bg-muted/30 p-2 rounded-lg transition-colors -mx-2">
+                                <div className={`flex h-10 w-10 items-center justify-center rounded-full border transition-transform group-hover:scale-105 ${t.type === 'INCOME' ? 'bg-emerald-100 border-emerald-200' : 'bg-rose-100 border-rose-200'}`}>
                                     {t.type === 'INCOME'
-                                        ? <ArrowDownLeft className={`h-5 w-5 ${t.type === 'INCOME' ? 'text-green-600' : 'text-red-600'}`} />
-                                        : <ArrowUpRight className={`h-5 w-5 ${t.type === 'INCOME' ? 'text-green-600' : 'text-red-600'}`} />
+                                        ? <ArrowDownLeft className={`h-5 w-5 ${t.type === 'INCOME' ? 'text-emerald-600' : 'text-rose-600'}`} />
+                                        : <ArrowUpRight className={`h-5 w-5 ${t.type === 'INCOME' ? 'text-emerald-600' : 'text-rose-600'}`} />
                                     }
                                 </div>
-                                <div className="ml-4 space-y-1">
-                                    <p className="text-sm font-medium leading-none">{t.description}</p>
+                                <div className="ml-4 space-y-1 flex-1">
+                                    <p className="text-sm font-medium leading-none truncate max-w-[150px]">{t.description}</p>
                                     <p className="text-xs text-muted-foreground">
-                                        {new Date(t.transaction_date).toLocaleDateString()}
+                                        {new Date(t.transaction_date).toLocaleDateString('vi-VN')}
                                     </p>
                                 </div>
-                                <div className={`ml-auto font-medium ${t.type === 'INCOME' ? 'text-green-600' : 'text-red-600'}`}>
+                                <div className={`font-semibold text-sm ${t.type === 'INCOME' ? 'text-emerald-600' : 'text-rose-600'}`}>
                                     {t.type === 'INCOME' ? '+' : '-'}{formatCurrency(t.amount)}
                                 </div>
                             </div>
@@ -50,4 +38,3 @@ export function RecentTransactions({ transactions }) {
         </Card>
     )
 }
-import { ArrowRightLeft } from "lucide-react"
