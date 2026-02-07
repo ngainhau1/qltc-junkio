@@ -87,10 +87,14 @@ export function Sidebar({ className }) {
                         Cài Đặt
                     </h2>
                     <div className="space-y-1">
-                        <Button variant="ghost" className="w-full justify-start gap-2">
-                            <Settings className="h-4 w-4" />
-                            Chung
-                        </Button>
+                        <div className="space-y-1">
+                            <Button variant={location.pathname === "/settings" ? "secondary" : "ghost"} className="w-full justify-start gap-2" asChild>
+                                <Link to="/settings">
+                                    <Settings className="h-4 w-4" />
+                                    Chung
+                                </Link>
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </div>

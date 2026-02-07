@@ -1,14 +1,10 @@
 import { X } from "lucide-react"
 import { Button } from "./button"
 import { createPortal } from "react-dom"
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 
 export function Modal({ isOpen, onClose, title, children }) {
-    const [mounted, setMounted] = useState(false)
-
     useEffect(() => {
-        setMounted(true)
-        // Prevent scrolling when modal is open
         if (isOpen) {
             document.body.style.overflow = 'hidden'
         } else {
@@ -19,7 +15,7 @@ export function Modal({ isOpen, onClose, title, children }) {
         }
     }, [isOpen])
 
-    if (!isOpen || !mounted) return null
+    if (!isOpen) return null
 
     return createPortal(
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in zoom-in">

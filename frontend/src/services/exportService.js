@@ -1,6 +1,6 @@
 
 import jsPDF from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 import Papa from "papaparse";
 import { formatCurrency } from "@/lib/utils";
 
@@ -60,7 +60,7 @@ export const exportToPDF = (transactions, title = "Sao Kê Giao Dịch") => {
     });
 
     // 3. Generate Table
-    doc.autoTable({
+    autoTable(doc, {
         head: [tableColumn],
         body: tableRows,
         startY: 50,

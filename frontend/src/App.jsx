@@ -16,6 +16,7 @@ import { Transactions } from "@/pages/Transactions"
 import { Wallets } from "@/pages/Wallets"
 import { Family } from "@/pages/Family"
 import { Reports } from "@/pages/Reports"
+import { Settings } from "@/pages/Settings"
 
 import { runRecurringEngine } from "@/services/recurringService"
 import { store } from "@/store"
@@ -76,6 +77,7 @@ function App() {
             <Route path="/wallets" element={<Wallets />} />
             <Route path="/family" element={<Family />} />
             <Route path="/reports" element={<Reports />} />
+            <Route path="/settings" element={<Settings />} />
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
