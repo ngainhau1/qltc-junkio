@@ -8,7 +8,12 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors());
+// Middleware
+app.use(cors());
 app.use(express.json());
+
+// Routes
+app.use('/api/auth', require('./routes/authRoutes'));
 
 // Cấu hình kết nối Database (Lấy từ biến môi trường Docker)
 // Lưu ý: 'host' là tên service trong docker-compose ('db')
@@ -41,7 +46,7 @@ app.get('/db-check', async (req, res) => {
 // Khởi động server
 app.listen(PORT, async () => {
     console.log(`Server is running on port ${PORT}`);
-    
+
     // Thử kết nối DB ngay khi server chạy
     try {
         await sequelize.authenticate();

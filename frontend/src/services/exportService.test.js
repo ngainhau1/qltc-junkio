@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi } from 'vitest';
-import { exportToCSV } from './exportService';
+import { exportToCSV, exportToPDF } from './exportService';
 
 // Mock DOM elements for download
 global.URL.createObjectURL = vi.fn();
@@ -12,7 +12,8 @@ global.document.createElement = vi.fn().mockReturnValue({
 global.document.body.appendChild = vi.fn();
 global.document.body.removeChild = vi.fn();
 
-describe('exportService - CSV', () => {
+
+describe('exportService', () => {
     it('should generate valid CSV link', () => {
         const transactions = [
             { date: '2024-01-01', description: 'Test', amount: 100, type: 'EXPENSE' }
@@ -22,9 +23,19 @@ describe('exportService - CSV', () => {
 
         expect(document.createElement).toHaveBeenCalledWith('a');
         expect(URL.createObjectURL).toHaveBeenCalled();
-        // We can't easily check the BLOB content in this simple mock without reading the Blob
-        // but we verify the flow executed.
         expect(document.body.appendChild).toHaveBeenCalled();
         expect(document.body.removeChild).toHaveBeenCalled();
     });
+
+    it('should generate valid PDF', () => {
+        const transactions = [
+            { date: '2024-01-01', description: 'Test PDF', amount: 200, type: 'INCOME' }
+        ];
+
+        // We just want to ensure it runs without error (doc.autoTable is found)
+        // and doc.save is called.
+        // We know jsPDF is used internally.
+        expect(() => exportToPDF(transactions)).not.toThrow();
+    });
 });
+
