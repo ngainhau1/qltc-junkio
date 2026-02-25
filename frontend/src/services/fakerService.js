@@ -6,12 +6,12 @@ export const FakerService = {
         name: faker.person.fullName(),
         email: faker.internet.email(),
         avatar: faker.image.avatar(),
-        role: 'member'
+        role: 'MEMBER'
     }),
 
     generateFamily: (ownerId, ownerName) => {
         const members = [
-            { id: ownerId, name: ownerName, role: 'owner', joinedAt: new Date().toISOString() }
+            { id: ownerId, name: ownerName, role: 'OWNER', joinedAt: new Date().toISOString() }
         ];
 
         // Add 2-3 random members
@@ -20,7 +20,7 @@ export const FakerService = {
             members.push({
                 id: faker.string.uuid(),
                 name: faker.person.fullName(),
-                role: 'member',
+                role: faker.helpers.arrayElement(['ADMIN', 'MEMBER', 'VIEWER']),
                 joinedAt: faker.date.past().toISOString()
             });
         }
@@ -80,7 +80,7 @@ export const FakerService = {
 
     initData: (existingUserId = null) => {
         const user = existingUserId
-            ? { id: existingUserId, name: 'Demo User', role: 'member' }
+            ? { id: existingUserId, name: 'Demo User', role: 'MEMBER' }
             : FakerService.generateUser();
 
         const family = FakerService.generateFamily(user.id, user.name);

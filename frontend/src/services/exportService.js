@@ -2,7 +2,7 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import Papa from "papaparse";
-import { formatCurrency } from "@/lib/utils";
+import { removeVietnameseTones } from "@/lib/utils";
 
 // --- CSV Export ---
 export const exportToCSV = (transactions) => {
@@ -40,21 +40,24 @@ export const exportToPDF = (transactions, title = "Sao Kê Giao Dịch") => {
     doc.text("JUNKIO EXPENSE TRACKER", 14, 22);
 
     doc.setFontSize(14);
-    doc.text(title, 14, 32);
+    doc.text(removeVietnameseTones(title), 14, 32);
 
     doc.setFontSize(10);
-    doc.text(`Ngày xuất: ${new Date().toLocaleDateString("vi-VN")}`, 14, 40);
+    doc.text(`${removeVietnameseTones("Ngày xuất")}: ${new Date().toLocaleDateString("vi-VN")}`, 14, 40);
 
     // 2. Table Data
-    const tableColumn = ["Ngày", "Mô Tả", "Loại", "Số Tiền"];
+    const tableColumn = ["Ngay", "Mo Ta", "Loai", "So Tien"]; // Hardcoded ASCII headers
     const tableRows = [];
 
     transactions.forEach(t => {
+        // Manual ASCII Currency Formatting: 100000 -> "100.000 VND"
+        const formattedAmount = new Intl.NumberFormat('vi-VN').format(t.amount) + ' VND';
+
         const transactionData = [
             new Date(t.date).toLocaleDateString("vi-VN"),
-            t.description,
+            removeVietnameseTones(t.description),
             t.type === 'INCOME' ? 'Thu' : 'Chi',
-            formatCurrency(t.amount)
+            formattedAmount
         ];
         tableRows.push(transactionData);
     });

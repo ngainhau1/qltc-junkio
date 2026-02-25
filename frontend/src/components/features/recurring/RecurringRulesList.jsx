@@ -5,7 +5,7 @@ import { formatCurrency } from "@/lib/utils"
 import { Clock, Trash2, Power, PowerOff } from "lucide-react"
 import { toggleRule, deleteRule } from "@/features/recurring/recurringSlice"
 
-export function RecurringRulesList({ onEdit }) {
+export function RecurringRulesList() {
     const { rules } = useSelector(state => state.recurring)
     const dispatch = useDispatch()
 

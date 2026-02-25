@@ -68,7 +68,7 @@ export function DashboardStats({ wallets, transactions }) {
             </Card>
 
             {/* Transactions - Glassmorphism/Neutral */}
-            <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm shadow-sm border-muted/50">
+            <Card className="bg-card/50 backdrop-blur-sm shadow-sm border-muted/50">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium text-muted-foreground">Giao Dịch</CardTitle>
                     <ArrowRightLeft className="h-4 w-4 text-muted-foreground" />

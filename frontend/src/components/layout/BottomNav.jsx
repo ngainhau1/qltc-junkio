@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom"
-import { Home, Wallet, PieChart, Users, Plus } from "lucide-react"
+import { Home, Wallet, PieChart, Users, Plus, Target } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useDispatch } from "react-redux"
 import { openAddTransactionModal } from "@/features/ui/uiSlice"
@@ -7,7 +7,7 @@ import { openAddTransactionModal } from "@/features/ui/uiSlice"
 const navItems = [
     { icon: Home, label: "Tổng Quan", href: "/" },
     { icon: Wallet, label: "Ví", href: "/wallets" },
-    { icon: PieChart, label: "Báo Cáo", href: "/reports" },
+    { icon: Target, label: "Mục Tiêu", href: "/goals" },
     { icon: Users, label: "Gia Đình", href: "/family" },
 ]
 
