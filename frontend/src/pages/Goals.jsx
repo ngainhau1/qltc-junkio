@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { DepositModal } from '@/components/features/goals/DepositModal';
 import { CreateGoalModal } from '@/components/features/goals/CreateGoalModal';
+import { EmptyState } from '@/components/ui/empty-state';
 
 // Icon Map for dynamic rendering
 const iconMap = {
@@ -89,64 +90,73 @@ export function Goals() {
             {/* Active Goals Grid */}
             <div>
                 <h2 className="text-xl font-bold mb-6 flex items-center gap-2">Hũ Đang Mở <span className="bg-secondary text-secondary-foreground text-xs px-2 py-1 rounded-full">{activeGoals.length}</span></h2>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {activeGoals.map(goal => {
-                        const IconComponent = iconMap[goal.imageUrl] || Target;
-                        const percentage = Math.min(100, Math.round((goal.currentAmount / goal.targetAmount) * 100));
 
-                        return (
-                            <Card key={goal.id} className="overflow-hidden hover:shadow-md transition-shadow group border-border/60">
-                                <CardContent className="p-0">
-                                    <div className="p-6">
-                                        <div className="flex justify-between items-start mb-6">
-                                            <div className="flex items-center gap-4">
-                                                <div
-                                                    className="h-14 w-14 rounded-2xl flex items-center justify-center text-white shadow-sm"
-                                                    style={{ backgroundColor: goal.colorCode }}
-                                                >
-                                                    <IconComponent className="h-7 w-7" />
+                {activeGoals.length === 0 ? (
+                    <EmptyState
+                        icon={Target}
+                        title="Chưa có Hũ Tiết Kiệm nào"
+                        description="Tạo mục tiêu để bắt đầu hành trình tích lũy và theo dõi tiến độ của bạn."
+                    />
+                ) : (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {activeGoals.map(goal => {
+                            const IconComponent = iconMap[goal.imageUrl] || Target;
+                            const percentage = Math.min(100, Math.round((goal.currentAmount / goal.targetAmount) * 100));
+
+                            return (
+                                <Card key={goal.id} className="overflow-hidden hover:shadow-md transition-shadow group border-border/60">
+                                    <CardContent className="p-0">
+                                        <div className="p-6">
+                                            <div className="flex justify-between items-start mb-6">
+                                                <div className="flex items-center gap-4">
+                                                    <div
+                                                        className="h-14 w-14 rounded-2xl flex items-center justify-center text-white shadow-sm"
+                                                        style={{ backgroundColor: goal.colorCode }}
+                                                    >
+                                                        <IconComponent className="h-7 w-7" />
+                                                    </div>
+                                                    <div>
+                                                        <h3 className="font-bold text-lg group-hover:text-primary transition-colors">{goal.name}</h3>
+                                                        <p className="text-sm text-muted-foreground">Hạn chót: <span className="font-medium text-foreground">{formatShortDate(goal.deadline)}</span></p>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <h3 className="font-bold text-lg group-hover:text-primary transition-colors">{goal.name}</h3>
-                                                    <p className="text-sm text-muted-foreground">Hạn chót: <span className="font-medium text-foreground">{formatShortDate(goal.deadline)}</span></p>
+                                                <div className="text-right">
+                                                    <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-1">Cần góp thêm</p>
+                                                    <p className="text-lg font-bold text-destructive">
+                                                        {formatCurrency(goal.targetAmount - goal.currentAmount)}
+                                                    </p>
                                                 </div>
                                             </div>
-                                            <div className="text-right">
-                                                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-1">Cần góp thêm</p>
-                                                <p className="text-lg font-bold text-destructive">
-                                                    {formatCurrency(goal.targetAmount - goal.currentAmount)}
-                                                </p>
-                                            </div>
-                                        </div>
 
-                                        {/* Progress Bar Area */}
-                                        <div className="space-y-2 mb-6">
-                                            <div className="flex justify-between text-sm font-medium">
-                                                <span className="text-primary">{formatCurrency(goal.currentAmount)}</span>
-                                                <span className="text-muted-foreground">{formatCurrency(goal.targetAmount)}</span>
+                                            {/* Progress Bar Area */}
+                                            <div className="space-y-2 mb-6">
+                                                <div className="flex justify-between text-sm font-medium">
+                                                    <span className="text-primary">{formatCurrency(goal.currentAmount)}</span>
+                                                    <span className="text-muted-foreground">{formatCurrency(goal.targetAmount)}</span>
+                                                </div>
+                                                <div className="h-3 w-full bg-secondary rounded-full overflow-hidden relative">
+                                                    <div
+                                                        className="absolute top-0 left-0 h-full rounded-full transition-all duration-1000 ease-out"
+                                                        style={{ width: `${percentage}%`, backgroundColor: goal.colorCode }}
+                                                    />
+                                                </div>
+                                                <p className="text-right text-xs font-bold text-muted-foreground">{percentage}%</p>
                                             </div>
-                                            <div className="h-3 w-full bg-secondary rounded-full overflow-hidden relative">
-                                                <div
-                                                    className="absolute top-0 left-0 h-full rounded-full transition-all duration-1000 ease-out"
-                                                    style={{ width: `${percentage}%`, backgroundColor: goal.colorCode }}
-                                                />
-                                            </div>
-                                            <p className="text-right text-xs font-bold text-muted-foreground">{percentage}%</p>
-                                        </div>
 
-                                        <Button
-                                            className="w-full text-foreground hover:text-primary-foreground transition-colors font-semibold shadow-sm"
-                                            style={{ backgroundColor: `${goal.colorCode}20`, color: goal.colorCode }}
-                                            onClick={() => handleOpenDeposit(goal)}
-                                        >
-                                            Nạp Tiền Vào Hũ
-                                        </Button>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        )
-                    })}
-                </div>
+                                            <Button
+                                                className="w-full text-foreground hover:text-primary-foreground transition-colors font-semibold shadow-sm"
+                                                style={{ backgroundColor: `${goal.colorCode}20`, color: goal.colorCode }}
+                                                onClick={() => handleOpenDeposit(goal)}
+                                            >
+                                                Nạp Tiền Vào Hũ
+                                            </Button>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            )
+                        })}
+                    </div>
+                )}
             </div>
 
             {/* Achieved Goals List */}

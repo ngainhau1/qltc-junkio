@@ -81,6 +81,19 @@ export function DepositModal({ isOpen, onClose, goal }) {
     const remainingNeeded = goal.targetAmount - goal.currentAmount;
     const percentage = Math.min(100, Math.round((goal.currentAmount / goal.targetAmount) * 100));
 
+    const handleSetAmount = (newAmountStr) => {
+        const numAmount = Number(newAmountStr) || 0;
+        const cappedAmount = Math.min(numAmount, remainingNeeded);
+
+        // If the user cleared the input, allow it to be empty
+        // otherwise, convert the capped number to string
+        if (newAmountStr === '') {
+            setAmount('');
+        } else {
+            setAmount(cappedAmount.toString());
+        }
+    };
+
     return (
         <Modal isOpen={isOpen} onClose={onClose} title="Nạp Tiền Mục Tiêu">
             <div className="p-6 space-y-6">
@@ -117,7 +130,7 @@ export function DepositModal({ isOpen, onClose, goal }) {
                                 type="number"
                                 placeholder="0"
                                 value={amount}
-                                onChange={(e) => setAmount(e.target.value)}
+                                onChange={(e) => handleSetAmount(e.target.value)}
                                 className="text-center text-3xl font-bold h-16 rounded-2xl border-2 focus-visible:ring-0 focus-visible:border-primary transition-colors"
                             />
                             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">₫</span>
@@ -132,7 +145,7 @@ export function DepositModal({ isOpen, onClose, goal }) {
                                 type="button"
                                 onClick={() => {
                                     const currentVal = Number(amount) || 0;
-                                    setAmount((currentVal + qAmount).toString());
+                                    handleSetAmount((currentVal + qAmount).toString());
                                 }}
                                 className="px-3 py-1.5 rounded-full border border-border bg-card text-xs font-semibold hover:border-primary hover:bg-primary/5 transition-all active:scale-95"
                             >

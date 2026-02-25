@@ -1,6 +1,7 @@
 import { useMemo, memo } from 'react';
 import { formatCurrency } from "@/lib/utils";
 import { ArrowUpRight, ArrowDownLeft } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 
 // Row Item Component (Adapted for standard list)
 const TransactionRow = memo(({ item }) => {
@@ -79,7 +80,14 @@ export function VirtualizedTransactionList({ transactions }) {
     }, [transactions]);
 
     if (flatData.length === 0) {
-        return <div className="text-center py-10 text-muted-foreground">Không tìm thấy giao dịch nào.</div>;
+        return (
+            <div className="py-8">
+                <EmptyState
+                    title="Chưa có giao dịch nào"
+                    description="Bạn chưa có bất kỳ giao dịch nào trong khoảng thời gian này. Hãy thêm giao dịch mới để bắt đầu theo dõi chi tiêu."
+                />
+            </div>
+        );
     }
 
     return (

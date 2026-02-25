@@ -1,13 +1,18 @@
 import { Sidebar } from "./Sidebar"
 import { BottomNav } from "./BottomNav"
-
 import { Outlet } from "react-router-dom"
 import { GlobalAddTransactionModal } from "@/components/features/transactions/GlobalAddTransactionModal"
 import { Header } from "./Header"
+import { Button } from "@/components/ui/button"
+import { Plus } from "lucide-react"
+import { useDispatch } from "react-redux"
+import { openAddTransactionModal } from "@/features/ui/uiSlice"
 
 export function MainLayout() {
+    const dispatch = useDispatch()
+
     return (
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen bg-background relative">
             {/* Desktop Sidebar */}
             <Sidebar />
 
@@ -24,6 +29,16 @@ export function MainLayout() {
 
             {/* Mobile Bottom Nav */}
             <BottomNav />
+
+            {/* Global FAB for Desktop */}
+            <Button
+                onClick={() => dispatch(openAddTransactionModal())}
+                className="hidden md:flex fixed bottom-8 right-8 h-14 w-14 rounded-full shadow-2xl hover:shadow-primary/50 hover:-translate-y-1 transition-all z-50 p-0 text-white"
+                size="icon"
+                title="Thêm Giao Dịch"
+            >
+                <Plus className="h-7 w-7" />
+            </Button>
         </div>
     )
 }
