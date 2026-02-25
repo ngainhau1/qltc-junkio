@@ -5,6 +5,7 @@ import { formatCurrency } from "@/lib/utils"
 import { Wallet } from "lucide-react"
 import { Modal } from "@/components/ui/modal"
 import { WalletForm } from "@/components/features/wallets/WalletForm"
+import { EmptyState } from "@/components/ui/empty-state"
 
 export function Wallets() {
     const { wallets } = useSelector(state => state.wallets)
@@ -19,23 +20,33 @@ export function Wallets() {
             </header>
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {wallets.map(wallet => (
-                    <Card key={wallet.id} className="relative overflow-hidden">
-                        <div className="absolute top-0 right-0 p-4 opacity-10">
-                            <Wallet className="w-24 h-24" />
-                        </div>
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-lg">{wallet.name}</CardTitle>
-                            <CardDescription className="capitalize">{wallet.type}</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{formatCurrency(wallet.balance)}</div>
-                            <p className="text-xs text-muted-foreground mt-2">
-                                ID: {wallet.id.substring(0, 8)}...
-                            </p>
-                        </CardContent>
-                    </Card>
-                ))}
+                {wallets.length === 0 ? (
+                    <div className="col-span-full">
+                        <EmptyState
+                            icon={Wallet}
+                            title="Chưa có ví nào"
+                            description="Tạo một ví mới để bắt đầu quản lý thu chi của bạn."
+                        />
+                    </div>
+                ) : (
+                    wallets.map(wallet => (
+                        <Card key={wallet.id} className="relative overflow-hidden">
+                            <div className="absolute top-0 right-0 p-4 opacity-10">
+                                <Wallet className="w-24 h-24" />
+                            </div>
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-lg">{wallet.name}</CardTitle>
+                                <CardDescription className="capitalize">{wallet.type}</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold">{formatCurrency(wallet.balance)}</div>
+                                <p className="text-xs text-muted-foreground mt-2">
+                                    ID: {wallet.id.substring(0, 8)}...
+                                </p>
+                            </CardContent>
+                        </Card>
+                    ))
+                )}
 
                 {/* Add Wallet Card */}
                 <Card

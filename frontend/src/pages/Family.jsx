@@ -13,10 +13,11 @@ import {
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
 import { addFamily, setActiveFamily, updateMemberRole, removeMember } from "@/features/families/familySlice"
-import { Users, Plus, ArrowRight, MoreHorizontal, Shield, ShieldAlert, LogOut, Check, Copy } from "lucide-react"
+import { Users, Plus, ArrowRight, MoreHorizontal, Shield, ShieldAlert, LogOut, Check, Copy, Receipt, Target } from "lucide-react"
 import { simplifyDebts } from "@/utils/debtSimplification"
 import { formatCurrency } from "@/lib/utils"
 import { toast } from "sonner"
+import { EmptyState } from "@/components/ui/empty-state"
 const generateId = (prefix) => `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
 export function Family() {
@@ -308,7 +309,13 @@ export function Family() {
                         <CardContent>
                             <div className="space-y-3">
                                 {formattedExpenses.length === 0 ? (
-                                    <p className="text-sm text-muted-foreground">Chưa có giao dịch chung nào.</p>
+                                    <div className="py-8">
+                                        <EmptyState
+                                            icon={Receipt}
+                                            title="Chưa có giao dịch"
+                                            description="Chưa có khoản chi tiêu chung nào được ghi nhận."
+                                        />
+                                    </div>
                                 ) : (
                                     formattedExpenses.map(t => (
                                         <div key={t.id} className="text-sm border-b pb-2">
@@ -340,8 +347,12 @@ export function Family() {
                         </CardHeader>
                         <CardContent>
                             {settlements.length === 0 ? (
-                                <div className="text-muted-foreground text-sm italic">
-                                    {formattedExpenses.length > 0 ? "Nhấn nút để chạy thuật toán..." : "Cần có giao dịch để tính toán."}
+                                <div className="py-8">
+                                    <EmptyState
+                                        icon={Target}
+                                        title="Không có nợ"
+                                        description={formattedExpenses.length > 0 ? "Nhấn Tối Ưu Hóa Nợ để bắt đầu tính toán." : "Cần có giao dịch để chia tiền."}
+                                    />
                                 </div>
                             ) : (
                                 <div className="space-y-3">
