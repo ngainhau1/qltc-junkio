@@ -130,12 +130,22 @@ export function DepositModal({ isOpen, onClose, goal }) {
                             <button
                                 key={qAmount}
                                 type="button"
-                                onClick={() => setAmount(qAmount.toString())}
-                                className="px-3 py-1.5 rounded-full border border-border bg-card text-xs font-semibold hover:border-primary hover:bg-primary/5 transition-all"
+                                onClick={() => {
+                                    const currentVal = Number(amount) || 0;
+                                    setAmount((currentVal + qAmount).toString());
+                                }}
+                                className="px-3 py-1.5 rounded-full border border-border bg-card text-xs font-semibold hover:border-primary hover:bg-primary/5 transition-all active:scale-95"
                             >
                                 +{qAmount / 1000}k
                             </button>
                         ))}
+                        <button
+                            type="button"
+                            onClick={() => setAmount(remainingNeeded.toString())}
+                            className="px-3 py-1.5 rounded-full border border-primary bg-primary/10 text-primary text-xs font-bold hover:bg-primary hover:text-primary-foreground transition-all active:scale-95"
+                        >
+                            Đầy Hũ
+                        </button>
                     </div>
                 </div>
 
