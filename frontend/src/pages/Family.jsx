@@ -16,6 +16,8 @@ import { addFamily, setActiveFamily, updateMemberRole, removeMember } from "@/fe
 import { Users, Plus, ArrowRight, MoreHorizontal, Shield, ShieldAlert, LogOut, Check, Copy } from "lucide-react"
 import { simplifyDebts } from "@/utils/debtSimplification"
 import { formatCurrency } from "@/lib/utils"
+import { toast } from "sonner"
+const generateId = (prefix) => `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
 export function Family() {
     const dispatch = useDispatch()
@@ -42,17 +44,27 @@ export function Family() {
 
     // 3. Transform for Algorithm
     const formattedExpenses = familyExpenses.map(t => {
-        const payer = activeFamily?.members.find(m => m.id === t.user_id)
-        const payerName = payer ? payer.name : 'Unknown User'
+        let splitAmongIds = [];
+        if (t.shares && t.shares.length > 0) {
+            splitAmongIds = t.shares.map(s => s.user_id);
+        } else {
+            splitAmongIds = activeFamily?.members.map(m => m.id) || [];
+        }
 
         return {
             id: t.id,
-            paidBy: payerName,
-            splitAmong: activeFamily?.members.map(m => m.name) || [], // Split equal among all
+            paidBy: t.user_id, // Pass ID to algo
+            splitAmong: splitAmongIds,
+            shares: t.shares,
             amount: parseFloat(t.amount),
             desc: t.description
         }
-    }).slice(0, 50) // Limit to 50 for performance demo if thousands exist
+    }).slice(0, 100) // Increase limit for accurate debt calc
+
+    const getMemberName = (id) => {
+        const m = activeFamily?.members.find(m => m.id === id)
+        return m ? m.name : 'Unknown'
+    }
 
     const [settlements, setSettlements] = useState([])
 
@@ -65,6 +77,10 @@ export function Family() {
     const [inviteCode, setInviteCode] = useState("")
     const [copied, setCopied] = useState(false)
     const [associatedFamilyName, setAssociatedFamilyName] = useState("")
+
+    // Settle Modal State
+    const [settleModalOpen, setSettleModalOpen] = useState(false)
+    const [selectedSettlement, setSelectedSettlement] = useState(null)
 
     const handleCreateFamily = (e) => {
         e.preventDefault()
@@ -103,6 +119,54 @@ export function Family() {
         navigator.clipboard.writeText(inviteCode)
         setCopied(true)
         setTimeout(() => setCopied(false), 2000)
+    }
+
+    const handleSettleClick = (settlement) => {
+        setSelectedSettlement(settlement)
+        setSettleModalOpen(true)
+    }
+
+    const confirmSettle = () => {
+        if (!selectedSettlement || familyWalletIds.length === 0) return;
+
+        const { from, to, amount } = selectedSettlement;
+
+        const newTx = {
+            id: generateId('settle'),
+            amount: amount,
+            date: new Date().toISOString(),
+            transaction_date: new Date().toISOString(),
+            description: `Thanh toán nợ: ${getMemberName(from)} trả ${getMemberName(to)}`,
+            type: 'EXPENSE',
+            wallet_id: familyWalletIds[0], // record in family context
+            category_id: 'cat-settlement',
+            user_id: from, // Debtor is payer
+            shares: [{
+                id: generateId('share'),
+                user_id: to,
+                amount: amount,
+                status: 'PAID'
+            }],
+            created_at: new Date().toISOString()
+        };
+
+        dispatch({ type: 'transactions/addTransaction', payload: newTx });
+        toast.success(`Đã ghi nhận thanh toán ${formatCurrency(amount)}`);
+
+        // Update local state without needing to re-render the whole page immediately
+        // The Redux state update will re-trigger the familyExpenses recalculation
+        const newExpenses = [...formattedExpenses, {
+            id: newTx.id,
+            paidBy: from,
+            splitAmong: [to],
+            shares: newTx.shares,
+            amount: amount,
+            desc: newTx.description
+        }];
+        const results = simplifyDebts(newExpenses);
+        setSettlements(results);
+
+        setSettleModalOpen(false);
     }
 
     return (
@@ -250,7 +314,14 @@ export function Family() {
                                         <div key={t.id} className="text-sm border-b pb-2">
                                             <p className="font-medium">{t.desc}</p>
                                             <p className="text-muted-foreground">
-                                                {t.paidBy} đã trả {formatCurrency(t.amount)} (Chia đều cho {t.splitAmong.length} người)
+                                                {getMemberName(t.paidBy)} đã trả {formatCurrency(t.amount)}
+                                                {t.shares && t.shares.length > 0 && t.shares[0].status === 'PAID'
+                                                    ? ' (Settle Up)'
+                                                    : (t.shares && t.shares.length > 0
+                                                        ? ` (Chia cho ${t.shares.length} người)`
+                                                        : ` (Chia đều cho ${t.splitAmong.length} người)`
+                                                    )
+                                                }
                                             </p>
                                         </div>
                                     ))
@@ -275,13 +346,24 @@ export function Family() {
                             ) : (
                                 <div className="space-y-3">
                                     {settlements.map((s, idx) => (
-                                        <div key={idx} className="flex items-center justify-between p-3 bg-green-50 text-green-800 rounded-md">
-                                            <div className="flex items-center gap-2 font-medium">
-                                                <span>{s.from}</span>
-                                                <ArrowRight className="h-4 w-4" />
-                                                <span>{s.to}</span>
+                                        <div key={idx} className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-400 rounded-lg border border-green-200 dark:border-green-800/50">
+                                            <div className="flex items-center gap-2 md:gap-4 font-medium">
+                                                <div className="flex flex-col">
+                                                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">Người nợ</span>
+                                                    <span className="text-sm font-semibold text-foreground truncate max-w-[80px] md:max-w-full">{getMemberName(s.from)}</span>
+                                                </div>
+                                                <ArrowRight className="h-4 w-4 text-green-600 dark:text-green-500 shrink-0" />
+                                                <div className="flex flex-col">
+                                                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">Chủ nợ</span>
+                                                    <span className="text-sm font-semibold text-foreground truncate max-w-[80px] md:max-w-full">{getMemberName(s.to)}</span>
+                                                </div>
                                             </div>
-                                            <div className="font-bold">{formatCurrency(s.amount)}</div>
+                                            <div className="flex flex-col items-end gap-1 shrink-0">
+                                                <div className="font-bold">{formatCurrency(s.amount)}</div>
+                                                <Button size="sm" onClick={() => handleSettleClick(s)} className="h-6 text-[10px] px-2 bg-green-600 hover:bg-green-700 text-white shadow-sm">
+                                                    Trả Nợ
+                                                </Button>
+                                            </div>
                                         </div>
                                     ))}
                                     <p className="text-xs text-muted-foreground pt-4 text-center">
@@ -332,11 +414,48 @@ export function Family() {
                             onChange={(e) => setNewFamilyDesc(e.target.value)}
                         />
                     </div>
-                    <div className="pt-2 flex justify-end gap-2">
+                    <div className="pt-2 flex justify-end gap-2 border-t">
                         <Button type="button" variant="ghost" onClick={() => setCreateModalOpen(false)}>Hủy</Button>
                         <Button type="submit">Tạo Nhóm</Button>
                     </div>
                 </form>
+            </Modal>
+
+            {/* Settle Modal */}
+            <Modal isOpen={settleModalOpen} onClose={() => setSettleModalOpen(false)} title="Xác Nhận Thanh Toán">
+                {selectedSettlement && (
+                    <div className="space-y-6">
+                        <div className="flex items-center justify-between p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-800/50">
+                            <div className="flex flex-col items-center">
+                                <div className="h-12 w-12 rounded-full bg-background border flex items-center justify-center font-bold mb-2 shadow-sm text-foreground">
+                                    {getMemberName(selectedSettlement.from).charAt(0)}
+                                </div>
+                                <span className="font-semibold text-sm">{getMemberName(selectedSettlement.from)}</span>
+                            </div>
+                            <div className="flex flex-col items-center gap-1">
+                                <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground bg-muted px-2 py-0.5 rounded-full">Chuyển Trả</span>
+                                <ArrowRight className="h-5 w-5 text-green-600 dark:text-green-500 my-1" />
+                                <span className="font-bold text-lg text-green-600 dark:text-green-500">{formatCurrency(selectedSettlement.amount)}</span>
+                            </div>
+                            <div className="flex flex-col items-center">
+                                <div className="h-12 w-12 rounded-full bg-background border flex items-center justify-center font-bold mb-2 shadow-sm text-foreground">
+                                    {getMemberName(selectedSettlement.to).charAt(0)}
+                                </div>
+                                <span className="font-semibold text-sm">{getMemberName(selectedSettlement.to)}</span>
+                            </div>
+                        </div>
+                        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 p-4 rounded-xl">
+                            <p className="text-sm text-blue-800 dark:text-blue-300">
+                                Hành động này sẽ tạo một giao dịch thanh toán trong hệ thống để tự động cấn trừ khoản nợ này.
+                                Bạn cần đảm bảo việc chuyển tiền thực tế đã được thực hiện.
+                            </p>
+                        </div>
+                        <div className="pt-2 flex justify-end gap-3 border-t">
+                            <Button type="button" variant="ghost" onClick={() => setSettleModalOpen(false)}>Hủy</Button>
+                            <Button onClick={confirmSettle} className="bg-green-600 hover:bg-green-700 text-white">Xác nhận Đã Trả</Button>
+                        </div>
+                    </div>
+                )}
             </Modal>
 
         </div>

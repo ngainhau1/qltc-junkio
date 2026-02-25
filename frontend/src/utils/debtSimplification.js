@@ -15,23 +15,24 @@ export function simplifyDebts(transactions) {
     transactions.forEach(t => {
         const payer = t.paidBy;
         const amount = t.amount;
-        const splitCount = t.splitAmong.length;
-        const splitAmount = amount / splitCount;
 
         // Payer gets back the full amount (conceptually)
-        // Check if payer is also in splitAmong? usually yes. 
-        // Logic: Payer paid X. Everyone in splitAmong owes Payer X/N.
-        // Net change for Payer = +X - (X/N if included)
-        // Net change for Splitter = -X/N
-
-        // Simpler mental model:
-        // Payer is +Amount
         balances[payer] = (balances[payer] || 0) + amount;
 
-        // Each person in split (including payer if applicable) pays their share
-        t.splitAmong.forEach(memberId => {
-            balances[memberId] = (balances[memberId] || 0) - splitAmount;
-        });
+        // If specific shares are provided, use them
+        if (t.shares && t.shares.length > 0) {
+            t.shares.forEach(share => {
+                balances[share.user_id] = (balances[share.user_id] || 0) - share.amount;
+            });
+        } else {
+            // Otherwise default to equal split among splitAmong array
+            const splitCount = t.splitAmong.length;
+            const splitAmount = amount / splitCount;
+
+            t.splitAmong.forEach(memberId => {
+                balances[memberId] = (balances[memberId] || 0) - splitAmount;
+            });
+        }
     });
 
     // 2. Separate into Debtors and Creditors
