@@ -71,13 +71,13 @@ export function Transactions() {
             <div className="flex p-1 bg-muted rounded-lg w-fit">
                 <button
                     onClick={() => setActiveTab('history')}
-                    className={`px-4 py-2 text-sm font-medium rounded-md transition-all flex items-center gap-2 ${activeTab === 'history' ? 'bg-white shadow text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                    className={`px-4 py-2 text-sm font-medium rounded-md transition-all flex items-center gap-2 ${activeTab === 'history' ? 'bg-background shadow-sm text-foreground border border-border' : 'text-muted-foreground hover:text-foreground'}`}
                 >
                     <History className="h-4 w-4" /> Lịch Sử
                 </button>
                 <button
                     onClick={() => setActiveTab('recurring')}
-                    className={`px-4 py-2 text-sm font-medium rounded-md transition-all flex items-center gap-2 ${activeTab === 'recurring' ? 'bg-white shadow text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                    className={`px-4 py-2 text-sm font-medium rounded-md transition-all flex items-center gap-2 ${activeTab === 'recurring' ? 'bg-background shadow-sm text-foreground border border-border' : 'text-muted-foreground hover:text-foreground'}`}
                 >
                     <Repeat className="h-4 w-4" /> Định Kỳ
                 </button>

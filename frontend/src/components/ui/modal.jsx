@@ -19,7 +19,7 @@ export function Modal({ isOpen, onClose, title, children }) {
 
     return createPortal(
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in zoom-in">
-            <div className="w-full max-w-md bg-white rounded-lg shadow-xl border p-6 relative">
+            <div className="w-full max-w-md bg-background rounded-lg shadow-xl border border-border p-6 relative">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-semibold">{title}</h2>
                     <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">

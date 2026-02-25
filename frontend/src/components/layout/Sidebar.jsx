@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom"
-import { Home, Wallet, PieChart, Settings, Users, ArrowRightLeft, ChevronsUpDown } from "lucide-react"
+import { Home, Wallet, PieChart, Settings, Users, ArrowRightLeft, ChevronsUpDown, Target } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -17,6 +17,7 @@ const sidebarItems = [
     { icon: Home, label: "Tổng Quan", href: "/" },
     { icon: ArrowRightLeft, label: "Giao Dịch", href: "/transactions" },
     { icon: Wallet, label: "Ví Của Tôi", href: "/wallets" },
+    { icon: Target, label: "Mục Tiêu", href: "/goals" },
     { icon: PieChart, label: "Báo Cáo", href: "/reports" },
     { icon: Users, label: "Gia Đình", href: "/family" },
 ]

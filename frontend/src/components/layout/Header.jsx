@@ -1,0 +1,20 @@
+import { NotificationBell } from "./NotificationBell";
+import { useSelector } from "react-redux";
+
+export function Header() {
+    const { user } = useSelector(state => state.auth);
+
+    return (
+        <header className="sticky top-0 z-40 w-full backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b bg-background/95">
+            <div className="flex h-14 items-center justify-end max-w-7xl mx-auto px-4 md:px-8">
+                <div className="flex items-center gap-4">
+                    <NotificationBell />
+                    <span className="text-sm font-medium hidden md:inline-block">
+                        Xin chào, <span className="font-bold">{user?.name || "Người dùng"}</span>
+                    </span>
+                    <img src={`https://api.dicebear.com/7.x/notionists/svg?seed=${user?.name || 'demo'}`} alt="Avatar" className="h-8 w-8 rounded-full border bg-muted" />
+                </div>
+            </div>
+        </header>
+    );
+}

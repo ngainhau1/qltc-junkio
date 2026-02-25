@@ -3,6 +3,7 @@ import { BottomNav } from "./BottomNav"
 
 import { Outlet } from "react-router-dom"
 import { GlobalAddTransactionModal } from "@/components/features/transactions/GlobalAddTransactionModal"
+import { Header } from "./Header"
 
 export function MainLayout() {
     return (
@@ -14,6 +15,7 @@ export function MainLayout() {
             {/* Adds left margin on desktop to account for fixed sidebar */}
             {/* Adds bottom padding on mobile to account for fixed bottom nav */}
             <main className="md:pl-64 pb-16 md:pb-0 min-h-screen transition-all duration-300">
+                <Header />
                 <div className="container mx-auto p-4 md:p-8 max-w-7xl">
                     <Outlet />
                     <GlobalAddTransactionModal />

@@ -17,6 +17,7 @@ import { Wallets } from "@/pages/Wallets"
 import { Family } from "@/pages/Family"
 import { Reports } from "@/pages/Reports"
 import { Settings } from "@/pages/Settings"
+import { Goals } from "@/pages/Goals"
 
 import { runRecurringEngine } from "@/services/recurringService"
 import { store } from "@/store"
@@ -28,20 +29,31 @@ function App() {
 
   useEffect(() => {
     // 1. Check Auth & Seed Data
-    if (isAuthenticated && transactions.length === 0) {
-      // Only seed if we are logged in (e.g. Demo User) but have no data
-      // (RegisterPage handles its own seeding)
-      const { user } = store.getState().auth
-      if (user) {
-        const data = FakerService.initData(user.id)
-        dispatch(setWallets(data.wallets))
-        dispatch(setTransactions(data.transactions))
-        if (data.family) dispatch(addFamily(data.family))
-        // Recurring rules seed
-        if (data.recurringRules) {
-          // We need to dispatch addRule. Assuming imported or use loop
-          // Since addRule is not imported in App.jsx scope inside useEffect properly without import,
-          // Let's just focus on main data for now.
+    if (isAuthenticated) {
+      const state = store.getState()
+      const { families } = state.families
+
+      if (transactions.length === 0) {
+        // Only seed if we are logged in (e.g. Demo User) but have no data
+        const { user } = state.auth
+        if (user) {
+          const data = FakerService.initData(user.id)
+          dispatch(setWallets(data.wallets))
+          dispatch(setTransactions(data.transactions))
+          if (data.family) dispatch(addFamily(data.family))
+          // Recurring rules seed
+          if (data.recurringRules) {
+            // Logic for rules
+          }
+        }
+      } else if (families.length === 0) {
+        // Fix: Check if families are missing but other data exists (HMR/Migration case)
+        const { user } = state.auth
+        if (user) {
+          // Generate just a family
+          const newFamily = FakerService.generateFamily(user.id, user.name)
+          dispatch(addFamily(newFamily))
+          toast.info("Đã tạo tự động Gia Đình mặc định cho bạn.", { duration: 3000 })
         }
       }
     }
@@ -75,6 +87,7 @@ function App() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/transactions" element={<Transactions />} />
             <Route path="/wallets" element={<Wallets />} />
+            <Route path="/goals" element={<Goals />} />
             <Route path="/family" element={<Family />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/settings" element={<Settings />} />

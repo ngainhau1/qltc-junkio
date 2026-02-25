@@ -12,7 +12,26 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { formatCurrency } from "@/lib/utils"
 
+const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+        return (
+            <div className="bg-popover border border-border p-3 rounded-xl shadow-lg">
+                <p className="text-sm font-medium mb-2 text-popover-foreground">{label}</p>
+                {payload.map((p, index) => (
+                    <div key={index} className="text-sm flex items-center gap-2" style={{ color: p.color }}>
+                        <span className="font-bold">{p.name}:</span>
+                        <span>{formatCurrency(p.value)}</span>
+                    </div>
+                ))}
+            </div>
+        )
+    }
+    return null
+}
+
 export function FinancialChart({ transactions }) {
+    // ... (existing code) ...
+
     const [range, setRange] = useState('ALL') // '7D', '30D', 'ALL'
 
     const data = useMemo(() => {
@@ -45,7 +64,7 @@ export function FinancialChart({ transactions }) {
 
             if (t.type === 'INCOME') {
                 acc[sortKey].income += t.amount
-            } else {
+            } else if (t.type === 'EXPENSE') {
                 acc[sortKey].expense += t.amount
             }
 
@@ -71,7 +90,7 @@ export function FinancialChart({ transactions }) {
                             <button
                                 key={r}
                                 onClick={() => setRange(r)}
-                                className={`text-xs font-medium px-3 py-1.5 rounded-md transition-all ${range === r ? 'bg-white text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted'}`}
+                                className={`text-xs font-medium px-3 py-1.5 rounded-md transition-all ${range === r ? 'bg-background text-primary border border-border shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted'}`}
                             >
                                 {r}
                             </button>
@@ -109,10 +128,7 @@ export function FinancialChart({ transactions }) {
                             tick={{ fill: '#6b7280' }}
                             tickFormatter={(value) => `${value / 1000000}M`}
                         />
-                        <Tooltip
-                            formatter={(value) => formatCurrency(value)}
-                            contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)' }}
-                        />
+                        <Tooltip content={<CustomTooltip />} />
                         <Legend iconType="circle" />
                         <Area
                             type="monotone"

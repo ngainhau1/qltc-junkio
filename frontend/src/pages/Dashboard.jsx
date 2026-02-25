@@ -5,7 +5,6 @@ import { RecentTransactions } from "@/components/dashboard/RecentTransactions"
 import { FinancialChart } from "@/components/dashboard/FinancialChart"
 
 export function Dashboard() {
-    const { user } = useSelector(state => state.auth)
     const { transactions } = useSelector(state => state.transactions)
     const { wallets } = useSelector(state => state.wallets)
 
@@ -19,8 +18,6 @@ export function Dashboard() {
 
                 <div className="flex items-center gap-4">
                     <img src="/logo.png" alt="Logo" className="h-8 w-8 md:hidden" />
-                    <span className="text-muted-foreground hidden md:inline-block">Xin chào, {user?.name}</span>
-                    {/* <Button>Thêm Giao Dịch</Button> */}
                 </div>
             </header>
 
