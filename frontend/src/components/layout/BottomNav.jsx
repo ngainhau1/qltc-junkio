@@ -18,8 +18,8 @@ export function BottomNav({ className }) {
     ]
 
     return (
-        <div className={cn("fixed bottom-0 left-0 right-0 border-t bg-background md:hidden z-50", className)}>
-            <div className="flex justify-between items-center h-16 px-6">
+        <div className={cn("fixed bottom-0 left-0 right-0 border-t bg-background md:hidden z-50 pb-[env(safe-area-inset-bottom)]", className)}>
+            <div className="flex justify-between items-center h-16 px-4">
                 {/* First 2 Items */}
                 {navItems.slice(0, 2).map((item, index) => {
                     const isActive = location.pathname === item.href
@@ -28,23 +28,23 @@ export function BottomNav({ className }) {
                             key={index}
                             to={item.href}
                             className={cn(
-                                "flex flex-col items-center justify-center space-y-1 cursor-pointer transition-colors",
-                                isActive ? "text-primary" : "text-muted-foreground hover:text-primary"
+                                "flex flex-col items-center justify-center space-y-1 w-16 h-14 cursor-pointer transition-colors rounded-xl mx-0.5",
+                                isActive ? "text-primary" : "text-muted-foreground hover:text-primary hover:bg-muted/50"
                             )}
                         >
-                            <item.icon className={cn("h-5 w-5", isActive && "fill-current/20")} />
+                            <item.icon className={cn("h-6 w-6", isActive && "fill-current/20")} />
                             <span className="text-[10px] font-medium">{item.label}</span>
                         </Link>
                     )
                 })}
 
                 {/* Center FAB */}
-                <div className="relative -top-5">
+                <div className="relative -top-5 mx-2">
                     <button
                         onClick={() => dispatch(openAddTransactionModal())}
-                        className="h-12 w-12 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:bg-primary/90 transition-colors"
+                        className="h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 flex items-center justify-center hover:bg-primary/90 hover:-translate-y-1 transition-all active:scale-95"
                     >
-                        <Plus className="h-6 w-6" />
+                        <Plus className="h-7 w-7" />
                     </button>
                 </div>
 
@@ -56,11 +56,11 @@ export function BottomNav({ className }) {
                             key={index}
                             to={item.href}
                             className={cn(
-                                "flex flex-col items-center justify-center space-y-1 cursor-pointer transition-colors",
-                                isActive ? "text-primary" : "text-muted-foreground hover:text-primary"
+                                "flex flex-col items-center justify-center space-y-1 w-16 h-14 cursor-pointer transition-colors rounded-xl mx-0.5",
+                                isActive ? "text-primary" : "text-muted-foreground hover:text-primary hover:bg-muted/50"
                             )}
                         >
-                            <item.icon className={cn("h-5 w-5", isActive && "fill-current/20")} />
+                            <item.icon className={cn("h-6 w-6", isActive && "fill-current/20")} />
                             <span className="text-[10px] font-medium">{item.label}</span>
                         </Link>
                     )

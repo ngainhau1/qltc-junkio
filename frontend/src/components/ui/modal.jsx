@@ -18,11 +18,16 @@ export function Modal({ isOpen, onClose, title, children }) {
     if (!isOpen) return null
 
     return createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in zoom-in">
-            <div className="w-full max-w-md bg-background rounded-lg shadow-xl border border-border p-6 relative">
+        <div className="fixed inset-0 z-[100] flex flex-col justify-end md:items-center md:justify-center bg-black/50 backdrop-blur-sm animate-in fade-in p-0 md:p-4 md:duration-200">
+            <div className="w-full md:max-w-md bg-background md:rounded-lg rounded-t-2xl shadow-xl border border-border p-6 relative animate-in slide-in-from-bottom-full md:slide-in-from-bottom-0 md:zoom-in-95 max-h-[90vh] overflow-y-auto overflow-x-hidden safe-area-pb">
+                {/* Drag Handle for Mobile */}
+                <div className="w-full flex justify-center mb-4 md:hidden">
+                    <div className="h-1.5 w-12 rounded-full bg-muted-foreground/20"></div>
+                </div>
+
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-semibold">{title}</h2>
-                    <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
+                    <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8 rounded-full">
                         <X className="h-4 w-4" />
                     </Button>
                 </div>

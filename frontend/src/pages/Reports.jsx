@@ -131,7 +131,7 @@ export function Reports() {
                                     ))}
                                 </Pie>
                                 <Tooltip formatter={(value) => formatCurrency(value)} />
-                                <Legend layout="vertical" verticalAlign="middle" align="right" />
+                                <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
                             </PieChart>
                         </ResponsiveContainer>
                     </CardContent>

@@ -9,22 +9,25 @@ import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
 import { Loader2, Eye, EyeOff, Mail, Lock, User } from "lucide-react"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 import { addFamily } from "@/features/families/familySlice"
 import { setWallets } from "@/features/wallets/walletSlice"
 import { setTransactions } from "@/features/transactions/transactionSlice"
 import { FakerService } from "@/services/fakerService"
 
-// Validation Schema
-const RegisterSchema = Yup.object().shape({
-    name: Yup.string().required("Vui lòng nhập tên hiển thị"),
-    email: Yup.string().email("Email không hợp lệ").required("Vui lòng nhập Email"),
-    password: Yup.string().min(6, "Mật khẩu tối thiểu 6 ký tự").required("Vui lòng nhập mật khẩu"),
-    confirmPassword: Yup.string()
-        .oneOf([Yup.ref('password'), null], 'Mật khẩu không khớp')
-        .required('Vui lòng xác nhận mật khẩu'),
-})
-
 export function RegisterPage() {
+    const { t } = useTranslation()
+
+    // Validation Schema
+    const RegisterSchema = Yup.object().shape({
+        name: Yup.string().required(t('auth.nameRequired')),
+        email: Yup.string().email(t('auth.emailInvalid')).required(t('auth.emailRequired')),
+        password: Yup.string().min(6, t('auth.passwordMin')).required(t('auth.passwordRequired')),
+        confirmPassword: Yup.string()
+            .oneOf([Yup.ref('password'), null], t('auth.passwordMismatch'))
+            .required(t('auth.confirmPasswordRequired')),
+    })
+
     const dispatch = useDispatch()
     const navigate = useNavigate()
     const [isLoading, setIsLoading] = useState(false)
@@ -57,7 +60,7 @@ export function RegisterPage() {
                 dispatch(setTransactions(data.transactions))
                 if (data.family) dispatch(addFamily(data.family))
 
-                toast.success("Đăng ký thành công! Đã tạo dữ liệu mẫu tham khảo.")
+                toast.success(t('auth.registerSuccess'))
                 navigate("/")
                 setIsLoading(false)
             }, 1000)
@@ -65,21 +68,21 @@ export function RegisterPage() {
     })
 
     const handleMockGoogleLogin = () => {
-        toast.info("Tính năng đăng ký Social đang trong lộ trình phát triển.");
+        toast.info(t('auth.socialRegisterComingSoon'));
     }
 
     return (
         <div className="w-full">
             <div className="mb-8 text-center sm:text-left">
-                <h2 className="text-3xl font-bold tracking-tight">Tạo tài khoản mới</h2>
+                <h2 className="text-3xl font-bold tracking-tight">{t('auth.registerTitle')}</h2>
                 <p className="text-muted-foreground mt-2">
-                    Bắt đầu hành trình quản lý tài chính thông minh của bạn.
+                    {t('auth.registerDesc')}
                 </p>
             </div>
 
             <form onSubmit={formik.handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                    <Label htmlFor="name">Tên hiển thị</Label>
+                    <Label htmlFor="name">{t('auth.displayName')}</Label>
                     <div className="relative">
                         <User className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input
@@ -95,7 +98,7 @@ export function RegisterPage() {
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email">{t('auth.email')}</Label>
                     <div className="relative">
                         <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input
@@ -112,7 +115,7 @@ export function RegisterPage() {
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="password">Mật khẩu</Label>
+                    <Label htmlFor="password">{t('auth.password')}</Label>
                     <div className="relative">
                         <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input
@@ -136,7 +139,7 @@ export function RegisterPage() {
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="confirmPassword">Xác nhận mật khẩu</Label>
+                    <Label htmlFor="confirmPassword">{t('auth.confirmPassword')}</Label>
                     <div className="relative">
                         <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input
@@ -161,13 +164,13 @@ export function RegisterPage() {
 
                 <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 mt-2" disabled={isLoading}>
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Tạo Tài Khoản
+                    {t('auth.createAccountBtn')}
                 </Button>
             </form>
 
             <div className="mt-5 flex items-center justify-center gap-4">
                 <span className="h-px w-full bg-border" />
-                <span className="text-xs text-muted-foreground uppercase whitespace-nowrap">Hoặc đăng ký bằng</span>
+                <span className="text-xs text-muted-foreground uppercase whitespace-nowrap">{t('auth.orRegisterWith')}</span>
                 <span className="h-px w-full bg-border" />
             </div>
 
@@ -190,9 +193,9 @@ export function RegisterPage() {
             </div>
 
             <p className="mt-8 text-center text-sm text-muted-foreground">
-                Đã có tài khoản?{" "}
+                {t('auth.alreadyHaveAccount')}{" "}
                 <Link to="/login" className="font-semibold text-emerald-600 hover:underline">
-                    Đăng nhập
+                    {t('auth.loginLink')}
                 </Link>
             </p>
         </div>
