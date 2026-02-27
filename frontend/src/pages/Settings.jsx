@@ -1,29 +1,27 @@
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { useTheme } from "@/components/theme-provider"
-import { Moon, Sun, Laptop, Download, Trash2 } from "lucide-react"
-import { useSelector } from "react-redux"
+import { Moon, Sun, Laptop, Download, Trash2, LogOut } from "lucide-react"
+import { useSelector, useDispatch } from "react-redux"
 import { toast } from "sonner"
 import { store } from "@/store"
+import { logout } from "@/features/auth/authSlice"
 
 export function Settings() {
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 max-w-4xl mx-auto pb-10">
             <div>
                 <h1 className="text-3xl font-bold tracking-tight">Cài Đặt</h1>
-                <p className="text-muted-foreground">Quản lý giao diện, dữ liệu và tài khoản của bạn.</p>
+                <p className="text-muted-foreground">Quản lý giao diện, hệ thống và tài khoản của bạn.</p>
             </div>
 
             <Tabs defaultValue="appearance" className="space-y-4">
                 <TabsList>
                     <TabsTrigger value="appearance">Giao Diện</TabsTrigger>
                     <TabsTrigger value="data">Dữ Liệu</TabsTrigger>
-                    <TabsTrigger value="profile">Hồ Sơ</TabsTrigger>
+                    <TabsTrigger value="account">Tài Khoản</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="appearance" className="space-y-4">
@@ -34,8 +32,8 @@ export function Settings() {
                     <DataSettings />
                 </TabsContent>
 
-                <TabsContent value="profile" className="space-y-4">
-                    <ProfileSettings />
+                <TabsContent value="account" className="space-y-4">
+                    <AccountSettings />
                 </TabsContent>
             </Tabs>
         </div>
@@ -87,7 +85,6 @@ function AppearanceSettings() {
 }
 
 function DataSettings() {
-
     const handleBackup = () => {
         const state = store.getState()
         const data = {
@@ -134,12 +131,12 @@ function DataSettings() {
                     </Button>
                 </div>
 
-                <div className="flex items-center justify-between rounded-lg border p-4 border-destructive/50 bg-destructive/10">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-lg border p-4 border-destructive/50 bg-destructive/10">
                     <div className="space-y-0.5">
                         <Label className="text-base text-destructive">Xóa Dữ Liệu (Hard Reset)</Label>
                         <p className="text-sm text-muted-foreground">Xóa toàn bộ dữ liệu cục bộ và đưa ứng dụng về trạng thái ban đầu.</p>
                     </div>
-                    <Button variant="destructive" onClick={handleHardReset}>
+                    <Button variant="destructive" onClick={handleHardReset} className="w-full sm:w-auto">
                         <Trash2 className="mr-2 h-4 w-4" /> Reset App
                     </Button>
                 </div>
@@ -148,28 +145,34 @@ function DataSettings() {
     )
 }
 
-function ProfileSettings() {
+function AccountSettings() {
+    const dispatch = useDispatch()
     const { user } = useSelector(state => state.auth)
+
+    const handleLogout = () => {
+        if (window.confirm("Bạn muốn đăng xuất khỏi hệ thống?")) {
+            dispatch(logout())
+            toast.success("Đã đăng xuất thành công")
+        }
+    }
 
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Hồ Sơ Của Tôi</CardTitle>
-                <CardDescription>Thông tin tài khoản (Chế độ Frontend - Giả lập).</CardDescription>
+                <CardTitle>Tài Khoản</CardTitle>
+                <CardDescription>Quản lý phiên đăng nhập của {user?.email}.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-                <div className="grid gap-4 md:grid-cols-2">
-                    <div className="space-y-2">
-                        <Label htmlFor="name">Tên hiển thị</Label>
-                        <Input id="name" defaultValue={user?.name || "Người dùng Demo"} disabled />
+            <CardContent>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                        <Label className="text-base">Đăng Xuất Khỏi Thiết Bị Này</Label>
+                        <p className="text-sm text-muted-foreground">
+                            Kết thúc phiên làm việc hiện tại trên trình duyệt này.
+                        </p>
                     </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
-                        <Input id="email" defaultValue={user?.email || "demo@junkio.com"} disabled />
-                    </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                    <Button disabled>Lưu Thay Đổi (Backend Required)</Button>
+                    <Button variant="outline" onClick={handleLogout} className="w-full sm:w-auto text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/20">
+                        <LogOut className="mr-2 h-4 w-4" /> Đăng Xuất
+                    </Button>
                 </div>
             </CardContent>
         </Card>

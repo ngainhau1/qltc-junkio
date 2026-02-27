@@ -1,5 +1,6 @@
 import { NotificationBell } from "./NotificationBell";
 import { useSelector } from "react-redux";
+import { Link } from "react-router-dom";
 
 export function Header() {
     const { user } = useSelector(state => state.auth);
@@ -9,10 +10,16 @@ export function Header() {
             <div className="flex h-14 items-center justify-end max-w-7xl mx-auto px-4 md:px-8">
                 <div className="flex items-center gap-4">
                     <NotificationBell />
-                    <span className="text-sm font-medium hidden md:inline-block">
-                        Xin chào, <span className="font-bold">{user?.name || "Người dùng"}</span>
-                    </span>
-                    <img src={`https://api.dicebear.com/7.x/notionists/svg?seed=${user?.name || 'demo'}`} alt="Avatar" className="h-8 w-8 rounded-full border bg-muted" />
+                    <Link to="/profile" className="flex items-center gap-3 hover:bg-muted/50 p-1.5 rounded-full transition-colors">
+                        <span className="text-sm font-medium hidden md:inline-block">
+                            Xin chào, <span className="font-bold">{user?.name || "Người dùng"}</span>
+                        </span>
+                        <img
+                            src={user?.avatarUrl || `https://api.dicebear.com/7.x/notionists/svg?seed=${user?.name || 'demo'}`}
+                            alt="Avatar"
+                            className="h-8 w-8 rounded-full border bg-muted object-cover"
+                        />
+                    </Link>
                 </div>
             </div>
         </header>
