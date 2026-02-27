@@ -16,8 +16,10 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Download, FileText, FileSpreadsheet } from "lucide-react"
 import { exportToCSV, exportToPDF } from "@/services/exportService"
+import { useTranslation } from "react-i18next"
 
 export function Transactions() {
+    const { t } = useTranslation();
     const { transactions } = useSelector(state => state.transactions)
     const [activeTab, setActiveTab] = useState('history') // 'history' | 'recurring'
     const [isAddRuleOpen, setIsAddRuleOpen] = useState(false)
@@ -39,29 +41,29 @@ export function Transactions() {
         <div className="space-y-6">
             <header className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Giao Dịch</h1>
-                    <p className="text-muted-foreground">Quản lý chi tiêu & lập lịch định kỳ.</p>
+                    <h1 className="text-3xl font-bold tracking-tight">{t('transactions.title')}</h1>
+                    <p className="text-muted-foreground">{t('transactions.desc')}</p>
                 </div>
                 <div className="flex gap-2">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline">
-                                <Download className="mr-2 h-4 w-4" /> Xuất Dữ Liệu
+                                <Download className="mr-2 h-4 w-4" /> {t('transactions.exportData')}
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
                             <DropdownMenuItem onClick={() => exportToPDF(filteredTransactions)}>
-                                <FileText className="mr-2 h-4 w-4" /> Xuất PDF
+                                <FileText className="mr-2 h-4 w-4" /> {t('transactions.exportPDF')}
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => exportToCSV(filteredTransactions)}>
-                                <FileSpreadsheet className="mr-2 h-4 w-4" /> Xuất CSV (Excel)
+                                <FileSpreadsheet className="mr-2 h-4 w-4" /> {t('transactions.exportCSV')}
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
 
                     {activeTab === 'recurring' && (
                         <Button onClick={() => setIsAddRuleOpen(true)}>
-                            <Plus className="mr-2 h-4 w-4" /> Thêm Lịch
+                            <Plus className="mr-2 h-4 w-4" /> {t('transactions.addSchedule')}
                         </Button>
                     )}
                 </div>
@@ -73,13 +75,13 @@ export function Transactions() {
                     onClick={() => setActiveTab('history')}
                     className={`px-4 py-2 text-sm font-medium rounded-md transition-all flex items-center gap-2 ${activeTab === 'history' ? 'bg-background shadow-sm text-foreground border border-border' : 'text-muted-foreground hover:text-foreground'}`}
                 >
-                    <History className="h-4 w-4" /> Lịch Sử
+                    <History className="h-4 w-4" /> {t('transactions.tabs.history')}
                 </button>
                 <button
                     onClick={() => setActiveTab('recurring')}
                     className={`px-4 py-2 text-sm font-medium rounded-md transition-all flex items-center gap-2 ${activeTab === 'recurring' ? 'bg-background shadow-sm text-foreground border border-border' : 'text-muted-foreground hover:text-foreground'}`}
                 >
-                    <Repeat className="h-4 w-4" /> Định Kỳ
+                    <Repeat className="h-4 w-4" /> {t('transactions.tabs.recurring')}
                 </button>
             </div>
 
@@ -87,7 +89,7 @@ export function Transactions() {
                 <>
                     <div className="flex gap-4">
                         <Input
-                            placeholder="Tìm kiếm giao dịch..."
+                            placeholder={t('transactions.search')}
                             className="max-w-xs"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
@@ -105,7 +107,7 @@ export function Transactions() {
             <Modal
                 isOpen={isAddRuleOpen}
                 onClose={() => setIsAddRuleOpen(false)}
-                title="Thêm Lịch Định Kỳ"
+                title={t('transactions.addRecurringTitle')}
             >
                 <RecurringRuleForm onSuccess={() => setIsAddRuleOpen(false)} />
             </Modal>

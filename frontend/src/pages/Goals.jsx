@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { Target, Plus, Laptop, Plane, ShieldCheck, CheckCircle2, TrendingUp, Gamepad2, Home as HomeIcon, Car, Smartphone, GraduationCap, Coins } from 'lucide-react';
 import { formatCurrency, formatShortDate } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -22,6 +23,7 @@ const iconMap = {
 };
 
 export function Goals() {
+    const { t } = useTranslation();
     const { items: goals } = useSelector(state => state.goals);
 
     // Derived states
@@ -48,8 +50,8 @@ export function Goals() {
                         <Target className="h-8 w-8" />
                     </div>
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight text-foreground">Mục Tiêu Tài Chính</h1>
-                        <p className="text-muted-foreground mt-1">Biến ước mơ thành hiện thực thông qua tiết kiệm.</p>
+                        <h1 className="text-3xl font-bold tracking-tight text-foreground">{t('goals.title')}</h1>
+                        <p className="text-muted-foreground mt-1">{t('goals.desc')}</p>
                     </div>
                 </div>
                 <Button
@@ -57,7 +59,7 @@ export function Goals() {
                     size="lg"
                     onClick={() => setIsCreateModalOpen(true)}
                 >
-                    <Plus className="h-5 w-5" /> Tạo Mục Tiêu Mới
+                    <Plus className="h-5 w-5" /> {t('goals.btnCreate')}
                 </Button>
             </header>
 
@@ -66,7 +68,7 @@ export function Goals() {
                 <Card className="bg-card/50 backdrop-blur border-border/50">
                     <CardContent className="p-6 flex items-center justify-between">
                         <div>
-                            <p className="text-sm font-medium text-muted-foreground">Tổng đang tích lũy</p>
+                            <p className="text-sm font-medium text-muted-foreground">{t('goals.overviewTotal')}</p>
                             <p className="text-3xl font-bold text-primary mt-1">{formatCurrency(totalSaved)}</p>
                         </div>
                         <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center text-primary">
@@ -77,7 +79,7 @@ export function Goals() {
                 <Card className="bg-card/50 backdrop-blur border-border/50">
                     <CardContent className="p-6 flex items-center justify-between">
                         <div>
-                            <p className="text-sm font-medium text-muted-foreground">Mục tiêu đã đạt</p>
+                            <p className="text-sm font-medium text-muted-foreground">{t('goals.overviewAchieved')}</p>
                             <p className="text-3xl font-bold text-emerald-500 mt-1">{achievedGoals.length}</p>
                         </div>
                         <div className="h-12 w-12 bg-emerald-500/10 rounded-full flex items-center justify-center text-emerald-500">
@@ -89,13 +91,13 @@ export function Goals() {
 
             {/* Active Goals Grid */}
             <div>
-                <h2 className="text-xl font-bold mb-6 flex items-center gap-2">Hũ Đang Mở <span className="bg-secondary text-secondary-foreground text-xs px-2 py-1 rounded-full">{activeGoals.length}</span></h2>
+                <h2 className="text-xl font-bold mb-6 flex items-center gap-2">{t('goals.activeGoals')} <span className="bg-secondary text-secondary-foreground text-xs px-2 py-1 rounded-full">{activeGoals.length}</span></h2>
 
                 {activeGoals.length === 0 ? (
                     <EmptyState
                         icon={Target}
-                        title="Chưa có Hũ Tiết Kiệm nào"
-                        description="Tạo mục tiêu để bắt đầu hành trình tích lũy và theo dõi tiến độ của bạn."
+                        title={t('goals.emptyTitle')}
+                        description={t('goals.emptyDesc')}
                     />
                 ) : (
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -117,11 +119,11 @@ export function Goals() {
                                                     </div>
                                                     <div>
                                                         <h3 className="font-bold text-lg group-hover:text-primary transition-colors">{goal.name}</h3>
-                                                        <p className="text-sm text-muted-foreground">Hạn chót: <span className="font-medium text-foreground">{formatShortDate(goal.deadline)}</span></p>
+                                                        <p className="text-sm text-muted-foreground">{t('goals.deadline')} <span className="font-medium text-foreground">{formatShortDate(goal.deadline)}</span></p>
                                                     </div>
                                                 </div>
                                                 <div className="text-right">
-                                                    <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-1">Cần góp thêm</p>
+                                                    <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-1">{t('goals.remainingNeeded')}</p>
                                                     <p className="text-lg font-bold text-destructive">
                                                         {formatCurrency(goal.targetAmount - goal.currentAmount)}
                                                     </p>
@@ -148,7 +150,7 @@ export function Goals() {
                                                 style={{ backgroundColor: `${goal.colorCode}20`, color: goal.colorCode }}
                                                 onClick={() => handleOpenDeposit(goal)}
                                             >
-                                                Nạp Tiền Vào Hũ
+                                                {t('goals.btnDeposit')}
                                             </Button>
                                         </div>
                                     </CardContent>
@@ -163,7 +165,7 @@ export function Goals() {
             {achievedGoals.length > 0 && (
                 <div className="pt-8 opacity-80">
                     <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-emerald-500">
-                        <CheckCircle2 className="h-5 w-5" /> Đã Hoàn Thành
+                        <CheckCircle2 className="h-5 w-5" /> {t('goals.achievedTitle')}
                     </h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         {achievedGoals.map(goal => {
@@ -176,7 +178,7 @@ export function Goals() {
                                         </div>
                                         <div>
                                             <h3 className="font-semibold">{goal.name}</h3>
-                                            <p className="text-xs text-emerald-600 font-medium">Đạt {formatCurrency(goal.targetAmount)}</p>
+                                            <p className="text-xs text-emerald-600 font-medium">{t('goals.achievedSub')} {formatCurrency(goal.targetAmount)}</p>
                                         </div>
                                     </div>
                                 </Card>

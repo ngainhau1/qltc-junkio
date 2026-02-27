@@ -9,14 +9,17 @@ import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
 import { Loader2, Eye, EyeOff, Mail, Lock } from "lucide-react"
 import { useState } from "react"
-
-// Validation Schema
-const LoginSchema = Yup.object().shape({
-    email: Yup.string().email("Email không hợp lệ").required("Vui lòng nhập Email"),
-    password: Yup.string().min(6, "Mật khẩu tối thiểu 6 ký tự").required("Vui lòng nhập mật khẩu"),
-})
+import { useTranslation } from "react-i18next"
 
 export function LoginPage() {
+    const { t } = useTranslation();
+
+    // Validation Schema
+    const LoginSchema = Yup.object().shape({
+        email: Yup.string().email(t('auth.emailInvalid')).required(t('auth.emailRequired')),
+        password: Yup.string().min(6, t('auth.passwordMin')).required(t('auth.passwordRequired')),
+    })
+
     const dispatch = useDispatch()
     const navigate = useNavigate()
     const [isLoading, setIsLoading] = useState(false)
@@ -39,7 +42,7 @@ export function LoginPage() {
                     role: 'MEMBER'
                 }
                 dispatch(login(mockUser))
-                toast.success("Chào mừng bạn trở lại!")
+                toast.success(t('auth.loginSuccess'))
                 navigate("/") // Redirect to Dashboard
                 setIsLoading(false)
             }, 1000)
@@ -47,21 +50,21 @@ export function LoginPage() {
     })
 
     const handleMockGoogleLogin = () => {
-        toast.info("Tính năng đăng nhập Social đang trong lộ trình phát triển.");
+        toast.info(t('auth.socialLoginComingSoon'));
     }
 
     return (
         <div className="w-full">
             <div className="mb-8 text-center sm:text-left">
-                <h2 className="text-3xl font-bold tracking-tight">Đăng nhập</h2>
+                <h2 className="text-3xl font-bold tracking-tight">{t('auth.loginTitle')}</h2>
                 <p className="text-muted-foreground mt-2">
-                    Chào mừng trở lại! Vui lòng nhập thông tin để tiếp tục.
+                    {t('auth.loginDesc')}
                 </p>
             </div>
 
             <form onSubmit={formik.handleSubmit} className="space-y-5">
                 <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email">{t('auth.email')}</Label>
                     <div className="relative">
                         <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input
@@ -79,9 +82,9 @@ export function LoginPage() {
 
                 <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                        <Label htmlFor="password">Mật khẩu</Label>
+                        <Label htmlFor="password">{t('auth.password')}</Label>
                         <a href="#" className="text-sm font-medium text-emerald-600 hover:text-emerald-500 hover:underline">
-                            Quên mật khẩu?
+                            {t('auth.forgotPassword')}
                         </a>
                     </div>
                     <div className="relative">
@@ -108,13 +111,13 @@ export function LoginPage() {
 
                 <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700" disabled={isLoading}>
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Đăng Nhập
+                    {t('auth.login')}
                 </Button>
             </form>
 
             <div className="mt-6 flex items-center justify-center gap-4">
                 <span className="h-px w-full bg-border" />
-                <span className="text-xs text-muted-foreground uppercase whitespace-nowrap">Hoặc tiếp tục với</span>
+                <span className="text-xs text-muted-foreground uppercase whitespace-nowrap">{t('auth.orContinueWith')}</span>
                 <span className="h-px w-full bg-border" />
             </div>
 
@@ -137,9 +140,9 @@ export function LoginPage() {
             </div>
 
             <p className="mt-8 text-center text-sm text-muted-foreground">
-                Chưa có tài khoản?{" "}
+                {t('auth.dontHaveAccount')}{" "}
                 <Link to="/register" className="font-semibold text-emerald-600 hover:underline">
-                    Đăng ký ngay
+                    {t('auth.registerNow')}
                 </Link>
             </p>
         </div>

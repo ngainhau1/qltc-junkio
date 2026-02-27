@@ -1,4 +1,5 @@
 import { useSelector, useDispatch } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -9,9 +10,10 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { markAsRead, markAllAsRead, selectUnreadCount } from '@/features/notifications/notificationsSlice';
 import { formatDistanceToNow } from 'date-fns';
-import { vi } from 'date-fns/locale';
+import { getDateLocale } from '@/lib/utils';
 
 export function NotificationBell() {
+    const { t } = useTranslation();
     const dispatch = useDispatch();
     const { items } = useSelector(state => state.notifications);
     const unreadCount = useSelector(selectUnreadCount);
@@ -30,16 +32,16 @@ export function NotificationBell() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-80">
                 <div className="flex items-center justify-between px-4 py-2 border-b">
-                    <span className="font-semibold">Thông báo</span>
+                    <span className="font-semibold">{t('notifications.title')}</span>
                     {unreadCount > 0 && (
                         <Button variant="ghost" size="sm" onClick={() => dispatch(markAllAsRead())} className="text-xs text-primary h-auto py-1 px-2">
-                            Đánh dấu đã đọc
+                            {t('notifications.markRead')}
                         </Button>
                     )}
                 </div>
                 <div className="max-h-[300px] overflow-y-auto">
                     {items.length === 0 ? (
-                        <div className="p-4 text-center text-sm text-muted-foreground">Không có thông báo nào</div>
+                        <div className="p-4 text-center text-sm text-muted-foreground">{t('notifications.empty')}</div>
                     ) : (
                         items.map(notif => (
                             <DropdownMenuItem
@@ -53,7 +55,7 @@ export function NotificationBell() {
                                 <div className="flex justify-between w-full mb-1">
                                     <span className={`font-medium text-sm ${!notif.isRead && 'text-foreground'}`}>{notif.title}</span>
                                     <span className="text-xs text-muted-foreground whitespace-nowrap ml-2">
-                                        {formatDistanceToNow(new Date(notif.createdAt), { addSuffix: true, locale: vi })}
+                                        {formatDistanceToNow(new Date(notif.createdAt), { addSuffix: true, locale: getDateLocale() })}
                                     </span>
                                 </div>
                                 <p className="text-xs text-muted-foreground line-clamp-2 text-left w-full">{notif.message}</p>

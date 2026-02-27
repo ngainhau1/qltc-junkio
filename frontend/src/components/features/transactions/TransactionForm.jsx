@@ -8,26 +8,28 @@ import { addTransaction } from "@/features/transactions/transactionSlice"
 import { decreaseBalance, increaseBalance } from "@/features/wallets/walletSlice"
 import { formatCurrency } from "@/lib/utils"
 import { ArrowRight } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
-const validationSchema = Yup.object({
-    description: Yup.string().required("Vui lòng nhập mô tả"),
-    amount: Yup.number().positive("Số tiền phải lớn hơn 0").required("Vui lòng nhập số tiền"),
-    date: Yup.date().required("Vui lòng chọn ngày"),
-    type: Yup.string().oneOf(['EXPENSE', 'INCOME', 'TRANSFER']).required("Vui lòng chọn loại"),
-    walletId: Yup.string().required("Vui lòng chọn ví"),
+const createYupSchema = (t) => Yup.object({
+    description: Yup.string().required(t('transactionForm.validations.reqDesc')),
+    amount: Yup.number().positive(t('transactionForm.validations.posAmount')).required(t('transactionForm.validations.reqAmount')),
+    date: Yup.date().required(t('transactionForm.validations.reqDate')),
+    type: Yup.string().oneOf(['EXPENSE', 'INCOME', 'TRANSFER']).required(t('transactionForm.validations.reqType')),
+    walletId: Yup.string().required(t('transactionForm.validations.reqWallet')),
     categoryId: Yup.string().when('type', {
         is: (type) => type !== 'TRANSFER',
-        then: (schema) => schema.required("Vui lòng chọn danh mục"),
+        then: (schema) => schema.required(t('transactionForm.validations.reqCategory')),
         otherwise: (schema) => schema.notRequired()
     }),
     destinationWalletId: Yup.string().when('type', {
         is: 'TRANSFER',
-        then: (schema) => schema.required("Vui lòng chọn ví đích").notOneOf([Yup.ref('walletId')], "Ví đích phải khác ví nguồn"),
+        then: (schema) => schema.required(t('transactionForm.validations.reqDestWallet')).notOneOf([Yup.ref('walletId')], t('transactionForm.validations.diffWallet')),
         otherwise: (schema) => schema.notRequired()
     })
 })
 
 export function TransactionForm({ onSuccess }) {
+    const { t } = useTranslation()
     const dispatch = useDispatch()
     const { wallets } = useSelector(state => state.wallets)
 
@@ -46,7 +48,7 @@ export function TransactionForm({ onSuccess }) {
             destinationWalletId: defaultDestWalletId,
             categoryId: 'general',
         },
-        validationSchema,
+        validationSchema: createYupSchema(t),
         onSubmit: (values) => {
             const newTransaction = {
                 id: `t-${Date.now()}`,
@@ -88,16 +90,16 @@ export function TransactionForm({ onSuccess }) {
         <form onSubmit={formik.handleSubmit} className="space-y-4" data-testid={`form-${formik.values.type}`}>
             <Tabs defaultValue="EXPENSE" onValueChange={handleTabChange} className="w-full">
                 <TabsList className="grid w-full grid-cols-3 mb-4">
-                    <TabsTrigger value="EXPENSE">Chi Tiêu</TabsTrigger>
-                    <TabsTrigger value="INCOME">Thu Nhập</TabsTrigger>
-                    <TabsTrigger value="TRANSFER">Chuyển Khoản</TabsTrigger>
+                    <TabsTrigger value="EXPENSE">{t('transactionForm.tabs.expense')}</TabsTrigger>
+                    <TabsTrigger value="INCOME">{t('transactionForm.tabs.income')}</TabsTrigger>
+                    <TabsTrigger value="TRANSFER">{t('transactionForm.tabs.transfer')}</TabsTrigger>
                 </TabsList>
             </Tabs>
 
             <div className="space-y-4">
                 {/* Amount */}
                 <div>
-                    <label className="text-sm font-medium mb-1 block">Số Tiền</label>
+                    <label className="text-sm font-medium mb-1 block">{t('transactionForm.amount')}</label>
                     <Input
                         name="amount"
                         type="number"
@@ -113,7 +115,7 @@ export function TransactionForm({ onSuccess }) {
                 {formik.values.type === 'TRANSFER' ? (
                     <div className="grid grid-cols-[1fr,auto,1fr] gap-2 items-center">
                         <div>
-                            <label className="text-sm font-medium mb-1 block">Từ Ví</label>
+                            <label className="text-sm font-medium mb-1 block">{t('transactionForm.fromWallet')}</label>
                             <select
                                 name="walletId"
                                 className="w-full border rounded-md h-10 px-3 text-sm bg-background"
@@ -129,7 +131,7 @@ export function TransactionForm({ onSuccess }) {
                             <ArrowRight className="h-4 w-4" />
                         </div>
                         <div>
-                            <label className="text-sm font-medium mb-1 block">Đến Ví</label>
+                            <label className="text-sm font-medium mb-1 block">{t('transactionForm.toWallet')}</label>
                             <select
                                 name="destinationWalletId"
                                 className="w-full border rounded-md h-10 px-3 text-sm bg-background"
@@ -137,7 +139,7 @@ export function TransactionForm({ onSuccess }) {
                                 onChange={formik.handleChange}
                                 data-testid="dest-wallet-select"
                             >
-                                <option value="" disabled>Chọn ví</option>
+                                <option value="" disabled>{t('transactionForm.selectWallet')}</option>
                                 {wallets.filter(w => w.id !== formik.values.walletId).map(w => (
                                     <option key={w.id} value={w.id}>{w.name}</option>
                                 ))}
@@ -147,7 +149,7 @@ export function TransactionForm({ onSuccess }) {
                     </div>
                 ) : (
                     <div>
-                        <label className="text-sm font-medium mb-1 block">Ví</label>
+                        <label className="text-sm font-medium mb-1 block">{t('transactionForm.wallet')}</label>
                         <select
                             name="walletId"
                             className="w-full border rounded-md h-10 px-3 text-sm bg-background"
@@ -165,10 +167,10 @@ export function TransactionForm({ onSuccess }) {
                 {/* Description & Category */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label className="text-sm font-medium mb-1 block">Mô Tả</label>
+                        <label className="text-sm font-medium mb-1 block">{t('transactionForm.description')}</label>
                         <Input
                             name="description"
-                            placeholder={formik.values.type === 'TRANSFER' ? "vd: Chuyển tiền tiết kiệm" : "vd: Ăn trưa"}
+                            placeholder={formik.values.type === 'TRANSFER' ? t('transactionForm.descPlaceholderTransfer') : t('transactionForm.descPlaceholderDefault')}
                             value={formik.values.description}
                             onChange={formik.handleChange}
                             className={formik.errors.description && formik.touched.description ? "border-red-500" : ""}
@@ -177,7 +179,7 @@ export function TransactionForm({ onSuccess }) {
                     </div>
 
                     <div>
-                        <label className="text-sm font-medium mb-1 block">Ngày</label>
+                        <label className="text-sm font-medium mb-1 block">{t('transactionForm.date')}</label>
                         <Input
                             name="date"
                             type="date"
@@ -189,21 +191,21 @@ export function TransactionForm({ onSuccess }) {
 
                 {formik.values.type !== 'TRANSFER' && (
                     <div>
-                        <label className="text-sm font-medium mb-1 block">Danh Mục</label>
+                        <label className="text-sm font-medium mb-1 block">{t('transactionForm.category')}</label>
                         <select
                             name="categoryId"
                             className="w-full border rounded-md h-10 px-3 text-sm bg-background block"
                             value={formik.values.categoryId}
                             onChange={formik.handleChange}
                         >
-                            <option value="general">Chung</option>
-                            <option value="food">Ăn Uống</option>
-                            <option value="transport">Di Chuyển</option>
-                            <option value="shopping">Mua Sắm</option>
-                            <option value="utilities">Hóa Đơn & Tiện Ích</option>
-                            <option value="entertainment">Giải Trí</option>
-                            <option value="health">Sức Khỏe</option>
-                            <option value="income">Lương / Thu Nhập</option>
+                            <option value="general">{t('transactionForm.categories.general')}</option>
+                            <option value="food">{t('transactionForm.categories.food')}</option>
+                            <option value="transport">{t('transactionForm.categories.transport')}</option>
+                            <option value="shopping">{t('transactionForm.categories.shopping')}</option>
+                            <option value="utilities">{t('transactionForm.categories.utilities')}</option>
+                            <option value="entertainment">{t('transactionForm.categories.entertainment')}</option>
+                            <option value="health">{t('transactionForm.categories.health')}</option>
+                            <option value="income">{t('transactionForm.categories.income')}</option>
                         </select>
                     </div>
                 )}
@@ -211,7 +213,7 @@ export function TransactionForm({ onSuccess }) {
 
             <div className="pt-4 flex justify-end gap-2">
                 <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
-                    {formik.values.type === 'TRANSFER' ? 'Xác Nhận Chuyển' : 'Thêm Giao Dịch'}
+                    {formik.values.type === 'TRANSFER' ? t('transactionForm.submitTransfer') : t('transactionForm.submitAdd')}
                 </Button>
             </div>
         </form>

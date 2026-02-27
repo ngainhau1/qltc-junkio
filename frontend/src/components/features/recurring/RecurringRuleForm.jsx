@@ -7,15 +7,17 @@ import { addRule } from "@/features/recurring/recurringSlice"
 import { runRecurringEngine } from "@/services/recurringService"
 import { store } from "@/store"
 import { formatCurrency } from "@/lib/utils"
-
-const validationSchema = Yup.object({
-    name: Yup.string().required("Name is required"),
-    amount: Yup.number().positive("Amount must be positive").required("Amount is required"),
-    frequency: Yup.string().oneOf(['DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY']).required("Frequency is required"),
-    type: Yup.string().oneOf(['EXPENSE', 'INCOME']).required("Type is required"),
-})
+import { useTranslation } from "react-i18next"
 
 export function RecurringRuleForm({ onSuccess }) {
+    const { t } = useTranslation();
+
+    const validationSchema = Yup.object().shape({
+        name: Yup.string().required(t('transactions.recurring.form.validation.nameRequired')),
+        amount: Yup.number().positive(t('transactions.recurring.form.validation.amountPositive')).required(t('transactions.recurring.form.validation.amountRequired')),
+        frequency: Yup.string().oneOf(['DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY']).required(t('transactions.recurring.form.validation.frequencyRequired')),
+        type: Yup.string().oneOf(['EXPENSE', 'INCOME']).required(t('transactions.recurring.form.validation.typeRequired')),
+    })
     const dispatch = useDispatch()
     const { wallets } = useSelector(state => state.wallets)
 
@@ -59,10 +61,10 @@ export function RecurringRuleForm({ onSuccess }) {
     return (
         <form onSubmit={formik.handleSubmit} className="space-y-4">
             <div>
-                <label className="text-sm font-medium mb-1 block">Tên Lịch</label>
+                <label className="text-sm font-medium mb-1 block">{t('transactions.recurring.form.name')}</label>
                 <Input
                     name="name"
-                    placeholder="vd: Tiền Thuê Nhà"
+                    placeholder={t('transactions.recurring.form.namePlaceholder')}
                     value={formik.values.name}
                     onChange={formik.handleChange}
                     className={formik.errors.name ? "border-red-500" : ""}
@@ -72,7 +74,7 @@ export function RecurringRuleForm({ onSuccess }) {
 
             <div className="grid grid-cols-2 gap-4">
                 <div>
-                    <label className="text-sm font-medium mb-1 block">Số Tiền</label>
+                    <label className="text-sm font-medium mb-1 block">{t('transactions.recurring.form.amount')}</label>
                     <Input
                         name="amount"
                         type="number"
@@ -82,36 +84,36 @@ export function RecurringRuleForm({ onSuccess }) {
                     />
                 </div>
                 <div>
-                    <label className="text-sm font-medium mb-1 block">Loại</label>
+                    <label className="text-sm font-medium mb-1 block">{t('transactions.recurring.form.type')}</label>
                     <select
                         name="type"
                         className="w-full border rounded-md h-10 px-3 text-sm bg-background"
                         value={formik.values.type}
                         onChange={formik.handleChange}
                     >
-                        <option value="EXPENSE">Chi Tiêu</option>
-                        <option value="INCOME">Thu Nhập</option>
+                        <option value="EXPENSE">{t('transactions.recurring.form.types.EXPENSE')}</option>
+                        <option value="INCOME">{t('transactions.recurring.form.types.INCOME')}</option>
                     </select>
                 </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
                 <div>
-                    <label className="text-sm font-medium mb-1 block">Tần Suất</label>
+                    <label className="text-sm font-medium mb-1 block">{t('transactions.recurring.form.frequency')}</label>
                     <select
                         name="frequency"
                         className="w-full border rounded-md h-10 px-3 text-sm bg-background"
                         value={formik.values.frequency}
                         onChange={formik.handleChange}
                     >
-                        <option value="DAILY">Hàng Ngày</option>
-                        <option value="WEEKLY">Hàng Tuần</option>
-                        <option value="MONTHLY">Hàng Tháng</option>
-                        <option value="YEARLY">Hàng Năm</option>
+                        <option value="DAILY">{t('transactions.recurring.freq.DAILY')}</option>
+                        <option value="WEEKLY">{t('transactions.recurring.freq.WEEKLY')}</option>
+                        <option value="MONTHLY">{t('transactions.recurring.freq.MONTHLY')}</option>
+                        <option value="YEARLY">{t('transactions.recurring.freq.YEARLY')}</option>
                     </select>
                 </div>
                 <div>
-                    <label className="text-sm font-medium mb-1 block">Ngày Bắt Đầu</label>
+                    <label className="text-sm font-medium mb-1 block">{t('transactions.recurring.form.startDate')}</label>
                     <Input
                         name="startDate"
                         type="date"
@@ -122,7 +124,7 @@ export function RecurringRuleForm({ onSuccess }) {
             </div>
 
             <div>
-                <label className="text-sm font-medium mb-1 block">Ví</label>
+                <label className="text-sm font-medium mb-1 block">{t('transactions.recurring.form.wallet')}</label>
                 <select
                     name="walletId"
                     className="w-full border rounded-md h-10 px-3 text-sm bg-background"
@@ -136,7 +138,7 @@ export function RecurringRuleForm({ onSuccess }) {
             </div>
 
             <div className="pt-4 flex justify-end gap-2">
-                <Button type="submit" className="w-full">Tạo Lịch</Button>
+                <Button type="submit" className="w-full">{t('transactions.recurring.form.createBtn')}</Button>
             </div>
         </form>
     )

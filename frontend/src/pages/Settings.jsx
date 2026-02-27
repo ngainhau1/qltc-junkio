@@ -13,13 +13,15 @@ import { logout } from "@/features/auth/authSlice"
 import { updateCurrency, updateLanguage, toggleNotification } from "@/features/settings/settingsSlice"
 import { useState } from "react"
 import { Modal } from "@/components/ui/modal"
+import { useTranslation } from "react-i18next"
 
 export function Settings() {
+    const { t } = useTranslation();
     return (
         <div className="space-y-6 max-w-5xl mx-auto pb-10">
             <div>
-                <h1 className="text-3xl font-bold tracking-tight">Cài Đặt</h1>
-                <p className="text-muted-foreground mt-2">Quản lý giao diện, hiển thị, hệ thống và tài khoản của bạn.</p>
+                <h1 className="text-3xl font-bold tracking-tight">{t('settings.title')}</h1>
+                <p className="text-muted-foreground mt-2">{t('settings.subtitle')}</p>
             </div>
 
             {/* Sidebar Desktop Layout */}
@@ -28,19 +30,19 @@ export function Settings() {
                 <TabsList className="flex flex-col h-auto bg-transparent items-stretch justify-start space-y-1 w-full md:w-[250px] shrink-0 p-0 font-medium">
                     <TabsTrigger value="appearance" className="justify-start px-4 py-2.5 data-[state=active]:bg-muted data-[state=active]:shadow-none rounded-md transition-colors hover:bg-muted/50">
                         <Settings2 className="w-4 h-4 mr-2" />
-                        Giao Diện & Ký Hiệu
+                        {t('settings.tabs.appearance')}
                     </TabsTrigger>
                     <TabsTrigger value="notifications" className="justify-start px-4 py-2.5 data-[state=active]:bg-muted data-[state=active]:shadow-none rounded-md transition-colors hover:bg-muted/50">
                         <Bell className="w-4 h-4 mr-2" />
-                        Thông Báo
+                        {t('settings.tabs.notifications')}
                     </TabsTrigger>
                     <TabsTrigger value="data" className="justify-start px-4 py-2.5 data-[state=active]:bg-muted data-[state=active]:shadow-none rounded-md transition-colors hover:bg-muted/50">
                         <Database className="w-4 h-4 mr-2" />
-                        Dữ Liệu Hệ Thống
+                        {t('settings.tabs.data')}
                     </TabsTrigger>
                     <TabsTrigger value="account" className="justify-start px-4 py-2.5 text-destructive data-[state=active]:text-destructive data-[state=active]:bg-destructive/10 data-[state=active]:shadow-none rounded-md transition-colors hover:bg-destructive/5 hover:text-destructive">
                         <Shield className="w-4 h-4 mr-2" />
-                        Tài Khoản & Bảo Mật
+                        {t('settings.tabs.account')}
                     </TabsTrigger>
                 </TabsList>
 
@@ -68,6 +70,7 @@ export function Settings() {
 }
 
 function AppearanceSettings() {
+    const { t } = useTranslation();
     const { setTheme, theme } = useTheme()
     const dispatch = useDispatch()
     const { currency, language } = useSelector(state => state.settings)
@@ -75,13 +78,13 @@ function AppearanceSettings() {
     return (
         <Card className="shadow-none border-muted/60">
             <CardHeader>
-                <CardTitle>Hiển thị & Giao diện</CardTitle>
-                <CardDescription>Cá nhân hóa trải nghiệm sử dụng ứng dụng.</CardDescription>
+                <CardTitle>{t('settings.appearance.title')}</CardTitle>
+                <CardDescription>{t('settings.appearance.desc')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-8">
                 {/* Theme Selector */}
                 <div className="space-y-3">
-                    <Label className="text-base font-semibold">Chủ Màu (Theme)</Label>
+                    <Label className="text-base font-semibold">{t('settings.appearance.themeTitle')}</Label>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div
                             className={`cursor-pointer rounded-lg border-2 p-4 transition-all hover:bg-accent/50 ${theme === 'light' ? 'border-primary bg-primary/5' : 'border-muted'}`}
@@ -89,7 +92,7 @@ function AppearanceSettings() {
                         >
                             <div className="flex flex-col items-center gap-2">
                                 <Sun className="h-6 w-6" />
-                                <span className="font-medium text-sm">Giao diện Sáng</span>
+                                <span className="font-medium text-sm">{t('settings.appearance.themeLight')}</span>
                             </div>
                         </div>
                         <div
@@ -98,7 +101,7 @@ function AppearanceSettings() {
                         >
                             <div className="flex flex-col items-center gap-2">
                                 <Moon className="h-6 w-6" />
-                                <span className="font-medium text-sm">Giao diện Tối</span>
+                                <span className="font-medium text-sm">{t('settings.appearance.themeDark')}</span>
                             </div>
                         </div>
                         <div
@@ -107,7 +110,7 @@ function AppearanceSettings() {
                         >
                             <div className="flex flex-col items-center gap-2">
                                 <Laptop className="h-6 w-6" />
-                                <span className="font-medium text-sm">Tự động (Hệ thống)</span>
+                                <span className="font-medium text-sm">{t('settings.appearance.themeSystem')}</span>
                             </div>
                         </div>
                     </div>
@@ -119,12 +122,12 @@ function AppearanceSettings() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-3">
                         <div>
-                            <Label className="text-base font-semibold">Tiền tệ & Ký hiệu</Label>
-                            <p className="text-sm text-muted-foreground mt-1 mb-3">Tất cả giao dịch sẽ hiển thị với ký hiệu này.</p>
+                            <Label className="text-base font-semibold">{t('settings.appearance.currencyTitle')}</Label>
+                            <p className="text-sm text-muted-foreground mt-1 mb-3">{t('settings.appearance.currencyDesc')}</p>
                         </div>
                         <Select value={currency} onValueChange={(val) => dispatch(updateCurrency(val))}>
                             <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Chọn tiền tệ" />
+                                <SelectValue placeholder={t('settings.appearance.currencyPlaceholder')} />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="VND">Tiền Việt (₫)</SelectItem>
@@ -136,12 +139,12 @@ function AppearanceSettings() {
 
                     <div className="space-y-3">
                         <div>
-                            <Label className="text-base font-semibold">Ngôn ngữ Ưu tiên</Label>
-                            <p className="text-sm text-muted-foreground mt-1 mb-3">Ngôn ngữ giao diện (Đang hiển thị dạng giả lập).</p>
+                            <Label className="text-base font-semibold">{t('settings.appearance.langTitle')}</Label>
+                            <p className="text-sm text-muted-foreground mt-1 mb-3">{t('settings.appearance.langDesc')}</p>
                         </div>
                         <Select value={language} onValueChange={(val) => dispatch(updateLanguage(val))}>
                             <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Chọn ngôn ngữ" />
+                                <SelectValue placeholder={t('settings.appearance.langPlaceholder')} />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="vi">Tiếng Việt (Vietnamese)</SelectItem>
@@ -156,6 +159,7 @@ function AppearanceSettings() {
 }
 
 function NotificationSettings() {
+    const { t } = useTranslation();
     const dispatch = useDispatch()
     const { notifications } = useSelector(state => state.settings)
 
@@ -166,14 +170,14 @@ function NotificationSettings() {
     return (
         <Card className="shadow-none border-muted/60">
             <CardHeader>
-                <CardTitle>Cài Đặt Thông Báo</CardTitle>
-                <CardDescription>Quản lý các sự kiện nào sẽ gửi cảnh báo đến bạn.</CardDescription>
+                <CardTitle>{t('settings.notifications.title')}</CardTitle>
+                <CardDescription>{t('settings.notifications.desc')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
                 <div className="flex items-center justify-between space-x-2 rounded-lg border p-4">
                     <div className="space-y-0.5">
-                        <Label className="text-base">Nhắc Nhở Nợ & Thanh Toán</Label>
-                        <p className="text-sm text-muted-foreground">Nhận thông báo khi tới hạn chót thanh toán hóa đơn hoặc trả nợ.</p>
+                        <Label className="text-base">{t('settings.notifications.debtTitle')}</Label>
+                        <p className="text-sm text-muted-foreground">{t('settings.notifications.debtDesc')}</p>
                     </div>
                     <Switch
                         checked={notifications?.debtReminders}
@@ -183,8 +187,8 @@ function NotificationSettings() {
 
                 <div className="flex items-center justify-between space-x-2 rounded-lg border p-4">
                     <div className="space-y-0.5">
-                        <Label className="text-base">Cảnh Báo Vượt Ngân Sách</Label>
-                        <p className="text-sm text-muted-foreground">Báo động đỏ khi bạn tiêu quá số tiền đã hoạch định cho một hạng mục.</p>
+                        <Label className="text-base">{t('settings.notifications.budgetTitle')}</Label>
+                        <p className="text-sm text-muted-foreground">{t('settings.notifications.budgetDesc')}</p>
                     </div>
                     <Switch
                         checked={notifications?.budgetAlerts}
@@ -194,8 +198,8 @@ function NotificationSettings() {
 
                 <div className="flex items-center justify-between space-x-2 rounded-lg border p-4">
                     <div className="space-y-0.5">
-                        <Label className="text-base">Báo Cáo Chi Tiêu Hàng Tuần</Label>
-                        <p className="text-sm text-muted-foreground">Gửi bản tóm tắt tình hình tài chính vào Chủ Nhật hàng tuần qua email.</p>
+                        <Label className="text-base">{t('settings.notifications.weeklyTitle')}</Label>
+                        <p className="text-sm text-muted-foreground">{t('settings.notifications.weeklyDesc')}</p>
                     </div>
                     <Switch
                         checked={notifications?.weeklyReports}
@@ -208,6 +212,7 @@ function NotificationSettings() {
 }
 
 function DataSettings() {
+    const { t } = useTranslation();
     const [isResetModalOpen, setIsResetModalOpen] = useState(false);
 
     const handleBackup = () => {
@@ -230,11 +235,11 @@ function DataSettings() {
         link.click()
         document.body.removeChild(link)
 
-        toast.success("Đã phân loại & tải xuống tệp dữ liệu backup.")
+        toast.success(t('settings.data.backupSuccess'))
     }
 
     const handleImportPlaceholder = () => {
-        toast.info("Tính năng nhận tệp Backup JSON đang được phát triển.")
+        toast.info(t('settings.data.importNotice'))
     }
 
     const confirmHardReset = () => {
@@ -245,27 +250,27 @@ function DataSettings() {
     return (
         <Card className="shadow-none border-muted/60">
             <CardHeader>
-                <CardTitle>Lưu Trữ & Khôi Phục</CardTitle>
-                <CardDescription>Kiểm soát toàn bộ kho dữ liệu cục bộ của ứng dụng.</CardDescription>
+                <CardTitle>{t('settings.data.title')}</CardTitle>
+                <CardDescription>{t('settings.data.desc')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-lg border border-primary/20 bg-primary/5 p-4">
                     <div className="space-y-0.5">
-                        <Label className="text-base font-semibold">Xuất Phục Hồi (Backup Data)</Label>
-                        <p className="text-sm text-muted-foreground">Tải xuống toàn bộ tài sản, giao dịch dưới định dạng tệp .json an toàn.</p>
+                        <Label className="text-base font-semibold">{t('settings.data.backupTitle')}</Label>
+                        <p className="text-sm text-muted-foreground">{t('settings.data.backupDesc')}</p>
                     </div>
                     <Button onClick={handleBackup} className="w-full sm:w-auto h-10 px-6">
-                        <Download className="mr-2 h-4 w-4" /> Sao Lưu Ngay
+                        <Download className="mr-2 h-4 w-4" /> {t('settings.data.backupBtn')}
                     </Button>
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-lg border p-4">
                     <div className="space-y-0.5">
-                        <Label className="text-base">Nhập Dữ Liệu Cũ (Import)</Label>
-                        <p className="text-sm text-muted-foreground">Nạp lại file backup .json nếu bạn mất dữ liệu, hoặc chuyển thiết bị.</p>
+                        <Label className="text-base">{t('settings.data.importTitle')}</Label>
+                        <p className="text-sm text-muted-foreground">{t('settings.data.importDesc')}</p>
                     </div>
                     <Button variant="outline" onClick={handleImportPlaceholder} className="w-full sm:w-auto h-10 px-5">
-                        <Upload className="mr-2 h-4 w-4" /> Tải Lên Tệp
+                        <Upload className="mr-2 h-4 w-4" /> {t('settings.data.importBtn')}
                     </Button>
                 </div>
 
@@ -273,34 +278,34 @@ function DataSettings() {
 
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 mt-6">
                     <div className="space-y-1">
-                        <Label className="text-base text-destructive font-semibold">Xoá Dữ Liệu Giả Lập (Hard Reset)</Label>
-                        <p className="text-sm text-muted-foreground max-w-sm">Hành động này mang ý nghĩa format database, dùng trong trường hợp app bị lỗi cache. Sẽ mất sạch data chưa backup.</p>
+                        <Label className="text-base text-destructive font-semibold">{t('settings.data.resetTitle')}</Label>
+                        <p className="text-sm text-muted-foreground max-w-sm">{t('settings.data.resetDesc')}</p>
                     </div>
                     <Button variant="destructive" onClick={() => setIsResetModalOpen(true)} className="w-full sm:w-auto mt-2 sm:mt-0 font-medium">
-                        <Trash2 className="mr-2 h-4 w-4" /> Xoá Toàn Bộ Dữ Liệu
+                        <Trash2 className="mr-2 h-4 w-4" /> {t('settings.data.resetBtn')}
                     </Button>
                 </div>
             </CardContent>
 
-            <Modal isOpen={isResetModalOpen} onClose={() => setIsResetModalOpen(false)} title="Cảnh Báo Nguy Hiểm">
+            <Modal isOpen={isResetModalOpen} onClose={() => setIsResetModalOpen(false)} title={t('settings.data.resetModalTitle')}>
                 <div className="py-4">
                     <div className="flex items-center gap-3 text-destructive mb-3">
                         <AlertTriangle className="h-6 w-6" />
-                        <h4 className="font-semibold text-lg">Xóa vĩnh viễn dữ liệu thiết bị?</h4>
+                        <h4 className="font-semibold text-lg">{t('settings.data.resetModalQ')}</h4>
                     </div>
                     <p className="text-muted-foreground text-sm">
-                        Toàn bộ <b>Giao dịch, Ví, Thông tin tài khoản</b> của bạn được lưu trong LocalStorage sẽ bị xóa sạch và KHÔNG THỂ KHÔI PHỤC được nếu chưa có file dữ liệu .json sao lưu.
+                        {t('settings.data.resetModalDesc1')}<b>{t('settings.data.resetModalDescStrong')}</b>{t('settings.data.resetModalDesc2')}
                     </p>
                     <p className="text-muted-foreground text-sm mt-2">
-                        Ứng dụng sẽ tự động tải lại (Reload).
+                        {t('settings.data.resetModalDesc3')}
                     </p>
                 </div>
                 <div className="flex items-center justify-end gap-3 mt-4">
                     <Button variant="outline" onClick={() => setIsResetModalOpen(false)}>
-                        Hủy bỏ
+                        {t('common.cancel')}
                     </Button>
                     <Button variant="destructive" onClick={confirmHardReset}>
-                        <Trash2 className="mr-2 h-4 w-4" /> Xác nhận Xóa
+                        <Trash2 className="mr-2 h-4 w-4" /> {t('settings.data.resetModalConfirm')}
                     </Button>
                 </div>
             </Modal>
@@ -309,48 +314,49 @@ function DataSettings() {
 }
 
 function AccountSettings() {
+    const { t } = useTranslation();
     const dispatch = useDispatch()
     const { user } = useSelector(state => state.auth)
     const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
     const confirmLogout = () => {
         dispatch(logout())
-        toast.success("Đã kết thúc phiên bảo mật")
+        toast.success(t('settings.account.logoutSuccess'))
         setIsLogoutModalOpen(false);
     }
 
     return (
         <Card className="shadow-none border-muted/60">
             <CardHeader className="pb-4">
-                <CardTitle>Tài Khoản & Phiên Đăng Nhập</CardTitle>
-                <CardDescription>Thông tin trạng thái bảo mật của phiên ({user?.email || 'N/A'}).</CardDescription>
+                <CardTitle>{t('settings.account.title')}</CardTitle>
+                <CardDescription>{t('settings.account.desc')} ({user?.email || 'N/A'}).</CardDescription>
             </CardHeader>
             <CardContent>
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 rounded-xl border border-destructive/20 bg-destructive/5 p-5">
                     <div className="space-y-1 max-w-[80%]">
-                        <Label className="text-base font-semibold text-destructive">Đăng Xuất Phiên Hiện Tại</Label>
+                        <Label className="text-base font-semibold text-destructive">{t('settings.account.logoutTitle')}</Label>
                         <p className="text-sm text-muted-foreground">
-                            Hành động này sẽ xóa Identity Token hiện tại, bạn cần phải nhập lại Email/Mật khẩu khi truy cập tiếp.
+                            {t('settings.account.logoutDesc')}
                         </p>
                     </div>
                     <Button variant="destructive" onClick={() => setIsLogoutModalOpen(true)} className="w-full lg:w-auto shrink-0 shadow-sm shadow-destructive/20">
-                        <LogOut className="mr-2 h-4 w-4" /> An Toàn Đăng Xuất
+                        <LogOut className="mr-2 h-4 w-4" /> {t('settings.account.logoutBtn')}
                     </Button>
                 </div>
             </CardContent>
 
-            <Modal isOpen={isLogoutModalOpen} onClose={() => setIsLogoutModalOpen(false)} title="Xác Nhận Hành Động">
+            <Modal isOpen={isLogoutModalOpen} onClose={() => setIsLogoutModalOpen(false)} title={t('settings.account.logoutModalTitle')}>
                 <div className="py-2 pb-6">
                     <p className="text-muted-foreground">
-                        Bạn có chắc chắn muốn thoát khỏi tài khoản hệ thống của thiết bị này chứ?
+                        {t('settings.account.logoutModalQ')}
                     </p>
                 </div>
                 <div className="flex items-center justify-end gap-3 border-t pt-4">
                     <Button variant="outline" onClick={() => setIsLogoutModalOpen(false)}>
-                        Giữ tôi đăng nhập
+                        {t('settings.account.stayBtn')}
                     </Button>
                     <Button variant="destructive" onClick={confirmLogout}>
-                        Đăng Xuất
+                        {t('settings.account.logoutConfirmBtn')}
                     </Button>
                 </div>
             </Modal>

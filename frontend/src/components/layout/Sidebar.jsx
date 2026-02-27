@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom"
-import { Home, Wallet, PieChart, Settings, Users, ArrowRightLeft, ChevronsUpDown, Target } from "lucide-react"
+import { Home, Wallet, PieChart, Settings, Users, ArrowRightLeft, ChevronsUpDown, Target, Plus } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -11,27 +11,26 @@ import {
 import { useSelector, useDispatch } from "react-redux"
 import { setActiveFamily } from "@/features/families/familySlice"
 import { openAddTransactionModal } from "@/features/ui/uiSlice"
-import { Plus } from "lucide-react"
-
-const sidebarItems = [
-    { icon: Home, label: "Tổng Quan", href: "/" },
-    { icon: ArrowRightLeft, label: "Giao Dịch", href: "/transactions" },
-    { icon: Wallet, label: "Ví Của Tôi", href: "/wallets" },
-    { icon: Target, label: "Mục Tiêu", href: "/goals" },
-    { icon: PieChart, label: "Báo Cáo", href: "/reports" },
-    { icon: Users, label: "Gia Đình", href: "/family" },
-]
+import { useTranslation } from "react-i18next"
 
 export function Sidebar({ className }) {
+    const { t } = useTranslation();
     const location = useLocation()
     const dispatch = useDispatch()
     const { families, activeFamilyId } = useSelector(state => state.families)
-    // Local state removed, using global modal
-    // const [isAddTransactionOpen, setIsAddTransactionOpen] = useState(false)
+
+    const sidebarItems = [
+        { icon: Home, label: t('nav.dashboard'), href: "/" },
+        { icon: ArrowRightLeft, label: t('nav.transactions'), href: "/transactions" },
+        { icon: Wallet, label: t('nav.wallets'), href: "/wallets" },
+        { icon: Target, label: t('nav.goals'), href: "/goals" },
+        { icon: PieChart, label: t('nav.reports'), href: "/reports" },
+        { icon: Users, label: t('nav.family'), href: "/family" },
+    ]
 
     // Derived state for display
     const activeFamily = families.find(f => f.id === activeFamilyId)
-    const contextName = activeFamily ? activeFamily.name : "Ví Cá Nhân"
+    const contextName = activeFamily ? activeFamily.name : t('sidebar.personalWallet')
 
     return (
         <div className={cn("pb-12 min-h-screen border-r bg-card hidden md:block w-64 fixed left-0 top-0", className)}>
@@ -45,7 +44,7 @@ export function Sidebar({ className }) {
                             <DropdownMenuTrigger asChild>
                                 <Button variant="outline" className="w-full justify-between h-12 border-dashed">
                                     <div className="flex flex-col items-start truncate text-left">
-                                        <span className="text-xs text-muted-foreground uppercase font-semibold">Ngữ Cảnh</span>
+                                        <span className="text-xs text-muted-foreground uppercase font-semibold">{t('sidebar.context')}</span>
                                         <span className="font-bold truncate w-[140px]">{contextName}</span>
                                     </div>
                                     <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
@@ -53,7 +52,7 @@ export function Sidebar({ className }) {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent className="w-56">
                                 <DropdownMenuItem onClick={() => dispatch(setActiveFamily(null))}>
-                                    Ví Cá Nhân
+                                    {t('sidebar.personalWallet')}
                                 </DropdownMenuItem>
                                 {families.map(family => (
                                     <DropdownMenuItem key={family.id} onClick={() => dispatch(setActiveFamily(family.id))}>
@@ -61,7 +60,7 @@ export function Sidebar({ className }) {
                                     </DropdownMenuItem>
                                 ))}
                                 <DropdownMenuItem className="text-muted-foreground text-xs pt-2">
-                                    <Link to="/family">+ Quản Lý Gia Đình</Link>
+                                    <Link to="/family">+ {t('sidebar.manageFamily')}</Link>
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
@@ -85,14 +84,14 @@ export function Sidebar({ className }) {
                 </div>
                 <div className="px-3 py-2">
                     <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">
-                        Cài Đặt
+                        {t('nav.settings')}
                     </h2>
                     <div className="space-y-1">
                         <div className="space-y-1">
                             <Button variant={location.pathname === "/settings" ? "secondary" : "ghost"} className="w-full justify-start gap-2" asChild>
                                 <Link to="/settings">
                                     <Settings className="h-4 w-4" />
-                                    Chung
+                                    {t('sidebar.general')}
                                 </Link>
                             </Button>
                         </div>
@@ -102,7 +101,7 @@ export function Sidebar({ className }) {
 
             <div className="px-5 mt-4">
                 <Button className="w-full bg-blue-600 hover:bg-blue-700 shadow-md" onClick={() => dispatch(openAddTransactionModal())}>
-                    <Plus className="mr-2 h-4 w-4" /> Thêm Giao Dịch
+                    <Plus className="mr-2 h-4 w-4" /> {t('sidebar.addTransaction')}
                 </Button>
             </div>
         </div>

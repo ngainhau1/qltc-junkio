@@ -7,8 +7,10 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { User, Mail, Phone, Calendar, Link as LinkIcon, Save } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export function Profile() {
+    const { t } = useTranslation();
     const dispatch = useDispatch();
     const { user } = useSelector(state => state.auth);
 
@@ -34,7 +36,7 @@ export function Profile() {
 
         // Basic validation
         if (!formData.name.trim()) {
-            toast.error("Vui lòng nhập họ tên.");
+            toast.error(t('profile.reqName'));
             return;
         }
 
@@ -46,7 +48,7 @@ export function Profile() {
             avatarUrl: formData.avatarUrl,
         }));
 
-        toast.success("Đã cập nhật thông tin thành công!");
+        toast.success(t('profile.successMsg'));
     };
 
     const handleGenerateAvatar = () => {
@@ -60,9 +62,9 @@ export function Profile() {
     return (
         <div className="space-y-6 max-w-4xl mx-auto pb-10">
             <div>
-                <h1 className="text-3xl font-bold tracking-tight">Hồ sơ cá nhân</h1>
+                <h1 className="text-3xl font-bold tracking-tight">{t('profile.title')}</h1>
                 <p className="text-muted-foreground">
-                    Quản lý thông tin cá nhân và tài khoản của bạn.
+                    {t('profile.desc')}
                 </p>
             </div>
 
@@ -71,7 +73,7 @@ export function Profile() {
                 <div className="md:col-span-1 space-y-6">
                     <Card>
                         <CardHeader className="text-center">
-                            <CardTitle>Ảnh Đại Diện</CardTitle>
+                            <CardTitle>{t('profile.avatarTitle')}</CardTitle>
                         </CardHeader>
                         <CardContent className="flex flex-col items-center space-y-4">
                             <div className="relative group">
@@ -85,7 +87,7 @@ export function Profile() {
                             <div className="w-full space-y-3 pt-4">
                                 <form onSubmit={e => e.preventDefault()} className="space-y-2">
                                     <Label htmlFor="avatarUrl" className="text-xs text-muted-foreground flex items-center gap-1">
-                                        <LinkIcon className="h-3 w-3" /> Liên kết ảnh hiện tại
+                                        <LinkIcon className="h-3 w-3" /> {t('profile.avatarCurrent')}
                                     </Label>
                                     <Input
                                         id="avatarUrl"
@@ -102,7 +104,7 @@ export function Profile() {
                                     className="w-full text-xs"
                                     onClick={handleGenerateAvatar}
                                 >
-                                    Tạo ảnh ngẫu nhiên
+                                    {t('profile.avatarGenerate')}
                                 </Button>
                             </div>
                         </CardContent>
@@ -114,28 +116,28 @@ export function Profile() {
                     <form onSubmit={handleSave}>
                         <Card>
                             <CardHeader>
-                                <CardTitle>Thông tin cơ bản</CardTitle>
+                                <CardTitle>{t('profile.basicInfo')}</CardTitle>
                                 <CardDescription>
-                                    Thông tin này sẽ được hiển thị trên hệ thống và với các thành viên trong gia đình.
+                                    {t('profile.basicDesc')}
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="name" className="flex items-center gap-2">
-                                        <User className="h-4 w-4" /> Họ và tên <span className="text-destructive">*</span>
+                                        <User className="h-4 w-4" /> {t('profile.fullName')} <span className="text-destructive">*</span>
                                     </Label>
                                     <Input
                                         id="name"
                                         name="name"
                                         value={formData.name}
                                         onChange={handleChange}
-                                        placeholder="Nhập họ và tên..."
+                                        placeholder={t('profile.fullNamePlaceholder')}
                                     />
                                 </div>
 
                                 <div className="space-y-2">
                                     <Label htmlFor="email" className="flex items-center gap-2">
-                                        <Mail className="h-4 w-4" /> Địa chỉ Email
+                                        <Mail className="h-4 w-4" /> {t('profile.email')}
                                     </Label>
                                     <Input
                                         id="email"
@@ -146,14 +148,14 @@ export function Profile() {
                                         className="bg-muted text-muted-foreground"
                                     />
                                     <p className="text-[0.8rem] text-muted-foreground">
-                                        Email là thông tin đăng nhập và không thể thay đổi.
+                                        {t('profile.emailNote')}
                                     </p>
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <Label htmlFor="phone" className="flex items-center gap-2">
-                                            <Phone className="h-4 w-4" /> Số điện thoại
+                                            <Phone className="h-4 w-4" /> {t('profile.phone')}
                                         </Label>
                                         <Input
                                             id="phone"
@@ -165,7 +167,7 @@ export function Profile() {
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="dateOfBirth" className="flex items-center gap-2">
-                                            <Calendar className="h-4 w-4" /> Ngày sinh
+                                            <Calendar className="h-4 w-4" /> {t('profile.dob')}
                                         </Label>
                                         <Input
                                             id="dateOfBirth"
@@ -179,11 +181,11 @@ export function Profile() {
 
                                 <div className="pt-6 flex justify-end gap-4">
                                     <Button type="button" variant="outline" onClick={() => window.history.back()}>
-                                        Hủy bỏ
+                                        {t('profile.cancel')}
                                     </Button>
                                     <Button type="submit" className="gap-2">
                                         <Save className="h-4 w-4" />
-                                        Lưu thay đổi
+                                        {t('profile.save')}
                                     </Button>
                                 </div>
                             </CardContent>

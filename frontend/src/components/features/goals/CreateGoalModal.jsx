@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { addGoal } from '@/features/goals/goalsSlice';
 import { Modal } from '@/components/ui/modal';
@@ -23,6 +24,7 @@ const ICONS = [
 ];
 
 export function CreateGoalModal({ isOpen, onClose }) {
+    const { t } = useTranslation();
     const dispatch = useDispatch();
     const [name, setName] = useState('');
     const [targetAmount, setTargetAmount] = useState('');
@@ -32,24 +34,24 @@ export function CreateGoalModal({ isOpen, onClose }) {
 
     const handleCreate = () => {
         if (!name.trim()) {
-            toast.error("Vui lòng nhập tên mục tiêu");
+            toast.error(t('goals.modals.create.errName'));
             return;
         }
 
         const numTarget = Number(targetAmount);
         if (!numTarget || numTarget <= 0) {
-            toast.error("Số tiền mục tiêu không hợp lệ");
+            toast.error(t('goals.modals.create.errAmount'));
             return;
         }
 
         if (!deadline) {
-            toast.error("Vui lòng chọn hạn chót");
+            toast.error(t('goals.modals.create.errDate'));
             return;
         }
 
         const selectedDate = new Date(deadline);
         if (selectedDate <= new Date()) {
-            toast.error("Hạn chót phải là một ngày trong tương lai");
+            toast.error(t('goals.modals.create.errFuture'));
             return;
         }
 
@@ -61,7 +63,7 @@ export function CreateGoalModal({ isOpen, onClose }) {
             imageUrl
         }));
 
-        toast.success(`Đã tạo mục tiêu "${name}" thành công!`);
+        toast.success(t('goals.modals.create.successMsg', { name: name.trim() }));
 
         // Reset and close
         setName('');
@@ -73,7 +75,7 @@ export function CreateGoalModal({ isOpen, onClose }) {
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Tạo Mục Tiêu Mới">
+        <Modal isOpen={isOpen} onClose={onClose} title={t('goals.modals.create.title')}>
             <div className="p-6 space-y-6">
 
                 {/* Visual Preview */}
@@ -89,9 +91,9 @@ export function CreateGoalModal({ isOpen, onClose }) {
                             })()}
                         </div>
                         <div className="text-center">
-                            <h4 className="font-bold text-lg">{name || "Tên Mục Tiêu"}</h4>
+                            <h4 className="font-bold text-lg">{name || t('goals.modals.create.previewDefault')}</h4>
                             <p className="text-sm font-medium text-primary">
-                                Đích đến: {targetAmount ? formatCurrency(Number(targetAmount)) : '0 ₫'}
+                                {t('goals.modals.create.targetPreview')} {targetAmount ? formatCurrency(Number(targetAmount)) : '0 ₫'}
                             </p>
                         </div>
                     </div>
@@ -100,17 +102,17 @@ export function CreateGoalModal({ isOpen, onClose }) {
                 {/* Form Fields */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="col-span-full space-y-2">
-                        <Label htmlFor="goal-name">Tên Mục Tiêu</Label>
+                        <Label htmlFor="goal-name">{t('goals.modals.create.nameLabel')}</Label>
                         <Input
                             id="goal-name"
-                            placeholder="Vd: Mua xe máy mới, Đi du lịch..."
+                            placeholder={t('goals.modals.create.namePlaceholder')}
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                         />
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="goal-amount">Số Tiền Cần Đạt</Label>
+                        <Label htmlFor="goal-amount">{t('goals.modals.create.amountLabel')}</Label>
                         <Input
                             id="goal-amount"
                             type="number"
@@ -121,7 +123,7 @@ export function CreateGoalModal({ isOpen, onClose }) {
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="goal-deadline">Hạn Chót Tích Lũy</Label>
+                        <Label htmlFor="goal-deadline">{t('goals.modals.create.dateLabel')}</Label>
                         <Input
                             id="goal-deadline"
                             type="date"
@@ -132,7 +134,7 @@ export function CreateGoalModal({ isOpen, onClose }) {
 
                     {/* Color Picker */}
                     <div className="col-span-full space-y-2 pt-2">
-                        <Label>Chọn Màu Sắc</Label>
+                        <Label>{t('goals.modals.create.colorLabel')}</Label>
                         <div className="flex flex-wrap gap-3">
                             {COLORS.map(color => (
                                 <button
@@ -149,7 +151,7 @@ export function CreateGoalModal({ isOpen, onClose }) {
 
                     {/* Icon Picker */}
                     <div className="col-span-full space-y-2 pt-2">
-                        <Label>Chọn Biểu Tượng</Label>
+                        <Label>{t('goals.modals.create.iconLabel')}</Label>
                         <div className="grid grid-cols-5 gap-2 sm:gap-3">
                             {/* eslint-disable-next-line no-unused-vars */}
                             {ICONS.map(({ name: iconName, icon: Icon }) => (
@@ -167,9 +169,9 @@ export function CreateGoalModal({ isOpen, onClose }) {
                 </div>
 
                 <div className="pt-4 flex gap-3 justify-end border-t border-border">
-                    <Button variant="outline" onClick={onClose}>Hủy Bỏ</Button>
+                    <Button variant="outline" onClick={onClose}>{t('goals.modals.create.btnCancel')}</Button>
                     <Button onClick={handleCreate}>
-                        Tạo Mục Tiêu
+                        {t('goals.modals.create.btnSubmit')}
                     </Button>
                 </div>
             </div>

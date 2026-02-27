@@ -1,7 +1,8 @@
 import { useMemo, memo } from 'react';
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatDateString } from "@/lib/utils";
 import { ArrowUpRight, ArrowDownLeft } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
+import { useTranslation } from "react-i18next";
 
 // Row Item Component (Adapted for standard list)
 const TransactionRow = memo(({ item }) => {
@@ -40,6 +41,7 @@ const TransactionRow = memo(({ item }) => {
 });
 
 export function VirtualizedTransactionList({ transactions }) {
+    const { t } = useTranslation()
     // 1. Flatten Data: Convert grouped object to flat list with Headers
     const flatData = useMemo(() => {
         const groups = transactions.reduce((acc, transaction) => {
@@ -50,7 +52,7 @@ export function VirtualizedTransactionList({ transactions }) {
                 const dateObj = new Date(rawDate);
                 if (isNaN(dateObj.getTime())) return acc; // Skip invalid dates
 
-                const date = dateObj.toLocaleDateString('vi-VN');
+                const date = formatDateString(rawDate);
                 if (!acc[date]) {
                     acc[date] = [];
                 }
@@ -83,8 +85,8 @@ export function VirtualizedTransactionList({ transactions }) {
         return (
             <div className="py-8">
                 <EmptyState
-                    title="Chưa có giao dịch nào"
-                    description="Bạn chưa có bất kỳ giao dịch nào trong khoảng thời gian này. Hãy thêm giao dịch mới để bắt đầu theo dõi chi tiêu."
+                    title={t('transactions.list.emptyTitle')}
+                    description={t('transactions.list.emptyDesc')}
                 />
             </div>
         );

@@ -3,8 +3,10 @@ import { Button } from "@/components/ui/button"
 import { DashboardStats } from "@/components/dashboard/DashboardStats"
 import { RecentTransactions } from "@/components/dashboard/RecentTransactions"
 import { FinancialChart } from "@/components/dashboard/FinancialChart"
+import { useTranslation } from "react-i18next"
 
 export function Dashboard() {
+    const { t } = useTranslation();
     const { transactions } = useSelector(state => state.transactions)
     const { wallets } = useSelector(state => state.wallets)
 
@@ -12,8 +14,8 @@ export function Dashboard() {
         <div className="space-y-6">
             <header className="flex justify-between items-center mb-8">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Tổng Quan</h1>
-                    <p className="text-muted-foreground">Bức tranh toàn cảnh về tài chính của bạn.</p>
+                    <h1 className="text-3xl font-bold tracking-tight">{t('dashboard.title')}</h1>
+                    <p className="text-muted-foreground">{t('dashboard.desc')}</p>
                 </div>
 
                 <div className="flex items-center gap-4">

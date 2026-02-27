@@ -1,8 +1,10 @@
 import { NotificationBell } from "./NotificationBell";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 export function Header() {
+    const { t } = useTranslation();
     const { user } = useSelector(state => state.auth);
 
     return (
@@ -12,7 +14,7 @@ export function Header() {
                     <NotificationBell />
                     <Link to="/profile" className="flex items-center gap-3 hover:bg-muted/50 p-1.5 rounded-full transition-colors">
                         <span className="text-sm font-medium hidden md:inline-block">
-                            Xin chào, <span className="font-bold">{user?.name || "Người dùng"}</span>
+                            {t('header.hello')} <span className="font-bold">{user?.name || t('header.user')}</span>
                         </span>
                         <img
                             src={user?.avatarUrl || `https://api.dicebear.com/7.x/notionists/svg?seed=${user?.name || 'demo'}`}

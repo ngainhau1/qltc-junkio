@@ -1,4 +1,5 @@
 import { useSelector } from "react-redux"
+import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import {
     BarChart,
@@ -21,6 +22,7 @@ import { exportToPDF, exportToCSV } from "@/services/exportService"
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 
 export function Reports() {
+    const { t } = useTranslation();
     const { transactions } = useSelector(state => state.transactions)
 
     // 1. Prepare Data for Bar Chart (Income vs Expense by Month)
@@ -37,8 +39,8 @@ export function Reports() {
         .reduce((sum, t) => sum + t.amount, 0)
 
     const summaryData = [
-        { name: 'Thu Nhập', amount: incomeTotal },
-        { name: 'Chi Tiêu', amount: expenseTotal }
+        { name: t('reports.income'), amount: incomeTotal },
+        { name: t('reports.expense'), amount: expenseTotal }
     ]
 
     // 2. Prepare Data for Donut Chart (Expense by Category - Top 5 + Others)
@@ -61,22 +63,22 @@ export function Reports() {
     if (sortedCategories.length > 5) {
         const top5 = sortedCategories.slice(0, 5)
         const othersValue = sortedCategories.slice(5).reduce((sum, c) => sum + c.value, 0)
-        sortedCategories = [...top5, { name: 'Khác', value: othersValue }]
+        sortedCategories = [...top5, { name: t('reports.others'), value: othersValue }]
     }
 
     return (
         <div className="space-y-6">
             <header className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Báo Cáo & Thống Kê</h1>
-                    <p className="text-muted-foreground">Hiểu rõ hơn về thói quen chi tiêu của bạn.</p>
+                    <h1 className="text-3xl font-bold tracking-tight">{t('reports.title')}</h1>
+                    <p className="text-muted-foreground">{t('reports.desc')}</p>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => exportToPDF(transactions, "Báo Cáo Tài Chính")}>
-                        <FileText className="mr-2 h-4 w-4" /> PDF
+                    <Button variant="outline" size="sm" onClick={() => exportToPDF(transactions, t('reports.exportTitle'))}>
+                        <FileText className="mr-2 h-4 w-4" /> {t('reports.btnPdf')}
                     </Button>
                     <Button variant="outline" size="sm" onClick={() => exportToCSV(transactions)}>
-                        <Download className="mr-2 h-4 w-4" /> CSV
+                        <Download className="mr-2 h-4 w-4" /> {t('reports.btnCsv')}
                     </Button>
                 </div>
             </header>
@@ -86,8 +88,8 @@ export function Reports() {
                 {/* Income vs Expense Bar Chart */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>Thu và Chi</CardTitle>
-                        <CardDescription>Tổng hợp tài chính dựa trên dữ liệu hiện tại.</CardDescription>
+                        <CardTitle>{t('reports.summaryTitle')}</CardTitle>
+                        <CardDescription>{t('reports.summaryDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent className="h-[300px]">
                         <ResponsiveContainer width="100%" height="100%">
@@ -100,7 +102,7 @@ export function Reports() {
                                     cursor={{ fill: 'transparent' }}
                                 />
                                 <Legend wrapperStyle={{ paddingTop: '20px' }} />
-                                <Bar dataKey="amount" fill="#3b82f6" name="Số Tiền" radius={[4, 4, 0, 0]} barSize={50} />
+                                <Bar dataKey="amount" fill="#3b82f6" name={t('reports.amount')} radius={[4, 4, 0, 0]} barSize={50} />
                             </BarChart>
                         </ResponsiveContainer>
                     </CardContent>
@@ -109,8 +111,8 @@ export function Reports() {
                 {/* Category Donut Chart */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>Chi Tiêu Theo Danh Mục</CardTitle>
-                        <CardDescription>Top 5 danh mục chi tiêu nhiều nhất.</CardDescription>
+                        <CardTitle>{t('reports.categoryTitle')}</CardTitle>
+                        <CardDescription>{t('reports.categoryDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent className="h-[300px]">
                         <ResponsiveContainer width="100%" height="100%">

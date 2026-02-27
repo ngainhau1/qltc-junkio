@@ -1,27 +1,29 @@
 import { useSelector, useDispatch } from "react-redux"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { formatCurrency } from "@/lib/utils"
+import { formatCurrency, formatDateString } from "@/lib/utils"
 import { Clock, Trash2, Power, PowerOff } from "lucide-react"
 import { toggleRule, deleteRule } from "@/features/recurring/recurringSlice"
+import { useTranslation } from "react-i18next"
 
 export function RecurringRulesList() {
+    const { t } = useTranslation();
     const { rules } = useSelector(state => state.recurring)
     const dispatch = useDispatch()
 
     const frequencyMap = {
-        'DAILY': 'Hàng Ngày',
-        'WEEKLY': 'Hàng Tuần',
-        'MONTHLY': 'Hàng Tháng',
-        'YEARLY': 'Hàng Năm'
+        'DAILY': t('transactions.recurring.freq.DAILY'),
+        'WEEKLY': t('transactions.recurring.freq.WEEKLY'),
+        'MONTHLY': t('transactions.recurring.freq.MONTHLY'),
+        'YEARLY': t('transactions.recurring.freq.YEARLY')
     }
 
     if (rules.length === 0) {
         return (
             <div className="text-center py-10 text-muted-foreground">
                 <Clock className="mx-auto h-12 w-12 opacity-20 mb-3" />
-                <p>Chưa có lịch định kỳ nào.</p>
-                <p className="text-sm">Tạo lịch để tự động hóa các khoản chi thường xuyên.</p>
+                <p>{t('transactions.recurring.emptyTitle')}</p>
+                <p className="text-sm">{t('transactions.recurring.emptyDesc')}</p>
             </div>
         )
     }
@@ -38,13 +40,13 @@ export function RecurringRulesList() {
                             <div>
                                 <h3 className="font-semibold flex items-center gap-2">
                                     {rule.name}
-                                    {!rule.active && <span className="text-xs bg-muted px-2 py-0.5 rounded text-muted-foreground">Đã tạm dừng</span>}
+                                    {!rule.active && <span className="text-xs bg-muted px-2 py-0.5 rounded text-muted-foreground">{t('transactions.recurring.paused')}</span>}
                                 </h3>
                                 <p className="text-sm text-muted-foreground">
                                     {formatCurrency(rule.amount)} • {frequencyMap[rule.frequency] || rule.frequency}
                                 </p>
                                 <p className="text-xs text-muted-foreground">
-                                    Đến hạn: {new Date(rule.nextDueDate).toLocaleDateString('vi-VN')}
+                                    {t('transactions.recurring.due')} {formatDateString(rule.nextDueDate)}
                                 </p>
                             </div>
                         </div>
@@ -54,7 +56,7 @@ export function RecurringRulesList() {
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => dispatch(toggleRule(rule.id))}
-                                title={rule.active ? "Tạm dừng" : "Kích hoạt"}
+                                title={rule.active ? t('transactions.recurring.pauseBtn') : t('transactions.recurring.activateBtn')}
                             >
                                 {rule.active ? <Power className="h-4 w-4 text-green-600" /> : <PowerOff className="h-4 w-4 text-muted-foreground" />}
                             </Button>
@@ -63,7 +65,7 @@ export function RecurringRulesList() {
                                 size="icon"
                                 className="text-red-500 hover:text-red-600 hover:bg-red-50"
                                 onClick={() => {
-                                    if (confirm('Bạn có chắc muốn xóa lịch này không?')) {
+                                    if (confirm(t('transactions.recurring.deleteConfirm'))) {
                                         dispatch(deleteRule(rule.id))
                                     }
                                 }}

@@ -3,17 +3,19 @@ import { Home, Wallet, PieChart, Users, Plus, Target } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useDispatch } from "react-redux"
 import { openAddTransactionModal } from "@/features/ui/uiSlice"
-
-const navItems = [
-    { icon: Home, label: "Tổng Quan", href: "/" },
-    { icon: Wallet, label: "Ví", href: "/wallets" },
-    { icon: Target, label: "Mục Tiêu", href: "/goals" },
-    { icon: Users, label: "Gia Đình", href: "/family" },
-]
+import { useTranslation } from "react-i18next"
 
 export function BottomNav({ className }) {
+    const { t } = useTranslation()
     const location = useLocation()
     const dispatch = useDispatch()
+
+    const navItems = [
+        { icon: Home, label: t('nav.dashboard'), href: "/" },
+        { icon: Wallet, label: t('nav.wallets'), href: "/wallets" },
+        { icon: Target, label: t('nav.goals'), href: "/goals" },
+        { icon: Users, label: t('nav.family'), href: "/family" },
+    ]
 
     return (
         <div className={cn("fixed bottom-0 left-0 right-0 border-t bg-background md:hidden z-50", className)}>

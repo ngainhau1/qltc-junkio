@@ -4,15 +4,18 @@ import { useDispatch } from "react-redux"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { addWallet } from "@/features/wallets/walletSlice"
+import { useTranslation } from "react-i18next"
 // import { v4 as uuidv4 } from 'uuid';
 
-const validationSchema = Yup.object({
-    name: Yup.string().required("Wallet Name is required"),
-    balance: Yup.number().min(0, "Balance must be positive").required("Initial Balance is required"),
-    type: Yup.string().oneOf(['cash', 'bank', 'credit-card', 'e-wallet']).required("Type is required"),
-})
-
 export function WalletForm({ onSuccess }) {
+    const { t } = useTranslation();
+
+    const validationSchema = Yup.object().shape({
+        name: Yup.string().required(t('wallets.form.validation.nameRequired')),
+        balance: Yup.number().min(0, t('wallets.form.validation.balanceMin')).required(t('wallets.form.validation.balanceRequired')),
+        type: Yup.string().oneOf(['cash', 'bank', 'credit-card', 'e-wallet']).required(t('wallets.form.validation.typeRequired')),
+    })
+
     const dispatch = useDispatch()
 
     const formik = useFormik({
@@ -39,10 +42,10 @@ export function WalletForm({ onSuccess }) {
     return (
         <form onSubmit={formik.handleSubmit} className="space-y-4">
             <div>
-                <label className="text-sm font-medium mb-1 block">Tên Ví</label>
+                <label className="text-sm font-medium mb-1 block">{t('wallets.form.name')}</label>
                 <Input
                     name="name"
-                    placeholder="vd: Vietcombank"
+                    placeholder={t('wallets.form.namePlaceholder')}
                     value={formik.values.name}
                     onChange={formik.handleChange}
                     className={formik.errors.name ? "border-red-500" : ""}
@@ -52,7 +55,7 @@ export function WalletForm({ onSuccess }) {
 
             <div className="grid grid-cols-2 gap-4">
                 <div>
-                    <label className="text-sm font-medium mb-1 block">Số Dư Ban Đầu</label>
+                    <label className="text-sm font-medium mb-1 block">{t('wallets.form.balance')}</label>
                     <Input
                         name="balance"
                         type="number"
@@ -62,23 +65,23 @@ export function WalletForm({ onSuccess }) {
                     />
                 </div>
                 <div>
-                    <label className="text-sm font-medium mb-1 block">Loại</label>
+                    <label className="text-sm font-medium mb-1 block">{t('wallets.form.type')}</label>
                     <select
                         name="type"
                         className="w-full border rounded-md h-10 px-3 text-sm bg-background"
                         value={formik.values.type}
                         onChange={formik.handleChange}
                     >
-                        <option value="cash">Tiền Mặt</option>
-                        <option value="bank">Tài Khoản Ngân Hàng</option>
-                        <option value="credit-card">Thẻ Tín Dụng</option>
-                        <option value="e-wallet">Ví Điện Tử</option>
+                        <option value="cash">{t('wallets.form.types.cash')}</option>
+                        <option value="bank">{t('wallets.form.types.bank')}</option>
+                        <option value="credit-card">{t('wallets.form.types.credit-card')}</option>
+                        <option value="e-wallet">{t('wallets.form.types.e-wallet')}</option>
                     </select>
                 </div>
             </div>
 
             <div className="pt-4 flex justify-end gap-2">
-                <Button type="submit" className="w-full">Tạo Ví</Button>
+                <Button type="submit" className="w-full">{t('wallets.form.createBtn')}</Button>
             </div>
         </form>
     )
