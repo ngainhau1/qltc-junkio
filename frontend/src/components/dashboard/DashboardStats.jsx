@@ -1,8 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { formatCurrency } from "@/lib/utils"
 import { Wallet, ArrowRightLeft, TrendingUp, TrendingDown } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 export function DashboardStats({ wallets, transactions }) {
+    const { t } = useTranslation();
     const totalBalance = wallets.reduce((acc, w) => acc + w.balance, 0)
 
     // Simple calculation for income/expense
@@ -22,13 +24,13 @@ export function DashboardStats({ wallets, transactions }) {
                     <Wallet className="h-24 w-24" />
                 </div>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 z-10 relative">
-                    <CardTitle className="text-sm font-medium text-blue-100">Tổng Tài Sản</CardTitle>
+                    <CardTitle className="text-sm font-medium text-blue-100">{t('dashboard.stats.totalAssets')}</CardTitle>
                     <Wallet className="h-4 w-4 text-blue-200" />
                 </CardHeader>
                 <CardContent className="z-10 relative">
                     <div className="text-3xl font-bold tracking-tight">{formatCurrency(totalBalance)}</div>
                     <p className="text-xs text-blue-200 mt-1">
-                        Trên {wallets.length} ví đang hoạt động
+                        {t('dashboard.stats.activeWallets', { count: wallets.length })}
                     </p>
                 </CardContent>
             </Card>
@@ -39,13 +41,13 @@ export function DashboardStats({ wallets, transactions }) {
                     <TrendingUp className="h-24 w-24" />
                 </div>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 z-10 relative">
-                    <CardTitle className="text-sm font-medium text-emerald-100">Thu Nhập</CardTitle>
+                    <CardTitle className="text-sm font-medium text-emerald-100">{t('dashboard.stats.income')}</CardTitle>
                     <TrendingUp className="h-4 w-4 text-emerald-200" />
                 </CardHeader>
                 <CardContent className="z-10 relative">
                     <div className="text-2xl font-bold tracking-tight">+{formatCurrency(totalIncome)}</div>
                     <p className="text-xs text-emerald-100 mt-1">
-                        Tổng thu nhập ghi nhận
+                        {t('dashboard.stats.incomeTotal')}
                     </p>
                 </CardContent>
             </Card>
@@ -56,13 +58,13 @@ export function DashboardStats({ wallets, transactions }) {
                     <TrendingDown className="h-24 w-24" />
                 </div>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 z-10 relative">
-                    <CardTitle className="text-sm font-medium text-rose-100">Chi Tiêu</CardTitle>
+                    <CardTitle className="text-sm font-medium text-rose-100">{t('dashboard.stats.expense')}</CardTitle>
                     <TrendingDown className="h-4 w-4 text-rose-200" />
                 </CardHeader>
                 <CardContent className="z-10 relative">
                     <div className="text-2xl font-bold tracking-tight">-{formatCurrency(totalExpense)}</div>
                     <p className="text-xs text-rose-100 mt-1">
-                        Tổng chi tiêu ghi nhận
+                        {t('dashboard.stats.expenseTotal')}
                     </p>
                 </CardContent>
             </Card>
@@ -70,13 +72,13 @@ export function DashboardStats({ wallets, transactions }) {
             {/* Transactions - Glassmorphism/Neutral */}
             <Card className="bg-card/50 backdrop-blur-sm shadow-sm border-muted/50">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">Giao Dịch</CardTitle>
+                    <CardTitle className="text-sm font-medium text-muted-foreground">{t('dashboard.stats.transactions')}</CardTitle>
                     <ArrowRightLeft className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                     <div className="text-2xl font-bold text-foreground">{transactions.length}</div>
                     <p className="text-xs text-muted-foreground mt-1">
-                        Tổng số bản ghi
+                        {t('dashboard.stats.totalRecords')}
                     </p>
                 </CardContent>
             </Card>

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { formatCurrency } from '@/lib/utils';
 import { depositToGoal } from '@/features/goals/goalsSlice';
@@ -18,6 +19,7 @@ const ICONS = {
 const QUICK_AMOUNTS = [100000, 500000, 1000000, 5000000];
 
 export function DepositModal({ isOpen, onClose, goal }) {
+    const { t } = useTranslation();
     const dispatch = useDispatch();
     const { wallets } = useSelector((state) => state.wallets);
     const [amount, setAmount] = useState('');
@@ -29,24 +31,24 @@ export function DepositModal({ isOpen, onClose, goal }) {
     const handleDeposit = () => {
         const numAmount = Number(amount);
         if (!numAmount || numAmount <= 0) {
-            toast.error("Vui lòng nhập số tiền hợp lệ");
+            toast.error(t('goals.modals.deposit.errInvalid'));
             return;
         }
 
         if (!selectedWalletId) {
-            toast.error("Vui lòng chọn ví trích tiền");
+            toast.error(t('goals.modals.deposit.errSelectWallet'));
             return;
         }
 
         const wallet = wallets.find(w => w.id === selectedWalletId);
         if (numAmount > wallet.balance) {
-            toast.error(`Số dư trong ví không đủ. Ví đang có ${formatCurrency(wallet.balance)}`);
+            toast.error(t('goals.modals.deposit.errNotEnough', { amount: formatCurrency(wallet.balance) }));
             return;
         }
 
         const remainingNeeded = goal.targetAmount - goal.currentAmount;
         if (numAmount > remainingNeeded) {
-            toast.error(`Số tiền nạp vượt quá mục tiêu cần thiết (${formatCurrency(remainingNeeded)} nữa)`);
+            toast.error(t('goals.modals.deposit.errOverfill', { amount: formatCurrency(remainingNeeded) }));
             return;
         }
 
@@ -57,7 +59,7 @@ export function DepositModal({ isOpen, onClose, goal }) {
             amount: numAmount,
             type: 'EXPENSE',
             date: new Date().toISOString(),
-            description: `Nạp tiền mục tiêu: ${goal.name}`
+            description: `${t('goals.modals.deposit.title')}: ${goal.name}`
         }));
 
         dispatch(updateWalletBalance({
@@ -69,7 +71,7 @@ export function DepositModal({ isOpen, onClose, goal }) {
         // 2. Deposit to Goal
         dispatch(depositToGoal({ id: goal.id, amount: numAmount }));
 
-        toast.success(`Đã nạp thành công ${formatCurrency(numAmount)} vào ${goal.name}`);
+        toast.success(t('goals.modals.deposit.successMsg', { amount: formatCurrency(numAmount), name: goal.name }));
         onClose();
         setAmount('');
         setSelectedWalletId(null);
@@ -95,7 +97,7 @@ export function DepositModal({ isOpen, onClose, goal }) {
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Nạp Tiền Mục Tiêu">
+        <Modal isOpen={isOpen} onClose={onClose} title={t('goals.modals.deposit.title')}>
             <div className="p-6 space-y-6">
                 {/* Visual Header */}
                 <div className="flex bg-muted/30 p-4 rounded-2xl items-center gap-4 border border-border/50">
@@ -109,7 +111,7 @@ export function DepositModal({ isOpen, onClose, goal }) {
                         <h3 className="font-bold text-lg truncate">{goal.name}</h3>
                         <div className="flex justify-between items-center mt-1">
                             <span className="text-sm font-medium text-muted-foreground">{percentage}%</span>
-                            <span className="text-xs font-semibold text-primary">Cần thêm: {formatCurrency(remainingNeeded)}</span>
+                            <span className="text-xs font-semibold text-primary">{t('goals.modals.deposit.needMore')} {formatCurrency(remainingNeeded)}</span>
                         </div>
                         <div className="h-2 w-full bg-secondary rounded-full mt-1.5 overflow-hidden">
                             <div
@@ -123,7 +125,7 @@ export function DepositModal({ isOpen, onClose, goal }) {
                 {/* Amount Input area */}
                 <div className="space-y-4">
                     <div className="text-center space-y-2">
-                        <Label htmlFor="deposit-amount" className="text-muted-foreground">Nhập số tiền muốn nạp</Label>
+                        <Label htmlFor="deposit-amount" className="text-muted-foreground">{t('goals.modals.deposit.inputLabel')}</Label>
                         <div className="relative max-w-[250px] mx-auto">
                             <Input
                                 id="deposit-amount"
@@ -157,18 +159,18 @@ export function DepositModal({ isOpen, onClose, goal }) {
                             onClick={() => setAmount(remainingNeeded.toString())}
                             className="px-3 py-1.5 rounded-full border border-primary bg-primary/10 text-primary text-xs font-bold hover:bg-primary hover:text-primary-foreground transition-all active:scale-95"
                         >
-                            Đầy Hũ
+                            {t('goals.modals.deposit.quickFill')}
                         </button>
                     </div>
                 </div>
 
                 <div className="space-y-3 pt-2">
                     <Label className="flex items-center gap-2">
-                        <Wallet className="h-4 w-4" /> Nguồn Tiền (Ví Cá Nhân)
+                        <Wallet className="h-4 w-4" /> {t('goals.modals.deposit.sourceWallet')}
                     </Label>
                     {availableWallets.length === 0 ? (
                         <div className="p-4 bg-destructive/10 text-destructive text-sm rounded-xl text-center font-medium border border-destructive/20">
-                            Bạn không có ví cá nhân nào có số dư để trích.
+                            {t('goals.modals.deposit.emptyWallet')}
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[180px] overflow-y-auto p-1 scrollbar-thin">
@@ -190,14 +192,14 @@ export function DepositModal({ isOpen, onClose, goal }) {
                 </div>
 
                 <div className="pt-4 flex gap-3 justify-end border-t border-border">
-                    <Button variant="ghost" onClick={onClose} className="rounded-xl">Hủy</Button>
+                    <Button variant="ghost" onClick={onClose} className="rounded-xl">{t('goals.modals.deposit.btnCancel')}</Button>
                     <Button
                         onClick={handleDeposit}
                         disabled={!selectedWalletId || !amount || availableWallets.length === 0}
                         className="rounded-xl px-8 shadow-md hover:shadow-lg transition-all"
                         style={{ backgroundColor: goal.colorCode }}
                     >
-                        Xác Nhận Nạp
+                        {t('goals.modals.deposit.btnConfirm')}
                     </Button>
                 </div>
             </div>

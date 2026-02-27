@@ -1,28 +1,57 @@
-
-import { Outlet } from "react-router-dom"
+import { Outlet, Link } from "react-router-dom"
+import { Wallet } from "lucide-react"
 
 export function AuthLayout() {
     return (
-        <div className="flex min-h-screen w-full">
-            {/* Left Side: Hero Image / Branding */}
-            <div className="hidden lg:flex w-1/2 bg-zinc-900 items-center justify-center relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/90 to-black/90 z-10" />
-                <img
-                    src="/banner.png"
-                    alt="Background"
-                    className="absolute inset-0 w-full h-full object-cover opacity-30 invert"
-                />
-                <div className="relative z-20 text-white p-12 max-w-lg">
-                    <h1 className="text-4xl font-bold mb-6">Quản lý tài chính cá nhân & gia đình thông minh.</h1>
-                    <p className="text-lg text-zinc-300">
-                        Theo dõi thu chi, lập ngân sách và đơn giản hóa các khoản nợ gia đình chỉ trong vài bước đơn giản.
+        <div className="flex min-h-screen w-full font-sans">
+            {/* Left Side: Branding & Quote */}
+            <div className="hidden lg:flex w-1/2 bg-zinc-950 text-white flex-col justify-between p-12 relative overflow-hidden">
+                {/* Background Pattern */}
+                <div className="absolute inset-0 opacity-10"
+                    style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '32px 32px' }}>
+                </div>
+                {/* Gradient Overlay */}
+                <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-emerald-900/50 to-transparent z-0" />
+
+                <div className="relative z-10 font-bold text-2xl flex items-center gap-2">
+                    <Wallet className="h-8 w-8 text-emerald-500" />
+                    Junkio Tracker
+                </div>
+
+                <div className="relative z-10 space-y-6 max-w-lg mb-12">
+                    <h1 className="text-5xl font-extrabold tracking-tight leading-[1.1]">
+                        Quản lý tài chính,<br />
+                        <span className="text-emerald-400">Tận hưởng cuộc sống.</span>
+                    </h1>
+                    <p className="text-zinc-400 text-lg leading-relaxed">
+                        Theo dõi thu chi, lập ngân sách thông minh và xử lý dễ dàng các khoản nợ chung của quản lý gia đình chỉ bằng một chạm.
                     </p>
+
+                    <div className="pt-8 flex items-center gap-4">
+                        <div className="flex -space-x-4">
+                            {[1, 2, 3, 4].map((i) => (
+                                <img key={i} className="w-10 h-10 border-2 border-zinc-950 rounded-full bg-zinc-800 object-cover" src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${i}`} alt="user avatar" />
+                            ))}
+                        </div>
+                        <p className="text-sm font-medium text-zinc-300">
+                            Hơn 10,000+ gia đình đã tin dùng
+                        </p>
+                    </div>
+                </div>
+
+                <div className="relative z-10 text-zinc-500 text-sm">
+                    © 2026 Junkio Finance. All rights reserved.
                 </div>
             </div>
 
             {/* Right Side: Form Content */}
-            <div className="flex-1 flex items-center justify-center p-8 bg-background">
-                <div className="w-full max-w-sm space-y-6">
+            <div className="flex-1 flex flex-col justify-center px-6 py-12 lg:px-12 bg-background relative">
+                {/* Mobile Logo Only */}
+                <div className="flex lg:hidden justify-center items-center gap-2 mb-8 font-bold text-xl">
+                    <Wallet className="h-6 w-6 text-emerald-500" />
+                    Junkio Tracker
+                </div>
+                <div className="w-full max-w-sm mx-auto">
                     <Outlet />
                 </div>
             </div>

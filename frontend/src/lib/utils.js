@@ -1,15 +1,29 @@
 import { clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { store } from "@/store"
+import i18n from "i18next"
+import { vi, enUS } from 'date-fns/locale'
 
 export function cn(...inputs) {
     return twMerge(clsx(inputs))
 }
 
 export const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('vi-VN', {
+    // Lấy config tiền tệ từ Store (mặc định VND)
+    const state = store.getState();
+    const currency = state.settings?.currency || 'VND';
+
+    const locale = currency === 'USD' ? 'en-US' : 'vi-VN';
+    const curr = currency === 'USD' ? 'USD' : 'VND';
+
+    return new Intl.NumberFormat(locale, {
         style: 'currency',
-        currency: 'VND',
+        currency: curr,
     }).format(amount);
+}
+
+export function generateId(prefix = 'id') {
+    return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 };
 
 export function removeVietnameseTones(str) {
@@ -37,12 +51,26 @@ export function removeVietnameseTones(str) {
     return str;
 }
 
+// --- Date/Time Utils ---
+
+export const getDateLocale = () => {
+    return i18n.language?.startsWith('vi') ? vi : enUS;
+}
+
 export function formatShortDate(dateString) {
     if (!dateString) return "";
     const date = new Date(dateString);
-    return new Intl.DateTimeFormat('vi-VN', {
+    const localeStr = i18n.language?.startsWith('vi') ? 'vi-VN' : 'en-US';
+    return new Intl.DateTimeFormat(localeStr, {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric'
     }).format(date);
+}
+
+export function formatDateString(dateString, options = {}) {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const localeStr = i18n.language?.startsWith('vi') ? 'vi-VN' : 'en-US';
+    return new Intl.DateTimeFormat(localeStr, options).format(date);
 }

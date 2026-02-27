@@ -1,14 +1,17 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { formatCurrency } from "@/lib/utils"
-import { ArrowUpRight, ArrowDownLeft } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { formatCurrency, formatDateString } from "@/lib/utils"
+import { CreditCard, ShoppingBag, Coffee, Home, Car, Smartphone, ArrowDownLeft, ArrowUpRight } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 export function RecentTransactions({ transactions }) {
+    const { t } = useTranslation();
     const recent = transactions.slice(0, 5)
 
     return (
         <Card className="col-span-1 shadow-md border-muted/40 h-full">
             <CardHeader>
-                <CardTitle className="text-xl font-bold">Giao Dịch Gần Đây</CardTitle>
+                <CardTitle className="text-xl font-bold">{t('dashboard.recent.title')}</CardTitle>
             </CardHeader>
             <CardContent>
                 <div className="space-y-6">
@@ -22,9 +25,9 @@ export function RecentTransactions({ transactions }) {
                                     }
                                 </div>
                                 <div className="ml-4 space-y-1 flex-1">
-                                    <p className="text-sm font-medium leading-none truncate max-w-[150px]">{t.description}</p>
-                                    <p className="text-xs text-muted-foreground">
-                                        {new Date(t.transaction_date).toLocaleDateString('vi-VN')}
+                                    <p className="text-sm font-medium leading-none">{t.description}</p>
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                        {formatDateString(t.transaction_date)}
                                     </p>
                                 </div>
                                 <div className={`font-semibold text-sm ${t.type === 'INCOME' ? 'text-emerald-600' : 'text-rose-600'}`}>

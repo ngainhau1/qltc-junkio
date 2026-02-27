@@ -1,0 +1,456 @@
+{
+    "common": {
+        "save": "Lưu",
+        "cancel": "Hủy bỏ",
+        "edit": "Sửa",
+        "delete": "Xóa",
+        "confirm": "Xác nhận",
+        "ok": "Đồng ý",
+        "close": "Đóng",
+        "loading": "Đang tải...",
+        "success": "Thành công",
+        "error": "Lỗi"
+    },
+    "auth": {
+        "login": "Đăng nhập",
+        "register": "Đăng ký",
+        "email": "Địa chỉ Email",
+        "password": "Mật khẩu",
+        "forgotPassword": "Quên mật khẩu?",
+        "dontHaveAccount": "Chưa có tài khoản?",
+        "alreadyHaveAccount": "Đã có tài khoản?",
+        "emailInvalid": "Email không hợp lệ",
+        "emailRequired": "Vui lòng nhập Email",
+        "passwordMin": "Mật khẩu tối thiểu 6 ký tự",
+        "passwordRequired": "Vui lòng nhập mật khẩu",
+        "passwordMismatch": "Mật khẩu không khớp",
+        "confirmPasswordRequired": "Vui lòng xác nhận mật khẩu",
+        "nameRequired": "Vui lòng nhập tên hiển thị",
+        "loginTitle": "Đăng nhập",
+        "loginDesc": "Chào mừng trở lại! Vui lòng nhập thông tin để tiếp tục.",
+        "orContinueWith": "Hoặc tiếp tục với",
+        "registerNow": "Đăng ký ngay",
+        "registerTitle": "Tạo tài khoản mới",
+        "registerDesc": "Bắt đầu hành trình quản lý tài chính thông minh của bạn.",
+        "displayName": "Tên hiển thị",
+        "confirmPassword": "Xác nhận mật khẩu",
+        "createAccountBtn": "Tạo Tài Khoản",
+        "orRegisterWith": "Hoặc đăng ký bằng",
+        "loginLink": "Đăng nhập",
+        "loginSuccess": "Chào mừng bạn trở lại!",
+        "socialLoginComingSoon": "Tính năng đăng nhập Social đang trong lộ trình phát triển.",
+        "registerSuccess": "Đăng ký thành công! Đã tạo dữ liệu mẫu tham khảo.",
+        "socialRegisterComingSoon": "Tính năng đăng ký Social đang trong lộ trình phát triển."
+    },
+    "nav": {
+        "dashboard": "Tổng Quan",
+        "wallets": "Ví Của Tôi",
+        "transactions": "Giao Dịch",
+        "family": "Gia Đình",
+        "goals": "Mục Tiêu",
+        "reports": "Báo Cáo",
+        "settings": "Cài Đặt"
+    },
+    "sidebar": {
+        "context": "Ngữ Cảnh",
+        "personalWallet": "Ví Cá Nhân",
+        "manageFamily": "Quản Lý Gia Đình",
+        "general": "Chung",
+        "addTransaction": "Thêm Giao Dịch"
+    },
+    "header": {
+        "hello": "Xin chào,",
+        "user": "Người dùng"
+    },
+    "dashboard": {
+        "title": "Tổng Quan",
+        "desc": "Bức tranh toàn cảnh về tài chính của bạn.",
+        "stats": {
+            "totalAssets": "Tổng Tài Sản",
+            "activeWallets": "Trên {{count}} ví đang hoạt động",
+            "income": "Thu Nhập",
+            "incomeTotal": "Tổng thu nhập ghi nhận",
+            "expense": "Chi Tiêu",
+            "expenseTotal": "Tổng chi tiêu ghi nhận",
+            "transactions": "Giao Dịch",
+            "totalRecords": "Tổng số bản ghi"
+        },
+        "recent": {
+            "title": "Giao Dịch Gần Đây"
+        },
+        "chart": {
+            "title": "Xu Hướng Dòng Tiền",
+            "desc": "Biểu đồ thu chi theo thời gian."
+        }
+    },
+    "wallets": {
+        "title": "Ví Của Tôi",
+        "desc": "Quản lý nguồn tiền của bạn.",
+        "emptyTitle": "Chưa có ví nào",
+        "emptyDesc": "Tạo một ví mới để bắt đầu quản lý thu chi của bạn.",
+        "addWallet": "+ Thêm Ví Mới",
+        "addWalletTitle": "Thêm Ví Mới",
+        "form": {
+            "name": "Tên Ví",
+            "namePlaceholder": "vd: Vietcombank",
+            "balance": "Số Dư Ban Đầu",
+            "type": "Loại",
+            "createBtn": "Tạo Ví",
+            "types": {
+                "cash": "Tiền Mặt",
+                "bank": "Tài Khoản Ngân Hàng",
+                "credit-card": "Thẻ Tín Dụng",
+                "e-wallet": "Ví Điện Tử"
+            },
+            "validation": {
+                "nameRequired": "Vui lòng nhập tên ví",
+                "balanceRequired": "Vui lòng nhập số dư ban đầu",
+                "balanceMin": "Số dư không được âm",
+                "typeRequired": "Vui lòng chọn loại ví"
+            }
+        }
+    },
+    "transactions": {
+        "title": "Giao Dịch",
+        "desc": "Quản lý chi tiêu & lập lịch định kỳ.",
+        "exportData": "Xuất Dữ Liệu",
+        "exportPDF": "Xuất PDF",
+        "exportCSV": "Xuất CSV (Excel)",
+        "addSchedule": "Thêm Lịch",
+        "tabs": {
+            "history": "Lịch Sử",
+            "recurring": "Định Kỳ"
+        },
+        "search": "Tìm kiếm giao dịch...",
+        "addRecurringTitle": "Thêm Lịch Định Kỳ",
+        "list": {
+            "emptyTitle": "Chưa có giao dịch nào",
+            "emptyDesc": "Bạn chưa có bất kỳ giao dịch nào trong khoảng thời gian này. Hãy thêm giao dịch mới để bắt đầu theo dõi chi tiêu."
+        },
+        "recurring": {
+            "emptyTitle": "Chưa có lịch định kỳ nào.",
+            "emptyDesc": "Tạo lịch để tự động hóa các khoản chi thường xuyên.",
+            "paused": "Đã tạm dừng",
+            "due": "Thời hạn:",
+            "pauseBtn": "Tạm dừng",
+            "activateBtn": "Kích hoạt",
+            "deleteConfirm": "Bạn có chắc muốn xóa lịch này không?",
+            "freq": {
+                "DAILY": "Hàng Ngày",
+                "WEEKLY": "Hàng Tuần",
+                "MONTHLY": "Hàng Tháng",
+                "YEARLY": "Hàng Năm"
+            },
+            "form": {
+                "name": "Tên Lịch",
+                "namePlaceholder": "vd: Tiền Thuê Nhà",
+                "amount": "Số Tiền",
+                "type": "Loại",
+                "types": {
+                    "EXPENSE": "Chi Tiêu",
+                    "INCOME": "Thu Nhập"
+                },
+                "frequency": "Tần Suất",
+                "startDate": "Ngày Bắt Đầu",
+                "wallet": "Ví",
+                "createBtn": "Tạo Lịch",
+                "validation": {
+                    "nameRequired": "Vui lòng nhập tên lịch",
+                    "amountRequired": "Vui lòng nhập số tiền",
+                    "amountPositive": "Số tiền phải lớn hơn 0",
+                    "frequencyRequired": "Vui lòng chọn tần suất",
+                    "typeRequired": "Vui lòng chọn loại"
+                }
+            }
+        }
+    },
+    "family": {
+        "title": "Quản Lý Gia Đình",
+        "desc": "Quản lý các nhóm chi tiêu chung của bạn.",
+        "createBtn": "Tạo Gia Đình Mới",
+        "list": {
+            "title": "Gia Đình Của Bạn",
+            "empty": "Chưa có gia đình nào. Hãy tạo mới để bắt đầu!",
+            "members": "{{count}} thành viên",
+            "role": "Vai trò: {{role}}",
+            "active": "Đang Chọn",
+            "switch": "Chuyển Đổi",
+            "ownerBadge": "Owner",
+            "you": "(Bạn)",
+            "memberListTitle": "Thành Viên"
+        },
+        "actions": {
+            "manage": "Quản lý thành viên",
+            "makeAdmin": "Thăng làm Admin",
+            "makeMember": "Đặt làm Thành viên",
+            "makeViewer": "Đặt làm Viewer",
+            "remove": "Mời ra khỏi nhóm",
+            "invite": "Mời Thành Viên Mới"
+        },
+        "expenses": {
+            "title": "Chi Tiêu Chung ({{count}})",
+            "desc": "Danh sách các giao dịch từ Quỹ Gia Đình.",
+            "emptyTitle": "Chưa có giao dịch",
+            "emptyDesc": "Chưa có khoản chi tiêu chung nào được ghi nhận.",
+            "paidBy": "{{name}} đã trả {{amount}}",
+            "settleUp": "(Settle Up)",
+            "splitMembers": "(Chia cho {{count}} người)",
+            "splitEven": "(Chia đều cho {{count}} người)",
+            "optimizeBtn": "Tối Ưu Hóa Nợ (Thuật Toán Splitwise)"
+        },
+        "settlement": {
+            "title": "Thanh Toán Tối Ưu",
+            "desc": "Ai cần phải trả cho ai để cân bằng.",
+            "emptyTitle": "Không có nợ",
+            "emptyDescZero": "Cần có giao dịch để chia tiền.",
+            "emptyDescHasTx": "Các khoản nợ đã được cân bằng.",
+            "debtor": "Người nợ",
+            "creditor": "Chủ nợ",
+            "payBtn": "Trả Nợ",
+            "algorithmNote": "Giao dịch được giảm thiểu bằng Thuật Toán Tham Lam (Greedy)."
+        },
+        "modals": {
+            "invite": {
+                "title": "Mời tham gia {{name}}",
+                "desc": "Chia sẻ mã này cho người thân để họ tham gia nhóm gia đình.",
+                "validity": "Mã có hiệu lực trong 24 giờ."
+            },
+            "create": {
+                "title": "Tạo Gia Đình Mới",
+                "nameLabel": "Tên Gia Đình / Nhóm",
+                "namePlaceholder": "Ví dụ: Nhà Hạnh Phúc, Team Đi Phượt...",
+                "descLabel": "Mô tả (Tùy chọn)",
+                "descPlaceholder": "Mô tả ngắn về nhóm này...",
+                "cancel": "Hủy",
+                "submit": "Tạo Nhóm"
+            },
+            "settle": {
+                "title": "Xác Nhận Thanh Toán",
+                "payTo": "Chuyển Trả",
+                "note": "Hành động này sẽ tạo một giao dịch thanh toán trong hệ thống để tự động cấn trừ khoản nợ này. Bạn cần đảm bảo việc chuyển tiền thực tế đã được thực hiện.",
+                "cancel": "Hủy",
+                "submit": "Xác nhận Đã Trả"
+            }
+        },
+        "toasts": {
+            "paymentRecorded": "Đã ghi nhận thanh toán {{amount}}"
+        },
+        "emptySelection": "Vui lòng chọn một Gia Đình ở trên để xem tính năng Quản Lý Nợ."
+    },
+    "settings": {
+        "title": "Cài Đặt",
+        "subtitle": "Quản lý giao diện, hiển thị, hệ thống và tài khoản của bạn.",
+        "tabs": {
+            "appearance": "Giao Diện & Ký Hiệu",
+            "notifications": "Thông Báo",
+            "data": "Dữ Liệu Hệ Thống",
+            "account": "Tài Khoản & Bảo Mật"
+        },
+        "appearance": {
+            "title": "Hiển thị & Giao diện",
+            "desc": "Cá nhân hóa trải nghiệm sử dụng ứng dụng.",
+            "themeTitle": "Chủ Màu (Theme)",
+            "themeLight": "Giao diện Sáng",
+            "themeDark": "Giao diện Tối",
+            "themeSystem": "Tự động (Hệ thống)",
+            "currencyTitle": "Tiền tệ & Ký hiệu",
+            "currencyDesc": "Tất cả giao dịch sẽ hiển thị với ký hiệu này.",
+            "currencyPlaceholder": "Chọn tiền tệ",
+            "langTitle": "Ngôn ngữ Ưu tiên",
+            "langDesc": "Ngôn ngữ giao diện (Đang hiển thị dạng giả lập).",
+            "langPlaceholder": "Chọn ngôn ngữ"
+        },
+        "notifications": {
+            "title": "Cài Đặt Thông Báo",
+            "desc": "Quản lý các sự kiện nào sẽ gửi cảnh báo đến bạn.",
+            "debtTitle": "Nhắc Nhở Nợ & Thanh Toán",
+            "debtDesc": "Nhận thông báo khi tới hạn chót thanh toán hóa đơn hoặc trả nợ.",
+            "budgetTitle": "Cảnh Báo Vượt Ngân Sách",
+            "budgetDesc": "Báo động đỏ khi bạn tiêu quá số tiền đã hoạch định cho một hạng mục.",
+            "weeklyTitle": "Báo Cáo Chi Tiêu Hàng Tuần",
+            "weeklyDesc": "Gửi bản tóm tắt tình hình tài chính vào Chủ Nhật hàng tuần qua email."
+        },
+        "data": {
+            "title": "Lưu Trữ & Khôi Phục",
+            "desc": "Kiểm soát toàn bộ kho dữ liệu cục bộ của ứng dụng.",
+            "backupTitle": "Xuất Phục Hồi (Backup Data)",
+            "backupDesc": "Tải xuống toàn bộ tài sản, giao dịch dưới định dạng tệp .json an toàn.",
+            "backupBtn": "Sao Lưu Ngay",
+            "backupSuccess": "Đã phân loại & tải xuống tệp dữ liệu backup.",
+            "importTitle": "Nhập Dữ Liệu Cũ (Import)",
+            "importDesc": "Nạp lại file backup .json nếu bạn mất dữ liệu, hoặc chuyển thiết bị.",
+            "importBtn": "Tải Lên Tệp",
+            "importNotice": "Tính năng nhận tệp Backup JSON đang được phát triển.",
+            "resetTitle": "Xoá Dữ Liệu Giả Lập (Hard Reset)",
+            "resetDesc": "Hành động này mang ý nghĩa format database, dùng trong trường hợp app bị lỗi cache. Sẽ mất sạch data chưa backup.",
+            "resetBtn": "Xoá Toàn Bộ Dữ Liệu",
+            "resetModalTitle": "Cảnh Báo Nguy Hiểm",
+            "resetModalQ": "Xóa vĩnh viễn dữ liệu thiết bị?",
+            "resetModalDesc1": "Toàn bộ ",
+            "resetModalDescStrong": "Giao dịch, Ví, Thông tin tài khoản",
+            "resetModalDesc2": " của bạn được lưu trong LocalStorage sẽ bị xóa sạch và KHÔNG THỂ KHÔI PHỤC được nếu chưa có file dữ liệu .json sao lưu.",
+            "resetModalDesc3": "Ứng dụng sẽ tự động tải lại (Reload).",
+            "resetModalConfirm": "Xác nhận Xóa"
+        },
+        "account": {
+            "title": "Tài Khoản & Phiên Đăng Nhập",
+            "desc": "Thông tin trạng thái bảo mật của phiên",
+            "logoutTitle": "Đăng Xuất Phiên Hiện Tại",
+            "logoutDesc": "Hành động này sẽ xóa Identity Token hiện tại, bạn cần phải nhập lại Email/Mật khẩu khi truy cập tiếp.",
+            "logoutBtn": "An Toàn Đăng Xuất",
+            "logoutSuccess": "Đã kết thúc phiên bảo mật",
+            "logoutModalTitle": "Xác Nhận Hành Động",
+            "logoutModalQ": "Bạn có chắc chắn muốn thoát khỏi tài khoản hệ thống của thiết bị này chứ?",
+            "stayBtn": "Giữ tôi đăng nhập",
+            "logoutConfirmBtn": "Đăng Xuất"
+        }
+    },
+    "goals": {
+        "title": "Mục Tiêu Tài Chính",
+        "desc": "Biến ước mơ thành hiện thực thông qua tiết kiệm.",
+        "btnCreate": "Tạo Mục Tiêu Mới",
+        "overviewTotal": "Tổng đang tích lũy",
+        "overviewAchieved": "Mục tiêu đã đạt",
+        "activeGoals": "Hũ Đang Mở",
+        "emptyTitle": "Chưa có Hũ Tiết Kiệm nào",
+        "emptyDesc": "Tạo mục tiêu để bắt đầu hành trình tích lũy và theo dõi tiến độ của bạn.",
+        "deadline": "Hạn chót:",
+        "remainingNeeded": "Cần góp thêm",
+        "btnDeposit": "Nạp Tiền Vào Hũ",
+        "achievedTitle": "Đã Hoàn Thành",
+        "achievedSub": "Đạt",
+        "modals": {
+            "deposit": {
+                "title": "Nạp Tiền Mục Tiêu",
+                "needMore": "Cần thêm:",
+                "inputLabel": "Nhập số tiền muốn nạp",
+                "quickFill": "Đầy Hũ",
+                "sourceWallet": "Nguồn Tiền (Ví Cá Nhân)",
+                "emptyWallet": "Bạn không có ví cá nhân nào có số dư để trích.",
+                "btnCancel": "Hủy",
+                "btnConfirm": "Xác Nhận Nạp",
+                "errInvalid": "Vui lòng nhập số tiền hợp lệ",
+                "errSelectWallet": "Vui lòng chọn ví trích tiền",
+                "errNotEnough": "Số dư trong ví không đủ. Ví đang có {{amount}}",
+                "errOverfill": "Số tiền nạp vượt quá mục tiêu cần thiết ({{amount}} nữa)",
+                "successMsg": "Đã nạp thành công {{amount}} vào {{name}}"
+            },
+            "create": {
+                "title": "Tạo Mục Tiêu Mới",
+                "previewDefault": "Tên Mục Tiêu",
+                "targetPreview": "Đích đến:",
+                "nameLabel": "Tên Mục Tiêu",
+                "namePlaceholder": "Vd: Mua xe máy mới, Đi du lịch...",
+                "amountLabel": "Số Tiền Cần Đạt",
+                "dateLabel": "Hạn Chót Tích Lũy",
+                "colorLabel": "Chọn Màu Sắc",
+                "iconLabel": "Chọn Biểu Tượng",
+                "btnCancel": "Hủy Bỏ",
+                "btnSubmit": "Tạo Mục Tiêu",
+                "errName": "Vui lòng nhập tên mục tiêu",
+                "errAmount": "Số tiền mục tiêu không hợp lệ",
+                "errDate": "Vui lòng chọn hạn chót",
+                "errFuture": "Hạn chót phải là một ngày trong tương lai",
+                "successMsg": "Đã tạo mục tiêu \"{{name}}\" thành công!"
+            }
+        }
+    },
+    "reports": {
+        "title": "Báo Cáo & Thống Kê",
+        "desc": "Hiểu rõ hơn về thói quen chi tiêu của bạn.",
+        "btnPdf": "PDF",
+        "btnCsv": "CSV",
+        "summaryTitle": "Thu và Chi",
+        "summaryDesc": "Tổng hợp tài chính dựa trên dữ liệu hiện tại.",
+        "income": "Thu Nhập",
+        "expense": "Chi Tiêu",
+        "amount": "Số Tiền",
+        "categoryTitle": "Chi Tiêu Theo Danh Mục",
+        "categoryDesc": "Top 5 danh mục chi tiêu nhiều nhất.",
+        "others": "Khác",
+        "uncategorized": "Chưa phân loại",
+        "exportTitle": "Báo Cáo Tài Chính"
+    },
+    "notifications": {
+        "title": "Thông báo",
+        "markRead": "Đánh dấu đã đọc",
+        "empty": "Không có thông báo nào"
+    },
+    "transactionForm": {
+        "title": "Thêm Giao Dịch Mới",
+        "tabs": {
+            "expense": "Chi Tiêu",
+            "income": "Thu Nhập",
+            "transfer": "Chuyển Khoản"
+        },
+        "amount": "Số Tiền",
+        "fromWallet": "Từ Ví",
+        "toWallet": "Đến Ví",
+        "wallet": "Ví",
+        "selectWallet": "Chọn ví",
+        "description": "Mô Tả",
+        "descPlaceholderTransfer": "vd: Chuyển tiền tiết kiệm",
+        "descPlaceholderDefault": "vd: Ăn trưa",
+        "date": "Ngày",
+        "category": "Danh Mục",
+        "submitTransfer": "Xác Nhận Chuyển",
+        "submitAdd": "Thêm Giao Dịch",
+        "categories": {
+            "general": "Chung",
+            "food": "Ăn Uống",
+            "transport": "Di Chuyển",
+            "shopping": "Mua Sắm",
+            "utilities": "Hóa Đơn & Tiện Ích",
+            "entertainment": "Giải Trí",
+            "health": "Sức Khỏe",
+            "income": "Lương / Thu Nhập"
+        },
+        "validations": {
+            "reqDesc": "Vui lòng nhập mô tả",
+            "reqAmount": "Vui lòng nhập số tiền",
+            "posAmount": "Số tiền phải lớn hơn 0",
+            "reqDate": "Vui lòng chọn ngày",
+            "reqType": "Vui lòng chọn loại",
+            "reqWallet": "Vui lòng chọn ví",
+            "reqCategory": "Vui lòng chọn danh mục",
+            "reqDestWallet": "Vui lòng chọn ví đích",
+            "diffWallet": "Ví đích phải khác ví nguồn"
+        }
+    },
+    "profile": {
+        "title": "Hồ sơ cá nhân",
+        "desc": "Quản lý thông tin cá nhân và tài khoản của bạn.",
+        "avatarTitle": "Ảnh Đại Diện",
+        "avatarCurrent": "Liên kết ảnh hiện tại",
+        "avatarGenerate": "Tạo ảnh ngẫu nhiên",
+        "basicInfo": "Thông tin cơ bản",
+        "basicDesc": "Thông tin này sẽ được hiển thị trên hệ thống và với các thành viên trong gia đình.",
+        "fullName": "Họ và tên",
+        "fullNamePlaceholder": "Nhập họ và tên...",
+        "email": "Địa chỉ Email",
+        "emailNote": "Email là thông tin đăng nhập và không thể thay đổi.",
+        "phone": "Số điện thoại",
+        "dob": "Ngày sinh",
+        "cancel": "Hủy bỏ",
+        "save": "Lưu thay đổi",
+        "reqName": "Vui lòng nhập họ tên.",
+        "successMsg": "Đã cập nhật thông tin thành công!"
+    },
+    "sharedExpense": {
+        "addBtn": "Thêm Chi Tiêu Chung",
+        "title": "Thêm Chi Tiêu Chung",
+        "desc": "Tạo giao dịch nhóm, dự chi từ quỹ gia đình và tự động chia đều nợ cho các thành viên.",
+        "descriptionLabel": "Mô tả khoản chi",
+        "descriptionPlaceholder": "vd: Tiền ăn lẩu tối thứ 7",
+        "amountLabel": "Tổng số tiền",
+        "paidByLabel": "Người ứng tiền / Trả tiền",
+        "splitEqually": "Chia đều cho {{count}} người (mỗi người {{amount}})",
+        "previewLabel": "Bản xem trước phân bổ nợ:",
+        "submitBtn": "Tạo Giao Dịch Nhóm",
+        "cancelBtn": "Hủy",
+        "errDesc": "Vui lòng nhập mô tả",
+        "errAmount": "Vui lòng nhập số tiền hợp lệ lớn hơn 0",
+        "errNoWallet": "Gia đình này chưa có quỹ hoặc ví chung nào để ghi nhận giao dịch.",
+        "successMsg": "Đã thêm chi tiêu chung thành công!"
+    }
+}

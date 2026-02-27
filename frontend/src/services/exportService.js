@@ -1,20 +1,21 @@
-
-import jsPDF from "jspdf";
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
 import autoTable from "jspdf-autotable";
-import Papa from "papaparse";
-import { removeVietnameseTones } from "@/lib/utils";
+import Papa from "papaparse"; // Keep Papa for now as the unparse line is still there, but the user's snippet is contradictory. I will assume the user wants to keep Papa for CSV for now, and the XLSX import is for a future Excel export function not fully provided.
+import { formatCurrency, formatDateString, removeVietnameseTones } from '@/lib/utils';
+import i18n from 'i18next';
 
 // --- CSV Export ---
 export const exportToCSV = (transactions) => {
     // 1. Transform data for CSV
+    // Dịch headers thông qua i18n
     const data = transactions.map(t => ({
-        Date: new Date(t.date).toLocaleDateString("vi-VN"),
-        Description: t.description,
-        Amount: t.amount,
-        Currency: "VND",
-        Type: t.type === 'INCOME' ? 'Thu' : 'Chi',
-        Category: "Category", // Needs mapping if we had category names
-        Wallet: "Wallet" // Needs mapping
+        [i18n.t('transactions.form.date') || 'Ngày']: formatDateString(t.date),
+        [i18n.t('transactions.form.desc') || 'Mô Tả']: t.description || 'Không có mô tả',
+        [i18n.t('transactions.form.type') || 'Loại']: t.type === 'INCOME' ? '+' : '-',
+        [i18n.t('transactions.form.amount') || 'Số Tiền']: formatCurrency(t.amount),
+        [i18n.t('transactions.form.category') || 'Danh mục']: t.category_id, // Assuming category_id is what's available
+        [i18n.t('transactions.form.wallet') || 'Ví']: t.wallet_id // Assuming wallet_id is what's available
     }));
 
     // 2. Generate CSV
@@ -43,29 +44,28 @@ export const exportToPDF = (transactions, title = "Sao Kê Giao Dịch") => {
     doc.text(removeVietnameseTones(title), 14, 32);
 
     doc.setFontSize(10);
-    doc.text(`${removeVietnameseTones("Ngày xuất")}: ${new Date().toLocaleDateString("vi-VN")}`, 14, 40);
+    doc.text(`${removeVietnameseTones(i18n.t('common.export_date') || "Ngày xuất")}: ${formatDateString(new Date())}`, 14, 40);
 
     // 2. Table Data
-    const tableColumn = ["Ngay", "Mo Ta", "Loai", "So Tien"]; // Hardcoded ASCII headers
-    const tableRows = [];
-
-    transactions.forEach(t => {
-        // Manual ASCII Currency Formatting: 100000 -> "100.000 VND"
-        const formattedAmount = new Intl.NumberFormat('vi-VN').format(t.amount) + ' VND';
-
-        const transactionData = [
-            new Date(t.date).toLocaleDateString("vi-VN"),
-            removeVietnameseTones(t.description),
-            t.type === 'INCOME' ? 'Thu' : 'Chi',
-            formattedAmount
-        ];
-        tableRows.push(transactionData);
-    });
+    // The tableColumn and tableRows generation is replaced by the autoTable head and body directly.
 
     // 3. Generate Table
     autoTable(doc, {
-        head: [tableColumn],
-        body: tableRows,
+        head: [[
+            removeVietnameseTones(i18n.t('transactions.form.date') || 'Ngay'),
+            removeVietnameseTones(i18n.t('transactions.form.desc') || 'Mo Ta'),
+            removeVietnameseTones(i18n.t('transactions.form.type') || 'Loai'),
+            removeVietnameseTones(i18n.t('transactions.form.amount') || 'So Tien')
+        ]],
+        body: transactions.map(t => {
+            const formattedAmount = formatCurrency(t.amount);
+            return [
+                formatDateString(t.date),
+                removeVietnameseTones(t.description || 'Khong co mo ta'),
+                t.type === 'INCOME' ? '+' : '-',
+                formattedAmount
+            ];
+        }),
         startY: 50,
         theme: 'grid',
         styles: { font: "helvetica", fontSize: 10 },

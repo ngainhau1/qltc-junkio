@@ -6,8 +6,10 @@ import { Wallet } from "lucide-react"
 import { Modal } from "@/components/ui/modal"
 import { WalletForm } from "@/components/features/wallets/WalletForm"
 import { EmptyState } from "@/components/ui/empty-state"
+import { useTranslation } from "react-i18next"
 
 export function Wallets() {
+    const { t } = useTranslation()
     const { wallets } = useSelector(state => state.wallets)
     const [isAddWalletOpen, setIsAddWalletOpen] = useState(false)
 
@@ -15,8 +17,8 @@ export function Wallets() {
 
         <div className="space-y-6">
             <header>
-                <h1 className="text-3xl font-bold tracking-tight">Ví Của Tôi</h1>
-                <p className="text-muted-foreground">Quản lý nguồn tiền của bạn.</p>
+                <h1 className="text-3xl font-bold tracking-tight">{t('wallets.title')}</h1>
+                <p className="text-muted-foreground">{t('wallets.desc')}</p>
             </header>
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -24,8 +26,8 @@ export function Wallets() {
                     <div className="col-span-full">
                         <EmptyState
                             icon={Wallet}
-                            title="Chưa có ví nào"
-                            description="Tạo một ví mới để bắt đầu quản lý thu chi của bạn."
+                            title={t('wallets.emptyTitle')}
+                            description={t('wallets.emptyDesc')}
                         />
                     </div>
                 ) : (
@@ -54,7 +56,7 @@ export function Wallets() {
                     onClick={() => setIsAddWalletOpen(true)}
                 >
                     <div className="text-center text-muted-foreground">
-                        <p className="font-medium">+ Thêm Ví Mới</p>
+                        <p className="font-medium">{t('wallets.addWallet')}</p>
                     </div>
                 </Card>
             </div>
@@ -62,7 +64,7 @@ export function Wallets() {
             <Modal
                 isOpen={isAddWalletOpen}
                 onClose={() => setIsAddWalletOpen(false)}
-                title="Thêm Ví Mới"
+                title={t('wallets.addWalletTitle')}
             >
                 <WalletForm onSuccess={() => setIsAddWalletOpen(false)} />
             </Modal>

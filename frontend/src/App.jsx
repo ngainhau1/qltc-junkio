@@ -18,6 +18,7 @@ import { Family } from "@/pages/Family"
 import { Reports } from "@/pages/Reports"
 import { Settings } from "@/pages/Settings"
 import { Goals } from "@/pages/Goals"
+import { Profile } from "@/pages/Profile"
 
 import { runRecurringEngine } from "@/services/recurringService"
 import { store } from "@/store"
@@ -60,8 +61,6 @@ function App() {
 
     // 3. Run Recurring Checks (Safe to run multiple times as it checks dates)
     if (isAuthenticated) {
-      // We pass the store instance directly so the engine can dispatch
-      // In a real app we might use a middleware or a thunk, but this is a simple "Lazy Check"
       const count = runRecurringEngine(store)
       if (count > 0) {
         toast.success(`Đã tự động tạo ${count} giao dịch định kỳ đến hạn.`, {
@@ -91,6 +90,7 @@ function App() {
             <Route path="/family" element={<Family />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/profile" element={<Profile />} />
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>

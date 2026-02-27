@@ -10,9 +10,11 @@ import {
     Legend
 } from 'recharts'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { formatCurrency } from "@/lib/utils"
+import { formatCurrency, formatDateString } from "@/lib/utils"
+import { useTranslation } from "react-i18next"
 
 const CustomTooltip = ({ active, payload, label }) => {
+    // ... tooltip code (no translation text needed inside tooltip for now, it uses localized dataKey name)
     if (active && payload && payload.length) {
         return (
             <div className="bg-popover border border-border p-3 rounded-xl shadow-lg">
@@ -30,8 +32,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 }
 
 export function FinancialChart({ transactions }) {
-    // ... (existing code) ...
-
+    const { t } = useTranslation();
     const [range, setRange] = useState('ALL') // '7D', '30D', 'ALL'
 
     const data = useMemo(() => {
@@ -53,7 +54,9 @@ export function FinancialChart({ transactions }) {
 
         // 2. Aggregate by Date
         const grouped = filtered.reduce((acc, t) => {
-            const date = new Date(t.date || t.transaction_date).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })
+            // Convert multiple date formats safely
+            const dateStr = t.date || t.transaction_date;
+            const date = dateStr ? formatDateString(dateStr, { day: '2-digit', month: '2-digit' }) : "---";
             // Sort key (YYYY-MM-DD) for correct ordering
             const dateObj = new Date(t.date || t.transaction_date)
             const sortKey = dateObj.toISOString().split('T')[0]
@@ -81,9 +84,9 @@ export function FinancialChart({ transactions }) {
                 <div className="flex items-center justify-between">
                     <div>
                         <CardTitle className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
-                            Xu Hướng Dòng Tiền
+                            {t('dashboard.chart.title')}
                         </CardTitle>
-                        <CardDescription>Biểu đồ thu chi theo thời gian.</CardDescription>
+                        <CardDescription>{t('dashboard.chart.desc')}</CardDescription>
                     </div>
                     <div className="flex gap-1 bg-muted/50 p-1 rounded-lg">
                         {['7D', '30D', 'ALL'].map(r => (
@@ -133,7 +136,7 @@ export function FinancialChart({ transactions }) {
                         <Area
                             type="monotone"
                             dataKey="income"
-                            name="Thu Nhập"
+                            name={t('dashboard.stats.income')}
                             stroke="#10b981"
                             strokeWidth={3}
                             fillOpacity={1}
@@ -142,7 +145,7 @@ export function FinancialChart({ transactions }) {
                         <Area
                             type="monotone"
                             dataKey="expense"
-                            name="Chi Tiêu"
+                            name={t('dashboard.stats.expense')}
                             stroke="#ef4444"
                             strokeWidth={3}
                             fillOpacity={1}
