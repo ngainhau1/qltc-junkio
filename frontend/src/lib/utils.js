@@ -1,14 +1,22 @@
 import { clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { store } from "@/store"
 
 export function cn(...inputs) {
     return twMerge(clsx(inputs))
 }
 
 export const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('vi-VN', {
+    // Lấy config tiền tệ từ Store (mặc định VND)
+    const state = store.getState();
+    const currency = state.settings?.currency || 'VND';
+
+    const locale = currency === 'USD' ? 'en-US' : 'vi-VN';
+    const curr = currency === 'USD' ? 'USD' : 'VND';
+
+    return new Intl.NumberFormat(locale, {
         style: 'currency',
-        currency: 'VND',
+        currency: curr,
     }).format(amount);
 };
 

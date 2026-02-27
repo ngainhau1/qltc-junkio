@@ -7,6 +7,7 @@ import recurringReducer from '../features/recurring/recurringSlice';
 import uiReducer from '../features/ui/uiSlice';
 import notificationsReducer from '../features/notifications/notificationsSlice';
 import goalsReducer from '../features/goals/goalsSlice';
+import settingsReducer from '../features/settings/settingsSlice';
 
 export const store = configureStore({
     reducer: {
@@ -18,5 +19,6 @@ export const store = configureStore({
         ui: uiReducer,
         notifications: notificationsReducer,
         goals: goalsReducer,
+        settings: settingsReducer,
     },
 });
