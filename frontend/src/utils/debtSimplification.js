@@ -17,21 +17,16 @@ export function simplifyDebts(transactions) {
         balances[payer] = (balances[payer] || 0) + amount;
 
         if (t.shares && t.shares.length > 0) {
-            // Lọc các share đã được APPROVED
-            const approvedShares = t.shares.filter(s => s.approval_status === 'APPROVED');
-
-            if (approvedShares.length > 0) {
-                approvedShares.forEach(share => {
-                    balances[share.user_id] = (balances[share.user_id] || 0) - share.amount;
-                });
-            } else {
-                // Nếu chưa có ai APPROVED, thuật toán có thể tạm thời coi khoản chi đó do người tạo tự chịu
-                // Hoặc đơn giản là không gán nợ cho ai cả.
-                // Để đơn giản, ta sẽ chia đều theo logic cũ nếu KHÔNG CÓ shares nào được approved, 
-                // nhưng nếu bám sát thực tế, việc chưa phê duyệt có nghĩa là nợ chưa chốt hạ.
-                // Phương pháp an toàn nhất: Ta không tính các khoản này.
-                // Do nothing. Payer paid, but no one accepted debt yet.
-            }
+            t.shares.forEach(share => {
+                const shareAmount = share.amount;
+                if (share.approval_status === 'APPROVED') {
+                    // Nếu đã APPROVED, người bị gán nợ phải gánh
+                    balances[share.user_id] = (balances[share.user_id] || 0) - shareAmount;
+                } else {
+                    // Nếu PENDING hoặc REJECTED, người chi tiền (Payer) phải chịu thiệt thòi giữ khoản nợ này
+                    balances[payer] = (balances[payer] || 0) - shareAmount;
+                }
+            });
         } else {
             const splitCount = t.splitAmong.length;
             const splitAmount = amount / splitCount;
