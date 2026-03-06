@@ -24,6 +24,7 @@ app.use('/api', limiter); // Áp dụng cho mọi API
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/transactions', require('./routes/transactionRoutes'));
+app.use('/api/debts', require('./routes/debtRoutes'));
 
 // Cấu hình kết nối Database (Lấy từ biến môi trường Docker)
 // Lưu ý: 'host' là tên service trong docker-compose ('db')

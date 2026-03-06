@@ -32,6 +32,10 @@ module.exports = (sequelize, DataTypes) => {
         status: {
             type: DataTypes.STRING,
             defaultValue: 'UNPAID' // UNPAID, PAID
+        },
+        approval_status: {
+            type: DataTypes.STRING,
+            defaultValue: 'PENDING' // PENDING, APPROVED, REJECTED
         }
     }, {
         sequelize,
