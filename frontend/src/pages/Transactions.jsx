@@ -15,7 +15,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Download, FileText, FileSpreadsheet } from "lucide-react"
-import { exportToCSV, exportToPDF } from "@/services/exportService"
+import { exportToCSV, exportToPDF, exportToExcel } from "@/services/exportService"
 import { useTranslation } from "react-i18next"
 
 export function Transactions() {
@@ -57,6 +57,9 @@ export function Transactions() {
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => exportToCSV(filteredTransactions)}>
                                 <FileSpreadsheet className="mr-2 h-4 w-4" /> {t('transactions.exportCSV')}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => exportToExcel(filteredTransactions)}>
+                                <FileSpreadsheet className="mr-2 h-4 w-4" /> Xuất Excel
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>

@@ -1,9 +1,7 @@
 /**
- * Minimizes the number of transactions required to settle debts within a group.
- * Uses a greedy algorithm approach:
- * 1. Calculate net balance for each person.
- * 2. Separate into debtors (owe money) and creditors (owed money).
- * 3. Match the biggest debtor with the biggest creditor to settle amounts.
+ * Cải tiến thuật toán Đơn giản hóa nợ.
+ * Thay vì Greedy cơ bản luôn bốc thằng nợ nhiều nhất trả cho thằng cho vay nhiều nhất (dễ sinh ra giao dịch chéo vô cớ),
+ * thuật toán cải tiến này ưu tiên "Exact Matches" (khớp lệnh chính xác) trước, sau đó mới đến Greedy.
  * 
  * @param {Array} transactions - List of expenses { paidBy: userId, splitAmong: [userIds], amount: number }
  * @returns {Array} - Optimized transactions { from: userId, to: userId, amount: number }
@@ -16,16 +14,13 @@ export function simplifyDebts(transactions) {
         const payer = t.paidBy;
         const amount = t.amount;
 
-        // Payer gets back the full amount (conceptually)
         balances[payer] = (balances[payer] || 0) + amount;
 
-        // If specific shares are provided, use them
         if (t.shares && t.shares.length > 0) {
             t.shares.forEach(share => {
                 balances[share.user_id] = (balances[share.user_id] || 0) - share.amount;
             });
         } else {
-            // Otherwise default to equal split among splitAmong array
             const splitCount = t.splitAmong.length;
             const splitAmount = amount / splitCount;
 
@@ -35,32 +30,57 @@ export function simplifyDebts(transactions) {
         }
     });
 
-    // 2. Separate into Debtors and Creditors
     const debtors = [];
     const creditors = [];
 
     Object.keys(balances).forEach(person => {
         const balance = balances[person];
-        // Floating point correction
         if (Math.abs(balance) < 0.01) return;
 
         if (balance > 0) {
             creditors.push({ person, amount: balance });
         } else {
-            debtors.push({ person, amount: -balance }); // Store positive debt
+            debtors.push({ person, amount: -balance });
         }
     });
 
-    // 3. Greedy Matching
     const settlements = [];
-    let i = 0; // debtors index
-    let j = 0; // creditors index
 
-    while (i < debtors.length && j < creditors.length) {
-        const debtor = debtors[i];
-        const creditor = creditors[j];
+    // Bước 2: Ưu tiên Khớp Lệnh Chính Xác (Exact Match)
+    // Nếu A nợ đúng 50k, và B được nhận đúng 50k -> Bắt cặp luôn để loại bỏ khoir mảng
+    for (let i = 0; i < debtors.length; i++) {
+        for (let j = 0; j < creditors.length; j++) {
+            if (debtors[i].amount > 0 && creditors[j].amount > 0 &&
+                Math.abs(debtors[i].amount - creditors[j].amount) < 0.01) {
 
-        // The amount to settle is logical min of what debtor owes and creditor is owed
+                settlements.push({
+                    from: debtors[i].person,
+                    to: creditors[j].person,
+                    amount: Number(debtors[i].amount.toFixed(2))
+                });
+
+                debtors[i].amount = 0;
+                creditors[j].amount = 0;
+            }
+        }
+    }
+
+    // Lọc lại mảng bỏ những người đã được thanh toán
+    const activeDebtors = debtors.filter(d => d.amount > 0.01);
+    const activeCreditors = creditors.filter(c => c.amount > 0.01);
+
+    // Bước 3: Thuật toán tham lam (Greedy) có nắn chỉnh
+    // Ưu tiên sắp xếp để thanh toán các khoản lớn nhất với nhau
+    activeDebtors.sort((a, b) => b.amount - a.amount);
+    activeCreditors.sort((a, b) => b.amount - a.amount);
+
+    let i = 0;
+    let j = 0;
+
+    while (i < activeDebtors.length && j < activeCreditors.length) {
+        const debtor = activeDebtors[i];
+        const creditor = activeCreditors[j];
+
         const amount = Math.min(debtor.amount, creditor.amount);
 
         settlements.push({
@@ -69,11 +89,9 @@ export function simplifyDebts(transactions) {
             amount: Number(amount.toFixed(2))
         });
 
-        // Adjust remaining amounts
         debtor.amount -= amount;
         creditor.amount -= amount;
 
-        // Move pointers if settled
         if (debtor.amount < 0.01) i++;
         if (creditor.amount < 0.01) j++;
     }
@@ -81,7 +99,6 @@ export function simplifyDebts(transactions) {
     return settlements;
 }
 
-// Helper to calculate total flow just for comparison
 export function calculateTotalFlow(settlements) {
     return settlements.reduce((acc, s) => acc + s.amount, 0);
 }

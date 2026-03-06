@@ -2,6 +2,32 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { User, Family, FamilyMember } = require('../models');
 
+// Helpers for Token Generation
+const generateAccessToken = (user) => {
+    return jwt.sign(
+        { user: { id: user.id } },
+        process.env.JWT_SECRET || 'secret',
+        { expiresIn: '15m' } // Hết hạn ngắn
+    );
+};
+
+const generateRefreshToken = (user) => {
+    return jwt.sign(
+        { user: { id: user.id } },
+        process.env.JWT_REFRESH_SECRET || 'refresh_secret_b6d9677116aa4',
+        { expiresIn: '7d' } // Hết hạn dài
+    );
+};
+
+const setRefreshTokenCookie = (res, token) => {
+    res.cookie('refresh_token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 ngày
+    });
+};
+
 exports.register = async (req, res) => {
     const { name, email, password } = req.body;
     try {
@@ -32,21 +58,14 @@ exports.register = async (req, res) => {
             role: 'owner'
         });
 
-        const payload = {
-            user: {
-                id: user.id
-            }
-        };
+        const accessToken = generateAccessToken(user);
+        const refreshToken = generateRefreshToken(user);
 
-        jwt.sign(
-            payload,
-            process.env.JWT_SECRET || 'secret',
-            { expiresIn: 360000 },
-            (err, token) => {
-                if (err) throw err;
-                res.json({ token, user: { id: user.id, name: user.name, email: user.email } });
-            }
-        );
+        // TODO: Mở rộng, lưu refresh token vào database ở bảng refresh_tokens nếu cần blacklist
+
+        setRefreshTokenCookie(res, refreshToken);
+
+        res.json({ token: accessToken, user: { id: user.id, name: user.name, email: user.email } });
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server error');
@@ -66,24 +85,37 @@ exports.login = async (req, res) => {
             return res.status(400).json({ msg: 'Invalid Credentials' });
         }
 
-        const payload = {
-            user: {
-                id: user.id
-            }
-        };
+        const accessToken = generateAccessToken(user);
+        const refreshToken = generateRefreshToken(user);
 
-        jwt.sign(
-            payload,
-            process.env.JWT_SECRET || 'secret',
-            { expiresIn: 360000 },
-            (err, token) => {
-                if (err) throw err;
-                res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
-            }
-        );
+        // TODO: Lưu refresh token vào DB nếu cần tracking device/revoke
+
+        setRefreshTokenCookie(res, refreshToken);
+
+        res.json({ token: accessToken, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server error');
+    }
+};
+
+exports.refreshToken = async (req, res) => {
+    const refreshToken = req.cookies?.refresh_token;
+
+    if (!refreshToken) {
+        return res.status(401).json({ msg: 'No refresh token provided, please log in' });
+    }
+
+    try {
+        const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET || 'refresh_secret_b6d9677116aa4');
+
+        // Generate new access token
+        const newAccessToken = generateAccessToken({ id: decoded.user.id });
+
+        res.json({ token: newAccessToken });
+    } catch (err) {
+        console.error('Refresh token error:', err.message);
+        res.status(403).json({ msg: 'Invalid or expired refresh token' });
     }
 };
 

@@ -1,19 +1,29 @@
 const express = require('express');
 const cors = require('cors');
+const rateLimit = require('express-rate-limit');
+const cookieParser = require('cookie-parser');
 const { Sequelize } = require('sequelize');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
-app.use(cors());
+// Rate Limiting Middleware (Bảo vệ chống Brute-force & DDoS)
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 phút
+    max: 100, // Tối đa 100 requests mỗi IP trong 15 phút
+    message: 'Quá nhiều yêu cầu từ IP này, vui lòng thử lại sau 15 phút.'
+});
+
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(cookieParser());
+app.use('/api', limiter); // Áp dụng cho mọi API
 
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/transactions', require('./routes/transactionRoutes'));
 
 // Cấu hình kết nối Database (Lấy từ biến môi trường Docker)
 // Lưu ý: 'host' là tên service trong docker-compose ('db')
@@ -51,6 +61,10 @@ app.listen(PORT, async () => {
     try {
         await sequelize.authenticate();
         console.log('✅ Database connected successfully!');
+
+        // Khởi chạy hệ thống báo thức giao dịch định kỳ
+        const { startCronJobs } = require('./services/cronJobs');
+        startCronJobs();
     } catch (error) {
         console.error('❌ Unable to connect to the database:', error.message);
     }

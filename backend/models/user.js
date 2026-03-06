@@ -9,6 +9,11 @@ module.exports = (sequelize, DataTypes) => {
       User.hasMany(models.Transaction, { foreignKey: 'user_id' });
       User.hasOne(models.Family, { as: 'OwnedFamily', foreignKey: 'owner_id' });
       User.belongsToMany(models.Family, { through: models.FamilyMember, foreignKey: 'user_id', as: 'Families' });
+
+      // New associations
+      User.hasMany(models.Goal, { foreignKey: 'user_id' });
+      User.hasMany(models.Notification, { foreignKey: 'user_id' });
+      User.hasMany(models.TransactionShare, { foreignKey: 'user_id' });
     }
   }
   User.init({
