@@ -13,7 +13,8 @@ import {
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
 import { addFamily, setActiveFamily, updateMemberRole, removeMember } from "@/features/families/familySlice"
-import { Users, Plus, ArrowRight, MoreHorizontal, Shield, ShieldAlert, LogOut, Check, Copy, Receipt, Target } from "lucide-react"
+import { updateShareApprovalStatus } from "@/features/transactions/transactionSlice"
+import { Users, Plus, ArrowRight, MoreHorizontal, Shield, ShieldAlert, LogOut, Check, Copy, Receipt, Target, CheckCircle2, XCircle } from "lucide-react"
 import { simplifyDebts } from "@/utils/debtSimplification"
 import { toast } from "sonner"
 import { EmptyState } from "@/components/ui/empty-state"
@@ -64,6 +65,21 @@ export function Family() {
         }
     }).slice(0, 100) // Increase limit for accurate debt calc
 
+    const pendingDebts = formattedExpenses.flatMap(tx => {
+        if (!tx.shares) return [];
+        const myPendingShare = tx.shares.find(s => s.user_id === user?.id && s.approval_status === 'PENDING');
+        if (myPendingShare) {
+            return [{
+                transactionId: tx.id,
+                shareId: myPendingShare.id,
+                amount: myPendingShare.amount,
+                desc: tx.desc,
+                paidBy: tx.paidBy
+            }];
+        }
+        return [];
+    });
+
     const getMemberName = (id) => {
         const m = activeFamily?.members.find(m => m.id === id)
         return m ? m.name : 'Unknown'
@@ -110,6 +126,13 @@ export function Family() {
         if (formattedExpenses.length === 0) return
         const results = simplifyDebts(formattedExpenses)
         setSettlements(results)
+    }
+
+    const handleShareAction = (transactionId, shareId, newStatus) => {
+        dispatch(updateShareApprovalStatus({ transactionId, shareId, newStatus }));
+        toast.success(`Đã ${newStatus === 'APPROVED' ? 'duyệt' : 'từ chối'} khoản nợ thành công!`);
+        // Recalculate settlements automatically so UI feels alive
+        setTimeout(() => runSimplification(), 100);
     }
 
     const handleOpenInvite = (family) => {
@@ -302,6 +325,50 @@ export function Family() {
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Pending Debts Section */}
+            {activeFamilyId && pendingDebts.length > 0 && (
+                <Card className="border-orange-200 bg-orange-50/50 dark:border-orange-900/50 dark:bg-orange-900/10">
+                    <CardHeader className="pb-3">
+                        <CardTitle className="text-orange-800 dark:text-orange-400 flex items-center gap-2">
+                            <ShieldAlert className="h-5 w-5" />
+                            Khoản nợ chờ bạn xác nhận ({pendingDebts.length})
+                        </CardTitle>
+                        <CardDescription>
+                            Các thành viên khác đã chỉ định bạn chia sẻ các khoản chi phí dưới đây. Xác nhận để tham gia phân bổ công nợ chung.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                        {pendingDebts.map((debt, idx) => (
+                            <div key={idx} className="flex flex-col sm:flex-row items-center justify-between gap-4 p-3 bg-white dark:bg-background rounded-lg border shadow-sm">
+                                <div>
+                                    <p className="font-medium text-sm">{debt.desc}</p>
+                                    <p className="text-xs text-muted-foreground mt-0.5">
+                                        <span className="font-semibold text-foreground">{getMemberName(debt.paidBy)}</span> đã chi trả • Bạn cần đóng góp: <span className="font-semibold text-orange-600 dark:text-orange-400">{formatCurrency(debt.amount)}</span>
+                                    </p>
+                                </div>
+                                <div className="flex items-center gap-2 w-full sm:w-auto">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="w-full sm:w-auto border-red-200 text-red-600 hover:bg-red-50 dark:border-red-900 dark:hover:bg-red-900/20"
+                                        onClick={() => handleShareAction(debt.transactionId, debt.shareId, 'REJECTED')}
+                                    >
+                                        <XCircle className="h-4 w-4 mr-1.5" /> Từ chối
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white"
+                                        onClick={() => handleShareAction(debt.transactionId, debt.shareId, 'APPROVED')}
+                                    >
+                                        <CheckCircle2 className="h-4 w-4 mr-1.5" /> Duyệt nợ
+                                    </Button>
+                                </div>
+                            </div>
+                        ))}
+                    </CardContent>
+                </Card>
+            )}
 
             {/* Debt Demo Section */}
             {activeFamilyId ? (

@@ -44,7 +44,8 @@ export function SharedExpenseModal({ isOpen, onClose, family, familyWalletId }) 
                 id: generateId('s'),
                 user_id: m.id,
                 amount: splitAmount,
-                status: m.id === values.paidBy ? 'PAID' : 'PENDING'
+                status: m.id === values.paidBy ? 'PAID' : 'UNPAID',
+                approval_status: m.id === values.paidBy ? 'APPROVED' : 'PENDING'
             }));
 
             const newTx = {

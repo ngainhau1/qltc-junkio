@@ -27,9 +27,19 @@ const transactionSlice = createSlice({
         },
         setFilter: (state, action) => {
             state.filter = { ...state.filter, ...action.payload };
+        },
+        updateShareApprovalStatus: (state, action) => {
+            const { transactionId, shareId, newStatus } = action.payload;
+            const transaction = state.transactions.find(t => t.id === transactionId);
+            if (transaction && transaction.shares) {
+                const share = transaction.shares.find(s => s.id === shareId);
+                if (share) {
+                    share.approval_status = newStatus;
+                }
+            }
         }
     },
 });
 
-export const { setTransactions, addTransaction, setFilter } = transactionSlice.actions;
+export const { setTransactions, addTransaction, setFilter, updateShareApprovalStatus } = transactionSlice.actions;
 export default transactionSlice.reducer;
