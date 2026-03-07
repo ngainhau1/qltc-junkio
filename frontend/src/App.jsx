@@ -2,10 +2,7 @@ import { useEffect } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
 import { Toaster, toast } from 'sonner'
-import { setWallets } from "@/features/wallets/walletSlice"
-import { setTransactions } from "@/features/transactions/transactionSlice"
-import { addFamily } from "@/features/families/familySlice"
-import { FakerService } from "@/services/fakerService"
+import { fetchCurrentUser } from "@/features/auth/authSlice"
 import { MainLayout } from "@/components/layout/MainLayout"
 import { AuthLayout } from "@/components/layout/AuthLayout"
 import { PrivateRoutes } from "@/components/auth/PrivateRoutes"
@@ -25,41 +22,18 @@ import { store } from "@/store"
 
 function App() {
   const dispatch = useDispatch()
-  const { isAuthenticated } = useSelector(state => state.auth)
+  const { isAuthenticated, token, user } = useSelector(state => state.auth)
   const { transactions } = useSelector(state => state.transactions)
 
+  // 1. Check Auth Session on Mount
   useEffect(() => {
-    // 1. Check Auth & Seed Data
-    if (isAuthenticated) {
-      const state = store.getState()
-      const { families } = state.families
-
-      if (transactions.length === 0) {
-        // Only seed if we are logged in (e.g. Demo User) but have no data
-        const { user } = state.auth
-        if (user) {
-          const data = FakerService.initData(user.id)
-          dispatch(setWallets(data.wallets))
-          dispatch(setTransactions(data.transactions))
-          if (data.family) dispatch(addFamily(data.family))
-          // Recurring rules seed
-          if (data.recurringRules) {
-            // Logic for rules
-          }
-        }
-      } else if (families.length === 0) {
-        // Fix: Check if families are missing but other data exists (HMR/Migration case)
-        const { user } = state.auth
-        if (user) {
-          // Generate just a family
-          const newFamily = FakerService.generateFamily(user.id, user.name)
-          dispatch(addFamily(newFamily))
-          toast.info("Đã tạo tự động Gia Đình mặc định cho bạn.", { duration: 3000 })
-        }
-      }
+    if (token && !user) {
+      dispatch(fetchCurrentUser());
     }
+  }, [dispatch, token, user]);
 
-    // 3. Run Recurring Checks (Safe to run multiple times as it checks dates)
+  // 3. Run Recurring Checks (Safe to run multiple times as it checks dates)
+  useEffect(() => {
     if (isAuthenticated) {
       const count = runRecurringEngine(store)
       if (count > 0) {
@@ -68,7 +42,7 @@ function App() {
         })
       }
     }
-  }, [dispatch, isAuthenticated, transactions.length])
+  }, [isAuthenticated, transactions.length])
 
   return (
     <Router>

@@ -2,7 +2,7 @@ import { useFormik } from "formik"
 import * as Yup from "yup"
 import { useDispatch } from "react-redux"
 import { Link, useNavigate } from "react-router-dom"
-import { login } from "@/features/auth/authSlice"
+import { loginUser } from "@/features/auth/authSlice"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -32,20 +32,18 @@ export function LoginPage() {
         },
         validationSchema: LoginSchema,
         onSubmit: async (values) => {
-            setIsLoading(true)
-            // Simulator API Call delay
-            setTimeout(() => {
-                const mockUser = {
-                    id: 'u-1',
-                    name: values.email.split('@')[0],
-                    email: values.email,
-                    role: 'MEMBER'
-                }
-                dispatch(login(mockUser))
-                toast.success(t('auth.loginSuccess'))
-                navigate("/") // Redirect to Dashboard
-                setIsLoading(false)
-            }, 1000)
+            setIsLoading(true);
+            try {
+                // Submit credentials to the real backend
+                await dispatch(loginUser({ email: values.email, password: values.password })).unwrap();
+                toast.success(t('auth.loginSuccess'));
+                navigate("/");
+            } catch (error) {
+                // Error structure comes from rejectWithValue in thunk
+                toast.error(error || t('auth.loginFailed', 'Đăng nhập không thành công, vui lòng thử lại'));
+            } finally {
+                setIsLoading(false);
+            }
         },
     })
 

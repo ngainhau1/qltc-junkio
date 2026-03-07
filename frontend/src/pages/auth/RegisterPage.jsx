@@ -2,7 +2,7 @@ import { useFormik } from "formik"
 import * as Yup from "yup"
 import { useDispatch } from "react-redux"
 import { Link, useNavigate } from "react-router-dom"
-import { login } from "@/features/auth/authSlice"
+import { registerUser } from "@/features/auth/authSlice"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -10,10 +10,6 @@ import { toast } from "sonner"
 import { Loader2, Eye, EyeOff, Mail, Lock, User } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
-import { addFamily } from "@/features/families/familySlice"
-import { setWallets } from "@/features/wallets/walletSlice"
-import { setTransactions } from "@/features/transactions/transactionSlice"
-import { FakerService } from "@/services/fakerService"
 
 export function RegisterPage() {
     const { t } = useTranslation()
@@ -43,27 +39,22 @@ export function RegisterPage() {
         },
         validationSchema: RegisterSchema,
         onSubmit: async (values) => {
-            setIsLoading(true)
-            // Simulator Register Logic
-            setTimeout(() => {
-                const newUser = {
-                    id: `u-${Date.now()}`,
+            setIsLoading(true);
+            try {
+                // Call real backend registration
+                await dispatch(registerUser({
                     name: values.name,
                     email: values.email,
-                    role: 'member'
-                }
+                    password: values.password
+                })).unwrap();
 
-                const data = FakerService.initData(newUser.id)
-
-                dispatch(login(newUser))
-                dispatch(setWallets(data.wallets))
-                dispatch(setTransactions(data.transactions))
-                if (data.family) dispatch(addFamily(data.family))
-
-                toast.success(t('auth.registerSuccess'))
-                navigate("/")
-                setIsLoading(false)
-            }, 1000)
+                toast.success(t('auth.registerSuccess'));
+                navigate("/");
+            } catch (error) {
+                toast.error(error || t('auth.registerFailed', 'Đăng ký không thành công, email có thể đã tồn tại'));
+            } finally {
+                setIsLoading(false);
+            }
         },
     })
 
