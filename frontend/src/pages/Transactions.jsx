@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useSelector } from "react-redux"
+import { useSelector, useDispatch } from "react-redux"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -14,20 +14,35 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Download, FileText, FileSpreadsheet } from "lucide-react"
+import { Download, FileText, FileSpreadsheet, Upload } from "lucide-react"
 import { exportToCSV, exportToPDF, exportToExcel } from "@/services/exportService"
 import { useTranslation } from "react-i18next"
+import { openImportModal, closeImportModal } from "@/features/ui/uiSlice"
+import { ImportTransactionsModal } from "@/components/features/transactions/ImportTransactionsModal"
 
 export function Transactions() {
     const { t } = useTranslation();
+    const dispatch = useDispatch();
     const { transactions } = useSelector(state => state.transactions)
+    const { wallets } = useSelector(state => state.wallets)
+    const { activeFamilyId } = useSelector(state => state.families)
+    const { isImportModalOpen } = useSelector(state => state.ui)
     const [activeTab, setActiveTab] = useState('history') // 'history' | 'recurring'
     const [isAddRuleOpen, setIsAddRuleOpen] = useState(false)
 
     const [searchTerm, setSearchTerm] = useState('')
 
+    // Filter wallets and transactions based on context
+    const contextWallets = wallets.filter(w =>
+        activeFamilyId ? w.family_id === activeFamilyId : !w.family_id
+    )
+    const contextWalletIds = contextWallets.map(w => w.id)
+    const contextTransactions = transactions.filter(t =>
+        contextWalletIds.includes(t.wallet_id)
+    )
+
     // Filter transactions based on search term
-    const filteredTransactions = transactions.filter(t => {
+    const filteredTransactions = contextTransactions.filter(t => {
         if (!t) return false;
         const desc = t.description || '';
         const cat = t.category_id || '';
@@ -45,6 +60,9 @@ export function Transactions() {
                     <p className="text-muted-foreground">{t('transactions.desc')}</p>
                 </div>
                 <div className="flex gap-2">
+                    <Button variant="outline" className="text-blue-600 border-blue-200 hover:bg-blue-50" onClick={() => dispatch(openImportModal())}>
+                        <Upload className="mr-2 h-4 w-4" /> Import CSV
+                    </Button>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline">
@@ -114,6 +132,12 @@ export function Transactions() {
             >
                 <RecurringRuleForm onSuccess={() => setIsAddRuleOpen(false)} />
             </Modal>
+
+            {/* Import Modal */}
+            <ImportTransactionsModal
+                isOpen={isImportModalOpen}
+                onClose={() => dispatch(closeImportModal())}
+            />
         </div>
     )
 }
