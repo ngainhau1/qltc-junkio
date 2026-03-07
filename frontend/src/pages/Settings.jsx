@@ -12,6 +12,7 @@ import { store } from "@/store"
 import { logout } from "@/features/auth/authSlice"
 import { updateCurrency, updateLanguage, toggleNotification } from "@/features/settings/settingsSlice"
 import { useState } from "react"
+import api from "@/lib/api"
 import { Modal } from "@/components/ui/modal"
 import { useTranslation } from "react-i18next"
 
@@ -319,11 +320,36 @@ function AccountSettings() {
     const { user } = useSelector(state => state.auth)
     const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
+    // Broadcast states
+    const [broadcastTitle, setBroadcastTitle] = useState('');
+    const [broadcastMsg, setBroadcastMsg] = useState('');
+    const [isSending, setIsSending] = useState(false);
+
     const confirmLogout = () => {
         dispatch(logout())
         toast.success(t('settings.account.logoutSuccess'))
         setIsLogoutModalOpen(false);
     }
+
+    const handleBroadcast = async (e) => {
+        e.preventDefault();
+        if (!broadcastMsg.trim()) return toast.error('Nội dung không được để trống');
+        setIsSending(true);
+        try {
+            const res = await api.post('/notifications/broadcast', {
+                title: broadcastTitle,
+                message: broadcastMsg,
+                type: 'SYSTEM'
+            });
+            toast.success(res.data.msg || 'Đã gửi thông báo thành công!');
+            setBroadcastTitle('');
+            setBroadcastMsg('');
+        } catch (error) {
+            toast.error(error.response?.data?.msg || 'Gửi thất bại');
+        } finally {
+            setIsSending(false);
+        }
+    };
 
     return (
         <Card className="shadow-none border-muted/60">
@@ -344,6 +370,46 @@ function AccountSettings() {
                     </Button>
                 </div>
             </CardContent>
+
+            {/* Admin Area */}
+            {user?.role === 'admin' && (
+                <>
+                    <div className="border-t border-border/50 my-6 mx-6"></div>
+                    <CardHeader className="pt-0">
+                        <CardTitle className="text-xl text-primary flex items-center gap-2">
+                            <Shield className="w-5 h-5" /> Admin Panel - Broadcast
+                        </CardTitle>
+                        <CardDescription>Gửi thông báo tới toàn bộ người dùng trong hệ thống (Hành động Quản trị).</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <form onSubmit={handleBroadcast} className="space-y-4 max-w-lg border rounded-lg p-5 bg-card">
+                            <div className="space-y-2">
+                                <Label>Tiêu đề (Tùy chọn)</Label>
+                                <input
+                                    type="text"
+                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                                    placeholder="Thêm tính năng mới, Khuyến mãi..."
+                                    value={broadcastTitle}
+                                    onChange={e => setBroadcastTitle(e.target.value)}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Nội dung thông báo *</Label>
+                                <textarea
+                                    className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                    placeholder="Nhập nội dung muốn gửi..."
+                                    value={broadcastMsg}
+                                    onChange={e => setBroadcastMsg(e.target.value)}
+                                    required
+                                />
+                            </div>
+                            <Button type="submit" disabled={isSending}>
+                                {isSending ? 'Đang gửi...' : 'Phát tán Thông Báo'}
+                            </Button>
+                        </form>
+                    </CardContent>
+                </>
+            )}
 
             <Modal isOpen={isLogoutModalOpen} onClose={() => setIsLogoutModalOpen(false)} title={t('settings.account.logoutModalTitle')}>
                 <div className="py-2 pb-6">

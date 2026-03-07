@@ -31,7 +31,10 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/transactions', require('./routes/transactionRoutes'));
+app.use('/api/families', require('./routes/familyRoutes'));
+app.use('/api/export', require('./routes/exportRoutes'));
 app.use('/api/debts', require('./routes/debtRoutes'));
+app.use('/api/notifications', require('./routes/notificationRoutes'));
 
 // Cấu hình kết nối Database (Lấy từ biến môi trường Docker)
 // Lưu ý: 'host' là tên service trong docker-compose ('db')

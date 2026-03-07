@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { Bell } from 'lucide-react';
@@ -8,7 +9,12 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { markAsRead, markAllAsRead, selectUnreadCount } from '@/features/notifications/notificationsSlice';
+import {
+    markAllNotificationsRead,
+    markSingleNotificationRead,
+    fetchNotifications,
+    selectUnreadCount
+} from '@/features/notifications/notificationsSlice';
 import { formatDistanceToNow } from 'date-fns';
 import { getDateLocale } from '@/lib/utils';
 
@@ -16,7 +22,14 @@ export function NotificationBell() {
     const { t } = useTranslation();
     const dispatch = useDispatch();
     const { items } = useSelector(state => state.notifications);
+    const { isAuthenticated } = useSelector(state => state.auth);
     const unreadCount = useSelector(selectUnreadCount);
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            dispatch(fetchNotifications());
+        }
+    }, [dispatch, isAuthenticated]);
 
     return (
         <DropdownMenu>
@@ -34,7 +47,7 @@ export function NotificationBell() {
                 <div className="flex items-center justify-between px-4 py-2 border-b">
                     <span className="font-semibold">{t('notifications.title')}</span>
                     {unreadCount > 0 && (
-                        <Button variant="ghost" size="sm" onClick={() => dispatch(markAllAsRead())} className="text-xs text-primary h-auto py-1 px-2">
+                        <Button variant="ghost" size="sm" onClick={() => dispatch(markAllNotificationsRead())} className="text-xs text-primary h-auto py-1 px-2">
                             {t('notifications.markRead')}
                         </Button>
                     )}
@@ -46,16 +59,20 @@ export function NotificationBell() {
                         items.map(notif => (
                             <DropdownMenuItem
                                 key={notif.id}
-                                className={`flex flex-col items-start p-4 cursor-pointer border-b last:border-0 ${notif.isRead ? 'opacity-70' : 'bg-muted/30'}`}
+                                className={`flex flex-col items-start p-4 cursor-pointer border-b last:border-0 ${(notif.isRead || notif.is_read) ? 'opacity-70' : 'bg-muted/30'}`}
                                 onClick={(e) => {
                                     e.preventDefault(); // keep dropdown open when clicking read
-                                    dispatch(markAsRead(notif.id));
+                                    if (!notif.isRead && !notif.is_read) {
+                                        dispatch(markSingleNotificationRead(notif.id));
+                                    }
                                 }}
                             >
                                 <div className="flex justify-between w-full mb-1">
-                                    <span className={`font-medium text-sm ${!notif.isRead && 'text-foreground'}`}>{notif.title}</span>
+                                    <span className={`font-medium text-sm ${(!notif.isRead && !notif.is_read) && 'text-foreground'}`}>{notif.title}</span>
                                     <span className="text-xs text-muted-foreground whitespace-nowrap ml-2">
-                                        {formatDistanceToNow(new Date(notif.createdAt), { addSuffix: true, locale: getDateLocale() })}
+                                        {(notif.created_at || notif.createdAt)
+                                            ? formatDistanceToNow(new Date(notif.created_at || notif.createdAt), { addSuffix: true, locale: getDateLocale() })
+                                            : ''}
                                     </span>
                                 </div>
                                 <p className="text-xs text-muted-foreground line-clamp-2 text-left w-full">{notif.message}</p>
