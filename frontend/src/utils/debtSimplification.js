@@ -19,7 +19,8 @@ export function simplifyDebts(transactions) {
         if (t.shares && t.shares.length > 0) {
             t.shares.forEach(share => {
                 const shareAmount = share.amount;
-                if (share.approval_status === 'APPROVED') {
+                // Backward compatibility: If approval_status is missing (old mock data), treat it as APPROVED
+                if (share.approval_status === 'APPROVED' || share.approval_status === undefined) {
                     // Nếu đã APPROVED, người bị gán nợ phải gánh
                     balances[share.user_id] = (balances[share.user_id] || 0) - shareAmount;
                 } else {
