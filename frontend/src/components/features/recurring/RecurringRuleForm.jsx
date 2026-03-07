@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 import { addRule } from "@/features/recurring/recurringSlice"
 import { runRecurringEngine } from "@/services/recurringService"
 import { store } from "@/store"
-import { formatCurrency } from "@/lib/utils"
+import { formatCurrency, generateId } from "@/lib/utils"
 import { useTranslation } from "react-i18next"
 
 export function RecurringRuleForm({ onSuccess }) {
@@ -20,9 +20,15 @@ export function RecurringRuleForm({ onSuccess }) {
     })
     const dispatch = useDispatch()
     const { wallets } = useSelector(state => state.wallets)
+    const { activeFamilyId } = useSelector(state => state.families)
+
+    // Filter wallets based on context
+    const contextWallets = wallets.filter(w =>
+        activeFamilyId ? w.family_id === activeFamilyId : !w.family_id
+    )
 
     // Select first wallet as default if available
-    const defaultWalletId = wallets.length > 0 ? wallets[0].id : ''
+    const defaultWalletId = contextWallets.length > 0 ? contextWallets[0].id : ''
 
     const formik = useFormik({
         initialValues: {
@@ -37,7 +43,7 @@ export function RecurringRuleForm({ onSuccess }) {
         validationSchema,
         onSubmit: (values) => {
             const newRule = {
-                id: `rule-${Date.now()}`,
+                id: generateId('rule'),
                 name: values.name,
                 amount: parseFloat(values.amount),
                 type: values.type,
@@ -131,7 +137,10 @@ export function RecurringRuleForm({ onSuccess }) {
                     value={formik.values.walletId}
                     onChange={formik.handleChange}
                 >
-                    {wallets.map(w => (
+                    {contextWallets.length === 0 && (
+                        <option value="" disabled>Không có ví nào trong mục này</option>
+                    )}
+                    {contextWallets.map(w => (
                         <option key={w.id} value={w.id}>{w.name} ({formatCurrency(w.balance)})</option>
                     ))}
                 </select>
