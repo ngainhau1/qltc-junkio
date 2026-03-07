@@ -130,3 +130,26 @@ exports.getMe = async (req, res) => {
         res.status(500).send('Server Error');
     }
 };
+
+exports.updateAvatar = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ msg: 'No file uploaded' });
+        }
+
+        const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+
+        const user = await User.findByPk(req.user.id);
+        if (!user) {
+            return res.status(404).json({ msg: 'User not found' });
+        }
+
+        user.avatar = avatarUrl;
+        await user.save();
+
+        res.json({ msg: 'Avatar updated successfully', avatarUrl });
+    } catch (err) {
+        console.error('Update avatar error:', err.message);
+        res.status(500).send('Server Error');
+    }
+};

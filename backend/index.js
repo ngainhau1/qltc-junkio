@@ -3,6 +3,7 @@ const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const cookieParser = require('cookie-parser');
 const { Sequelize } = require('sequelize');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
@@ -16,10 +17,16 @@ const limiter = rateLimit({
 });
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: process.env.VITE_FRONTEND_URL || 'http://localhost:5173',
+    credentials: true
+}));
 app.use(express.json());
 app.use(cookieParser());
 app.use('/api', limiter); // Áp dụng cho mọi API
+
+// Phục vụ các file tĩnh trong thư mục uploads (Ví dụ: ảnh đại diện)
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));

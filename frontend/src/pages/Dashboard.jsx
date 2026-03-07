@@ -9,6 +9,21 @@ export function Dashboard() {
     const { t } = useTranslation();
     const { transactions } = useSelector(state => state.transactions)
     const { wallets } = useSelector(state => state.wallets)
+    const { activeFamilyId } = useSelector(state => state.families)
+
+    // Filter wallets based on context:
+    // If a family is active, show only family wallets.
+    // Otherwise, show only personal wallets (no family_id).
+    const contextWallets = wallets.filter(w =>
+        activeFamilyId ? w.family_id === activeFamilyId : !w.family_id
+    )
+
+    const contextWalletIds = contextWallets.map(w => w.id)
+
+    // Filter transactions to only those belonging to the context wallets
+    const contextTransactions = transactions.filter(t =>
+        contextWalletIds.includes(t.wallet_id)
+    )
 
     return (
         <div className="space-y-6">
@@ -24,17 +39,17 @@ export function Dashboard() {
             </header>
 
             {/* Stats Row */}
-            <DashboardStats wallets={wallets} transactions={transactions} />
+            <DashboardStats wallets={contextWallets} transactions={contextTransactions} />
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
                 {/* Main Chart Area */}
                 <div className="col-span-4 lg:col-span-4">
-                    <FinancialChart transactions={transactions} />
+                    <FinancialChart transactions={contextTransactions} />
                 </div>
 
                 {/* Recent Transactions List */}
                 <div className="col-span-3 lg:col-span-3">
-                    <RecentTransactions transactions={transactions} />
+                    <RecentTransactions transactions={contextTransactions} />
                 </div>
             </div>
         </div>

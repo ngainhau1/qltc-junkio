@@ -8,6 +8,10 @@ export function Header() {
     const { user } = useSelector(state => state.auth);
     const location = useLocation();
 
+    // Lấy API base để nối url tương đối của ảnh
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    const serverUrl = API_URL.replace('/api', '');
+
     const getPageTitle = () => {
         const path = location.pathname;
         if (path === '/') return t('nav.dashboard');
@@ -34,7 +38,7 @@ export function Header() {
                             {t('header.hello')} <span className="font-bold">{user?.name || t('header.user')}</span>
                         </span>
                         <img
-                            src={user?.avatarUrl || `https://api.dicebear.com/7.x/notionists/svg?seed=${user?.name || 'demo'}`}
+                            src={user?.avatarUrl?.startsWith('/uploads') ? `${serverUrl}${user.avatarUrl}` : (user?.avatarUrl || `https://api.dicebear.com/7.x/notionists/svg?seed=${user?.name || 'demo'}`)}
                             alt="Avatar"
                             className="h-8 w-8 rounded-full border bg-muted object-cover"
                         />

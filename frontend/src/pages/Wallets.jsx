@@ -11,7 +11,13 @@ import { useTranslation } from "react-i18next"
 export function Wallets() {
     const { t } = useTranslation()
     const { wallets } = useSelector(state => state.wallets)
+    const { activeFamilyId } = useSelector(state => state.families)
     const [isAddWalletOpen, setIsAddWalletOpen] = useState(false)
+
+    // Filter wallets based on context
+    const contextWallets = wallets.filter(w =>
+        activeFamilyId ? w.family_id === activeFamilyId : !w.family_id
+    )
 
     return (
 
@@ -22,7 +28,7 @@ export function Wallets() {
             </header>
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {wallets.length === 0 ? (
+                {contextWallets.length === 0 ? (
                     <div className="col-span-full">
                         <EmptyState
                             icon={Wallet}
@@ -31,14 +37,16 @@ export function Wallets() {
                         />
                     </div>
                 ) : (
-                    wallets.map(wallet => (
+                    contextWallets.map(wallet => (
                         <Card key={wallet.id} className="relative overflow-hidden">
                             <div className="absolute top-0 right-0 p-4 opacity-10">
                                 <Wallet className="w-24 h-24" />
                             </div>
                             <CardHeader className="pb-2">
                                 <CardTitle className="text-lg">{wallet.name}</CardTitle>
-                                <CardDescription className="capitalize">{wallet.type}</CardDescription>
+                                <CardDescription className="capitalize">
+                                    {activeFamilyId ? 'Ví Gia Đình' : 'Ví Cá Nhân'} - {wallet.type}
+                                </CardDescription>
                             </CardHeader>
                             <CardContent>
                                 <div className="text-2xl font-bold">{formatCurrency(wallet.balance)}</div>

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
 const auth = require('../middleware/authMiddleware');
+const { uploadAvatar } = require('../middleware/uploadMiddleware');
 
 // @route   POST api/auth/register
 // @desc    Register user
@@ -22,5 +23,10 @@ router.post('/refresh-token', authController.refreshToken);
 // @desc    Get current user info
 // @access  Private
 router.get('/me', auth, authController.getMe);
+
+// @route   POST api/auth/avatar
+// @desc    Upload user avatar
+// @access  Private
+router.post('/avatar', auth, uploadAvatar.single('avatar'), authController.updateAvatar);
 
 module.exports = router;

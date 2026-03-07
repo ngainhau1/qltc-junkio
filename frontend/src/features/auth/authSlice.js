@@ -46,6 +46,22 @@ export const fetchCurrentUser = createAsyncThunk(
     }
 );
 
+export const uploadUserAvatar = createAsyncThunk(
+    'auth/uploadUserAvatar',
+    async (formData, { rejectWithValue }) => {
+        try {
+            const response = await api.post('/auth/avatar', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            return response.data; // { msg: "...", avatarUrl: "..." }
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.msg || 'Lỗi khi tải ảnh lên');
+        }
+    }
+);
+
 const authSlice = createSlice({
     name: 'auth',
     initialState,
@@ -127,6 +143,20 @@ const authSlice = createSlice({
                 state.token = null;
                 state.user = null;
                 localStorage.removeItem('auth_token');
+            })
+            // Upload Avatar
+            .addCase(uploadUserAvatar.pending, (state) => {
+                state.loading = true;
+            })
+            .addCase(uploadUserAvatar.fulfilled, (state, action) => {
+                state.loading = false;
+                if (state.user) {
+                    state.user.avatarUrl = action.payload.avatarUrl;
+                }
+            })
+            .addCase(uploadUserAvatar.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
             });
     }
 });

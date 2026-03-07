@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { updateProfile } from "@/features/auth/authSlice";
+import { updateProfile, uploadUserAvatar } from "@/features/auth/authSlice";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +13,12 @@ export function Profile() {
     const { t } = useTranslation();
     const dispatch = useDispatch();
     const { user } = useSelector(state => state.auth);
+    const fileInputRef = useRef(null);
+    const [isUploading, setIsUploading] = useState(false);
+
+    // Lấy API base để nối url tương đối của ảnh
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    const serverUrl = API_URL.replace('/api', '');
 
     // Provide initial state directly from redux where possible to avoid effect updates
     const [formData, setFormData] = useState({
@@ -51,12 +57,33 @@ export function Profile() {
         toast.success(t('profile.successMsg'));
     };
 
-    const handleGenerateAvatar = () => {
-        const randomSeed = Math.random().toString(36).substring(7);
-        setFormData(prev => ({
-            ...prev,
-            avatarUrl: `https://api.dicebear.com/7.x/notionists/svg?seed=${randomSeed}`
-        }));
+    const handleFileChange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Chỉ cho phép ảnh
+        if (!file.type.startsWith('image/')) {
+            toast.error(t('profile.onlyImageAllowed', 'Chỉ chấp nhận file hình ảnh!'));
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('avatar', file);
+
+        setIsUploading(true);
+        try {
+            const result = await dispatch(uploadUserAvatar(formData)).unwrap();
+            setFormData(prev => ({
+                ...prev,
+                avatarUrl: result.avatarUrl
+            }));
+            toast.success(result.msg || t('profile.uploadSuccess', 'Tải ảnh lên thành công.'));
+        } catch (error) {
+            toast.error(error || t('profile.uploadFailed', 'Lỗi khi tải ảnh lên.'));
+        } finally {
+            setIsUploading(false);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        }
     };
 
     return (
@@ -78,7 +105,7 @@ export function Profile() {
                         <CardContent className="flex flex-col items-center space-y-4">
                             <div className="relative group">
                                 <img
-                                    src={formData.avatarUrl || `https://api.dicebear.com/7.x/notionists/svg?seed=${user?.name || 'demo'}`}
+                                    src={formData.avatarUrl?.startsWith('/uploads') ? `${serverUrl}${formData.avatarUrl}` : (formData.avatarUrl || `https://api.dicebear.com/7.x/notionists/svg?seed=${user?.name || 'demo'}`)}
                                     alt="Profile"
                                     className="w-40 h-40 rounded-full border-4 border-muted object-cover bg-primary/10"
                                 />
@@ -98,13 +125,21 @@ export function Profile() {
                                         className="text-xs h-8"
                                     />
                                 </form>
+                                <Input
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    ref={fileInputRef}
+                                    onChange={handleFileChange}
+                                />
                                 <Button
                                     variant="outline"
                                     size="sm"
                                     className="w-full text-xs"
-                                    onClick={handleGenerateAvatar}
+                                    onClick={() => fileInputRef.current?.click()}
+                                    disabled={isUploading}
                                 >
-                                    {t('profile.avatarGenerate')}
+                                    {isUploading ? t('common.loading', 'Đang xử lý...') : t('profile.avatarUpload', 'Tải ảnh lên')}
                                 </Button>
                             </div>
                         </CardContent>
