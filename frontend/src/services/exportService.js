@@ -3,27 +3,26 @@ import jsPDF from 'jspdf';
 import autoTable from "jspdf-autotable";
 import Papa from "papaparse";
 import { formatCurrency, formatDateString } from '@/lib/utils';
-import i18n from 'i18next';
 import { robotoBase64 } from './Roboto-Regular-normal';
 
 // --- CSV Export ---
 export const exportToCSV = (transactions) => {
-    // 1. Transform data for CSV
-    // Dịch headers thông qua i18n
+    // 1. Transform data for CSV - Using English to prevent encoding/font issues
     const data = transactions.map(t => ({
-        [i18n.t('transactions.form.date') || 'Ngày']: formatDateString(t.date),
-        [i18n.t('transactions.form.desc') || 'Mô Tả']: t.description || 'Không có mô tả',
-        [i18n.t('transactions.form.type') || 'Loại']: t.type === 'INCOME' ? '+' : '-',
-        [i18n.t('transactions.form.amount') || 'Số Tiền']: formatCurrency(t.amount),
-        [i18n.t('transactions.form.category') || 'Danh mục']: t.category_id,
-        [i18n.t('transactions.form.wallet') || 'Ví']: t.wallet_id
+        'Date': formatDateString(t.date),
+        'Description': t.description || 'No description',
+        'Type': t.type,
+        'Amount': parseFloat(t.amount), // Emit raw number for Excel sum formulas, not text
+        'Category': t.category_id,
+        'Wallet ID': t.wallet_id
     }));
 
     // 2. Generate CSV
     const csv = Papa.unparse(data);
 
     // 3. Trigger Download
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    // \uFEFF is the UTF-8 Byte Order Mark (BOM). Required for Excel to recognize UTF-8 in CSVs.
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
@@ -34,12 +33,13 @@ export const exportToCSV = (transactions) => {
 };
 
 // --- Excel Export ---
-export const exportToExcel = (transactions, title = "Sao Kê Giao Dịch") => {
+export const exportToExcel = (transactions) => {
+    // Using English headers and Raw Numbers
     const data = transactions.map(t => ({
-        [i18n.t('transactions.form.date') || 'Ngày']: formatDateString(t.date),
-        [i18n.t('transactions.form.desc') || 'Mô Tả']: t.description || 'Không có mô tả',
-        [i18n.t('transactions.form.type') || 'Loại']: t.type === 'INCOME' ? 'Thu' : 'Chi',
-        [i18n.t('transactions.form.amount') || 'Số Tiền']: Number(t.amount)
+        'Date': formatDateString(t.date),
+        'Description': t.description || 'No description',
+        'Type': t.type,
+        'Amount': parseFloat(t.amount) // Raw Number so Excel treats it as a calculator digit
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(data);
@@ -58,13 +58,13 @@ export const exportToExcel = (transactions, title = "Sao Kê Giao Dịch") => {
 };
 
 // --- PDF Export ---
-export const exportToPDF = (transactions, title = "Sao Kê Giao Dịch") => {
+export const exportToPDF = (transactions, title = "Transaction Statement") => {
     const doc = new jsPDF();
 
-    // Add custom font for UTF-8 Support
+    // Still load custom font to safely render user descriptions that might contain Unicode
     doc.addFileToVFS("Roboto-Regular.ttf", robotoBase64);
     doc.addFont("Roboto-Regular.ttf", "Roboto", "normal");
-    doc.setFont("Roboto"); // Set default font to our custom font
+    doc.setFont("Roboto");
 
     // 1. Header
     doc.setFontSize(20);
@@ -74,28 +74,28 @@ export const exportToPDF = (transactions, title = "Sao Kê Giao Dịch") => {
     doc.text(title, 14, 32);
 
     doc.setFontSize(10);
-    doc.text(`${i18n.t('common.export_date') || "Ngày xuất"}: ${formatDateString(new Date())}`, 14, 40);
+    doc.text(`Export Date: ${formatDateString(new Date())}`, 14, 40);
 
     // 2. Generate Table
     autoTable(doc, {
         head: [[
-            i18n.t('transactions.form.date') || 'Ngày',
-            i18n.t('transactions.form.desc') || 'Mô Tả',
-            i18n.t('transactions.form.type') || 'Loại',
-            i18n.t('transactions.form.amount') || 'Số Tiền'
+            'Date',
+            'Description',
+            'Type',
+            'Amount'
         ]],
         body: transactions.map(t => {
-            const formattedAmount = formatCurrency(t.amount);
+            const formattedAmount = formatCurrency(t.amount); // Keep string format for PDF visuals
             return [
                 formatDateString(t.date),
-                t.description || 'Không có mô tả',
-                t.type === 'INCOME' ? '+' : '-',
+                t.description || 'No description',
+                t.type === 'INCOME' ? 'INC' : (t.type === 'EXPENSE' ? 'EXP' : 'TRF'),
                 formattedAmount
             ];
         }),
         startY: 50,
         theme: 'grid',
-        styles: { font: "Roboto", fontSize: 10 }, // Use Roboto here too
+        styles: { font: "Roboto", fontSize: 10 },
         headStyles: { fillColor: [79, 70, 229] } // Indigo-600
     });
 
