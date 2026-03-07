@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { addTransaction } from "@/features/transactions/transactionSlice"
 import { decreaseBalance, increaseBalance } from "@/features/wallets/walletSlice"
+import { addNotification } from "@/features/notifications/notificationsSlice"
 import { formatCurrency, generateId } from "@/lib/utils"
 import { ArrowRight } from "lucide-react"
 import { useTranslation } from "react-i18next"
@@ -38,6 +39,8 @@ export function TransactionForm({ onSuccess }) {
     const contextWallets = wallets.filter(w =>
         activeFamilyId ? w.family_id === activeFamilyId : !w.family_id
     )
+
+    const { transactions } = useSelector(state => state.transactions)
 
     // Select first wallet as default if available
     const defaultWalletId = contextWallets.length > 0 ? contextWallets[0].id : ''
@@ -82,6 +85,33 @@ export function TransactionForm({ onSuccess }) {
                 dispatch(decreaseBalance({ id: values.walletId, amount: values.amount }))
                 // Add to Destination
                 dispatch(increaseBalance({ id: values.destinationWalletId, amount: values.amount }))
+            }
+
+            // 3. Spending Alert Logic for Expenses (Competitor Enhancement)
+            if (values.type === 'EXPENSE') {
+                const currentMonth = new Date(values.date).getMonth();
+                const currentYear = new Date(values.date).getFullYear();
+
+                const monthlyExpenses = transactions.filter(t =>
+                    t.type === 'EXPENSE' &&
+                    t.wallet_id === values.walletId &&
+                    new Date(t.date).getMonth() === currentMonth &&
+                    new Date(t.date).getFullYear() === currentYear
+                ).reduce((acc, t) => acc + t.amount, 0);
+
+                const newTotalExpense = monthlyExpenses + parseFloat(values.amount);
+                const wallet = wallets.find(w => w.id === values.walletId);
+                const budgetLimit = wallet ? wallet.balance + newTotalExpense : 5000000; // Simplified Budget estimation (Balance + Total Expenses)
+
+                if (newTotalExpense > budgetLimit * 0.8) {
+                    dispatch(addNotification({
+                        type: 'BUDGET_ALERT',
+                        title: t('notifications.budgetAlertTitle', 'Cảnh báo Chi tiêu'),
+                        message: t('notifications.budgetAlertDesc', `Bạn đã chi tiêu ${formatCurrency(newTotalExpense)} (vượt quá 80% định mức) cho ví này trong tháng.`),
+                        isRead: false,
+                        is_read: false
+                    }));
+                }
             }
 
             if (onSuccess) onSuccess()
