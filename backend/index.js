@@ -9,10 +9,13 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Security: Ẩn thông tin server framework
+app.disable('x-powered-by');
+
 // Rate Limiting Middleware (Bảo vệ chống Brute-force & DDoS)
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 phút
-    max: 100, // Tối đa 100 requests mỗi IP trong 15 phút
+    max: 1000, // Tăng lên 1000 requests mỗi IP trong 15 phút để dev
     message: 'Quá nhiều yêu cầu từ IP này, vui lòng thử lại sau 15 phút.'
 });
 
@@ -31,10 +34,16 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/transactions', require('./routes/transactionRoutes'));
-app.use('/api/families', require('./routes/familyRoutes'));
-app.use('/api/export', require('./routes/exportRoutes'));
 app.use('/api/debts', require('./routes/debtRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
+app.use('/api/wallets', require('./routes/walletRoutes'));
+app.use('/api/families', require('./routes/familyRoutes'));
+app.use('/api/goals', require('./routes/goalRoutes'));
+app.use('/api/recurring', require('./routes/recurringRoutes'));
+app.use('/api/analytics', require('./routes/analyticsRoutes'));
+app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/budgets', require('./routes/budgetRoutes'));
+app.use('/api/categories', require('./routes/categoryRoutes'));
 
 // Cấu hình kết nối Database (Lấy từ biến môi trường Docker)
 // Lưu ý: 'host' là tên service trong docker-compose ('db')
@@ -54,8 +63,8 @@ app.get('/', (req, res) => {
     res.send('<h1>🚀 Junkio Expense Tracker Backend is Running!</h1>');
 });
 
-// Route kiểm tra kết nối Database
-app.get('/db-check', async (req, res) => {
+// Route kiểm tra kết nối Database (Bảo vệ bởi auth)
+app.get('/db-check', require('./middleware/authMiddleware'), async (req, res) => {
     try {
         await sequelize.authenticate();
         res.send('✅ Kết nối Database thành công!');

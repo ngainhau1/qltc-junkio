@@ -11,29 +11,29 @@ export function simplifyDebts(transactions) {
 
     // 1. Calculate Net Balances
     transactions.forEach(t => {
-        const payer = t.paidBy;
-        const amount = t.amount;
+        const payer = String(t.paidBy);
+        const amount = parseFloat(t.amount) || 0;
 
         balances[payer] = (balances[payer] || 0) + amount;
 
         if (t.shares && t.shares.length > 0) {
             t.shares.forEach(share => {
-                const shareAmount = share.amount;
+                const shareAmount = parseFloat(share.amount) || 0;
                 // Backward compatibility: If approval_status is missing (old mock data), treat it as APPROVED
                 if (share.approval_status === 'APPROVED' || share.approval_status === undefined) {
                     // Nếu đã APPROVED, người bị gán nợ phải gánh
-                    balances[share.user_id] = (balances[share.user_id] || 0) - shareAmount;
+                    balances[String(share.user_id)] = (balances[String(share.user_id)] || 0) - shareAmount;
                 } else {
                     // Nếu PENDING hoặc REJECTED, người chi tiền (Payer) phải chịu thiệt thòi giữ khoản nợ này
                     balances[payer] = (balances[payer] || 0) - shareAmount;
                 }
             });
-        } else {
+        } else if (t.splitAmong && t.splitAmong.length > 0) {
             const splitCount = t.splitAmong.length;
             const splitAmount = amount / splitCount;
 
             t.splitAmong.forEach(memberId => {
-                balances[memberId] = (balances[memberId] || 0) - splitAmount;
+                balances[String(memberId)] = (balances[String(memberId)] || 0) - splitAmount;
             });
         }
     });

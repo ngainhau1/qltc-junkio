@@ -18,7 +18,7 @@ export function RegisterPage() {
     const RegisterSchema = Yup.object().shape({
         name: Yup.string().required(t('auth.nameRequired')),
         email: Yup.string().email(t('auth.emailInvalid')).required(t('auth.emailRequired')),
-        password: Yup.string().min(6, t('auth.passwordMin')).required(t('auth.passwordRequired')),
+        password: Yup.string().required(t('auth.passwordRequired')),
         confirmPassword: Yup.string()
             .oneOf([Yup.ref('password'), null], t('auth.passwordMismatch'))
             .required(t('auth.confirmPasswordRequired')),
@@ -78,7 +78,7 @@ export function RegisterPage() {
                         <User className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input
                             id="name"
-                            placeholder="Nguyễn Văn A"
+                            placeholder={t('auth.namePlaceholder')}
                             className="pl-9"
                             {...formik.getFieldProps("name")}
                         />
@@ -95,7 +95,7 @@ export function RegisterPage() {
                         <Input
                             id="email"
                             type="email"
-                            placeholder="name@example.com"
+                            placeholder={t('auth.emailPlaceholder')}
                             className="pl-9"
                             {...formik.getFieldProps("email")}
                         />
@@ -112,7 +112,7 @@ export function RegisterPage() {
                         <Input
                             id="password"
                             type={showPassword ? "text" : "password"}
-                            placeholder="••••••••"
+                            placeholder={t('auth.passwordPlaceholder')}
                             className="pl-9 pr-10"
                             {...formik.getFieldProps("password")}
                         />
@@ -136,7 +136,7 @@ export function RegisterPage() {
                         <Input
                             id="confirmPassword"
                             type={showConfirmPassword ? "text" : "password"}
-                            placeholder="••••••••"
+                            placeholder={t('auth.passwordPlaceholder')}
                             className="pl-9 pr-10"
                             {...formik.getFieldProps("confirmPassword")}
                         />

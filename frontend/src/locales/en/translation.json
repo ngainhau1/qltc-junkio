@@ -38,9 +38,17 @@
         "orRegisterWith": "Or register with",
         "loginLink": "Sign in",
         "loginSuccess": "Welcome back!",
-        "socialLoginComingSoon": "Social login feature is on the roadmap.",
-        "registerSuccess": "Registration successful! Sample data created.",
-        "socialRegisterComingSoon": "Social registration feature is on the roadmap."
+        "socialLoginComingSoon": "Social login feature is in the roadmap.",
+        "registerSuccess": "Registration successful! Reference data created.",
+        "socialRegisterComingSoon": "Social registration feature is in the roadmap.",
+        "bannerTitle1": "Manage your finances,",
+        "bannerTitle2": "Enjoy your life.",
+        "bannerDesc": "Track income and expenses, set smart budgets, and easily handle shared family debts with just one tap.",
+        "bannerTrust": "Trusted by over 10,000+ families",
+        "bannerCopyright": "© 2026 Junkio Finance. All rights reserved.",
+        "namePlaceholder": "e.g. John Doe",
+        "emailPlaceholder": "name@example.com",
+        "passwordPlaceholder": "••••••••"
     },
     "nav": {
         "dashboard": "Dashboard",
@@ -73,7 +81,8 @@
             "expense": "Expense",
             "expenseTotal": "Total recorded expenses",
             "transactions": "Transactions",
-            "totalRecords": "Total records"
+            "totalRecords": "Total records",
+            "unassigned": "Unassigned (Zero-Based)"
         },
         "recent": {
             "title": "Recent Transactions"
@@ -90,6 +99,8 @@
         "emptyDesc": "Create a new wallet to start managing your income and expenses.",
         "addWallet": "+ Add New Wallet",
         "addWalletTitle": "Add New Wallet",
+        "familyWallet": "Family Wallet",
+        "personalWallet": "Personal Wallet",
         "form": {
             "name": "Wallet Name",
             "namePlaceholder": "ex: Chase Bank",
@@ -115,7 +126,8 @@
         "desc": "Manage expenses & set up recurring schedules.",
         "exportData": "Export Data",
         "exportPDF": "Export to PDF",
-        "exportCSV": "Export to CSV (Excel)",
+        "exportCSV": "Export to CSV",
+        "exportExcel": "Export to Excel",
         "addSchedule": "Add Schedule",
         "tabs": {
             "history": "History",
@@ -233,7 +245,18 @@
             }
         },
         "toasts": {
-            "paymentRecorded": "Payment recorded: {{amount}}"
+            "paymentRecorded": "Payment recorded: {{amount}}",
+            "optimizationEmpty": "No expenses to optimize at the moment.",
+            "optimizationZero": "Great! Current members have no outstanding debts.",
+            "debtApproved": "Debt approved successfully!",
+            "debtRejected": "Debt rejected successfully!"
+        },
+        "pendingDebts": {
+            "title": "Pending Debts ({{count}})",
+            "desc": "Other members assigned you shared expenses. Confirm to join the settlement pool.",
+            "paidByText": "paid • You contribute:",
+            "btnReject": "Reject",
+            "btnApprove": "Approve"
         },
         "emptySelection": "Please select a Family above to see the Debt Management feature."
     },
@@ -258,7 +281,11 @@
             "currencyPlaceholder": "Select currency",
             "langTitle": "Preferred Language",
             "langDesc": "Application interface language.",
-            "langPlaceholder": "Select language"
+            "langPlaceholder": "Select language",
+            "currencyVND": "Vietnamese Dong (₫)",
+            "currencyUSD": "US Dollar ($)",
+            "langVi": "Vietnamese (Tiếng Việt)",
+            "langEn": "English (Tiếng Anh)"
         },
         "notifications": {
             "title": "Notification Settings",
@@ -415,7 +442,8 @@
             "reqCategory": "Please select a category",
             "reqDestWallet": "Please select a destination wallet",
             "diffWallet": "Destination must be different from source"
-        }
+        },
+        "noWalletsAvailable": "No wallets available in this context"
     },
     "profile": {
         "title": "Personal Profile",
@@ -451,6 +479,7 @@
         "errDesc": "Please enter a description",
         "errAmount": "Please enter a valid amount greater than 0",
         "errNoWallet": "This family does not have a shared wallet/fund to record transactions.",
-        "successMsg": "Shared expense added successfully!"
+        "successMsg": "Shared expense added successfully!",
+        "selectMember": "Select member"
     }
 }

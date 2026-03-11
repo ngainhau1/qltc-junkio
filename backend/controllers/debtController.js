@@ -58,21 +58,32 @@ exports.rejectShare = async (req, res) => {
 // Body: { to_user_id, amount, from_wallet_id, to_wallet_id }
 exports.settleDebt = async (req, res) => {
     const { to_user_id, amount, from_wallet_id, to_wallet_id } = req.body;
-    const from_user_id = req.user.id;
+    const from_user_id = req.user.id; // Security: LUÔN dùng user đang đăng nhập
+
+    // Security: Validate amount
+    if (!amount || parseFloat(amount) <= 0) {
+        return res.status(400).json({ message: 'Số tiền thanh toán phải lớn hơn 0' });
+    }
 
     const t = await sequelize.transaction();
     try {
         // 1. Tạo Transaction TRANSFER
         const fromWallet = await Wallet.findByPk(from_wallet_id, { transaction: t });
-        const toWallet = await Wallet.findByPk(to_wallet_id, { transaction: t });
+        let toWallet;
 
-        if (!fromWallet || !toWallet) throw new Error('Ví không hợp lệ');
+        if (from_wallet_id === to_wallet_id) {
+            toWallet = fromWallet;
+            // No net change to balance if it's the exact same wallet conceptually
+        } else {
+            toWallet = await Wallet.findByPk(to_wallet_id, { transaction: t });
+            if (!fromWallet || !toWallet) throw new Error('Ví không hợp lệ');
 
-        fromWallet.balance = parseFloat(fromWallet.balance) - parseFloat(amount);
-        toWallet.balance = parseFloat(toWallet.balance) + parseFloat(amount);
+            fromWallet.balance = parseFloat(fromWallet.balance) - parseFloat(amount);
+            toWallet.balance = parseFloat(toWallet.balance) + parseFloat(amount);
 
-        await fromWallet.save({ transaction: t });
-        await toWallet.save({ transaction: t });
+            await fromWallet.save({ transaction: t });
+            await toWallet.save({ transaction: t });
+        }
 
         const transferTxOut = await Transaction.create({
             amount: amount,

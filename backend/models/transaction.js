@@ -26,7 +26,8 @@ module.exports = (sequelize, DataTypes) => {
     type: DataTypes.STRING,
     wallet_id: DataTypes.UUID,
     category_id: DataTypes.UUID,
-    user_id: DataTypes.UUID
+    user_id: DataTypes.UUID,
+    family_id: DataTypes.UUID
   }, {
     sequelize,
     modelName: 'Transaction',

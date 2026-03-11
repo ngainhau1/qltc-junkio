@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { addGoal } from '@/features/goals/goalsSlice';
+import { createGoal } from '@/features/goals/goalsSlice';
 import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,7 +32,7 @@ export function CreateGoalModal({ isOpen, onClose }) {
     const [colorCode, setColorCode] = useState(COLORS[0]);
     const [imageUrl, setImageUrl] = useState(ICONS[0].name);
 
-    const handleCreate = () => {
+    const handleCreate = async () => {
         if (!name.trim()) {
             toast.error(t('goals.modals.create.errName'));
             return;
@@ -55,23 +55,28 @@ export function CreateGoalModal({ isOpen, onClose }) {
             return;
         }
 
-        dispatch(addGoal({
-            name: name.trim(),
-            targetAmount: numTarget,
-            deadline: selectedDate.toISOString(),
-            colorCode,
-            imageUrl
-        }));
+        try {
+            await dispatch(createGoal({
+                name: name.trim(),
+                targetAmount: numTarget,
+                deadline: selectedDate.toISOString(),
+                colorCode,
+                imageUrl
+            })).unwrap();
 
-        toast.success(t('goals.modals.create.successMsg', { name: name.trim() }));
+            toast.success(t('goals.modals.create.successMsg', { name: name.trim() }));
 
-        // Reset and close
-        setName('');
-        setTargetAmount('');
-        setDeadline('');
-        setColorCode(COLORS[0]);
-        setImageUrl(ICONS[0].name);
-        onClose();
+            // Reset and close
+            setName('');
+            setTargetAmount('');
+            setDeadline('');
+            setColorCode(COLORS[0]);
+            setImageUrl(ICONS[0].name);
+            onClose();
+        } catch (error) {
+            console.error("Lỗi tạo mục tiêu:", error);
+            toast.error(error);
+        }
     };
 
     return (

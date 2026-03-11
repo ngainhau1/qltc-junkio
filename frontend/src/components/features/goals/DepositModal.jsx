@@ -3,9 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { formatCurrency } from '@/lib/utils';
-import { depositToGoal } from '@/features/goals/goalsSlice';
-import { addTransaction } from '@/features/transactions/transactionSlice';
-import { updateWalletBalance } from '@/features/wallets/walletSlice';
+import { depositAmount } from '@/features/goals/goalsSlice';
 import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,7 +26,7 @@ export function DepositModal({ isOpen, onClose, goal }) {
     // Filter to only show personal wallets with balance > 0
     const availableWallets = wallets.filter(w => !w.familyId && w.balance > 0);
 
-    const handleDeposit = () => {
+    const handleDeposit = async () => {
         const numAmount = Number(amount);
         if (!numAmount || numAmount <= 0) {
             toast.error(t('goals.modals.deposit.errInvalid'));
@@ -52,29 +50,22 @@ export function DepositModal({ isOpen, onClose, goal }) {
             return;
         }
 
-        // 1. Deduct from wallet & create transaction
-        dispatch(addTransaction({
-            walletId: selectedWalletId,
-            categoryId: 'cat-savings', // System category for savings
-            amount: numAmount,
-            type: 'EXPENSE',
-            date: new Date().toISOString(),
-            description: `${t('goals.modals.deposit.title')}: ${goal.name}`
-        }));
+        try {
+            // API call handles deducting wallet balance, updating goal, and creating transaction report
+            await dispatch(depositAmount({ 
+                id: goal.id, 
+                amount: numAmount, 
+                wallet_id: selectedWalletId 
+            })).unwrap();
 
-        dispatch(updateWalletBalance({
-            id: selectedWalletId,
-            amount: numAmount,
-            type: 'EXPENSE'
-        }));
-
-        // 2. Deposit to Goal
-        dispatch(depositToGoal({ id: goal.id, amount: numAmount }));
-
-        toast.success(t('goals.modals.deposit.successMsg', { amount: formatCurrency(numAmount), name: goal.name }));
-        onClose();
-        setAmount('');
-        setSelectedWalletId(null);
+            toast.success(t('goals.modals.deposit.successMsg', { amount: formatCurrency(numAmount), name: goal.name }));
+            onClose();
+            setAmount('');
+            setSelectedWalletId(null);
+        } catch (error) {
+            console.error("Lỗi nạp tiền:", error);
+            toast.error(error);
+        }
     };
 
     if (!goal) return null;

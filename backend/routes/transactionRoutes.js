@@ -1,13 +1,21 @@
 const express = require('express');
 const router = express.Router();
 const transactionController = require('../controllers/transactionController');
-
 const authMiddleware = require('../middleware/authMiddleware');
 
-// POST /api/transactions/transfer
+// Lấy danh sách
+router.get('/', authMiddleware, transactionController.getTransactions);
+
+// Tạo giao dịch (Income / Expense)
+router.post('/', authMiddleware, transactionController.createTransaction);
+
+// Chuyển khoản (Transfer)
 router.post('/transfer', authMiddleware, transactionController.createTransfer);
 
-// POST /api/transactions/import
+// Nhập dữ liệu (Import CSV)
 router.post('/import', authMiddleware, transactionController.importTransactions);
+
+// Xóa giao dịch
+router.delete('/:id', authMiddleware, transactionController.deleteTransaction);
 
 module.exports = router;

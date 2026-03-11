@@ -1,50 +1,93 @@
-import { createSlice } from "@reduxjs/toolkit"
-
-/*
-    Rule Structure:
-    {
-        id: string,
-        name: string,
-        amount: number,
-        type: 'EXPENSE' | 'INCOME',
-        frequency: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY',
-        startDate: ISOString,
-        nextDueDate: ISOString,
-        walletId: string,
-        categoryId: string,
-        active: boolean
-    }
-*/
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import api from '@/lib/api';
 
 const initialState = {
-    rules: []
-}
+    rules: [],
+    loading: false,
+    error: null,
+};
+
+export const fetchRecurring = createAsyncThunk(
+    'recurring/fetchRecurring',
+    async (_, { rejectWithValue }) => {
+        try {
+            const response = await api.get('/recurring');
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || 'Lỗi tải lịch định kỳ');
+        }
+    }
+);
+
+export const createRecurring = createAsyncThunk(
+    'recurring/createRecurring',
+    async (ruleData, { rejectWithValue }) => {
+        try {
+            const response = await api.post('/recurring', ruleData);
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || 'Lỗi tạo định kỳ');
+        }
+    }
+);
+
+export const editRecurring = createAsyncThunk(
+    'recurring/editRecurring',
+    async ({ id, data }, { rejectWithValue }) => {
+        try {
+            const response = await api.put(`/recurring/${id}`, data);
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || 'Lỗi cập nhật định kỳ');
+        }
+    }
+);
+
+export const removeRecurring = createAsyncThunk(
+    'recurring/removeRecurring',
+    async (id, { rejectWithValue }) => {
+        try {
+            await api.delete(`/recurring/${id}`);
+            return id;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || 'Lỗi xóa định kỳ');
+        }
+    }
+);
 
 const recurringSlice = createSlice({
     name: 'recurring',
     initialState,
     reducers: {
-        addRule: (state, action) => {
-            state.rules.push(action.payload)
-        },
-        updateRuleNextDueDate: (state, action) => {
-            const { ruleId, nextDate } = action.payload
-            const rule = state.rules.find(r => r.id === ruleId)
-            if (rule) {
-                rule.nextDueDate = nextDate
-            }
-        },
-        toggleRule: (state, action) => {
-            const rule = state.rules.find(r => r.id === action.payload)
-            if (rule) {
-                rule.active = !rule.active
-            }
-        },
-        deleteRule: (state, action) => {
-            state.rules = state.rules.filter(r => r.id !== action.payload)
-        }
-    }
-})
+        // Local reducers can exist if needed
+    },
+    extraReducers: (builder) => {
+        builder
+            .addCase(fetchRecurring.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(fetchRecurring.fulfilled, (state, action) => {
+                state.loading = false;
+                state.rules = action.payload;
+            })
+            .addCase(fetchRecurring.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
+            .addCase(createRecurring.fulfilled, (state, action) => {
+                state.rules.unshift(action.payload);
+            })
+            .addCase(editRecurring.fulfilled, (state, action) => {
+                const index = state.rules.findIndex(r => r.id === action.payload.id);
+                if (index !== -1) {
+                    state.rules[index] = action.payload;
+                }
+            })
+            .addCase(removeRecurring.fulfilled, (state, action) => {
+                state.rules = state.rules.filter(r => r.id !== action.payload);
+            });
+    },
+});
 
-export const { addRule, updateRuleNextDueDate, toggleRule, deleteRule } = recurringSlice.actions
-export default recurringSlice.reducer
+export default recurringSlice.reducer;

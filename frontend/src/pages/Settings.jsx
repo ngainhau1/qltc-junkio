@@ -131,8 +131,8 @@ function AppearanceSettings() {
                                 <SelectValue placeholder={t('settings.appearance.currencyPlaceholder')} />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="VND">Tiền Việt (₫)</SelectItem>
-                                <SelectItem value="USD">Dollar Mỹ ($)</SelectItem>
+                                <SelectItem value="VND">{t('settings.appearance.currencyVND')}</SelectItem>
+                                <SelectItem value="USD">{t('settings.appearance.currencyUSD')}</SelectItem>
                                 {/* Thêm ngoại tệ khác nếu cần */}
                             </SelectContent>
                         </Select>
@@ -148,8 +148,8 @@ function AppearanceSettings() {
                                 <SelectValue placeholder={t('settings.appearance.langPlaceholder')} />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="vi">Tiếng Việt (Vietnamese)</SelectItem>
-                                <SelectItem value="en">Tiếng Anh (English)</SelectItem>
+                                <SelectItem value="vi">{t('settings.appearance.langVi')}</SelectItem>
+                                <SelectItem value="en">{t('settings.appearance.langEn')}</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -357,7 +357,52 @@ function AccountSettings() {
                 <CardTitle>{t('settings.account.title')}</CardTitle>
                 <CardDescription>{t('settings.account.desc')} ({user?.email || 'N/A'}).</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-6">
+                {/* Change Password Area */}
+                <div className="rounded-xl border p-5 space-y-4">
+                    <div className="space-y-1">
+                        <Label className="text-base font-semibold">Đổi mật khẩu</Label>
+                        <p className="text-sm text-muted-foreground">Để bảo vệ tài khoản, xin vui lòng không chia sẻ mật khẩu của bạn.</p>
+                    </div>
+                    <form className="space-y-4 max-w-sm" onSubmit={async (e) => {
+                        e.preventDefault();
+                        const currentPassword = e.target.currentPassword.value;
+                        const newPassword = e.target.newPassword.value;
+                        const confirmPassword = e.target.confirmPassword.value;
+
+                        if (!currentPassword || !newPassword || !confirmPassword) {
+                            return toast.error("Vui lòng điền đầy đủ các trường");
+                        }
+                        if (newPassword !== confirmPassword) {
+                            return toast.error("Mật khẩu xác nhận không khớp");
+                        }
+                        
+                        try {
+                            // Using standard API call since authSlice doesn't have changePassword thunk yet
+                            await api.put('/users/me/password', { currentPassword, newPassword });
+                            toast.success("Thay đổi mật khẩu thành công!");
+                            e.target.reset();
+                        } catch (error) {
+                            toast.error(error.response?.data?.message || "Đổi mật khẩu thất bại");
+                        }
+                    }}>
+                        <div className="space-y-2">
+                            <Label htmlFor="currentPassword">Mật khẩu hiện tại</Label>
+                            <input id="currentPassword" type="password" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" required />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="newPassword">Mật khẩu mới</Label>
+                            <input id="newPassword" type="password" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" required minLength="6" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="confirmPassword">Xác nhận Mật khẩu mới</Label>
+                            <input id="confirmPassword" type="password" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" required minLength="6" />
+                        </div>
+                        <Button type="submit">Cập nhật mật khẩu</Button>
+                    </form>
+                </div>
+
+                {/* Logout Area */}
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 rounded-xl border border-destructive/20 bg-destructive/5 p-5">
                     <div className="space-y-1 max-w-[80%]">
                         <Label className="text-base font-semibold text-destructive">{t('settings.account.logoutTitle')}</Label>

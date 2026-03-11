@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { updateProfile, uploadUserAvatar } from "@/features/auth/authSlice";
+import { updateProfileAsync, uploadUserAvatar } from "@/features/auth/authSlice";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -37,7 +37,7 @@ export function Profile() {
         }));
     };
 
-    const handleSave = (e) => {
+    const handleSave = async (e) => {
         e.preventDefault();
 
         // Basic validation
@@ -46,15 +46,19 @@ export function Profile() {
             return;
         }
 
-        // Dispatch to Redux
-        dispatch(updateProfile({
-            name: formData.name,
-            phone: formData.phone,
-            dateOfBirth: formData.dateOfBirth,
-            avatarUrl: formData.avatarUrl,
-        }));
+        try {
+            // Dispatch to Redux Async Thunk
+            await dispatch(updateProfileAsync({
+                name: formData.name,
+                phone: formData.phone,
+                dateOfBirth: formData.dateOfBirth,
+                avatarUrl: formData.avatarUrl,
+            })).unwrap();
 
-        toast.success(t('profile.successMsg'));
+            toast.success(t('profile.successMsg'));
+        } catch (error) {
+            toast.error(error || t('profile.uploadFailed', 'Lỗi khi lưu hồ sơ.'));
+        }
     };
 
     const handleFileChange = async (e) => {

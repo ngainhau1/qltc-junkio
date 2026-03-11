@@ -4,10 +4,9 @@ import { useDispatch, useSelector } from "react-redux"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { addTransaction } from "@/features/transactions/transactionSlice"
-import { decreaseBalance, increaseBalance } from "@/features/wallets/walletSlice"
+import { createTransaction } from "@/features/transactions/transactionSlice"
 import { addNotification } from "@/features/notifications/notificationsSlice"
-import { formatCurrency, generateId } from "@/lib/utils"
+import { formatCurrency } from "@/lib/utils"
 import { ArrowRight } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
@@ -58,34 +57,20 @@ export function TransactionForm({ onSuccess }) {
             categoryId: 'general',
         },
         validationSchema: createYupSchema(t),
-        onSubmit: (values) => {
+        onSubmit: async (values) => {
             const newTransaction = {
-                id: generateId('t'),
                 description: values.description,
                 amount: parseFloat(values.amount),
-                date: new Date(values.date).toISOString(),
                 transaction_date: new Date(values.date).toISOString(),
                 type: values.type,
                 wallet_id: values.walletId,
                 category_id: values.type === 'TRANSFER' ? null : values.categoryId,
                 destination_wallet_id: values.type === 'TRANSFER' ? values.destinationWalletId : null,
-                created_at: new Date().toISOString()
             }
 
-            // 1. Add Transaction
-            dispatch(addTransaction(newTransaction))
-
-            // 2. Update Wallet Balance
-            if (values.type === 'EXPENSE') {
-                dispatch(decreaseBalance({ id: values.walletId, amount: values.amount }))
-            } else if (values.type === 'INCOME') {
-                dispatch(increaseBalance({ id: values.walletId, amount: values.amount }))
-            } else if (values.type === 'TRANSFER') {
-                // Deduct from Source
-                dispatch(decreaseBalance({ id: values.walletId, amount: values.amount }))
-                // Add to Destination
-                dispatch(increaseBalance({ id: values.destinationWalletId, amount: values.amount }))
-            }
+            try {
+                // 1. Create Transaction (Backend handles wallet balance adjustments safely)
+                await dispatch(createTransaction(newTransaction)).unwrap();
 
             // 3. Spending Alert Logic for Expenses (Competitor Enhancement)
             if (values.type === 'EXPENSE') {
@@ -114,7 +99,10 @@ export function TransactionForm({ onSuccess }) {
                 }
             }
 
-            if (onSuccess) onSuccess()
+                if (onSuccess) onSuccess();
+            } catch (err) {
+                console.error("Lỗi tạo giao dịch:", err);
+            }
         },
     })
 
@@ -139,6 +127,7 @@ export function TransactionForm({ onSuccess }) {
                     <Input
                         name="amount"
                         type="number"
+                        inputMode="decimal"
                         placeholder="0"
                         value={formik.values.amount}
                         onChange={formik.handleChange}
@@ -194,7 +183,7 @@ export function TransactionForm({ onSuccess }) {
                             data-testid="source-wallet-select"
                         >
                             {contextWallets.length === 0 && (
-                                <option value="" disabled>Không có ví nào trong mục này</option>
+                                <option value="" disabled>{t('transactionForm.noWalletsAvailable')}</option>
                             )}
                             {contextWallets.map(w => (
                                 <option key={w.id} value={w.id}>{w.name} ({formatCurrency(w.balance)})</option>

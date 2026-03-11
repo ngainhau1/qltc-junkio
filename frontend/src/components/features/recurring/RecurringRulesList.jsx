@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { formatCurrency, formatDateString } from "@/lib/utils"
 import { Clock, Trash2, Power, PowerOff } from "lucide-react"
-import { toggleRule, deleteRule } from "@/features/recurring/recurringSlice"
+import { editRecurring, removeRecurring } from "@/features/recurring/recurringSlice"
 import { useTranslation } from "react-i18next"
 
 export function RecurringRulesList() {
@@ -55,7 +55,7 @@ export function RecurringRulesList() {
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                onClick={() => dispatch(toggleRule(rule.id))}
+                                onClick={() => dispatch(editRecurring({ id: rule.id, data: { active: !rule.active } }))}
                                 title={rule.active ? t('transactions.recurring.pauseBtn') : t('transactions.recurring.activateBtn')}
                             >
                                 {rule.active ? <Power className="h-4 w-4 text-green-600" /> : <PowerOff className="h-4 w-4 text-muted-foreground" />}
@@ -66,7 +66,7 @@ export function RecurringRulesList() {
                                 className="text-red-500 hover:text-red-600 hover:bg-red-50"
                                 onClick={() => {
                                     if (confirm(t('transactions.recurring.deleteConfirm'))) {
-                                        dispatch(deleteRule(rule.id))
+                                        dispatch(removeRecurring(rule.id))
                                     }
                                 }}
                             >

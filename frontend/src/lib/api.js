@@ -17,7 +17,7 @@ api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('auth_token');
         if (token) {
-            config.headers['x-auth-token'] = token;
+            config.headers['Authorization'] = `Bearer ${token}`; // Đã sửa khớp với Backend authMiddleware
         }
         return config;
     },
@@ -58,7 +58,7 @@ api.interceptors.response.use(
                 return new Promise(function (resolve, reject) {
                     failedQueue.push({ resolve, reject })
                 }).then(token => {
-                    originalRequest.headers['x-auth-token'] = token;
+                    originalRequest.headers['Authorization'] = `Bearer ${token}`;
                     return api(originalRequest);
                 }).catch(err => {
                     return Promise.reject(err);
@@ -80,7 +80,7 @@ api.interceptors.response.use(
                 processQueue(null, newToken);
 
                 // Retry lại request hiện tại
-                originalRequest.headers['x-auth-token'] = newToken;
+                originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
                 return api(originalRequest);
             } catch (refreshError) {
                 processQueue(refreshError, null);

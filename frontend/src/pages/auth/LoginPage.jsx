@@ -17,7 +17,7 @@ export function LoginPage() {
     // Validation Schema
     const LoginSchema = Yup.object().shape({
         email: Yup.string().email(t('auth.emailInvalid')).required(t('auth.emailRequired')),
-        password: Yup.string().min(6, t('auth.passwordMin')).required(t('auth.passwordRequired')),
+        password: Yup.string().required(t('auth.passwordRequired')),
     })
 
     const dispatch = useDispatch()
@@ -27,8 +27,8 @@ export function LoginPage() {
 
     const formik = useFormik({
         initialValues: {
-            email: "demo@junkio.com",
-            password: "password123",
+            email: "",
+            password: "",
         },
         validationSchema: LoginSchema,
         onSubmit: async (values) => {
@@ -68,7 +68,7 @@ export function LoginPage() {
                         <Input
                             id="email"
                             type="email"
-                            placeholder="name@example.com"
+                            placeholder={t('auth.emailPlaceholder')}
                             className="pl-9"
                             {...formik.getFieldProps("email")}
                         />
@@ -90,7 +90,7 @@ export function LoginPage() {
                         <Input
                             id="password"
                             type={showPassword ? "text" : "password"}
-                            placeholder="••••••••"
+                            placeholder={t('auth.passwordPlaceholder')}
                             className="pl-9 pr-10"
                             {...formik.getFieldProps("password")}
                         />

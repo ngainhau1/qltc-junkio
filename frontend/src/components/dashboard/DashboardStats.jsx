@@ -5,16 +5,16 @@ import { useTranslation } from "react-i18next"
 
 export function DashboardStats({ wallets, transactions }) {
     const { t } = useTranslation();
-    const totalBalance = wallets.reduce((acc, w) => acc + w.balance, 0)
+    const totalBalance = wallets.reduce((acc, w) => acc + (parseFloat(w.balance) || 0), 0)
 
     // Simple calculation for income/expense
     const totalIncome = transactions
         .filter(t => t.type === 'INCOME')
-        .reduce((acc, t) => acc + t.amount, 0)
+        .reduce((acc, t) => acc + (parseFloat(t.amount) || 0), 0)
 
     const totalExpense = transactions
         .filter(t => t.type === 'EXPENSE')
-        .reduce((acc, t) => acc + t.amount, 0)
+        .reduce((acc, t) => acc + (parseFloat(t.amount) || 0), 0)
 
     const unassignedMoney = totalIncome - totalExpense;
 
@@ -78,7 +78,7 @@ export function DashboardStats({ wallets, transactions }) {
                 </div>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 z-10 relative">
                     <CardTitle className="text-sm font-medium text-muted-foreground">
-                        Chưa phân bổ (Zero-Based)
+                        {t('dashboard.stats.unassigned')}
                     </CardTitle>
                     <Scale className={`h-4 w-4 ${unassignedMoney >= 0 ? 'text-emerald-500' : 'text-destructive'}`} />
                 </CardHeader>

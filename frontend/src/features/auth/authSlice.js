@@ -62,6 +62,18 @@ export const uploadUserAvatar = createAsyncThunk(
     }
 );
 
+export const updateProfileAsync = createAsyncThunk(
+    'auth/updateProfileAsync',
+    async (profileData, { rejectWithValue }) => {
+        try {
+            const response = await api.put('/users/me', profileData);
+            return response.data; // The backend returns the updated user object
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.msg || 'Cập nhật hồ sơ thất bại');
+        }
+    }
+);
+
 const authSlice = createSlice({
     name: 'auth',
     initialState,
@@ -77,11 +89,6 @@ const authSlice = createSlice({
         },
         clearAuthError: (state) => {
             state.error = null;
-        },
-        updateProfile: (state, action) => {
-            if (state.user) {
-                state.user = { ...state.user, ...action.payload };
-            }
         }
     },
     extraReducers: (builder) => {
@@ -157,9 +164,24 @@ const authSlice = createSlice({
             .addCase(uploadUserAvatar.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
+            })
+            // Update Profile
+            .addCase(updateProfileAsync.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(updateProfileAsync.fulfilled, (state, action) => {
+                state.loading = false;
+                if (state.user) {
+                    state.user = { ...state.user, ...action.payload };
+                }
+            })
+            .addCase(updateProfileAsync.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
             });
     }
 });
 
-export const { logout, clearAuthError, updateProfile } = authSlice.actions;
+export const { logout, clearAuthError } = authSlice.actions;
 export default authSlice.reducer;

@@ -12,8 +12,8 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
-import { addFamily, setActiveFamily, updateMemberRole, removeMember } from "@/features/families/familySlice"
-import { updateShareApprovalStatus } from "@/features/transactions/transactionSlice"
+import { createFamily, setActiveFamily, removeMemberFromFamily } from "@/features/families/familySlice"
+import { approveDebt, rejectDebt, settleDebts, fetchTransactions } from "@/features/transactions/transactionSlice"
 import { Users, Plus, ArrowRight, MoreHorizontal, Shield, ShieldAlert, LogOut, Check, Copy, Receipt, Target, CheckCircle2, XCircle } from "lucide-react"
 import { simplifyDebts } from "@/utils/debtSimplification"
 import { toast } from "sonner"
@@ -109,35 +109,48 @@ export function Family() {
     // Shared Expense Modal State
     const [sharedExpenseModalOpen, setSharedExpenseModalOpen] = useState(false)
 
-    const handleCreateFamily = (e) => {
+    const handleCreateFamily = async (e) => {
         e.preventDefault()
         if (!newFamilyName.trim()) return
 
-        const newFamily = {
-            id: 'fam-' + Date.now(),
-            name: newFamilyName,
-            description: newFamilyDesc,
-            owner_id: user?.id,
-            members: [{ ...user, role: 'OWNER', joinedAt: new Date().toISOString() }],
-            created_at: new Date().toISOString()
+        try {
+            await dispatch(createFamily({ name: newFamilyName, description: newFamilyDesc })).unwrap();
+            setNewFamilyName("");
+            setNewFamilyDesc("");
+            setCreateModalOpen(false);
+            toast.success(t('family.modals.create.success', { defaultValue: 'Tạo gia đình thành công' }));
+        } catch (error) {
+            console.error("Lỗi tạo gia đình:", error);
+            toast.error(error);
         }
-        dispatch(addFamily(newFamily))
-        setNewFamilyName("")
-        setNewFamilyDesc("")
-        setCreateModalOpen(false)
     }
 
     const runSimplification = () => {
-        if (allFamilyDebts.length === 0) return
+        if (allFamilyDebts.length === 0) {
+            toast.info(t('family.toasts.optimizationEmpty'));
+            return;
+        }
         const results = simplifyDebts(allFamilyDebts)
+        if (results.length === 0) {
+            toast.success(t('family.toasts.optimizationZero'));
+        }
         setSettlements(results)
     }
 
-    const handleShareAction = (transactionId, shareId, newStatus) => {
-        dispatch(updateShareApprovalStatus({ transactionId, shareId, newStatus }));
-        toast.success(`Đã ${newStatus === 'APPROVED' ? 'duyệt' : 'từ chối'} khoản nợ thành công!`);
-        // Recalculate settlements automatically so UI feels alive
-        setTimeout(() => runSimplification(), 100);
+    const handleShareAction = async (transactionId, shareId, newStatus) => {
+        try {
+            if (newStatus === 'APPROVED') {
+                await dispatch(approveDebt(transactionId)).unwrap();
+            } else {
+                await dispatch(rejectDebt(transactionId)).unwrap();
+            }
+            toast.success(newStatus === 'APPROVED' ? t('family.toasts.debtApproved') : t('family.toasts.debtRejected'));
+            // Recalculate settlements automatically so UI feels alive
+            setTimeout(() => runSimplification(), 300);
+        } catch (error) {
+            console.error("Lỗi duyệt công nợ:", error);
+            toast.error(error);
+        }
     }
 
     const handleOpenInvite = (family) => {
@@ -160,48 +173,29 @@ export function Family() {
         setSettleModalOpen(true)
     }
 
-    const confirmSettle = () => {
+    const confirmSettle = async () => {
         if (!selectedSettlement || familyWalletIds.length === 0) return;
 
         const { from, to, amount } = selectedSettlement;
 
-        const newTx = {
-            id: generateId('settle'),
-            amount: amount,
-            date: new Date().toISOString(),
-            transaction_date: new Date().toISOString(),
-            description: `${t('family.expenses.settleUp')} ${getMemberName(from)} → ${getMemberName(to)}`,
-            type: 'TRANSFER', // Use TRANSFER to avoid showing in expenses list
-            wallet_id: familyWalletIds[0], // record in family context
-            category_id: 'cat-settlement',
-            user_id: from, // Debtor is payer
-            shares: [{
-                id: generateId('share'),
-                user_id: to,
+        try {
+            await dispatch(settleDebts({
+                from_user_id: from,
+                to_user_id: to,
                 amount: amount,
-                status: 'PAID',
-                approval_status: 'APPROVED'
-            }],
-            created_at: new Date().toISOString()
-        };
+                from_wallet_id: familyWalletIds[0],
+                to_wallet_id: familyWalletIds[0]
+            })).unwrap();
 
-        dispatch({ type: 'transactions/addTransaction', payload: newTx });
-        toast.success(t('family.toasts.paymentRecorded', { amount: formatCurrency(amount) }));
-
-        // Mathematically update local state
-        const newExpenses = [...allFamilyDebts, {
-            id: newTx.id,
-            type: newTx.type,
-            paidBy: from,
-            splitAmong: [to],
-            shares: newTx.shares,
-            amount: amount,
-            desc: newTx.description
-        }];
-        const results = simplifyDebts(newExpenses);
-        setSettlements(results);
-
-        setSettleModalOpen(false);
+            toast.success(t('family.toasts.paymentRecorded', { amount: formatCurrency(amount) }));
+            
+            // Reload transactions so the debts recalculate over the wire
+            dispatch(fetchTransactions());
+            setSettleModalOpen(false);
+        } catch (error) {
+            console.error("Lỗi khi thanh toán bù trừ:", error);
+            toast.error(error);
+        }
     }
 
     return (
@@ -294,17 +288,9 @@ export function Family() {
                                                                         <DropdownMenuContent align="end">
                                                                             <DropdownMenuLabel>{t('family.actions.manage')}</DropdownMenuLabel>
                                                                             <DropdownMenuSeparator />
-                                                                            <DropdownMenuItem onClick={() => dispatch(updateMemberRole({ familyId: family.id, memberId: member.id, newRole: 'ADMIN' }))}>
-                                                                                <Shield className="mr-2 h-4 w-4" /> {t('family.actions.makeAdmin')}
-                                                                            </DropdownMenuItem>
-                                                                            <DropdownMenuItem onClick={() => dispatch(updateMemberRole({ familyId: family.id, memberId: member.id, newRole: 'MEMBER' }))}>
-                                                                                <Users className="mr-2 h-4 w-4" /> {t('family.actions.makeMember')}
-                                                                            </DropdownMenuItem>
-                                                                            <DropdownMenuItem onClick={() => dispatch(updateMemberRole({ familyId: family.id, memberId: member.id, newRole: 'VIEWER' }))}>
-                                                                                <ShieldAlert className="mr-2 h-4 w-4" /> {t('family.actions.makeViewer')}
-                                                                            </DropdownMenuItem>
+                                                                            {/* Temporarily disabled role updates until backend API is ready */}
                                                                             <DropdownMenuSeparator />
-                                                                            <DropdownMenuItem className="text-red-600" onClick={() => dispatch(removeMember({ familyId: family.id, memberId: member.id }))}>
+                                                                            <DropdownMenuItem className="text-red-600" onClick={() => dispatch(removeMemberFromFamily({ familyId: family.id, userId: member.id }))}>
                                                                                 <LogOut className="mr-2 h-4 w-4" /> {t('family.actions.remove')}
                                                                             </DropdownMenuItem>
                                                                         </DropdownMenuContent>
@@ -338,10 +324,10 @@ export function Family() {
                     <CardHeader className="pb-3">
                         <CardTitle className="text-orange-800 dark:text-orange-400 flex items-center gap-2">
                             <ShieldAlert className="h-5 w-5" />
-                            Khoản nợ chờ bạn xác nhận ({pendingDebts.length})
+                            {t('family.pendingDebts.title', { count: pendingDebts.length })}
                         </CardTitle>
                         <CardDescription>
-                            Các thành viên khác đã chỉ định bạn chia sẻ các khoản chi phí dưới đây. Xác nhận để tham gia phân bổ công nợ chung.
+                            {t('family.pendingDebts.desc')}
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-3">
@@ -350,7 +336,7 @@ export function Family() {
                                 <div>
                                     <p className="font-medium text-sm">{debt.desc}</p>
                                     <p className="text-xs text-muted-foreground mt-0.5">
-                                        <span className="font-semibold text-foreground">{getMemberName(debt.paidBy)}</span> đã chi trả • Bạn cần đóng góp: <span className="font-semibold text-orange-600 dark:text-orange-400">{formatCurrency(debt.amount)}</span>
+                                        <span className="font-semibold text-foreground">{getMemberName(debt.paidBy)}</span> {t('family.pendingDebts.paidByText')} <span className="font-semibold text-orange-600 dark:text-orange-400">{formatCurrency(debt.amount)}</span>
                                     </p>
                                 </div>
                                 <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -360,14 +346,14 @@ export function Family() {
                                         className="w-full sm:w-auto border-red-200 text-red-600 hover:bg-red-50 dark:border-red-900 dark:hover:bg-red-900/20"
                                         onClick={() => handleShareAction(debt.transactionId, debt.shareId, 'REJECTED')}
                                     >
-                                        <XCircle className="h-4 w-4 mr-1.5" /> Từ chối
+                                        <XCircle className="h-4 w-4 mr-1.5" /> {t('family.pendingDebts.btnReject')}
                                     </Button>
                                     <Button
                                         size="sm"
                                         className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white"
                                         onClick={() => handleShareAction(debt.transactionId, debt.shareId, 'APPROVED')}
                                     >
-                                        <CheckCircle2 className="h-4 w-4 mr-1.5" /> Duyệt nợ
+                                        <CheckCircle2 className="h-4 w-4 mr-1.5" /> {t('family.pendingDebts.btnApprove')}
                                     </Button>
                                 </div>
                             </div>

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { decreaseBalance } from "@/features/wallets/walletSlice"
+import { createTransaction } from "@/features/transactions/transactionSlice"
 import { toast } from "sonner"
 import { useTranslation } from "react-i18next"
 import { formatCurrency, generateId } from "@/lib/utils"
@@ -30,7 +30,7 @@ export function SharedExpenseModal({ isOpen, onClose, family, familyWalletId }) 
         },
         validationSchema,
         enableReinitialize: true,
-        onSubmit: (values) => {
+        onSubmit: async (values) => {
             if (!familyWalletId) {
                 toast.error(t('sharedExpense.errNoWallet'));
                 return;
@@ -49,25 +49,27 @@ export function SharedExpenseModal({ isOpen, onClose, family, familyWalletId }) 
             }));
 
             const newTx = {
-                id: generateId('t-shared'),
                 amount: totalAmount,
-                date: new Date().toISOString(),
                 transaction_date: new Date().toISOString(),
                 description: values.description,
                 type: 'EXPENSE',
                 wallet_id: familyWalletId,
                 category_id: 'general',
                 user_id: values.paidBy,
-                shares: shares,
-                created_at: new Date().toISOString()
+                family_id: family.id,
+                shares: shares
             };
 
-            dispatch({ type: 'transactions/addTransaction', payload: newTx });
-            dispatch(decreaseBalance({ id: familyWalletId, amount: totalAmount }));
+            try {
+                await dispatch(createTransaction(newTx)).unwrap();
 
-            toast.success(t('sharedExpense.successMsg'));
-            formik.resetForm();
-            onClose();
+                toast.success(t('sharedExpense.successMsg'));
+                formik.resetForm();
+                onClose();
+            } catch (error) {
+                console.error("Lỗi tạo chi tiêu chung:", error);
+                toast.error(error);
+            }
         }
     });
 
@@ -99,6 +101,7 @@ export function SharedExpenseModal({ isOpen, onClose, family, familyWalletId }) 
                     <Input
                         id="amount"
                         type="number"
+                        inputMode="decimal"
                         placeholder="0"
                         {...formik.getFieldProps('amount')}
                         className={formik.touched.amount && formik.errors.amount ? "border-red-500" : ""}
@@ -115,12 +118,12 @@ export function SharedExpenseModal({ isOpen, onClose, family, familyWalletId }) 
                         onValueChange={(val) => formik.setFieldValue('paidBy', val)}
                     >
                         <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Chọn thành viên" />
+                            <SelectValue placeholder={t('sharedExpense.selectMember')} />
                         </SelectTrigger>
                         <SelectContent>
                             {family?.members.map(m => (
                                 <SelectItem key={m.id} value={String(m.id)}>
-                                    {m.name} {m.id === user?.id ? "(Bạn)" : ""}
+                                    {m.name} {m.id === user?.id ? t('family.list.you') : ""}
                                 </SelectItem>
                             ))}
                         </SelectContent>

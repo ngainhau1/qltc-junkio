@@ -3,10 +3,8 @@ import * as Yup from "yup"
 import { useDispatch, useSelector } from "react-redux"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { addRule } from "@/features/recurring/recurringSlice"
-import { runRecurringEngine } from "@/services/recurringService"
-import { store } from "@/store"
-import { formatCurrency, generateId } from "@/lib/utils"
+import { createRecurring } from "@/features/recurring/recurringSlice"
+import { formatCurrency } from "@/lib/utils"
 import { useTranslation } from "react-i18next"
 
 export function RecurringRuleForm({ onSuccess }) {
@@ -41,26 +39,22 @@ export function RecurringRuleForm({ onSuccess }) {
             startDate: new Date().toISOString().split('T')[0] // Today YYYY-MM-DD
         },
         validationSchema,
-        onSubmit: (values) => {
+        onSubmit: async (values) => {
             const newRule = {
-                id: generateId('rule'),
                 name: values.name,
                 amount: parseFloat(values.amount),
                 type: values.type,
+                wallet_id: values.walletId,
+                category_id: values.categoryId,
                 frequency: values.frequency,
-                startDate: new Date(values.startDate).toISOString(),
-                nextDueDate: new Date(values.startDate).toISOString(), // Start immediately (or logic to calc next)
-                walletId: values.walletId,
-                categoryId: values.categoryId,
-                active: true
+                start_date: new Date(values.startDate).toISOString()
             }
-
-            dispatch(addRule(newRule))
-
-            // Trigger Engine Check immediately so user sees effect if due today
-            runRecurringEngine(store)
-
-            if (onSuccess) onSuccess()
+            try {
+                await dispatch(createRecurring(newRule)).unwrap();
+                if (onSuccess) onSuccess();
+            } catch (err) {
+                console.error("Lỗi tạo rule định kỳ:", err);
+            }
         },
     })
 

@@ -30,6 +30,19 @@ const setRefreshTokenCookie = (res, token) => {
 
 exports.register = async (req, res) => {
     const { name, email, password } = req.body;
+
+    // Security: Input validation
+    if (!name || !email || !password) {
+        return res.status(400).json({ msg: 'Vui lòng điền đầy đủ thông tin' });
+    }
+    if (password.length < 6) {
+        return res.status(400).json({ msg: 'Mật khẩu phải có ít nhất 6 ký tự' });
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        return res.status(400).json({ msg: 'Email không hợp lệ' });
+    }
+
     try {
         let user = await User.findOne({ where: { email } });
         if (user) {

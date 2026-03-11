@@ -81,7 +81,7 @@ export function Reports() {
                         <Download className="mr-2 h-4 w-4" /> {t('reports.btnCsv')}
                     </Button>
                     <Button variant="outline" size="sm" onClick={() => exportToExcel(transactions, t('reports.exportTitle'))}>
-                        <Download className="mr-2 h-4 w-4" /> Excel
+                        <Download className="mr-2 h-4 w-4" /> {t('transactions.exportExcel')}
                     </Button>
                 </div>
             </header>

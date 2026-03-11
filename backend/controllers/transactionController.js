@@ -1,5 +1,134 @@
-const { Transaction, Wallet, User, sequelize } = require('../models');
+const { Transaction, Wallet, User, Category, sequelize } = require('../models');
 const { Op } = require('sequelize');
+
+// Lấy danh sách giao dịch
+exports.getTransactions = async (req, res) => {
+    try {
+        const transactions = await Transaction.findAll({
+            where: { user_id: req.user.id },
+            include: [
+                { model: Wallet, attributes: ['id', 'name'] },
+                { model: Category, attributes: ['id', 'name'] },
+                { model: sequelize.models.TransactionShare, as: 'Shares' }
+            ],
+            order: [['date', 'DESC']]
+        });
+        res.status(200).json(transactions);
+    } catch (error) {
+        console.error('Lỗi lấy danh sách giao dịch:', error);
+        res.status(500).json({ message: error.message || 'Lỗi lấy danh sách giao dịch' });
+    }
+};
+
+// Tạo giao dịch thông thường (INCOME / EXPENSE) & Giao dịch Gia Đình (Shared Expenses)
+exports.createTransaction = async (req, res) => {
+    const { wallet_id, category_id, amount, type, description, date, family_id, shares } = req.body;
+
+    if (!wallet_id || !amount || !type) {
+        return res.status(400).json({ message: 'wallet_id, amount and type are required' });
+    }
+
+    // Security: Validate amount is a positive number
+    const parsedAmount = parseFloat(amount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+        return res.status(400).json({ message: 'Số tiền phải lớn hơn 0' });
+    }
+
+    // Security: Validate transaction type
+    if (!['INCOME', 'EXPENSE'].includes(type)) {
+        return res.status(400).json({ message: 'Loại giao dịch không hợp lệ' });
+    }
+
+    const t = await sequelize.transaction();
+
+    try {
+        const wallet = await Wallet.findByPk(wallet_id, { transaction: t });
+        if (!wallet) {
+            throw new Error('Ví không tồn tại');
+        }
+
+        // Tạo giao dịch
+        const transaction = await Transaction.create({
+            user_id: req.user.id,
+            wallet_id,
+            category_id: (category_id === 'general' || !category_id) ? null : category_id,
+            amount,
+            type,
+            description,
+            date: date || new Date(),
+            transaction_date: date || new Date(),
+            family_id: family_id || null
+        }, { transaction: t });
+
+        // Nếu là giao dịch chia tiền gia đình (có shares)
+        if (shares && Array.isArray(shares) && shares.length > 0) {
+            const sharesToCreate = shares.map(share => ({
+                transaction_id: transaction.id,
+                user_id: share.user_id,
+                amount: share.amount,
+                status: share.status || 'UNPAID',
+                approval_status: share.approval_status || 'PENDING'
+            }));
+            await sequelize.models.TransactionShare.bulkCreate(sharesToCreate, { transaction: t });
+        }
+
+        // Cập nhật số dư ví
+        if (type === 'INCOME') {
+            wallet.balance = parseFloat(wallet.balance) + parseFloat(amount);
+        } else if (type === 'EXPENSE') {
+            wallet.balance = parseFloat(wallet.balance) - parseFloat(amount);
+        }
+        await wallet.save({ transaction: t });
+
+        await t.commit();
+        res.status(201).json(transaction);
+    } catch (error) {
+        await t.rollback();
+        console.error('Lỗi tạo giao dịch:', error);
+        res.status(500).json({ message: 'Lỗi tạo giao dịch: ' + error.message });
+    }
+};
+
+// Xóa giao dịch
+exports.deleteTransaction = async (req, res) => {
+    const { id } = req.params;
+    const t = await sequelize.transaction();
+
+    try {
+        const transaction = await Transaction.findOne({
+            where: { id, user_id: req.user.id },
+            transaction: t
+        });
+
+        if (!transaction) {
+            await t.rollback();
+            return res.status(404).json({ message: 'Giao dịch không tồn tại hoặc bạn không có quyền' });
+        }
+
+        const wallet = await Wallet.findByPk(transaction.wallet_id, { transaction: t });
+
+        // Hoàn tiền lại ví
+        if (wallet) {
+            if (transaction.type === 'INCOME') {
+                wallet.balance = parseFloat(wallet.balance) - parseFloat(transaction.amount);
+            } else if (transaction.type === 'EXPENSE' || transaction.type === 'TRANSFER_OUT') {
+                wallet.balance = parseFloat(wallet.balance) + parseFloat(transaction.amount);
+            } else if (transaction.type === 'TRANSFER_IN') {
+                wallet.balance = parseFloat(wallet.balance) - parseFloat(transaction.amount);
+            }
+            await wallet.save({ transaction: t });
+        }
+
+        await transaction.destroy({ transaction: t });
+        await t.commit();
+
+        res.status(200).json({ message: 'Xóa giao dịch thành công' });
+    } catch (error) {
+        await t.rollback();
+        console.error('Lỗi xóa giao dịch:', error);
+        res.status(500).json({ message: 'Lỗi xóa giao dịch: ' + error.message });
+    }
+};
 
 exports.createTransfer = async (req, res) => {
     const { from_wallet_id, to_wallet_id, amount, description, date } = req.body;

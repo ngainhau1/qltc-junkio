@@ -16,6 +16,12 @@ import { Reports } from "@/pages/Reports"
 import { Settings } from "@/pages/Settings"
 import { Goals } from "@/pages/Goals"
 import { Profile } from "@/pages/Profile"
+import { MobileMenu } from "@/pages/MobileMenu"
+import { fetchWallets } from "@/features/wallets/walletSlice"
+import { fetchFamilies } from "@/features/families/familySlice"
+import { fetchGoals } from "@/features/goals/goalsSlice"
+import { fetchRecurring } from "@/features/recurring/recurringSlice"
+import { fetchTransactions } from "@/features/transactions/transactionSlice"
 
 import { runRecurringEngine } from "@/services/recurringService"
 import { store } from "@/store"
@@ -23,7 +29,6 @@ import { store } from "@/store"
 function App() {
   const dispatch = useDispatch()
   const { isAuthenticated, token, user } = useSelector(state => state.auth)
-  const { transactions } = useSelector(state => state.transactions)
 
   // 1. Check Auth Session on Mount
   useEffect(() => {
@@ -32,9 +37,16 @@ function App() {
     }
   }, [dispatch, token, user]);
 
-  // 3. Run Recurring Checks (Safe to run multiple times as it checks dates)
+  // 2. Fetch App Data when Authenticated
   useEffect(() => {
     if (isAuthenticated) {
+      dispatch(fetchWallets());
+      dispatch(fetchFamilies());
+      dispatch(fetchGoals());
+      dispatch(fetchRecurring());
+      dispatch(fetchTransactions()); // Tạm lấy tất cả hoặc theo range filter ở transactionSlice
+      
+      // Khởi động trình quét recurring
       const count = runRecurringEngine(store)
       if (count > 0) {
         toast.success(`Đã tự động tạo ${count} giao dịch định kỳ đến hạn.`, {
@@ -42,7 +54,9 @@ function App() {
         })
       }
     }
-  }, [isAuthenticated, transactions.length])
+  }, [dispatch, isAuthenticated]);
+
+  // (Optional) Remove old Run Recurring Checks logic if not needed separately
 
   return (
     <Router>
@@ -65,6 +79,7 @@ function App() {
             <Route path="/reports" element={<Reports />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/menu" element={<MobileMenu />} />
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>

@@ -1,16 +1,13 @@
 import { useState, useRef } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { Upload, FileType, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import { importFromCSV } from '@/services/importService';
-import { fetchTransactions } from '@/features/transactions/transactionSlice';
-import { fetchWallets } from '@/features/wallets/walletSlice';
 
 export function ImportTransactionsModal({ isOpen, onClose }) {
     const { t } = useTranslation();
-    const dispatch = useDispatch();
     const fileInputRef = useRef(null);
     const [file, setFile] = useState(null);
     const [defaultWalletId, setDefaultWalletId] = useState('');
@@ -52,10 +49,10 @@ export function ImportTransactionsModal({ isOpen, onClose }) {
             setStatus('SUCCESS');
             setMessage(result.message || t('transactions.import.success', `Nhập thành công ${result.count} giao dịch.`));
 
-            // Format refresh dữ liệu sau khi import thành công
-            dispatch(fetchTransactions());
-            dispatch(fetchWallets());
-
+            // Cập nhật bằng cách reload lại dữ liệu (vì slice chưa định nghĩa thunk fetch tự động)
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
             // Tự đóng modal sau 2 giây
             setTimeout(() => {
                 handleClose();

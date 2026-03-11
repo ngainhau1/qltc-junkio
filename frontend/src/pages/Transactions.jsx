@@ -77,7 +77,7 @@ export function Transactions() {
                                 <FileSpreadsheet className="mr-2 h-4 w-4" /> {t('transactions.exportCSV')}
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => exportToExcel(filteredTransactions)}>
-                                <FileSpreadsheet className="mr-2 h-4 w-4" /> Xuất Excel
+                                <FileSpreadsheet className="mr-2 h-4 w-4" /> {t('transactions.exportExcel')}
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
