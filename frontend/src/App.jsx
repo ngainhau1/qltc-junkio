@@ -17,6 +17,8 @@ import { Settings } from "@/pages/Settings"
 import { Goals } from "@/pages/Goals"
 import { Profile } from "@/pages/Profile"
 import { MobileMenu } from "@/pages/MobileMenu"
+import { Forecast } from "@/pages/Forecast"
+import { AdminDashboard } from "@/pages/AdminDashboard"
 import { fetchWallets } from "@/features/wallets/walletSlice"
 import { fetchFamilies } from "@/features/families/familySlice"
 import { fetchGoals } from "@/features/goals/goalsSlice"
@@ -80,6 +82,8 @@ function App() {
             <Route path="/settings" element={<Settings />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/menu" element={<MobileMenu />} />
+            <Route path="/forecast" element={<Forecast />} />
+            <Route path="/admin" element={<AdminDashboard />} />
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>

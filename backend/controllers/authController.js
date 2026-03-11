@@ -5,7 +5,7 @@ const { User, Family, FamilyMember } = require('../models');
 // Helpers for Token Generation
 const generateAccessToken = (user) => {
     return jwt.sign(
-        { user: { id: user.id } },
+        { user: { id: user.id, role: user.role } },
         process.env.JWT_SECRET || 'secret',
         { expiresIn: '15m' } // Hết hạn ngắn
     );
@@ -13,7 +13,7 @@ const generateAccessToken = (user) => {
 
 const generateRefreshToken = (user) => {
     return jwt.sign(
-        { user: { id: user.id } },
+        { user: { id: user.id, role: user.role } },
         process.env.JWT_REFRESH_SECRET || 'refresh_secret_b6d9677116aa4',
         { expiresIn: '7d' } // Hết hạn dài
     );

@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom"
-import { Home, Wallet, PieChart, Settings, Users, ArrowRightLeft, ChevronsUpDown, Target, Plus } from "lucide-react"
+import { Home, Wallet, PieChart, Settings, Users, ArrowRightLeft, ChevronsUpDown, Target, Plus, TrendingUp, Shield } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -14,6 +14,7 @@ import { openAddTransactionModal } from "@/features/ui/uiSlice"
 import { useTranslation } from "react-i18next"
 
 export function Sidebar({ className }) {
+    const { user } = useSelector(state => state.auth)
     const { t } = useTranslation();
     const location = useLocation()
     const dispatch = useDispatch()
@@ -25,7 +26,9 @@ export function Sidebar({ className }) {
         { icon: Wallet, label: t('nav.wallets'), href: "/wallets" },
         { icon: Target, label: t('nav.goals'), href: "/goals" },
         { icon: PieChart, label: t('nav.reports'), href: "/reports" },
+        { icon: TrendingUp, label: t('nav.forecast'), href: "/forecast" },
         { icon: Users, label: t('nav.family'), href: "/family" },
+        ...(user?.role === 'admin' ? [{ icon: Shield, label: t('nav.admin'), href: "/admin" }] : []),
     ]
 
     // Derived state for display
@@ -37,7 +40,7 @@ export function Sidebar({ className }) {
             <div className="space-y-4 py-4">
                 <div className="px-3 py-2">
                     <div className="px-2 mb-6 pt-4">
-                        <img src="/banner.png" alt="Junkio Logo" className="h-14 w-auto object-contain" />
+                        <h2 className="text-lg font-bold tracking-tight">Junkio Finance</h2>
                     </div>
                     <div className="mb-6 px-2">
                         <DropdownMenu>

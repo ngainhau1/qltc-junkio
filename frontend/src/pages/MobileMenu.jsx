@@ -13,6 +13,8 @@ import {
     Repeat,
     User,
     Bell,
+    TrendingUp,
+    Shield,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -70,6 +72,20 @@ export function MobileMenu() {
                     color: "text-emerald-500",
                     bg: "bg-emerald-500/10",
                 },
+                {
+                    icon: TrendingUp,
+                    label: t("nav.forecast"),
+                    href: "/forecast",
+                    color: "text-cyan-500",
+                    bg: "bg-cyan-500/10",
+                },
+                ...(user?.role === 'admin' ? [{
+                    icon: Shield,
+                    label: t("nav.admin"),
+                    href: "/admin",
+                    color: "text-red-500",
+                    bg: "bg-red-500/10",
+                }] : []),
             ],
         },
         {

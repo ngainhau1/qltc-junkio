@@ -81,6 +81,13 @@ const startCronJobs = () => {
             console.error('❌ Lỗi Engine Cron:', error);
         }
     });
+
+    // Budget Alert: Chạy mỗi ngày lúc 8h sáng
+    const { checkBudgetAlerts } = require('./budgetAlertService');
+    cron.schedule('0 8 * * *', async () => {
+        console.log('🔔 Đang kiểm tra cảnh báo ngân sách...');
+        await checkBudgetAlerts();
+    });
 };
 
 module.exports = { startCronJobs };

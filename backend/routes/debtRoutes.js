@@ -23,4 +23,9 @@ router.put('/:shareId/reject', auth, debtController.rejectShare);
 // @access  Private
 router.post('/settle', auth, debtController.settleDebt);
 
+// @route   GET /api/debts/simplified/:familyId
+// @desc    Get optimized debt settlement suggestions (Greedy Algorithm)
+// @access  Private
+router.get('/simplified/:familyId', auth, debtController.getSimplifiedDebts);
+
 module.exports = router;

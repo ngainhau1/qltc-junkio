@@ -57,7 +57,9 @@
         "family": "Family Hub",
         "goals": "Goals",
         "reports": "Reports",
-        "settings": "Settings"
+        "settings": "Settings",
+        "forecast": "Forecast",
+        "admin": "Admin"
     },
     "sidebar": {
         "context": "Context",
@@ -481,5 +483,38 @@
         "errNoWallet": "This family does not have a shared wallet/fund to record transactions.",
         "successMsg": "Shared expense added successfully!",
         "selectMember": "Select member"
+    },
+    "admin": {
+        "title": "System Administration",
+        "desc": "Manage users, view system statistics, and control access.",
+        "totalUsers": "Total Users",
+        "totalTransactions": "Total Transactions",
+        "totalFamilies": "Total Families",
+        "userManagement": "User Management",
+        "search": "Search users...",
+        "colName": "Name",
+        "colRole": "Role",
+        "colStatus": "Status",
+        "colActions": "Actions",
+        "lockAccount": "Lock",
+        "unlockAccount": "Unlock",
+        "locked": "Locked",
+        "active": "Active",
+        "showing": "Showing {{from}}-{{to}} of {{total}}",
+        "accessDenied": "Access Denied",
+        "accessDeniedDesc": "You do not have permission to view this page."
+    },
+    "forecast": {
+        "title": "Cash Flow Forecast",
+        "desc": "Predict future income and expenses based on historical data.",
+        "chartTitle": "Income vs Expense Trend",
+        "income": "Predicted Income",
+        "expense": "Predicted Expense",
+        "netFlow": "Net Cash Flow",
+        "monthsLabel": "months",
+        "predicted": "Forecast",
+        "healthy": "Cash flow looks healthy for the forecast period.",
+        "warning": "Spending may exceed income",
+        "warningMsg": "Spending may exceed income in {{month}}"
     }
 }

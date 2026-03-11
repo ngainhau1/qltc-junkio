@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const cookieParser = require('cookie-parser');
 const { Sequelize } = require('sequelize');
@@ -9,7 +10,8 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Security: Ẩn thông tin server framework
+// Security: HTTP headers theo chuẩn OWASP (HSTS, X-Frame-Options, CSP...)
+app.use(helmet());
 app.disable('x-powered-by');
 
 // Rate Limiting Middleware (Bảo vệ chống Brute-force & DDoS)
@@ -44,6 +46,13 @@ app.use('/api/analytics', require('./routes/analyticsRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/budgets', require('./routes/budgetRoutes'));
 app.use('/api/categories', require('./routes/categoryRoutes'));
+app.use('/api/admin', require('./routes/adminRoutes'));
+app.use('/api/forecast', require('./routes/forecastRoutes'));
+
+// Swagger API Documentation (truy cập: /api-docs)
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./config/swagger');
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Cấu hình kết nối Database (Lấy từ biến môi trường Docker)
 // Lưu ý: 'host' là tên service trong docker-compose ('db')

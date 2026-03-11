@@ -57,7 +57,9 @@
         "family": "Gia Đình",
         "goals": "Mục Tiêu",
         "reports": "Báo Cáo",
-        "settings": "Cài Đặt"
+        "settings": "Cài Đặt",
+        "forecast": "Dự Báo",
+        "admin": "Quản Trị"
     },
     "sidebar": {
         "context": "Ngữ Cảnh",
@@ -481,5 +483,38 @@
         "errNoWallet": "Gia đình này chưa có quỹ hoặc ví chung nào để ghi nhận giao dịch.",
         "successMsg": "Đã thêm chi tiêu chung thành công!",
         "selectMember": "Chọn thành viên"
+    },
+    "admin": {
+        "title": "Quản trị Hệ thống",
+        "desc": "Quản lý người dùng, xem thống kê hệ thống và kiểm soát quyền truy cập.",
+        "totalUsers": "Tổng Người dùng",
+        "totalTransactions": "Tổng Giao dịch",
+        "totalFamilies": "Tổng Gia đình",
+        "userManagement": "Quản lý Người dùng",
+        "search": "Tìm người dùng...",
+        "colName": "Tên",
+        "colRole": "Vai trò",
+        "colStatus": "Trạng thái",
+        "colActions": "Hành động",
+        "lockAccount": "Khóa",
+        "unlockAccount": "Mở khóa",
+        "locked": "Đã khóa",
+        "active": "Hoạt động",
+        "showing": "Đang hiển thị {{from}}-{{to}} trong {{total}}",
+        "accessDenied": "Truy cập bị từ chối",
+        "accessDeniedDesc": "Bạn không có quyền truy cập trang này."
+    },
+    "forecast": {
+        "title": "Dự báo Dòng tiền",
+        "desc": "Dự đoán thu nhập và chi tiêu tương lai dựa trên dữ liệu lịch sử.",
+        "chartTitle": "Xu hướng Thu Chi",
+        "income": "Thu nhập Dự kiến",
+        "expense": "Chi tiêu Dự kiến",
+        "netFlow": "Dòng tiền Ròng",
+        "monthsLabel": "tháng",
+        "predicted": "Dự báo",
+        "healthy": "Dòng tiền khỏe mạnh trong khoảng dự báo.",
+        "warning": "Chi tiêu có thể vượt thu nhập",
+        "warningMsg": "Chi tiêu có thể vượt thu nhập vào {{month}}"
     }
 }

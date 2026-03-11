@@ -31,3 +31,6 @@ security_*.txt
 **/build.log
 **/lint_*.txt
 **/lint_*.json
+
+# Bỏ qua thư mục tài liệu
+doc/

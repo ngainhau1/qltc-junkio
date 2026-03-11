@@ -146,3 +146,82 @@ exports.settleDebt = async (req, res) => {
         res.status(500).json({ message: 'Settle Debt failed: ' + error.message });
     }
 }
+
+// GET /api/debts/simplified/:familyId
+// Thuật toán Tham lam (Greedy) tối ưu hóa mạng lưới nợ trong gia đình
+exports.getSimplifiedDebts = async (req, res) => {
+    try {
+        const { familyId } = req.params;
+
+        // 1. Lấy tất cả TransactionShare UNPAID + APPROVED trong family
+        const shares = await TransactionShare.findAll({
+            where: { status: 'UNPAID', approval_status: 'APPROVED' },
+            include: [{
+                model: Transaction, as: 'Transaction',
+                include: [{ model: Wallet, where: { family_id: familyId } }]
+            }]
+        });
+
+        // 2. Tính Net Balance mỗi người (số dư ròng)
+        const balances = {};
+        for (const share of shares) {
+            const debtor = share.user_id;               // người nợ
+            const creditor = share.Transaction.user_id;  // người chi (chủ nợ)
+            const amount = parseFloat(share.amount);
+
+            balances[debtor] = (balances[debtor] || 0) - amount;
+            balances[creditor] = (balances[creditor] || 0) + amount;
+        }
+
+        // 3. Phân mảnh: Tách Debtors (< 0) và Creditors (> 0)
+        const debtors = [];
+        const creditors = [];
+        for (const [userId, balance] of Object.entries(balances)) {
+            if (balance < -0.01) debtors.push({ userId, amount: Math.abs(balance) });
+            else if (balance > 0.01) creditors.push({ userId, amount: balance });
+        }
+
+        // Sắp xếp giảm dần theo giá trị tuyệt đối
+        debtors.sort((a, b) => b.amount - a.amount);
+        creditors.sort((a, b) => b.amount - a.amount);
+
+        // 4. Ghép cặp Tham lam (Greedy Matching)
+        const suggestions = [];
+        let i = 0, j = 0;
+        while (i < debtors.length && j < creditors.length) {
+            const transferAmount = Math.min(debtors[i].amount, creditors[j].amount);
+            suggestions.push({
+                from: debtors[i].userId,
+                to: creditors[j].userId,
+                amount: Math.round(transferAmount * 100) / 100
+            });
+            debtors[i].amount -= transferAmount;
+            creditors[j].amount -= transferAmount;
+            if (debtors[i].amount < 0.01) i++;
+            if (creditors[j].amount < 0.01) j++;
+        }
+
+        // 5. Enrich với thông tin user (tên, avatar)
+        const userIds = [...new Set(suggestions.flatMap(s => [s.from, s.to]))];
+        const users = await User.findAll({
+            where: { id: userIds },
+            attributes: ['id', 'name', 'avatar']
+        });
+        const userMap = Object.fromEntries(users.map(u => [u.id, { id: u.id, name: u.name, avatar: u.avatar }]));
+
+        const result = suggestions.map(s => ({
+            from: userMap[s.from] || { id: s.from, name: 'Unknown' },
+            to: userMap[s.to] || { id: s.to, name: 'Unknown' },
+            amount: s.amount
+        }));
+
+        res.json({
+            originalTransactions: shares.length,
+            simplifiedTransactions: result.length,
+            suggestions: result
+        });
+    } catch (error) {
+        console.error('Debt simplification error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
