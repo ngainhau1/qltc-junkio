@@ -75,16 +75,16 @@ const sequelize = new Sequelize(
 
 // Route kiểm tra server sống hay chết
 app.get('/', (req, res) => {
-    res.send('<h1>🚀 Junkio Expense Tracker Backend is Running!</h1>');
+    res.send('<h1> Junkio Expense Tracker Backend is Running!</h1>');
 });
 
 // Route kiểm tra kết nối Database (Bảo vệ bởi auth)
 app.get('/db-check', require('./middleware/authMiddleware'), async (req, res) => {
     try {
         await sequelize.authenticate();
-        res.send('✅ Kết nối Database thành công!');
+        res.send(' Kết nối Database thành công!');
     } catch (error) {
-        res.status(500).send('❌ Lỗi kết nối Database: ' + error.message);
+        res.status(500).send(' Lỗi kết nối Database: ' + error.message);
     }
 });
 
@@ -95,12 +95,12 @@ httpServer.listen(PORT, async () => {
     // Thử kết nối DB ngay khi server chạy
     try {
         await sequelize.authenticate();
-        console.log('✅ Database connected successfully!');
+        console.log(' Database connected successfully!');
 
         // Khởi chạy hệ thống báo thức giao dịch định kỳ
         const { startCronJobs } = require('./services/cronJobs');
         startCronJobs();
     } catch (error) {
-        console.error('❌ Unable to connect to the database:', error.message);
+        console.error(' Unable to connect to the database:', error.message);
     }
 });

@@ -1,21 +1,21 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/wallet.svg" alt="Junkio Logo" width="120" />
-  <h1>Junkio Expense Tracker</h1>
-  
-  <p><strong>Ứng dụng Quản lý Tài chính, Theo dõi Chi tiêu Cá nhân & Gia đình 🚀</strong></p>
+ <img src="https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/wallet.svg" alt="Junkio Logo" width="120" />
+ <h1>Junkio Expense Tracker</h1>
+ 
+ <p><strong>Ứng dụng Quản lý Tài chính, Theo dõi Chi tiêu Cá nhân & Gia đình </strong></p>
 
-  <p>
-    <img src="https://img.shields.io/badge/React-19.0-61DAFB?logo=react&logoColor=black" alt="React" />
-    <img src="https://img.shields.io/badge/Vite-6.0-646CFF?logo=vite&logoColor=white" alt="Vite" />
-    <img src="https://img.shields.io/badge/TailwindCSS-3.4-38B2AC?logo=tailwindcss&logoColor=white" alt="Tailwind" />
-    <img src="https://img.shields.io/badge/Redux-Toolkit-764ABC?logo=redux&logoColor=white" alt="Redux" />
-    <img src="https://img.shields.io/badge/i18next-Ph%C3%A2n%20Lo%E1%BA%A1i%20%C4%90a%20Ng%C3%B4n%20Ng%E1%BB%AF-26A69A?logo=i18next&logoColor=white" alt="i18next" />
-  </p>
+ <p>
+ <img src="https://img.shields.io/badge/React-19.0-61DAFB?logo=react&logoColor=black" alt="React" />
+ <img src="https://img.shields.io/badge/Vite-6.0-646CFF?logo=vite&logoColor=white" alt="Vite" />
+ <img src="https://img.shields.io/badge/TailwindCSS-3.4-38B2AC?logo=tailwindcss&logoColor=white" alt="Tailwind" />
+ <img src="https://img.shields.io/badge/Redux-Toolkit-764ABC?logo=redux&logoColor=white" alt="Redux" />
+ <img src="https://img.shields.io/badge/i18next-Ph%C3%A2n%20Lo%E1%BA%A1i%20%C4%90a%20Ng%C3%B4n%20Ng%E1%BB%AF-26A69A?logo=i18next&logoColor=white" alt="i18next" />
+ </p>
 </div>
 
 ---
 
-## 📖 Giới Thiệu (Introduction)
+## Giới Thiệu (Introduction)
 
 **Junkio Expense Tracker** là một giải pháp quản lý tài chính toàn diện dành cho Cá nhân và Gia đình. Được thiết kế với triết lý **Mobile-First** (Ưu tiên Thiết bị di động), ứng dụng này không chỉ cho phép bạn theo dõi dòng tiền phức tạp qua vô số ví khác nhau, mà còn được tích hợp chuẩn trải nghiệm Native App cực kì mượt mà (Bottom Sheet, vuốt chạm không cấn viền).
 
@@ -34,13 +34,13 @@ Dự án này là một Single Page Application (SPA), được cấu trúc hoà
 - **Kiểm Định Form (Forms & Validation)**: [Formik](https://formik.org/) và [Yup](https://github.com/jquense/yup) (Cảnh báo định dạng Email, mật khẩu mượt mà bên dưới dòng nhập).
 - **Trực Quan Dữ Liệu (Charts)**: [Recharts](https://recharts.org/) (Cho các biểu đồ Area và Donut sinh động).
 - **Cơ sở hạ tầng & Tiện ích**: 
-  - Đa ngôn ngữ: `i18next` & `react-i18next`.
-  - Ngày tháng: `date-fns` (Dễ dàng format thời gian theo Locale).
-  - Trích xuất File (Export Data): Tính năng tạo PDF qua `jsPDF` & Export Excel nhờ `xlsx` / `PapaParse`.
+ - Đa ngôn ngữ: `i18next` & `react-i18next`.
+ - Ngày tháng: `date-fns` (Dễ dàng format thời gian theo Locale).
+ - Trích xuất File (Export Data): Tính năng tạo PDF qua `jsPDF` & Export Excel nhờ `xlsx` / `PapaParse`.
 
 ---
 
-## ✨ Các Tính Năng Cốt Lõi & Hướng Dẫn Sử Dụng
+## Các Tính Năng Cốt Lõi & Hướng Dẫn Sử Dụng
 
 Đây không chỉ là một App liệt kê ví tiền. Nó là vũ khí tài chính cá nhân mang theo bên mình mọi lúc. Dưới đây là cách sử dụng từng Cụm tính năng:
 
@@ -63,9 +63,9 @@ Dự án này là một Single Page Application (SPA), được cấu trúc hoà
 ### 5. Siêu Việt Hóa Bản Địa (i18n & Format)
 - **Tính năng**: Không bị giới hạn ngôn ngữ. Dự án được Việt hóa và Anh hóa 100% (Từ Modal thông báo đến Header biểu đồ). Format đồng tiền và Ngày tháng sẽ tự động thay đổi bám theo loại ngôn ngữ bạn chọn.
 - **Cách dùng**: Mở bảng Navigation (Desktop) hoặc nút hình răng cưa dưới đáy màn (Mobile), chọn phần **Cài Đặt (Settings)**. Từ đó bạn thoải mái "Chuyển Đổi" cấu hình:
-  - Ngôn ngữ: `Tiếng Việt` ↔ `English`.
-  - Tiền tệ: `Việt Nam Đồng (₫)` ↔ `Đô La Mỹ ($)`. 
-  - (*Màn hình sẽ load ngay lập tức mà không cần refetch lại trang Web!*)
+ - Ngôn ngữ: `Tiếng Việt` ↔ `English`.
+ - Tiền tệ: `Việt Nam Đồng (₫)` ↔ `Đô La Mỹ ($)`. 
+ - (*Màn hình sẽ load ngay lập tức mà không cần refetch lại trang Web!*)
 
 ### 6. Trải nghiệm Điện thoại Thông minh (PWA-Ready Mobile-First)
 - **Tính năng**: App sinh ra là để chạy trên Smartphone.
@@ -73,7 +73,7 @@ Dự án này là một Single Page Application (SPA), được cấu trúc hoà
 
 ---
 
-## 🚀 Hướng Dẫn Cài Đặt (Getting Started)
+## Hướng Dẫn Cài Đặt (Getting Started)
 
 Được đóng gói vô cùng tinh giản bằng Vite, bạn có thể triển khai hệ thống cực kì nhanh gọn trên máy cá nhân theo các lệnh bên dưới:
 
@@ -83,49 +83,49 @@ Dự án này là một Single Page Application (SPA), được cấu trúc hoà
 ### Nhập môn Cài đặt Mã Nguồn
 
 1. **Clone mã nguồn (Tải về):**
-   ```bash
-   git clone https://github.com/ngainhau1/qltc-junkio.git
-   ```
+ ```bash
+ git clone https://github.com/ngainhau1/qltc-junkio.git
+ ```
 
 2. **Truy cập thư mục UI Frontend:**
-   ```bash
-   cd Junkio-Expense-Tracker/frontend
-   ```
+ ```bash
+ cd Junkio-Expense-Tracker/frontend
+ ```
 
 3. **Tải các gói Thư viện phụ thuộc (Dependencies):**
-   ```bash
-   npm install
-   ```
+ ```bash
+ npm install
+ ```
 
 4. **Kích hoạt máy chủ mô phỏng Dev (Khởi Chạy):**
-   ```bash
-   npm run dev
-   ```
+ ```bash
+ npm run dev
+ ```
 
 5. Sau khi Terminal báo chạy thành công, truy cập `http://localhost:5173` bằng Trình duyệt và Tận hưởng thôi! 
 
 ---
 
-## 🧪 Kiểm Thử Hệ Thống (Testing & Build)
+## Kiểm Thử Hệ Thống (Testing & Build)
 Dự án được bảo vệ nghiêm ngặt để chuẩn bị triển khai lên Vercel / Netlify. Mọi thao tác lỗi cú pháp (Syntax) hay Khai báo dư biến đều sẽ bị chặn đứng bằng Linter.
 
 - **Dọn Dẹp Code rác (Check Linting)**: 
-  ```bash
-  npm run lint
-  ```
+ ```bash
+ npm run lint
+ ```
 - **Xây Dựng Đóng Gói (Production Build)**: 
-  ```bash
-  npm run build
-  ```
-  *(Sản phẩm Web Build sẽ được nén lại bên trong thư mục mang tên `/dist`).*
+ ```bash
+ npm run build
+ ```
+ *(Sản phẩm Web Build sẽ được nén lại bên trong thư mục mang tên `/dist`).*
 
 ---
 
-## 👨‍💻 Đóng Góp Ý Kiến (Contributing)
+## ‍ Đóng Góp Ý Kiến (Contributing)
 Dự án được xây dựng với mục tiêu chia sẻ tri thức qua mã nguồn mở (Open-Source). Bạn thoải mái khởi tạo Pull Request (PR) hay Issues để chèn thêm tính năng Đồng Bộ Dữ liệu với Backend thực tế, hoặc dịch thêm các ngôn ngữ Nhật, Hàn, Pháp cực kì thuận lợi nhờ công nghệ `json` của i18n!
 
-Cảm ơn vì đã ghé qua! 🎉
+Cảm ơn vì đã ghé qua! 
 
 <div align="center">
-  <sub>Sản phẩm được dệt nên bởi Đam mê & Sự cầu toàn. Tiêu chuẩn code 100% Quality.</sub>
+ <sub>Sản phẩm được dệt nên bởi Đam mê & Sự cầu toàn. Tiêu chuẩn code 100% Quality.</sub>
 </div>

@@ -4,11 +4,11 @@ const { RecurringPattern, Transaction, Wallet, sequelize } = require('../models'
 
 // Job chạy vào 0h00 mỗi ngày để kiểm tra các giao dịch định kỳ
 const startCronJobs = () => {
-    console.log('⏳ Khởi tạo hệ thống Giao dịch định kỳ (Recurring Transactions Engine)...');
+    console.log(' Khởi tạo hệ thống Giao dịch định kỳ (Recurring Transactions Engine)...');
 
     // Mẫu cron: '0 0 * * *' có nghĩa là 0 phút 0 giờ mỗi ngày
     cron.schedule('0 0 * * *', async () => {
-        console.log('🔄 Đang kiểm tra các Giao dịch định kỳ cần thực thi trong ngày hôm nay...');
+        console.log(' Đang kiểm tra các Giao dịch định kỳ cần thực thi trong ngày hôm nay...');
         const today = new Date().toISOString().split('T')[0];
 
         try {
@@ -23,7 +23,7 @@ const startCronJobs = () => {
             });
 
             if (patterns.length === 0) {
-                console.log('✅ Không có giao dịch định kỳ nào cần thực thi hôm nay.');
+                console.log(' Không có giao dịch định kỳ nào cần thực thi hôm nay.');
                 return;
             }
 
@@ -70,22 +70,22 @@ const startCronJobs = () => {
 
                     // 4. Commit kết quả
                     await t.commit();
-                    console.log(`✅ Thực thi thành công mẫu định kỳ ID: ${pattern.id}`);
+                    console.log(` Thực thi thành công mẫu định kỳ ID: ${pattern.id}`);
 
                 } catch (err) {
                     await t.rollback();
-                    console.error(`❌ Lỗi khi thực thi mẫu định kỳ ID: ${pattern.id}`, err);
+                    console.error(` Lỗi khi thực thi mẫu định kỳ ID: ${pattern.id}`, err);
                 }
             }
         } catch (error) {
-            console.error('❌ Lỗi Engine Cron:', error);
+            console.error(' Lỗi Engine Cron:', error);
         }
     });
 
     // Budget Alert: Chạy mỗi ngày lúc 8h sáng
     const { checkBudgetAlerts } = require('./budgetAlertService');
     cron.schedule('0 8 * * *', async () => {
-        console.log('🔔 Đang kiểm tra cảnh báo ngân sách...');
+        console.log(' Đang kiểm tra cảnh báo ngân sách...');
         await checkBudgetAlerts();
     });
 };
