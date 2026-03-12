@@ -2,6 +2,7 @@ import { useEffect } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
 import { Toaster, toast } from 'sonner'
+import { io } from "socket.io-client"
 import { fetchCurrentUser } from "@/features/auth/authSlice"
 import { MainLayout } from "@/components/layout/MainLayout"
 import { AuthLayout } from "@/components/layout/AuthLayout"
@@ -57,6 +58,40 @@ function App() {
       }
     }
   }, [dispatch, isAuthenticated]);
+
+  // 3. Setup WebSocket push notifications
+  useEffect(() => {
+    let socket;
+    if (isAuthenticated && user) {
+      // Kết nối đến root domain của API (bỏ /api)
+      const socketUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace('/api', '');
+      socket = io(socketUrl, {
+        withCredentials: true
+      });
+
+      socket.on('connect', () => {
+        // Đăng ký nhận thông báo cá nhân
+        socket.emit('join_user_room', user.id);
+      });
+
+      // Lắng nghe sự kiện thông báo thời gian thực
+      socket.on('NEW_NOTIFICATION', (data) => {
+        if (data.type === 'alert') {
+          toast.error(data.message, { duration: 8000 });
+        } else if (data.type === 'success') {
+          toast.success(data.message);
+        } else {
+          toast.info(data.message);
+        }
+      });
+    }
+
+    return () => {
+      if (socket) {
+        socket.disconnect();
+      }
+    };
+  }, [isAuthenticated, user]);
 
   // (Optional) Remove old Run Recurring Checks logic if not needed separately
 

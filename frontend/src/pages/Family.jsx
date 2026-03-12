@@ -20,7 +20,7 @@ import { toast } from "sonner"
 import { EmptyState } from "@/components/ui/empty-state"
 import { useTranslation } from "react-i18next"
 import { SharedExpenseModal } from "@/components/features/families/SharedExpenseModal"
-import { formatCurrency, generateId } from "@/lib/utils"
+import { formatCurrency } from "@/lib/utils"
 
 export function Family() {
     const { t } = useTranslation();

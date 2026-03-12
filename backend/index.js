@@ -5,10 +5,16 @@ const rateLimit = require('express-rate-limit');
 const cookieParser = require('cookie-parser');
 const { Sequelize } = require('sequelize');
 const path = require('path');
+const http = require('http'); // Add HTTP module
+const socketConfig = require('./config/socket'); // Add Socket config
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const httpServer = http.createServer(app); // Create HTTP server
+
+// Initialize Socket.io
+socketConfig.init(httpServer);
 
 // Security: HTTP headers theo chuẩn OWASP (HSTS, X-Frame-Options, CSP...)
 app.use(helmet());
@@ -82,8 +88,8 @@ app.get('/db-check', require('./middleware/authMiddleware'), async (req, res) =>
     }
 });
 
-// Khởi động server
-app.listen(PORT, async () => {
+// Khởi động server (Dùng httpServer thay vì app.listen)
+httpServer.listen(PORT, async () => {
     console.log(`Server is running on port ${PORT}`);
 
     // Thử kết nối DB ngay khi server chạy

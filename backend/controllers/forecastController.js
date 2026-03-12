@@ -16,8 +16,8 @@ exports.getForecast = async (req, res) => {
             where: { user_id: userId, date: { [Op.gte]: sixMonthsAgo } },
             attributes: [
                 [fn('date_trunc', 'month', col('date')), 'month'],
-                [fn('SUM', literal("CASE WHEN type='INCOME' THEN amount ELSE 0 END")), 'income'],
-                [fn('SUM', literal("CASE WHEN type='EXPENSE' THEN amount ELSE 0 END")), 'expense'],
+                [fn('SUM', literal('CASE WHEN type=\'INCOME\' THEN amount ELSE 0 END')), 'income'],
+                [fn('SUM', literal('CASE WHEN type=\'EXPENSE\' THEN amount ELSE 0 END')), 'expense'],
             ],
             group: [fn('date_trunc', 'month', col('date'))],
             order: [[fn('date_trunc', 'month', col('date')), 'ASC']],

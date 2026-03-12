@@ -4,15 +4,17 @@ const authController = require('../controllers/authController');
 const auth = require('../middleware/authMiddleware');
 const { uploadAvatar } = require('../middleware/uploadMiddleware');
 
+const audit = require('../middleware/auditMiddleware');
+
 // @route   POST api/auth/register
 // @desc    Register user
 // @access  Public
-router.post('/register', authController.register);
+router.post('/register', audit('USER_REGISTER', 'USER'), authController.register);
 
 // @route   POST api/auth/login
 // @desc    Authenticate user & get token
 // @access  Public
-router.post('/login', authController.login);
+router.post('/login', audit('USER_LOGIN', 'USER'), authController.login);
 
 // @route   POST api/auth/refresh-token
 // @desc    Refresh access token using HTTP-only cookie

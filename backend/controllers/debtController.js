@@ -20,7 +20,7 @@ exports.getPendingDebts = async (req, res) => {
         console.error(err);
         res.status(500).json({ message: 'Lỗi lấy danh sách nợ chờ duyệt.' });
     }
-}
+};
 
 // PUT /api/debts/:shareId/approve
 exports.approveShare = async (req, res) => {
@@ -36,7 +36,7 @@ exports.approveShare = async (req, res) => {
         console.error(err);
         res.status(500).json({ message: 'Lỗi hệ thống.' });
     }
-}
+};
 
 // PUT /api/debts/:shareId/reject
 exports.rejectShare = async (req, res) => {
@@ -52,7 +52,7 @@ exports.rejectShare = async (req, res) => {
         console.error(err);
         res.status(500).json({ message: 'Lỗi hệ thống.' });
     }
-}
+};
 
 // POST /api/debts/settle
 // Body: { to_user_id, amount, from_wallet_id, to_wallet_id }
@@ -145,7 +145,7 @@ exports.settleDebt = async (req, res) => {
         console.error(error);
         res.status(500).json({ message: 'Settle Debt failed: ' + error.message });
     }
-}
+};
 
 // GET /api/debts/simplified/:familyId
 // Thuật toán Tham lam (Greedy) tối ưu hóa mạng lưới nợ trong gia đình

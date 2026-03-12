@@ -3,7 +3,7 @@ import { Navigate, Outlet } from "react-router-dom"
 import { useSelector } from "react-redux"
 
 export const PrivateRoutes = () => {
-    const { isAuthenticated, token, loading } = useSelector(state => state.auth)
+    const { isAuthenticated, token } = useSelector(state => state.auth)
 
     // Nếu có token trong localStorage nhưng fetchCurrentUser chưa xong → hiển thị Loading
     // Điều này ngăn chặn việc redirect sang /login trước khi API kịp xác minh session

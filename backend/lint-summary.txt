@@ -1,0 +1,49 @@
+\controllers\adminController.js
+  Line 230: 'User' is assigned a value but never used. (no-unused-vars)
+\controllers\analyticsController.js
+  Line 1: 'Goal' is assigned a value but never used. (no-unused-vars)
+  Line 74: 'userId' is assigned a value but never used. (no-unused-vars)
+  Line 75: 'year' is assigned a value but never used. (no-unused-vars)
+  Line 75: 'month' is assigned a value but never used. (no-unused-vars)
+\controllers\debtController.js
+  Line 88: 'transferTxOut' is assigned a value but never used. (no-unused-vars)
+  Line 97: 'transferTxIn' is assigned a value but never used. (no-unused-vars)
+\controllers\familyController.js
+  Line 2: 'Op' is assigned a value but never used. (no-unused-vars)
+\controllers\forecastController.js
+  Line 30: 'x' is defined but never used. Allowed unused args must match /^_/u. (no-unused-vars)
+\controllers\recurringController.js
+  Line 1: 'Category' is assigned a value but never used. (no-unused-vars)
+\controllers\transactionController.js
+  Line 1: 'User' is assigned a value but never used. (no-unused-vars)
+\controllers\walletController.js
+  Line 43: 'type' is assigned a value but never used. (no-unused-vars)
+\middleware\auth.js
+  Line 17: 'err' is defined but never used. (no-unused-vars)
+\migrations\20260205131239-create-user.js
+  Line 41: 'Sequelize' is defined but never used. Allowed unused args must match /^_/u. (no-unused-vars)
+\migrations\20260205131314-create-family.js
+  Line 35: 'Sequelize' is defined but never used. Allowed unused args must match /^_/u. (no-unused-vars)
+\migrations\20260205131320-create-category.js
+  Line 41: 'Sequelize' is defined but never used. Allowed unused args must match /^_/u. (no-unused-vars)
+\migrations\20260205131324-create-wallet.js
+  Line 51: 'Sequelize' is defined but never used. Allowed unused args must match /^_/u. (no-unused-vars)
+\migrations\20260205131333-create-transaction.js
+  Line 65: 'Sequelize' is defined but never used. Allowed unused args must match /^_/u. (no-unused-vars)
+\migrations\20260205131410-create-family-member.js
+  Line 49: 'Sequelize' is defined but never used. Allowed unused args must match /^_/u. (no-unused-vars)
+\migrations\20260205131423-create-budget.js
+  Line 52: 'Sequelize' is defined but never used. Allowed unused args must match /^_/u. (no-unused-vars)
+\migrations\20260306144222-add-approval-status-to-transactionshare.js
+  Line 13: 'Sequelize' is defined but never used. Allowed unused args must match /^_/u. (no-unused-vars)
+\migrations\20260310040157-create-recurring-patterns.js
+  Line 60: 'Sequelize' is defined but never used. Allowed unused args must match /^_/u. (no-unused-vars)
+\migrations\20260310041737-add-family-id-to-transactions.js
+  Line 17: 'Sequelize' is defined but never used. Allowed unused args must match /^_/u. (no-unused-vars)
+\migrations\20260312150000-create-auditlog.js
+  Line 66: 'Sequelize' is defined but never used. Allowed unused args must match /^_/u. (no-unused-vars)
+\seeders\20260205131744-demo-data.js
+  Line 6: 'Sequelize' is defined but never used. Allowed unused args must match /^_/u. (no-unused-vars)
+  Line 117: 'Sequelize' is defined but never used. Allowed unused args must match /^_/u. (no-unused-vars)
+\tests\admin.test.js
+  Line 3: 'Op' is assigned a value but never used. (no-unused-vars)
