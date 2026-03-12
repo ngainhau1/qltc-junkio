@@ -95,7 +95,17 @@ const transactionSlice = createSlice({
             })
             .addCase(fetchTransactions.fulfilled, (state, action) => {
                 state.loading = false;
-                state.transactions = action.payload; // Adjust if API returns { data: [] }
+                if (action.payload.transactions) {
+                    state.transactions = action.payload.transactions;
+                    state.pagination = {
+                        currentPage: action.payload.currentPage,
+                        totalItems: action.payload.totalItems,
+                        totalPages: action.payload.totalPages,
+                        itemsPerPage: state.pagination.itemsPerPage
+                    };
+                } else {
+                    state.transactions = action.payload;
+                }
             })
             .addCase(fetchTransactions.rejected, (state, action) => {
                 state.loading = false;

@@ -1,6 +1,9 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+const { Op } = require('sequelize');
 const { User, Family, FamilyMember } = require('../models');
+const sendEmail = require('../services/emailService');
 
 // Helpers for Token Generation
 const generateAccessToken = (user) => {
@@ -163,6 +166,76 @@ exports.updateAvatar = async (req, res) => {
         res.json({ msg: 'Avatar updated successfully', avatarUrl });
     } catch (err) {
         console.error('Update avatar error:', err.message);
+        res.status(500).send('Server Error');
+    }
+};
+
+exports.forgotPassword = async (req, res) => {
+    const { email } = req.body;
+    try {
+        const user = await User.findOne({ where: { email } });
+        if (!user) {
+            return res.status(404).json({ msg: 'Người dùng không tồn tại' });
+        }
+
+        const resetToken = crypto.randomBytes(20).toString('hex');
+        user.reset_password_token = crypto.createHash('sha256').update(resetToken).digest('hex');
+        user.reset_password_expires = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+        await user.save();
+
+        const frontendUrl = process.env.VITE_FRONTEND_URL || 'http://localhost:5173';
+        const finalResetUrl = `${frontendUrl}/reset-password/${resetToken}`;
+
+        const message = `Bạn nhận được email này vì bạn (hoặc ai đó) đã yêu cầu lấy lại mật khẩu.\n\nVui lòng truy cập đường dẫn sau để đặt lại mật khẩu:\n\n${finalResetUrl}\n\nNếu bạn không yêu cầu, vui lòng bỏ qua email này. Token có hiệu lực trong 10 phút.`;
+
+        await sendEmail({
+            email: user.email,
+            subject: 'Yêu cầu đặt lại mật khẩu - Junkio Expense Tracker',
+            message
+        });
+
+        res.status(200).json({ msg: 'Email khôi phục mật khẩu đã được gửi' });
+    } catch (err) {
+        console.error(err.message);
+        const user = await User.findOne({ where: { email } });
+        if (user) {
+            user.reset_password_token = null;
+            user.reset_password_expires = null;
+            await user.save();
+        }
+        res.status(500).send('Lỗi gửi email');
+    }
+};
+
+exports.resetPassword = async (req, res) => {
+    const resetToken = req.params.token;
+    const { password } = req.body;
+
+    try {
+        const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+
+        const user = await User.findOne({
+            where: {
+                reset_password_token: hashedToken,
+                reset_password_expires: { [Op.gt]: new Date() }
+            }
+        });
+
+        if (!user) {
+            return res.status(400).json({ msg: 'Token không hợp lệ hoặc đã hết hạn' });
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        user.password_hash = await bcrypt.hash(password, salt);
+        user.reset_password_token = null;
+        user.reset_password_expires = null;
+
+        await user.save();
+
+        res.status(200).json({ msg: 'Mật khẩu đã được đặt lại thành công' });
+    } catch (err) {
+        console.error(err.message);
         res.status(500).send('Server Error');
     }
 };

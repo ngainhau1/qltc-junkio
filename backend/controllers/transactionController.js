@@ -1,19 +1,68 @@
 const { Transaction, Wallet, User, Category, sequelize } = require('../models');
 const { Op } = require('sequelize');
+const { Parser } = require('json2csv');
+const PDFDocument = require('pdfkit');
 
-// Lấy danh sách giao dịch
+// Lấy danh sách giao dịch với Pagination và Filters
 exports.getTransactions = async (req, res) => {
     try {
-        const transactions = await Transaction.findAll({
-            where: { user_id: req.user.id },
+        const {
+            page = 1,
+            limit = 50,
+            startDate,
+            endDate,
+            type,
+            search,
+            wallet_id,
+            category_id
+        } = req.query;
+
+        const offset = (page - 1) * limit;
+
+        const whereClause = { user_id: req.user.id };
+
+        if (startDate && endDate) {
+            whereClause.date = { [Op.between]: [new Date(startDate), new Date(endDate)] };
+        } else if (startDate) {
+            whereClause.date = { [Op.gte]: new Date(startDate) };
+        } else if (endDate) {
+            whereClause.date = { [Op.lte]: new Date(endDate) };
+        }
+
+        if (type) {
+            whereClause.type = type;
+        }
+
+        if (wallet_id) {
+            whereClause.wallet_id = wallet_id;
+        }
+
+        if (category_id) {
+            whereClause.category_id = category_id;
+        }
+
+        if (search) {
+            whereClause.description = { [Op.like]: `%${search}%` };
+        }
+
+        const { count, rows: transactions } = await Transaction.findAndCountAll({
+            where: whereClause,
             include: [
                 { model: Wallet, attributes: ['id', 'name'] },
                 { model: Category, attributes: ['id', 'name'] },
                 { model: sequelize.models.TransactionShare, as: 'Shares' }
             ],
-            order: [['date', 'DESC']]
+            order: [['date', 'DESC']],
+            limit: parseInt(limit, 10),
+            offset: parseInt(offset, 10)
         });
-        res.status(200).json(transactions);
+
+        res.status(200).json({
+            transactions,
+            totalItems: count,
+            totalPages: Math.ceil(count / limit),
+            currentPage: parseInt(page, 10)
+        });
     } catch (error) {
         console.error('Lỗi lấy danh sách giao dịch:', error);
         res.status(500).json({ message: error.message || 'Lỗi lấy danh sách giao dịch' });
@@ -272,5 +321,60 @@ exports.importTransactions = async (req, res) => {
         await t.rollback();
         console.error('Lỗi import dữ liệu, đã Rollback:', error);
         res.status(500).json({ message: 'Lỗi khi nhập dữ liệu: ' + error.message });
+    }
+};
+
+exports.exportTransactions = async (req, res) => {
+    try {
+        const { type, startDate, endDate, format = 'csv' } = req.query;
+        const whereClause = { user_id: req.user.id };
+        
+        if (type) whereClause.type = type;
+        if (startDate && endDate) {
+            whereClause.date = { [Op.between]: [new Date(startDate), new Date(endDate)] };
+        }
+
+        const transactions = await Transaction.findAll({
+            where: whereClause,
+            include: [
+                { model: Wallet, attributes: ['name'] },
+                { model: Category, attributes: ['name'] }
+            ],
+            order: [['date', 'DESC']]
+        });
+
+        if (format === 'csv') {
+            const fields = ['id', 'amount', 'type', 'description', 'date', 'Wallet.name', 'Category.name'];
+            const opts = { fields };
+            const parser = new Parser(opts);
+            const csv = parser.parse(transactions);
+
+            res.header('Content-Type', 'text/csv');
+            res.attachment('transactions.csv');
+            return res.send(csv);
+        } else if (format === 'pdf') {
+            const doc = new PDFDocument();
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', 'attachment; filename="transactions.pdf"');
+            doc.pipe(res);
+
+            doc.fontSize(16).text('BAO CAO GIAO DICH', { align: 'center' });
+            doc.moveDown();
+
+            transactions.forEach(tx => {
+                doc.fontSize(12).text(`Ngay: ${new Date(tx.date).toLocaleDateString('vi-VN')} | Loại: ${tx.type} | Số tiền: ${tx.amount}`);
+                doc.text(`Ví: ${tx.Wallet ? tx.Wallet.name : 'N/A'} | Nội dung: ${tx.description}`);
+                doc.moveDown(0.5);
+                doc.rect(doc.x, doc.y, 400, 0.5).fill('#CCCCCC');
+                doc.moveDown(0.5);
+            });
+
+            doc.end();
+        } else {
+            return res.status(400).json({ message: 'Định dạng export không được hỗ trợ' });
+        }
+    } catch (error) {
+        console.error('Lỗi export dữ liệu:', error);
+        res.status(500).json({ message: 'Lỗi export dữ liệu backend' });
     }
 };

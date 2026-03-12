@@ -15,6 +15,9 @@ router.post('/transfer', authMiddleware, transactionController.createTransfer);
 // Nhập dữ liệu (Import CSV)
 router.post('/import', authMiddleware, transactionController.importTransactions);
 
+// Xuất dữ liệu (Export CSV/PDF)
+router.get('/export', authMiddleware, transactionController.exportTransactions);
+
 // Xóa giao dịch
 router.delete('/:id', authMiddleware, transactionController.deleteTransaction);
 
