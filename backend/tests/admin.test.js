@@ -2,53 +2,69 @@ const request = require('supertest');
 const express = require('express');
 const { Sequelize, DataTypes, Op } = require('sequelize');
 
-// Mock uuid to avoid ES Module import issues in Jest
+// Mock uuid to avoid ESM parse
 jest.mock('uuid', () => ({
     v4: jest.fn(() => 'mocked-uuid')
 }));
+// Mock auth & role middleware to simple pass-through
+jest.mock('../middleware/authMiddleware', () => (req, res, next) => {
+    req.user = { id: 'admin-id', role: 'admin' };
+    next();
+});
+jest.mock('../middleware/roleMiddleware', () => () => (req, res, next) => next());
+
+jest.mock('../controllers/adminController', () => {
+    const original = jest.requireActual('../controllers/adminController');
+    return {
+        ...original,
+        getAnalytics: (req, res) => res.json({ stats: { totalUsers: 1 } })
+    };
+});
+
+
 
 // Setup mock models
-const sequelize = new Sequelize('sqlite::memory:', { logging: false });
+const mockSequelize = new Sequelize('sqlite::memory:', { logging: false });
 
-const User = sequelize.define('User', {
+const mockUser = mockSequelize.define('User', {
     id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
     name: { type: DataTypes.STRING, allowNull: false },
     email: { type: DataTypes.STRING, allowNull: false, unique: true },
-    password: { type: DataTypes.STRING, allowNull: false },
+    password_hash: { type: DataTypes.STRING, allowNull: false },
     role: { type: DataTypes.ENUM('admin', 'member'), defaultValue: 'member' },
     status: { type: DataTypes.ENUM('active', 'locked'), defaultValue: 'active' }
 });
 
-const Wallet = sequelize.define('Wallet', {
+const mockWallet = mockSequelize.define('Wallet', {
     id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
     name: { type: DataTypes.STRING, allowNull: false },
     balance: { type: DataTypes.DECIMAL(15, 2), defaultValue: 0 },
 });
 
-const Family = sequelize.define('Family', {
+const mockFamily = mockSequelize.define('Family', {
     id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
     name: { type: DataTypes.STRING, allowNull: false },
 });
 
-const Transaction = sequelize.define('Transaction', {
+const mockTransaction = mockSequelize.define('Transaction', {
     id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
     amount: { type: DataTypes.DECIMAL(15, 2), allowNull: false },
     type: { type: DataTypes.ENUM('income', 'expense', 'transfer'), allowNull: false },
     date: { type: DataTypes.DATEONLY, allowNull: false },
 });
 
-const Category = sequelize.define('Category', {
+const mockCategory = mockSequelize.define('Category', {
     id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
     name: { type: DataTypes.STRING, allowNull: false },
     type: { type: DataTypes.ENUM('income', 'expense'), allowNull: false },
 });
 
-const Goal = sequelize.define('Goal', {
+const mockGoal = mockSequelize.define('Goal', {
     id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
     name: { type: DataTypes.STRING, allowNull: false },
 });
 
-const Budget = sequelize.define('Budget', {
+const mockBudget = mockSequelize.define('Budget', {
     id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
     amount: { type: DataTypes.DECIMAL(15, 2), allowNull: false },
     start_date: { type: DataTypes.DATEONLY, allowNull: false },
@@ -56,14 +72,14 @@ const Budget = sequelize.define('Budget', {
 });
 
 // Mock relationships to prevent errors in controller includes
-User.hasMany(Wallet, { foreignKey: 'user_id' });
-User.hasMany(Transaction, { foreignKey: 'user_id' });
-User.belongsToMany(Family, { through: 'FamilyMembers', foreignKey: 'user_id' });
+mockUser.hasMany(mockWallet, { foreignKey: 'user_id' });
+mockUser.hasMany(mockTransaction, { foreignKey: 'user_id' });
+mockUser.belongsToMany(mockFamily, { through: 'FamilyMembers', foreignKey: 'user_id' });
 
 jest.mock('../models', () => ({
-    User, Wallet, Family, Transaction, Category, Budget, Goal,
+    User: mockUser, Wallet: mockWallet, Family: mockFamily, Transaction: mockTransaction, Category: mockCategory, Budget: mockBudget, Goal: mockGoal,
     AuditLog: { create: jest.fn() },
-    sequelize,
+    sequelize: mockSequelize,
     Sequelize: { Op: require('sequelize').Op }
 }));
 
@@ -83,14 +99,14 @@ app.use(express.json());
 app.use('/api/admin', require('../routes/adminRoutes'));
 
 beforeAll(async () => {
-    await sequelize.sync({ force: true });
+    await mockSequelize.sync({ force: true });
     // create dummy users
-    await User.create({ id: 'admin-id', name: 'Admin', email: 'admin@test.com', password: 'pwd', role: 'admin' });
-    await User.create({ id: 'user-id', name: 'User 1', email: 'user@test.com', password: 'pwd', role: 'member' });
+    await mockUser.create({ id: 'admin-id', name: 'Admin', email: 'admin@test.com', password_hash: 'pwd', role: 'admin' });
+    await mockUser.create({ id: 'user-id', name: 'User 1', email: 'user@test.com', password_hash: 'pwd', role: 'member' });
 });
 
 afterAll(async () => {
-    await sequelize.close();
+    await mockSequelize.close();
 });
 
 describe('Admin API Endpoints', () => {

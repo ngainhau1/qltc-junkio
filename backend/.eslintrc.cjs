@@ -1,18 +1,19 @@
 module.exports = {
-  env: {
-    node: true,
-    jest: true,
-    es2021: true
-  },
-  extends: [
-    'eslint:recommended'
-  ],
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module' // Added since standard project is module sometimes
-  },
-  rules: {
-    // Override các rules nếu cần
-    'no-unused-vars': ['warn', { 'argsIgnorePattern': '^(next|_)|res|req|err' }]
-  }
+    root: true,
+    env: {
+        node: true,
+        es2022: true,
+        jest: true,
+    },
+    extends: ['eslint:recommended'],
+    parserOptions: {
+        ecmaVersion: 2022,
+        sourceType: 'script',
+    },
+    rules: {
+        'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+        'no-console': 'off',
+        'prefer-const': 'warn',
+    },
+    ignorePatterns: ['node_modules/', 'dist/', 'coverage/'],
 };

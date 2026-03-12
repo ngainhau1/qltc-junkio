@@ -27,7 +27,7 @@ exports.getForecast = async (req, res) => {
         // Linear Regression: y = ax + b
         const linearRegression = (data) => {
             const n = data.length;
-            if (n < 2) return { predict: (x) => data[0]?.y || 0 };
+            if (n < 2) return { predict: (_x) => data[0]?.y || 0 };
             const sumX = data.reduce((s, d) => s + d.x, 0);
             const sumY = data.reduce((s, d) => s + d.y, 0);
             const sumXY = data.reduce((s, d) => s + d.x * d.y, 0);

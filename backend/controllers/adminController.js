@@ -1,4 +1,4 @@
-const { User, Transaction, Wallet, Family, Goal, Budget, Category } = require('../models');
+const { User, Transaction, Wallet, Family, Goal, Budget, Category, sequelize } = require('../models');
 const { Op, fn, col } = require('sequelize');
 
 // GET /api/admin/dashboard
@@ -35,14 +35,19 @@ exports.getAnalytics = async (req, res) => {
         sixMonthsAgo.setDate(1);
         sixMonthsAgo.setHours(0,0,0,0);
         
+        const isSqlite = sequelize?.getDialect && sequelize.getDialect() === 'sqlite';
+        const monthExpr = isSqlite
+            ? fn('strftime', '%Y-%m', col('createdAt'))
+            : fn('date_trunc', 'month', col('createdAt'));
+
         const userGrowth = await User.findAll({
             where: { createdAt: { [Op.gte]: sixMonthsAgo } },
             attributes: [
-                [fn('date_trunc', 'month', col('createdAt')), 'month'],
+                [monthExpr, 'month'],
                 [fn('COUNT', col('id')), 'count']
             ],
-            group: [fn('date_trunc', 'month', col('createdAt'))],
-            order: [[fn('date_trunc', 'month', col('createdAt')), 'ASC']],
+            group: [monthExpr],
+            order: [[monthExpr, 'ASC']],
             raw: true
         });
 
@@ -67,14 +72,18 @@ exports.getAnalytics = async (req, res) => {
         startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay() + (startOfWeek.getDay() === 0 ? -6 : 1)); // Monday
         startOfWeek.setHours(0,0,0,0);
         
+        const dayExpr = isSqlite
+            ? fn('strftime', '%Y-%m-%d', col('createdAt'))
+            : fn('date_trunc', 'day', col('createdAt'));
+
         const weeklyActivity = await Transaction.findAll({
             where: { createdAt: { [Op.gte]: startOfWeek } },
             attributes: [
-                [fn('date_trunc', 'day', col('createdAt')), 'date'],
+                [dayExpr, 'date'],
                 [fn('COUNT', col('id')), 'count']
             ],
-            group: [fn('date_trunc', 'day', col('createdAt'))],
-            order: [[fn('date_trunc', 'day', col('createdAt')), 'ASC']],
+            group: [dayExpr],
+            order: [[dayExpr, 'ASC']],
             raw: true
         });
 
@@ -153,7 +162,7 @@ exports.deleteUser = async (req, res) => {
         if (user.id === req.user.id) return res.status(400).json({ message: 'Cannot delete yourself' });
 
         await user.destroy();
-        res.json({ message: 'User deleted successfully' });
+        res.json({ message: 'Xóa người dùng thành công' });
     } catch (error) {
         console.error('Admin deleteUser error:', error);
         res.status(500).json({ message: 'Server error' });
