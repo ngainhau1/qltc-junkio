@@ -68,19 +68,14 @@ jest.mock('../models', () => ({
 }));
 
 // Setup app with mocked auth middleware and routes
-// eslint-disable-next-line no-unused-vars
-const auth = require('../middleware/authMiddleware');
-jest.mock('../middleware/authMiddleware', () => {
-    return {
-        auth: (req, res, next) => {
-            req.user = { id: 'admin-id', role: 'admin' };
-            next();
-        },
-        role: (...roles) => (req, res, next) => {
-            if (!roles.includes(req.user.role)) return res.status(403).json({ message: 'Forbidden' });
-            next();
-        }
-    };
+jest.mock('../middleware/authMiddleware', () => (req, res, next) => {
+    req.user = { id: 'admin-id', role: 'admin' };
+    next();
+});
+
+jest.mock('../middleware/roleMiddleware', () => (...roles) => (req, res, next) => {
+    if (!roles.includes(req.user.role)) return res.status(403).json({ message: 'Forbidden' });
+    next();
 });
 
 const app = express();

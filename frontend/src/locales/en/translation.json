@@ -48,7 +48,19 @@
         "bannerCopyright": "© 2026 Junkio Finance. All rights reserved.",
         "namePlaceholder": "e.g. John Doe",
         "emailPlaceholder": "name@example.com",
-        "passwordPlaceholder": "••••••••"
+        "passwordPlaceholder": "••••••••",
+        "forgotPasswordSuccess": "A password reset link has been sent to your email. Please check your inbox.",
+        "forgotPasswordFailed": "Failed to send reset email, please try again later.",
+        "backToLogin": "Back to login",
+        "forgotPasswordDesc": "Enter your email address and we'll send you a link to reset your password.",
+        "sendResetLink": "Send reset link",
+        "passwordLength": "Password must be at least 6 characters.",
+        "resetPasswordSuccess": "Password reset successful! You can now log in with your new password.",
+        "resetPasswordFailed": "Failed to reset password. The token is invalid or has expired.",
+        "resetPasswordTitle": "Create new password",
+        "resetPasswordDesc": "Please enter a secure and memorable new password for your account.",
+        "newPassword": "New password",
+        "resetPasswordBtn": "Save password and Login"
     },
     "nav": {
         "dashboard": "Dashboard",

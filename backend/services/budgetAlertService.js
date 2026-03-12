@@ -41,7 +41,7 @@ async function checkBudgetAlerts() {
                 });
 
                 if (!existing) {
-                    await Notification.create({
+                    const newNotif = await Notification.create({
                         user_id: budget.family_id,
                         type: `BUDGET_${level}`,
                         title: level === 'WARNING'
@@ -50,6 +50,14 @@ async function checkBudgetAlerts() {
                         message: `Đã chi ${Math.round(totalSpent).toLocaleString()}/${Math.round(limit).toLocaleString()} (${Math.round(ratio * 100)}%)`,
                         reference_id: budget.id
                     });
+                    
+                    try {
+                        const io = require('../config/socket').getIO();
+                        io.to(budget.family_id).emit('NEW_NOTIFICATION', newNotif);
+                    } catch (err) {
+                        console.error('Socket emit error:', err);
+                    }
+                    
                     alertCount++;
                 }
             }

@@ -24,7 +24,7 @@ app.disable('x-powered-by');
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 phút
     max: 1000, // Tăng lên 1000 requests mỗi IP trong 15 phút để dev
-    message: 'Quá nhiều yêu cầu từ IP này, vui lòng thử lại sau 15 phút.'
+    message: 'Quá nhiều yêu cầu , vui lòng thử lại sau 15 phút.'
 });
 
 // Middleware

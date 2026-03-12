@@ -9,6 +9,8 @@ import { AuthLayout } from "@/components/layout/AuthLayout"
 import { PrivateRoutes } from "@/components/auth/PrivateRoutes"
 import { LoginPage } from "@/pages/auth/LoginPage"
 import { RegisterPage } from "@/pages/auth/RegisterPage"
+import { ForgotPasswordPage } from "@/pages/auth/ForgotPasswordPage"
+import { ResetPasswordPage } from "@/pages/auth/ResetPasswordPage"
 import { Dashboard } from "@/pages/Dashboard"
 import { Transactions } from "@/pages/Transactions"
 import { Wallets } from "@/pages/Wallets"
@@ -103,6 +105,8 @@ function App() {
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
         </Route>
 
         {/* Private Routes - App */}

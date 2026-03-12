@@ -68,6 +68,16 @@ exports.adminBroadcast = async (req, res) => {
 
         await Notification.bulkCreate(notifications);
 
+        // Realtime emit
+        const io = require('../config/socket').getIO();
+        users.forEach(u => {
+            io.to(u.id).emit('NEW_NOTIFICATION', {
+                type: type || 'SYSTEM_BROADCAST',
+                message: title ? `[${title}] ${message}` : message,
+                created_at: new Date()
+            });
+        });
+
         res.json({ msg: `Broadcasted to ${users.length} users successfully` });
     } catch (err) {
         console.error('Broadcast error:', err);

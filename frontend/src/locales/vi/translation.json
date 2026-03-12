@@ -48,7 +48,19 @@
         "bannerCopyright": "© 2026 Junkio Finance. All rights reserved.",
         "namePlaceholder": "ví dụ: Nguyễn Văn A",
         "emailPlaceholder": "name@example.com",
-        "passwordPlaceholder": "••••••••"
+        "passwordPlaceholder": "••••••••",
+        "forgotPasswordSuccess": "Thư khôi phục mật khẩu đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư.",
+        "forgotPasswordFailed": "Gửi thư thất bại, vui lòng thử lại sau.",
+        "backToLogin": "Quay lại đăng nhập",
+        "forgotPasswordDesc": "Nhập email của bạn và chúng tôi sẽ gửi liên kết để đặt lại mật khẩu.",
+        "sendResetLink": "Gửi liên kết",
+        "passwordLength": "Mật khẩu phải có ít nhất 6 ký tự.",
+        "resetPasswordSuccess": "Đổi mật khẩu thành công! Bạn có thể đăng nhập bằng mật khẩu mới.",
+        "resetPasswordFailed": "Đổi mật khẩu thất bại. Mã Token không hợp lệ hoặc đã hết hạn.",
+        "resetPasswordTitle": "Tạo mật khẩu mới",
+        "resetPasswordDesc": "Vui lòng nhập mật khẩu mới bảo mật và dễ nhớ cho tài khoản của bạn.",
+        "newPassword": "Mật khẩu mới",
+        "resetPasswordBtn": "Lưu mật khẩu và Đăng nhập"
     },
     "nav": {
         "dashboard": "Tổng Quan",

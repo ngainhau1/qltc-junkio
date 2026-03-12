@@ -1,0 +1,139 @@
+﻿node.exe : (node:23668) [DEP0170] 
+DeprecationWarning: The URL 
+sqlite::memory: is invalid. Future 
+versions of Node.js will throw an error.
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" 
+"C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecifi 
+   ed: ((node:23668) [D...throw an erro  
+  r.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeComm 
+   andError
+ 
+(Use `node --trace-deprecation ...` to 
+show where the warning was created)
+  console.error
+    Admin analytics error: Error: 
+        at Database.<anonymous> (D:\Junkio-Expense-Tracker\backend\node_modules\sequelize\src\dialects\sqlite\query.js:236:27)
+        at D:\Junkio-Expense-Tracker\backend\node_modules\sequelize\src\dialects\sqlite\query.js:234:50
+        at new Promise (<anonymous>)
+        at Query.run (D:\Junkio-Expense-Tracker\backend\node_modules\sequelize\src\dialects\sqlite\query.js:234:12)
+        at D:\Junkio-Expense-Tracker\backend\node_modules\sequelize\src\sequelize.js:650:28
+        at SQLiteQueryInterface.select (D:\Junkio-Expense-Tracker\backend\node_modules\sequelize\src\dialects\abstract\query-interface.js:1001:12)
+        at User.findAll (D:\Junkio-Expense-Tracker\backend\node_modules\sequelize\src\model.js:1824:21)
+        at exports.getAnalytics (D:\Junkio-Expense-Tracker\backend\controllers\adminController.js:38:28) {
+      name: 'SequelizeDatabaseError',
+      parent: [Error: SQLITE_ERROR: no such function: date_trunc] {
+        errno: 1,
+        code: 'SQLITE_ERROR',
+        sql: "SELECT date_trunc('month', `createdAt`) AS `month`, COUNT(`id`) AS `count` FROM `Users` AS `User` WHERE `User`.`createdAt` >= '2025-09-30 17:00:00.000 +00:00' GROUP BY date_trunc('month', `createdAt`) ORDER BY date_trunc('month', `createdAt`) ASC;"
+      },
+      original: [Error: SQLITE_ERROR: no such function: date_trunc] {
+        errno: 1,
+        code: 'SQLITE_ERROR',
+        sql: "SELECT date_trunc('month', `createdAt`) AS `month`, COUNT(`id`) AS `count` FROM `Users` AS `User` WHERE `User`.`createdAt` >= '2025-09-30 17:00:00.000 +00:00' GROUP BY date_trunc('month', `createdAt`) ORDER BY date_trunc('month', `createdAt`) ASC;"
+      },
+      sql: "SELECT date_trunc('month', `createdAt`) AS `month`, COUNT(`id`) AS `count` FROM `Users` AS `User` WHERE `User`.`createdAt` >= '2025-09-30 17:00:00.000 +00:00' GROUP BY date_trunc('month', `createdAt`) ORDER BY date_trunc('month', `createdAt`) ASC;",
+      parameters: {}
+    }
+
+    [0m [90m 91 |[39m         })[33m;[39m
+     [90m 92 |[39m     } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 93 |[39m         console[33m.[39merror([32m'Admin analytics error:'[39m[33m,[39m error)[33m;[39m
+     [90m    |[39m                 [31m[1m^[22m[39m
+     [90m 94 |[39m         res[33m.[39mstatus([35m500[39m)[33m.[39mjson({ message[33m:[39m [32m'Server error'[39m })[33m;[39m
+     [90m 95 |[39m     }
+     [90m 96 |[39m }[33m;[39m[0m
+
+      at exports.getAnalytics (controllers/adminController.js:93:17)
+
+FAIL tests/admin.test.js
+  Admin API Endpoints
+    ΓêÜ GET /api/admin/users should 
+return paginated list of users (43 ms)
+    ├ù GET /api/admin/analytics should 
+return system stats (38 ms)
+    ├ù DELETE /api/admin/users/:id 
+should soft delete user (12 ms)
+
+  ΓùÅ Admin API Endpoints ΓÇ║ GET 
+/api/admin/analytics should return 
+system stats
+
+    expect(received).toEqual(expected) 
+// deep equality
+
+    Expected: 200
+    Received: 500
+
+    [0m [90m 105 |[39m     
+it([32m'GET /api/admin/analytics should 
+return system stats'[39m[33m,[39m 
+[36masync[39m () [33m=>[39m {
+     [90m 106 |[39m         
+[36mconst[39m res [33m=[39m 
+[36mawait[39m request(app)[33m.[39m[
+36mget[39m([32m'/api/admin/analytics'[
+39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 107 |[39m 
+        expect(res[33m.[39mstatusCode)
+[33m.[39mtoEqual([35m200[39m)[33m;[3
+9m
+     [90m     |[39m                    
+            [31m[1m^[22m[39m
+     [90m 108 |[39m         expect(res
+[33m.[39mbody)[33m.[39mtoHaveProperty(
+[32m'stats'[39m)[33m;[39m
+     [90m 109 |[39m         expect(res
+[33m.[39mbody[33m.[39mstats)[33m.[39
+mtoHaveProperty([32m'totalUsers'[39m)[
+33m;[39m
+     [90m 110 |[39m     
+})[33m;[39m[0m
+
+      at Object.<anonymous> 
+(tests/admin.test.js:107:32)
+
+  ΓùÅ Admin API Endpoints ΓÇ║ DELETE 
+/api/admin/users/:id should soft delete 
+user
+
+    expect(received).toContain(expected) 
+// indexOf
+
+    Expected substring: "X├│a ng╞░ß╗¥i 
+d├╣ng th├ánh c├┤ng"
+    Received string:    "User deleted 
+successfully"
+
+    [0m [90m 113 |[39m         
+[36mconst[39m res [33m=[39m 
+[36mawait[39m request(app)[33m.[39m[
+36mdelete[39m([32m'/api/admin/users/use
+r-id'[39m)[33m;[39m
+     [90m 114 |[39m         expect(res
+[33m.[39mstatusCode)[33m.[39mtoEqual(
+[35m200[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 115 |[39m 
+        expect(res[33m.[39mbody[33m.[
+39mmessage)[33m.[39mtoContain([32m'X├│
+a ng╞░ß╗¥i d├╣ng th├ánh 
+c├┤ng'[39m)[33m;[39m
+     [90m     |[39m                    
+              [31m[1m^[22m[39m
+     [90m 116 |[39m     })[33m;[39m
+     [90m 117 |[39m })[33m;[39m
+     [90m 118 |[39m[0m
+
+      at Object.<anonymous> 
+(tests/admin.test.js:115:34)
+
+Test Suites: 1 failed, 1 total
+Tests:       2 failed, 1 passed, 3 total
+Snapshots:   0 total
+Time:        1.106 s, estimated 2 s
+Ran all test suites matching 
+tests/admin.test.js.

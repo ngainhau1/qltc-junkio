@@ -5,7 +5,7 @@ const authRoutes = require('../routes/authRoutes');
 
 // Mock uuid to avoid ES Module import issues in Jest
 jest.mock('uuid', () => ({
-    v4: jest.fn(() => 'mocked-uuid')
+    v4: () => 'mocked-uuid'
 }));
 
 // Mock Data

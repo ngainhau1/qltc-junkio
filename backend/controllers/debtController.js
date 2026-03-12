@@ -1,4 +1,4 @@
-const { TransactionShare, Transaction, Wallet, User, sequelize } = require('../models');
+const { TransactionShare, Transaction, Wallet, User, sequelize, Notification } = require('../models');
 
 // GET /api/debts/pending
 exports.getPendingDebts = async (req, res) => {
@@ -138,6 +138,22 @@ exports.settleDebt = async (req, res) => {
         }
 
         await t.commit();
+
+        try {
+            if (Notification) {
+                const notif = await Notification.create({
+                    user_id: to_user_id,
+                    type: 'DEBT_SETTLED',
+                    title: 'Nợ đã được thanh toán',
+                    message: `Bạn vừa nhận được khoản trả nợ ${amount} từ người dùng có ID ${from_user_id}.`
+                });
+                const io = require('../config/socket').getIO();
+                io.to(to_user_id).emit('NEW_NOTIFICATION', notif);
+            }
+        } catch (err) {
+            console.error('Socket emit error:', err);
+        }
+
         res.json({ message: 'Thanh toán bù trừ thành công' });
 
     } catch (error) {
