@@ -1,28 +1,28 @@
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from "jspdf-autotable";
-import Papa from "papaparse"; // Keep Papa for now as the unparse line is still there, but the user's snippet is contradictory. I will assume the user wants to keep Papa for CSV for now, and the XLSX import is for a future Excel export function not fully provided.
-import { formatCurrency, formatDateString, removeVietnameseTones } from '@/lib/utils';
-import i18n from 'i18next';
+import Papa from "papaparse";
+import { formatCurrency, formatDateString } from '@/lib/utils';
+import { robotoBase64 } from './Roboto-Regular-normal';
 
 // --- CSV Export ---
 export const exportToCSV = (transactions) => {
-    // 1. Transform data for CSV
-    // Dịch headers thông qua i18n
+    // 1. Transform data for CSV - Using English to prevent encoding/font issues
     const data = transactions.map(t => ({
-        [i18n.t('transactions.form.date') || 'Ngày']: formatDateString(t.date),
-        [i18n.t('transactions.form.desc') || 'Mô Tả']: t.description || 'Không có mô tả',
-        [i18n.t('transactions.form.type') || 'Loại']: t.type === 'INCOME' ? '+' : '-',
-        [i18n.t('transactions.form.amount') || 'Số Tiền']: formatCurrency(t.amount),
-        [i18n.t('transactions.form.category') || 'Danh mục']: t.category_id, // Assuming category_id is what's available
-        [i18n.t('transactions.form.wallet') || 'Ví']: t.wallet_id // Assuming wallet_id is what's available
+        'Date': formatDateString(t.date),
+        'Description': t.description || 'No description',
+        'Type': t.type,
+        'Amount': parseFloat(t.amount), // Emit raw number for Excel sum formulas, not text
+        'Category': t.category_id,
+        'Wallet ID': t.wallet_id
     }));
 
     // 2. Generate CSV
     const csv = Papa.unparse(data);
 
     // 3. Trigger Download
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    // \uFEFF is the UTF-8 Byte Order Mark (BOM). Required for Excel to recognize UTF-8 in CSVs.
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
@@ -32,43 +32,70 @@ export const exportToCSV = (transactions) => {
     document.body.removeChild(link);
 };
 
+// --- Excel Export ---
+export const exportToExcel = (transactions) => {
+    // Using English headers and Raw Numbers
+    const data = transactions.map(t => ({
+        'Date': formatDateString(t.date),
+        'Description': t.description || 'No description',
+        'Type': t.type,
+        'Amount': parseFloat(t.amount) // Raw Number so Excel treats it as a calculator digit
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Transactions");
+
+    // Auto-size columns slightly
+    worksheet['!cols'] = [
+        { wch: 15 }, // Date
+        { wch: 40 }, // Description
+        { wch: 10 }, // Type
+        { wch: 20 }, // Amount
+    ];
+
+    XLSX.writeFile(workbook, `report_${new Date().toISOString().split('T')[0]}.xlsx`);
+};
+
 // --- PDF Export ---
-export const exportToPDF = (transactions, title = "Sao Kê Giao Dịch") => {
+export const exportToPDF = (transactions, title = "Transaction Statement") => {
     const doc = new jsPDF();
+
+    // Still load custom font to safely render user descriptions that might contain Unicode
+    doc.addFileToVFS("Roboto-Regular.ttf", robotoBase64);
+    doc.addFont("Roboto-Regular.ttf", "Roboto", "normal");
+    doc.setFont("Roboto");
 
     // 1. Header
     doc.setFontSize(20);
     doc.text("JUNKIO EXPENSE TRACKER", 14, 22);
 
     doc.setFontSize(14);
-    doc.text(removeVietnameseTones(title), 14, 32);
+    doc.text(title, 14, 32);
 
     doc.setFontSize(10);
-    doc.text(`${removeVietnameseTones(i18n.t('common.export_date') || "Ngày xuất")}: ${formatDateString(new Date())}`, 14, 40);
+    doc.text(`Export Date: ${formatDateString(new Date())}`, 14, 40);
 
-    // 2. Table Data
-    // The tableColumn and tableRows generation is replaced by the autoTable head and body directly.
-
-    // 3. Generate Table
+    // 2. Generate Table
     autoTable(doc, {
         head: [[
-            removeVietnameseTones(i18n.t('transactions.form.date') || 'Ngay'),
-            removeVietnameseTones(i18n.t('transactions.form.desc') || 'Mo Ta'),
-            removeVietnameseTones(i18n.t('transactions.form.type') || 'Loai'),
-            removeVietnameseTones(i18n.t('transactions.form.amount') || 'So Tien')
+            'Date',
+            'Description',
+            'Type',
+            'Amount'
         ]],
         body: transactions.map(t => {
-            const formattedAmount = formatCurrency(t.amount);
+            const formattedAmount = formatCurrency(t.amount); // Keep string format for PDF visuals
             return [
                 formatDateString(t.date),
-                removeVietnameseTones(t.description || 'Khong co mo ta'),
-                t.type === 'INCOME' ? '+' : '-',
+                t.description || 'No description',
+                t.type === 'INCOME' ? 'INC' : (t.type === 'EXPENSE' ? 'EXP' : 'TRF'),
                 formattedAmount
             ];
         }),
         startY: 50,
         theme: 'grid',
-        styles: { font: "helvetica", fontSize: 10 },
+        styles: { font: "Roboto", fontSize: 10 },
         headStyles: { fillColor: [79, 70, 229] } // Indigo-600
     });
 

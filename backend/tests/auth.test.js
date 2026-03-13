@@ -1,0 +1,107 @@
+const request = require('supertest');
+const express = require('express');
+const { Sequelize } = require('sequelize');
+
+// Mock uuid (ESM) and uploadMiddleware to avoid parser issues in Jest CJS environment
+jest.mock('uuid', () => ({
+    v4: jest.fn(() => 'mocked-uuid')
+}));
+jest.mock('../middleware/uploadMiddleware', () => ({
+    uploadAvatar: { single: () => (req, res, next) => next() }
+}));
+jest.mock('../middleware/auditMiddleware', () => () => (req, res, next) => next());
+
+// Mock Data
+// Setup In-Memory DB
+const mockSequelize = new Sequelize('sqlite::memory:', { logging: false });
+
+const mockUser = mockSequelize.define('User', {
+    id: { type: require('sequelize').DataTypes.UUID, defaultValue: require('sequelize').DataTypes.UUIDV4, primaryKey: true },
+    name: { type: require('sequelize').DataTypes.STRING, allowNull: false },
+    email: { type: require('sequelize').DataTypes.STRING, allowNull: false, unique: true },
+    password_hash: { type: require('sequelize').DataTypes.STRING, allowNull: false },
+    role: { type: require('sequelize').DataTypes.ENUM('admin', 'member'), defaultValue: 'member' },
+    status: { type: require('sequelize').DataTypes.ENUM('active', 'locked'), defaultValue: 'active' }
+});
+
+// We don't need real AuditLogs for Auth tests here, just mock it or don't use the middleware that requires it
+jest.mock('../models', () => ({
+    User: mockUser,
+    Wallet: {},
+    Family: { create: jest.fn().mockResolvedValue({ id: 'dummy-family' }) },
+    FamilyMember: { create: jest.fn().mockResolvedValue({ id: 'dummy-member' }) },
+    Transaction: {},
+    Category: {},
+    Budget: {},
+    Goal: {},
+    AuditLog: { create: jest.fn() },
+    sequelize: mockSequelize
+}));
+
+let app;
+
+beforeAll(async () => {
+    await mockSequelize.sync({ force: true });
+
+    const authRoutes = require('../routes/authRoutes');
+    app = express();
+    app.use(express.json());
+    app.use('/api/auth', authRoutes);
+});
+
+afterAll(async () => {
+    await mockSequelize.close();
+});
+
+describe('Auth API Endpoints', () => {
+    it('should register a new user successfully', async () => {
+        const res = await request(app)
+            .post('/api/auth/register')
+            .send({
+                name: 'Test User',
+                email: 'testauth@example.com',
+                password: 'password123'
+            });
+
+        expect(res.statusCode).toEqual(200);
+        expect(res.body).toHaveProperty('user');
+        expect(res.body.user.email).toEqual('testauth@example.com');
+    });
+
+    it('should fail registration with existing email', async () => {
+        const res = await request(app)
+            .post('/api/auth/register')
+            .send({
+                name: 'Duplicate',
+                email: 'testauth@example.com',
+                password: 'password123'
+            });
+
+        expect(res.statusCode).toEqual(400);
+        expect(res.body).toHaveProperty('msg');
+    });
+    
+    it('should login an existing user', async () => {
+        const res = await request(app)
+            .post('/api/auth/login')
+            .send({
+                email: 'testauth@example.com',
+                password: 'password123'
+            });
+
+        expect(res.statusCode).toEqual(200);
+        expect(res.body).toHaveProperty('token');
+        expect(res.body.user.email).toEqual('testauth@example.com');
+    });
+
+    it('should fail login with wrong password', async () => {
+        const res = await request(app)
+            .post('/api/auth/login')
+            .send({
+                email: 'testauth@example.com',
+                password: 'wrongpassword'
+            });
+
+        expect(res.statusCode).toEqual(400);
+    });
+});

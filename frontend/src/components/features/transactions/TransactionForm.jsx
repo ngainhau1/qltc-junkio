@@ -4,8 +4,8 @@ import { useDispatch, useSelector } from "react-redux"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { addTransaction } from "@/features/transactions/transactionSlice"
-import { decreaseBalance, increaseBalance } from "@/features/wallets/walletSlice"
+import { createTransaction } from "@/features/transactions/transactionSlice"
+import { addNotification } from "@/features/notifications/notificationsSlice"
 import { formatCurrency } from "@/lib/utils"
 import { ArrowRight } from "lucide-react"
 import { useTranslation } from "react-i18next"
@@ -32,11 +32,19 @@ export function TransactionForm({ onSuccess }) {
     const { t } = useTranslation()
     const dispatch = useDispatch()
     const { wallets } = useSelector(state => state.wallets)
+    const { activeFamilyId } = useSelector(state => state.families)
+
+    // Filter wallets based on context
+    const contextWallets = wallets.filter(w =>
+        activeFamilyId ? w.family_id === activeFamilyId : !w.family_id
+    )
+
+    const { transactions } = useSelector(state => state.transactions)
 
     // Select first wallet as default if available
-    const defaultWalletId = wallets.length > 0 ? wallets[0].id : ''
+    const defaultWalletId = contextWallets.length > 0 ? contextWallets[0].id : ''
     // Select second wallet as default destination if available
-    const defaultDestWalletId = wallets.length > 1 ? wallets[1].id : ''
+    const defaultDestWalletId = contextWallets.length > 1 ? contextWallets[1].id : ''
 
     const formik = useFormik({
         initialValues: {
@@ -49,36 +57,52 @@ export function TransactionForm({ onSuccess }) {
             categoryId: 'general',
         },
         validationSchema: createYupSchema(t),
-        onSubmit: (values) => {
+        onSubmit: async (values) => {
             const newTransaction = {
-                id: `t-${Date.now()}`,
                 description: values.description,
                 amount: parseFloat(values.amount),
-                date: new Date(values.date).toISOString(),
                 transaction_date: new Date(values.date).toISOString(),
                 type: values.type,
                 wallet_id: values.walletId,
                 category_id: values.type === 'TRANSFER' ? null : values.categoryId,
                 destination_wallet_id: values.type === 'TRANSFER' ? values.destinationWalletId : null,
-                created_at: new Date().toISOString()
             }
 
-            // 1. Add Transaction
-            dispatch(addTransaction(newTransaction))
+            try {
+                // 1. Create Transaction (Backend handles wallet balance adjustments safely)
+                await dispatch(createTransaction(newTransaction)).unwrap();
 
-            // 2. Update Wallet Balance
+            // 3. Spending Alert Logic for Expenses (Competitor Enhancement)
             if (values.type === 'EXPENSE') {
-                dispatch(decreaseBalance({ id: values.walletId, amount: values.amount }))
-            } else if (values.type === 'INCOME') {
-                dispatch(increaseBalance({ id: values.walletId, amount: values.amount }))
-            } else if (values.type === 'TRANSFER') {
-                // Deduct from Source
-                dispatch(decreaseBalance({ id: values.walletId, amount: values.amount }))
-                // Add to Destination
-                dispatch(increaseBalance({ id: values.destinationWalletId, amount: values.amount }))
+                const currentMonth = new Date(values.date).getMonth();
+                const currentYear = new Date(values.date).getFullYear();
+
+                const monthlyExpenses = transactions.filter(t =>
+                    t.type === 'EXPENSE' &&
+                    t.wallet_id === values.walletId &&
+                    new Date(t.date).getMonth() === currentMonth &&
+                    new Date(t.date).getFullYear() === currentYear
+                ).reduce((acc, t) => acc + t.amount, 0);
+
+                const newTotalExpense = monthlyExpenses + parseFloat(values.amount);
+                const wallet = wallets.find(w => w.id === values.walletId);
+                const budgetLimit = wallet ? wallet.balance + newTotalExpense : 5000000; // Simplified Budget estimation (Balance + Total Expenses)
+
+                if (newTotalExpense > budgetLimit * 0.8) {
+                    dispatch(addNotification({
+                        type: 'BUDGET_ALERT',
+                        title: t('notifications.budgetAlertTitle', 'Cảnh báo Chi tiêu'),
+                        message: t('notifications.budgetAlertDesc', `Bạn đã chi tiêu ${formatCurrency(newTotalExpense)} (vượt quá 80% định mức) cho ví này trong tháng.`),
+                        isRead: false,
+                        is_read: false
+                    }));
+                }
             }
 
-            if (onSuccess) onSuccess()
+                if (onSuccess) onSuccess();
+            } catch (err) {
+                console.error("Lỗi tạo giao dịch:", err);
+            }
         },
     })
 
@@ -103,6 +127,7 @@ export function TransactionForm({ onSuccess }) {
                     <Input
                         name="amount"
                         type="number"
+                        inputMode="decimal"
                         placeholder="0"
                         value={formik.values.amount}
                         onChange={formik.handleChange}
@@ -122,7 +147,7 @@ export function TransactionForm({ onSuccess }) {
                                 value={formik.values.walletId}
                                 onChange={formik.handleChange}
                             >
-                                {wallets.map(w => (
+                                {contextWallets.map(w => (
                                     <option key={w.id} value={w.id}>{w.name}</option>
                                 ))}
                             </select>
@@ -140,7 +165,7 @@ export function TransactionForm({ onSuccess }) {
                                 data-testid="dest-wallet-select"
                             >
                                 <option value="" disabled>{t('transactionForm.selectWallet')}</option>
-                                {wallets.filter(w => w.id !== formik.values.walletId).map(w => (
+                                {contextWallets.filter(w => w.id !== formik.values.walletId).map(w => (
                                     <option key={w.id} value={w.id}>{w.name}</option>
                                 ))}
                             </select>
@@ -157,7 +182,10 @@ export function TransactionForm({ onSuccess }) {
                             onChange={formik.handleChange}
                             data-testid="source-wallet-select"
                         >
-                            {wallets.map(w => (
+                            {contextWallets.length === 0 && (
+                                <option value="" disabled>{t('transactionForm.noWalletsAvailable')}</option>
+                            )}
+                            {contextWallets.map(w => (
                                 <option key={w.id} value={w.id}>{w.name} ({formatCurrency(w.balance)})</option>
                             ))}
                         </select>

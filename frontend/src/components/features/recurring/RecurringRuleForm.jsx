@@ -3,9 +3,7 @@ import * as Yup from "yup"
 import { useDispatch, useSelector } from "react-redux"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { addRule } from "@/features/recurring/recurringSlice"
-import { runRecurringEngine } from "@/services/recurringService"
-import { store } from "@/store"
+import { createRecurring } from "@/features/recurring/recurringSlice"
 import { formatCurrency } from "@/lib/utils"
 import { useTranslation } from "react-i18next"
 
@@ -20,9 +18,15 @@ export function RecurringRuleForm({ onSuccess }) {
     })
     const dispatch = useDispatch()
     const { wallets } = useSelector(state => state.wallets)
+    const { activeFamilyId } = useSelector(state => state.families)
+
+    // Filter wallets based on context
+    const contextWallets = wallets.filter(w =>
+        activeFamilyId ? w.family_id === activeFamilyId : !w.family_id
+    )
 
     // Select first wallet as default if available
-    const defaultWalletId = wallets.length > 0 ? wallets[0].id : ''
+    const defaultWalletId = contextWallets.length > 0 ? contextWallets[0].id : ''
 
     const formik = useFormik({
         initialValues: {
@@ -35,26 +39,22 @@ export function RecurringRuleForm({ onSuccess }) {
             startDate: new Date().toISOString().split('T')[0] // Today YYYY-MM-DD
         },
         validationSchema,
-        onSubmit: (values) => {
+        onSubmit: async (values) => {
             const newRule = {
-                id: `rule-${Date.now()}`,
                 name: values.name,
                 amount: parseFloat(values.amount),
                 type: values.type,
+                wallet_id: values.walletId,
+                category_id: values.categoryId,
                 frequency: values.frequency,
-                startDate: new Date(values.startDate).toISOString(),
-                nextDueDate: new Date(values.startDate).toISOString(), // Start immediately (or logic to calc next)
-                walletId: values.walletId,
-                categoryId: values.categoryId,
-                active: true
+                start_date: new Date(values.startDate).toISOString()
             }
-
-            dispatch(addRule(newRule))
-
-            // Trigger Engine Check immediately so user sees effect if due today
-            runRecurringEngine(store)
-
-            if (onSuccess) onSuccess()
+            try {
+                await dispatch(createRecurring(newRule)).unwrap();
+                if (onSuccess) onSuccess();
+            } catch (err) {
+                console.error("Lỗi tạo rule định kỳ:", err);
+            }
         },
     })
 
@@ -131,7 +131,10 @@ export function RecurringRuleForm({ onSuccess }) {
                     value={formik.values.walletId}
                     onChange={formik.handleChange}
                 >
-                    {wallets.map(w => (
+                    {contextWallets.length === 0 && (
+                        <option value="" disabled>Không có ví nào trong mục này</option>
+                    )}
+                    {contextWallets.map(w => (
                         <option key={w.id} value={w.id}>{w.name} ({formatCurrency(w.balance)})</option>
                     ))}
                 </select>

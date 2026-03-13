@@ -8,6 +8,9 @@ export function Header() {
     const { user } = useSelector(state => state.auth);
     const location = useLocation();
 
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    const serverUrl = API_URL.replace('/api', '');
+
     const getPageTitle = () => {
         const path = location.pathname;
         if (path === '/') return t('nav.dashboard');
@@ -18,23 +21,34 @@ export function Header() {
         if (path.startsWith('/reports')) return t('nav.reports');
         if (path.startsWith('/settings')) return t('nav.settings');
         if (path.startsWith('/profile')) return t('profile.title');
+        if (path.startsWith('/menu')) return t('nav.menu', { defaultValue: 'Menu' });
+        if (path.startsWith('/notifications')) return t('notifications.title', { defaultValue: 'Thông báo' });
         return '';
     };
 
     return (
         <header className="sticky top-0 z-40 w-full backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b bg-background/95">
             <div className="flex h-14 items-center justify-between max-w-7xl mx-auto px-4 md:px-8">
+                {/* Mobile: Page Title only */}
                 <div className="font-bold text-lg tracking-tight truncate md:hidden">
                     {getPageTitle()}
                 </div>
-                <div className="flex items-center gap-4 ml-auto">
+
+                {/* Right Side Actions */}
+                <div className="flex items-center gap-3 ml-auto">
+                    {/* Notification Bell - visible everywhere */}
                     <NotificationBell />
-                    <Link to="/profile" className="flex items-center gap-3 hover:bg-muted/50 p-1.5 rounded-full transition-colors">
-                        <span className="text-sm font-medium hidden md:inline-block">
+
+                    {/* Desktop only: Profile Link with Avatar + Name */}
+                    <Link
+                        to="/profile"
+                        className="hidden md:flex items-center gap-3 hover:bg-muted/50 p-1.5 rounded-full transition-colors"
+                    >
+                        <span className="text-sm font-medium">
                             {t('header.hello')} <span className="font-bold">{user?.name || t('header.user')}</span>
                         </span>
                         <img
-                            src={user?.avatarUrl || `https://api.dicebear.com/7.x/notionists/svg?seed=${user?.name || 'demo'}`}
+                            src={user?.avatarUrl?.startsWith('/uploads') ? `${serverUrl}${user.avatarUrl}` : (user?.avatarUrl || `https://api.dicebear.com/7.x/notionists/svg?seed=${user?.name || 'demo'}`)}
                             alt="Avatar"
                             className="h-8 w-8 rounded-full border bg-muted object-cover"
                         />

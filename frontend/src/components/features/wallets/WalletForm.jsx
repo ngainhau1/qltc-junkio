@@ -3,12 +3,12 @@ import * as Yup from "yup"
 import { useDispatch } from "react-redux"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { addWallet } from "@/features/wallets/walletSlice"
+import { createWallet, editWallet } from "@/features/wallets/walletSlice"
 import { useTranslation } from "react-i18next"
-// import { v4 as uuidv4 } from 'uuid';
 
-export function WalletForm({ onSuccess }) {
+export function WalletForm({ onSuccess, initialData = null }) {
     const { t } = useTranslation();
+    const isEdit = !!initialData;
 
     const validationSchema = Yup.object().shape({
         name: Yup.string().required(t('wallets.form.validation.nameRequired')),
@@ -20,22 +20,29 @@ export function WalletForm({ onSuccess }) {
 
     const formik = useFormik({
         initialValues: {
-            name: '',
-            balance: '',
-            type: 'cash',
+            name: initialData?.name || '',
+            balance: initialData?.balance || '',
+            type: initialData?.type || 'cash',
         },
         validationSchema,
-        onSubmit: (values) => {
-            const newWallet = {
-                id: `w-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+        onSubmit: async (values) => {
+            const walletData = {
                 name: values.name,
-                balance: parseFloat(values.balance).toString(), // Store as string to match existing data
+                balance: parseFloat(values.balance),
+                currency: initialData?.currency || "VND", // Assuming config for now
                 type: values.type,
-                user_id: 'u-1' // Mock Current User ID
             }
 
-            dispatch(addWallet(newWallet))
-            if (onSuccess) onSuccess()
+            try {
+                if (isEdit) {
+                    await dispatch(editWallet({ id: initialData.id, data: walletData })).unwrap();
+                } else {
+                    await dispatch(createWallet(walletData)).unwrap();
+                }
+                if (onSuccess) onSuccess();
+            } catch (err) {
+                console.error("Lỗi lưu ví: ", err);
+            }
         },
     })
 
@@ -81,7 +88,7 @@ export function WalletForm({ onSuccess }) {
             </div>
 
             <div className="pt-4 flex justify-end gap-2">
-                <Button type="submit" className="w-full">{t('wallets.form.createBtn')}</Button>
+                <Button type="submit" className="w-full">{isEdit ? t('common.save') : t('wallets.form.createBtn')}</Button>
             </div>
         </form>
     )

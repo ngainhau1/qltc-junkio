@@ -40,7 +40,27 @@
         "loginSuccess": "Chào mừng bạn trở lại!",
         "socialLoginComingSoon": "Tính năng đăng nhập Social đang trong lộ trình phát triển.",
         "registerSuccess": "Đăng ký thành công! Đã tạo dữ liệu mẫu tham khảo.",
-        "socialRegisterComingSoon": "Tính năng đăng ký Social đang trong lộ trình phát triển."
+        "socialRegisterComingSoon": "Tính năng đăng ký Social đang trong lộ trình phát triển.",
+        "bannerTitle1": "Quản lý tài chính,",
+        "bannerTitle2": "Tận hưởng cuộc sống.",
+        "bannerDesc": "Theo dõi thu chi, lập ngân sách thông minh và xử lý dễ dàng các khoản nợ chung của quản lý gia đình chỉ bằng một chạm.",
+        "bannerTrust": "Hơn 10,000+ gia đình đã tin dùng",
+        "bannerCopyright": "© 2026 Junkio Finance. All rights reserved.",
+        "namePlaceholder": "ví dụ: Nguyễn Văn A",
+        "emailPlaceholder": "name@example.com",
+        "passwordPlaceholder": "••••••••",
+        "forgotPasswordSuccess": "Thư khôi phục mật khẩu đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư.",
+        "forgotPasswordFailed": "Gửi thư thất bại, vui lòng thử lại sau.",
+        "backToLogin": "Quay lại đăng nhập",
+        "forgotPasswordDesc": "Nhập email của bạn và chúng tôi sẽ gửi liên kết để đặt lại mật khẩu.",
+        "sendResetLink": "Gửi liên kết",
+        "passwordLength": "Mật khẩu phải có ít nhất 6 ký tự.",
+        "resetPasswordSuccess": "Đổi mật khẩu thành công! Bạn có thể đăng nhập bằng mật khẩu mới.",
+        "resetPasswordFailed": "Đổi mật khẩu thất bại. Mã Token không hợp lệ hoặc đã hết hạn.",
+        "resetPasswordTitle": "Tạo mật khẩu mới",
+        "resetPasswordDesc": "Vui lòng nhập mật khẩu mới bảo mật và dễ nhớ cho tài khoản của bạn.",
+        "newPassword": "Mật khẩu mới",
+        "resetPasswordBtn": "Lưu mật khẩu và Đăng nhập"
     },
     "nav": {
         "dashboard": "Tổng Quan",
@@ -49,7 +69,9 @@
         "family": "Gia Đình",
         "goals": "Mục Tiêu",
         "reports": "Báo Cáo",
-        "settings": "Cài Đặt"
+        "settings": "Cài Đặt",
+        "forecast": "Dự Báo",
+        "admin": "Quản Trị"
     },
     "sidebar": {
         "context": "Ngữ Cảnh",
@@ -73,7 +95,8 @@
             "expense": "Chi Tiêu",
             "expenseTotal": "Tổng chi tiêu ghi nhận",
             "transactions": "Giao Dịch",
-            "totalRecords": "Tổng số bản ghi"
+            "totalRecords": "Tổng số bản ghi",
+            "unassigned": "Chưa phân bổ (Zero-Based)"
         },
         "recent": {
             "title": "Giao Dịch Gần Đây"
@@ -90,6 +113,8 @@
         "emptyDesc": "Tạo một ví mới để bắt đầu quản lý thu chi của bạn.",
         "addWallet": "+ Thêm Ví Mới",
         "addWalletTitle": "Thêm Ví Mới",
+        "familyWallet": "Ví Gia Đình",
+        "personalWallet": "Ví Cá Nhân",
         "form": {
             "name": "Tên Ví",
             "namePlaceholder": "vd: Vietcombank",
@@ -115,7 +140,8 @@
         "desc": "Quản lý chi tiêu & lập lịch định kỳ.",
         "exportData": "Xuất Dữ Liệu",
         "exportPDF": "Xuất PDF",
-        "exportCSV": "Xuất CSV (Excel)",
+        "exportCSV": "Xuất CSV (Excel - Cơ bản)",
+        "exportExcel": "Xuất Excel (Nâng cao)",
         "addSchedule": "Thêm Lịch",
         "tabs": {
             "history": "Lịch Sử",
@@ -233,7 +259,18 @@
             }
         },
         "toasts": {
-            "paymentRecorded": "Đã ghi nhận thanh toán {{amount}}"
+            "paymentRecorded": "Đã ghi nhận thanh toán {{amount}}",
+            "optimizationEmpty": "Tạm thời không có chi phí nào để tính toán.",
+            "optimizationZero": "Tuyệt vời! Hiện tại các thành viên không nợ khoản nào.",
+            "debtApproved": "Đã duyệt khoản nợ thành công!",
+            "debtRejected": "Đã từ chối khoản nợ thành công!"
+        },
+        "pendingDebts": {
+            "title": "Khoản nợ chờ bạn xác nhận ({{count}})",
+            "desc": "Các thành viên khác đã chỉ định bạn chia sẻ các khoản chi phí. Xác nhận để tham gia phân bổ công nợ.",
+            "paidByText": "đã chi trả • Bạn cần đóng góp:",
+            "btnReject": "Từ chối",
+            "btnApprove": "Duyệt nợ"
         },
         "emptySelection": "Vui lòng chọn một Gia Đình ở trên để xem tính năng Quản Lý Nợ."
     },
@@ -258,7 +295,11 @@
             "currencyPlaceholder": "Chọn tiền tệ",
             "langTitle": "Ngôn ngữ Ưu tiên",
             "langDesc": "Ngôn ngữ giao diện (Đang hiển thị dạng giả lập).",
-            "langPlaceholder": "Chọn ngôn ngữ"
+            "langPlaceholder": "Chọn ngôn ngữ",
+            "currencyVND": "Tiền Việt (₫)",
+            "currencyUSD": "Dollar Mỹ ($)",
+            "langVi": "Tiếng Việt (Vietnamese)",
+            "langEn": "Tiếng Anh (English)"
         },
         "notifications": {
             "title": "Cài Đặt Thông Báo",
@@ -415,7 +456,8 @@
             "reqCategory": "Vui lòng chọn danh mục",
             "reqDestWallet": "Vui lòng chọn ví đích",
             "diffWallet": "Ví đích phải khác ví nguồn"
-        }
+        },
+        "noWalletsAvailable": "Không có ví nào trong mục này"
     },
     "profile": {
         "title": "Hồ sơ cá nhân",
@@ -451,6 +493,73 @@
         "errDesc": "Vui lòng nhập mô tả",
         "errAmount": "Vui lòng nhập số tiền hợp lệ lớn hơn 0",
         "errNoWallet": "Gia đình này chưa có quỹ hoặc ví chung nào để ghi nhận giao dịch.",
-        "successMsg": "Đã thêm chi tiêu chung thành công!"
+        "successMsg": "Đã thêm chi tiêu chung thành công!",
+        "selectMember": "Chọn thành viên"
+    },
+    "admin": {
+        "title": "Quản trị Hệ thống",
+        "desc": "Quản lý người dùng, xem thống kê hệ thống và kiểm soát quyền truy cập.",
+        "totalUsers": "Tổng Người dùng",
+        "totalTransactions": "Tổng Giao dịch",
+        "totalFamilies": "Tổng Gia đình",
+        "totalWallets": "Tổng số ví",
+        "totalGoals": "Tổng mục tiêu",
+        "totalBudgets": "Tổng ngân sách",
+        "userGrowth": "Tăng trưởng người dùng",
+        "topCategories": "Top danh mục chi tiêu",
+        "weeklyActivity": "Giao dịch trong tuần",
+        "revenueOverview": "Tổng quan doanh thu",
+        "userManagement": "Quản lý Người dùng",
+        "search": "Tìm người dùng...",
+        "colName": "Tên",
+        "colRole": "Vai trò",
+        "colStatus": "Trạng thái",
+        "colActions": "Hành động",
+        "lockAccount": "Khóa",
+        "unlockAccount": "Mở khóa",
+        "deleteUser": "Xóa",
+        "confirmDelete": "Bạn có chắc chắn muốn xóa người dùng này?",
+        "viewProfile": "Xem Hồ sơ",
+        "userDetails": "Chi tiết Người dùng",
+        "roleAdmin": "Quản trị",
+        "roleMember": "Thành viên",
+        "statusActive": "Hoạt động",
+        "statusLocked": "Đã khóa",
+        "filterRole": "Vai trò",
+        "filterStatus": "Trạng thái",
+        "all": "Tất cả",
+        "joinedAt": "Ngày tham gia",
+        "userWallets": "Các ví",
+        "userFamilies": "Gia đình",
+        "userTransactions": "Giao dịch",
+        "locked": "Đã khóa",
+        "active": "Hoạt động",
+        "showing": "Đang hiển thị {{from}}-{{to}} trong {{total}}",
+        "accessDenied": "Truy cập bị từ chối",
+        "accessDeniedDesc": "Bạn không có quyền truy cập trang này.",
+        "activityLogs": "Nhật ký Hoạt động",
+        "actionType": "Loại hành động",
+        "timestamp": "Thời gian",
+        "noLogs": "Không tìm thấy nhật ký hoạt động nào.",
+        "filterByAction": "Lọc theo hành động",
+        "action_USER_LOGIN": "Đăng nhập",
+        "action_USER_REGISTER": "Đăng ký mới",
+        "action_USER_LOCKED_UNLOCKED": "Khóa/Mở khóa User",
+        "action_ROLE_CHANGED": "Đổi vai trò",
+        "action_USER_DELETED": "Xóa User",
+        "loadMore": "Tải thêm"
+    },
+    "forecast": {
+        "title": "Dự báo Dòng tiền",
+        "desc": "Dự đoán thu nhập và chi tiêu tương lai dựa trên dữ liệu lịch sử.",
+        "chartTitle": "Xu hướng Thu Chi",
+        "income": "Thu nhập Dự kiến",
+        "expense": "Chi tiêu Dự kiến",
+        "netFlow": "Dòng tiền Ròng",
+        "monthsLabel": "tháng",
+        "predicted": "Dự báo",
+        "healthy": "Dòng tiền khỏe mạnh trong khoảng dự báo.",
+        "warning": "Chi tiêu có thể vượt thu nhập",
+        "warningMsg": "Chi tiêu có thể vượt thu nhập vào {{month}}"
     }
 }

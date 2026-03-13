@@ -12,6 +12,7 @@ import { store } from "@/store"
 import { logout } from "@/features/auth/authSlice"
 import { updateCurrency, updateLanguage, toggleNotification } from "@/features/settings/settingsSlice"
 import { useState } from "react"
+import api from "@/lib/api"
 import { Modal } from "@/components/ui/modal"
 import { useTranslation } from "react-i18next"
 
@@ -130,8 +131,8 @@ function AppearanceSettings() {
                                 <SelectValue placeholder={t('settings.appearance.currencyPlaceholder')} />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="VND">Tiền Việt (₫)</SelectItem>
-                                <SelectItem value="USD">Dollar Mỹ ($)</SelectItem>
+                                <SelectItem value="VND">{t('settings.appearance.currencyVND')}</SelectItem>
+                                <SelectItem value="USD">{t('settings.appearance.currencyUSD')}</SelectItem>
                                 {/* Thêm ngoại tệ khác nếu cần */}
                             </SelectContent>
                         </Select>
@@ -147,8 +148,8 @@ function AppearanceSettings() {
                                 <SelectValue placeholder={t('settings.appearance.langPlaceholder')} />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="vi">Tiếng Việt (Vietnamese)</SelectItem>
-                                <SelectItem value="en">Tiếng Anh (English)</SelectItem>
+                                <SelectItem value="vi">{t('settings.appearance.langVi')}</SelectItem>
+                                <SelectItem value="en">{t('settings.appearance.langEn')}</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -319,11 +320,36 @@ function AccountSettings() {
     const { user } = useSelector(state => state.auth)
     const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
+    // Broadcast states
+    const [broadcastTitle, setBroadcastTitle] = useState('');
+    const [broadcastMsg, setBroadcastMsg] = useState('');
+    const [isSending, setIsSending] = useState(false);
+
     const confirmLogout = () => {
         dispatch(logout())
         toast.success(t('settings.account.logoutSuccess'))
         setIsLogoutModalOpen(false);
     }
+
+    const handleBroadcast = async (e) => {
+        e.preventDefault();
+        if (!broadcastMsg.trim()) return toast.error('Nội dung không được để trống');
+        setIsSending(true);
+        try {
+            const res = await api.post('/notifications/broadcast', {
+                title: broadcastTitle,
+                message: broadcastMsg,
+                type: 'SYSTEM'
+            });
+            toast.success(res.data.msg || 'Đã gửi thông báo thành công!');
+            setBroadcastTitle('');
+            setBroadcastMsg('');
+        } catch (error) {
+            toast.error(error.response?.data?.msg || 'Gửi thất bại');
+        } finally {
+            setIsSending(false);
+        }
+    };
 
     return (
         <Card className="shadow-none border-muted/60">
@@ -331,7 +357,52 @@ function AccountSettings() {
                 <CardTitle>{t('settings.account.title')}</CardTitle>
                 <CardDescription>{t('settings.account.desc')} ({user?.email || 'N/A'}).</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-6">
+                {/* Change Password Area */}
+                <div className="rounded-xl border p-5 space-y-4">
+                    <div className="space-y-1">
+                        <Label className="text-base font-semibold">Đổi mật khẩu</Label>
+                        <p className="text-sm text-muted-foreground">Để bảo vệ tài khoản, xin vui lòng không chia sẻ mật khẩu của bạn.</p>
+                    </div>
+                    <form className="space-y-4 max-w-sm" onSubmit={async (e) => {
+                        e.preventDefault();
+                        const currentPassword = e.target.currentPassword.value;
+                        const newPassword = e.target.newPassword.value;
+                        const confirmPassword = e.target.confirmPassword.value;
+
+                        if (!currentPassword || !newPassword || !confirmPassword) {
+                            return toast.error("Vui lòng điền đầy đủ các trường");
+                        }
+                        if (newPassword !== confirmPassword) {
+                            return toast.error("Mật khẩu xác nhận không khớp");
+                        }
+                        
+                        try {
+                            // Using standard API call since authSlice doesn't have changePassword thunk yet
+                            await api.put('/users/me/password', { currentPassword, newPassword });
+                            toast.success("Thay đổi mật khẩu thành công!");
+                            e.target.reset();
+                        } catch (error) {
+                            toast.error(error.response?.data?.message || "Đổi mật khẩu thất bại");
+                        }
+                    }}>
+                        <div className="space-y-2">
+                            <Label htmlFor="currentPassword">Mật khẩu hiện tại</Label>
+                            <input id="currentPassword" type="password" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" required />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="newPassword">Mật khẩu mới</Label>
+                            <input id="newPassword" type="password" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" required minLength="6" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="confirmPassword">Xác nhận Mật khẩu mới</Label>
+                            <input id="confirmPassword" type="password" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" required minLength="6" />
+                        </div>
+                        <Button type="submit">Cập nhật mật khẩu</Button>
+                    </form>
+                </div>
+
+                {/* Logout Area */}
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 rounded-xl border border-destructive/20 bg-destructive/5 p-5">
                     <div className="space-y-1 max-w-[80%]">
                         <Label className="text-base font-semibold text-destructive">{t('settings.account.logoutTitle')}</Label>
@@ -344,6 +415,46 @@ function AccountSettings() {
                     </Button>
                 </div>
             </CardContent>
+
+            {/* Admin Area */}
+            {user?.role === 'admin' && (
+                <>
+                    <div className="border-t border-border/50 my-6 mx-6"></div>
+                    <CardHeader className="pt-0">
+                        <CardTitle className="text-xl text-primary flex items-center gap-2">
+                            <Shield className="w-5 h-5" /> Admin Panel - Broadcast
+                        </CardTitle>
+                        <CardDescription>Gửi thông báo tới toàn bộ người dùng trong hệ thống (Hành động Quản trị).</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <form onSubmit={handleBroadcast} className="space-y-4 max-w-lg border rounded-lg p-5 bg-card">
+                            <div className="space-y-2">
+                                <Label>Tiêu đề (Tùy chọn)</Label>
+                                <input
+                                    type="text"
+                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                                    placeholder="Thêm tính năng mới, Khuyến mãi..."
+                                    value={broadcastTitle}
+                                    onChange={e => setBroadcastTitle(e.target.value)}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Nội dung thông báo *</Label>
+                                <textarea
+                                    className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                    placeholder="Nhập nội dung muốn gửi..."
+                                    value={broadcastMsg}
+                                    onChange={e => setBroadcastMsg(e.target.value)}
+                                    required
+                                />
+                            </div>
+                            <Button type="submit" disabled={isSending}>
+                                {isSending ? 'Đang gửi...' : 'Phát tán Thông Báo'}
+                            </Button>
+                        </form>
+                    </CardContent>
+                </>
+            )}
 
             <Modal isOpen={isLogoutModalOpen} onClose={() => setIsLogoutModalOpen(false)} title={t('settings.account.logoutModalTitle')}>
                 <div className="py-2 pb-6">

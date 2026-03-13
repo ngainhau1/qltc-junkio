@@ -2,7 +2,7 @@ import { useFormik } from "formik"
 import * as Yup from "yup"
 import { useDispatch } from "react-redux"
 import { Link, useNavigate } from "react-router-dom"
-import { login } from "@/features/auth/authSlice"
+import { registerUser } from "@/features/auth/authSlice"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -10,10 +10,6 @@ import { toast } from "sonner"
 import { Loader2, Eye, EyeOff, Mail, Lock, User } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
-import { addFamily } from "@/features/families/familySlice"
-import { setWallets } from "@/features/wallets/walletSlice"
-import { setTransactions } from "@/features/transactions/transactionSlice"
-import { FakerService } from "@/services/fakerService"
 
 export function RegisterPage() {
     const { t } = useTranslation()
@@ -22,7 +18,7 @@ export function RegisterPage() {
     const RegisterSchema = Yup.object().shape({
         name: Yup.string().required(t('auth.nameRequired')),
         email: Yup.string().email(t('auth.emailInvalid')).required(t('auth.emailRequired')),
-        password: Yup.string().min(6, t('auth.passwordMin')).required(t('auth.passwordRequired')),
+        password: Yup.string().required(t('auth.passwordRequired')),
         confirmPassword: Yup.string()
             .oneOf([Yup.ref('password'), null], t('auth.passwordMismatch'))
             .required(t('auth.confirmPasswordRequired')),
@@ -43,27 +39,22 @@ export function RegisterPage() {
         },
         validationSchema: RegisterSchema,
         onSubmit: async (values) => {
-            setIsLoading(true)
-            // Simulator Register Logic
-            setTimeout(() => {
-                const newUser = {
-                    id: `u-${Date.now()}`,
+            setIsLoading(true);
+            try {
+                // Call real backend registration
+                await dispatch(registerUser({
                     name: values.name,
                     email: values.email,
-                    role: 'member'
-                }
+                    password: values.password
+                })).unwrap();
 
-                const data = FakerService.initData(newUser.id)
-
-                dispatch(login(newUser))
-                dispatch(setWallets(data.wallets))
-                dispatch(setTransactions(data.transactions))
-                if (data.family) dispatch(addFamily(data.family))
-
-                toast.success(t('auth.registerSuccess'))
-                navigate("/")
-                setIsLoading(false)
-            }, 1000)
+                toast.success(t('auth.registerSuccess'));
+                navigate("/");
+            } catch (error) {
+                toast.error(error || t('auth.registerFailed', 'Đăng ký không thành công, email có thể đã tồn tại'));
+            } finally {
+                setIsLoading(false);
+            }
         },
     })
 
@@ -87,7 +78,7 @@ export function RegisterPage() {
                         <User className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input
                             id="name"
-                            placeholder="Nguyễn Văn A"
+                            placeholder={t('auth.namePlaceholder')}
                             className="pl-9"
                             {...formik.getFieldProps("name")}
                         />
@@ -104,7 +95,7 @@ export function RegisterPage() {
                         <Input
                             id="email"
                             type="email"
-                            placeholder="name@example.com"
+                            placeholder={t('auth.emailPlaceholder')}
                             className="pl-9"
                             {...formik.getFieldProps("email")}
                         />
@@ -121,7 +112,7 @@ export function RegisterPage() {
                         <Input
                             id="password"
                             type={showPassword ? "text" : "password"}
-                            placeholder="••••••••"
+                            placeholder={t('auth.passwordPlaceholder')}
                             className="pl-9 pr-10"
                             {...formik.getFieldProps("password")}
                         />
@@ -145,7 +136,7 @@ export function RegisterPage() {
                         <Input
                             id="confirmPassword"
                             type={showConfirmPassword ? "text" : "password"}
-                            placeholder="••••••••"
+                            placeholder={t('auth.passwordPlaceholder')}
                             className="pl-9 pr-10"
                             {...formik.getFieldProps("confirmPassword")}
                         />

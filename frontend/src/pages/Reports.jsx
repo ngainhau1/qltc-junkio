@@ -17,7 +17,7 @@ import {
 import { formatCurrency } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Download, FileText } from "lucide-react"
-import { exportToPDF, exportToCSV } from "@/services/exportService"
+import { exportToPDF, exportToCSV, exportToExcel } from "@/services/exportService"
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 
@@ -79,6 +79,9 @@ export function Reports() {
                     </Button>
                     <Button variant="outline" size="sm" onClick={() => exportToCSV(transactions)}>
                         <Download className="mr-2 h-4 w-4" /> {t('reports.btnCsv')}
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => exportToExcel(transactions, t('reports.exportTitle'))}>
+                        <Download className="mr-2 h-4 w-4" /> {t('transactions.exportExcel')}
                     </Button>
                 </div>
             </header>

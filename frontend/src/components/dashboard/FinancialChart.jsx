@@ -123,7 +123,7 @@ export function FinancialChart({ transactions }) {
                             </linearGradient>
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" opacity={0.5} />
-                        <XAxis dataKey="date" fontSize={12} tickLine={false} axisLine={false} tick={{ fill: '#6b7280' }} />
+                        <XAxis dataKey="date" fontSize={12} tickLine={false} axisLine={false} tick={{ fill: '#6b7280' }} minTickGap={20} />
                         <YAxis
                             fontSize={12}
                             tickLine={false}

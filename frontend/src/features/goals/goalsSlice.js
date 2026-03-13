@@ -1,79 +1,140 @@
-import { createSlice } from '@reduxjs/toolkit';
-
-// Generate some initial mock goals
-const generateMockGoals = () => {
-    return [
-        {
-            id: 'goal-1',
-            name: 'Mua Macbook Pro',
-            targetAmount: 50000000, // 50 million
-            currentAmount: 20000000, // 20 million
-            deadline: new Date(new Date().setMonth(new Date().getMonth() + 6)).toISOString(), // 6 months from now
-            status: 'IN_PROGRESS',
-            colorCode: '#3b82f6', // blue-500
-            imageUrl: 'Laptop' // Lucide icon name or URL
-        },
-        {
-            id: 'goal-2',
-            name: 'Du Lịch Quỹ Tự Do',
-            targetAmount: 20000000,
-            currentAmount: 8500000,
-            deadline: new Date(new Date().setMonth(new Date().getMonth() + 2)).toISOString(),
-            status: 'IN_PROGRESS',
-            colorCode: '#10b981', // emerald-500
-            imageUrl: 'Plane'
-        },
-        {
-            id: 'goal-3',
-            name: 'Quỹ Dự Phòng Khẩn Cấp',
-            targetAmount: 100000000,
-            currentAmount: 100000000,
-            deadline: new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString(),
-            status: 'ACHIEVED',
-            colorCode: '#f59e0b', // amber-500
-            imageUrl: 'ShieldCheck'
-        }
-    ];
-};
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import api from '@/lib/api';
 
 const initialState = {
-    items: generateMockGoals(),
+    goals: [],
+    loading: false,
+    error: null,
 };
+
+// --- Async Thunks ---
+export const fetchGoals = createAsyncThunk(
+    'goals/fetchGoals',
+    async (_, { rejectWithValue }) => {
+        try {
+            const response = await api.get('/goals');
+            return response.data; // array of goals
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || 'Lỗi tải mục tiêu');
+        }
+    }
+);
+
+export const createGoal = createAsyncThunk(
+    'goals/createGoal',
+    async (goalData, { rejectWithValue }) => {
+        try {
+            const response = await api.post('/goals', goalData);
+            return response.data; // new goal obj
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || 'Lỗi tạo mục tiêu');
+        }
+    }
+);
+
+export const editGoal = createAsyncThunk(
+    'goals/editGoal',
+    async ({ id, data }, { rejectWithValue }) => {
+        try {
+            const response = await api.put(`/goals/${id}`, data);
+            return response.data; // updated goal
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || 'Lỗi cập nhật mục tiêu');
+        }
+    }
+);
+
+export const removeGoal = createAsyncThunk(
+    'goals/removeGoal',
+    async (id, { rejectWithValue }) => {
+        try {
+            await api.delete(`/goals/${id}`);
+            return id;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || 'Lỗi xóa mục tiêu');
+        }
+    }
+);
+
+export const depositAmount = createAsyncThunk(
+    'goals/depositAmount',
+    async ({ id, amount, wallet_id }, { rejectWithValue }) => {
+        try {
+            const response = await api.post(`/goals/${id}/deposit`, { amount, wallet_id });
+            return response.data; // Assuming it returns the updated goal obj
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || 'Lỗi nạp tiền');
+        }
+    }
+);
 
 const goalsSlice = createSlice({
     name: 'goals',
     initialState,
     reducers: {
-        addGoal: (state, action) => {
-            state.items.unshift({
-                ...action.payload,
-                id: `goal-${Date.now()}`,
-                status: 'IN_PROGRESS',
-                currentAmount: 0
-            });
-        },
-        updateGoal: (state, action) => {
-            const index = state.items.findIndex(g => g.id === action.payload.id);
-            if (index !== -1) {
-                state.items[index] = { ...state.items[index], ...action.payload };
-            }
-        },
-        deleteGoal: (state, action) => {
-            state.items = state.items.filter(g => g.id !== action.payload);
-        },
-        depositToGoal: (state, action) => {
-            // payload: { id, amount }
-            const goal = state.items.find(g => g.id === action.payload.id);
+        // Local Optimistic updates can be kept if needed.
+        updateGoalProgressLocal: (state, action) => {
+            const { id, amount } = action.payload;
+            const goal = state.goals.find(g => g.id === id);
             if (goal) {
-                goal.currentAmount += Number(action.payload.amount);
+                goal.currentAmount = Number(goal.currentAmount) + Number(amount);
                 if (goal.currentAmount >= goal.targetAmount) {
                     goal.status = 'ACHIEVED';
                 }
             }
-        },
-    }
+        }
+    },
+    extraReducers: (builder) => {
+        builder
+            // Fetch Goals
+            .addCase(fetchGoals.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(fetchGoals.fulfilled, (state, action) => {
+                state.loading = false;
+                state.goals = action.payload;
+            })
+            .addCase(fetchGoals.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
+
+            // Create
+            .addCase(createGoal.pending, (state) => {
+                state.loading = true;
+            })
+            .addCase(createGoal.fulfilled, (state, action) => {
+                state.loading = false;
+                state.goals.unshift(action.payload);
+            })
+            .addCase(createGoal.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
+
+            // Edit
+            .addCase(editGoal.fulfilled, (state, action) => {
+                const index = state.goals.findIndex(g => g.id === action.payload.id);
+                if (index !== -1) {
+                    state.goals[index] = action.payload;
+                }
+            })
+
+            // Remove
+            .addCase(removeGoal.fulfilled, (state, action) => {
+                state.goals = state.goals.filter(g => g.id !== action.payload);
+            })
+
+            // Deposit
+            .addCase(depositAmount.fulfilled, (state, action) => {
+                const index = state.goals.findIndex(g => g.id === action.payload.id);
+                if (index !== -1) {
+                    state.goals[index] = action.payload;
+                }
+            });
+    },
 });
 
-export const { addGoal, updateGoal, deleteGoal, depositToGoal } = goalsSlice.actions;
-
+export const { updateGoalProgressLocal } = goalsSlice.actions;
 export default goalsSlice.reducer;

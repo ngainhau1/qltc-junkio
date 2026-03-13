@@ -1,7 +1,9 @@
 import { Outlet, Link } from "react-router-dom"
 import { Wallet } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 export function AuthLayout() {
+    const { t } = useTranslation();
     return (
         <div className="flex min-h-screen w-full font-sans">
             {/* Left Side: Branding & Quote */}
@@ -20,11 +22,11 @@ export function AuthLayout() {
 
                 <div className="relative z-10 space-y-6 max-w-lg mb-12">
                     <h1 className="text-5xl font-extrabold tracking-tight leading-[1.1]">
-                        Quản lý tài chính,<br />
-                        <span className="text-emerald-400">Tận hưởng cuộc sống.</span>
+                        {t('auth.bannerTitle1')}<br />
+                        <span className="text-emerald-400">{t('auth.bannerTitle2')}</span>
                     </h1>
                     <p className="text-zinc-400 text-lg leading-relaxed">
-                        Theo dõi thu chi, lập ngân sách thông minh và xử lý dễ dàng các khoản nợ chung của quản lý gia đình chỉ bằng một chạm.
+                        {t('auth.bannerDesc')}
                     </p>
 
                     <div className="pt-8 flex items-center gap-4">
@@ -34,13 +36,13 @@ export function AuthLayout() {
                             ))}
                         </div>
                         <p className="text-sm font-medium text-zinc-300">
-                            Hơn 10,000+ gia đình đã tin dùng
+                            {t('auth.bannerTrust')}
                         </p>
                     </div>
                 </div>
 
                 <div className="relative z-10 text-zinc-500 text-sm">
-                    © 2026 Junkio Finance. All rights reserved.
+                    {t('auth.bannerCopyright')}
                 </div>
             </div>
 

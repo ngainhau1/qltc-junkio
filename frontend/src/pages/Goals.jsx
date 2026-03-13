@@ -24,7 +24,7 @@ const iconMap = {
 
 export function Goals() {
     const { t } = useTranslation();
-    const { items: goals } = useSelector(state => state.goals);
+    const { goals = [] } = useSelector(state => state.goals);
 
     // Derived states
     const activeGoals = goals.filter(g => g.status === 'IN_PROGRESS');

@@ -1,7 +1,7 @@
 
-import { addTransaction } from "@/features/transactions/transactionSlice"
-import { updateRuleNextDueDate } from "@/features/recurring/recurringSlice"
-import { decreaseBalance, increaseBalance } from "@/features/wallets/walletSlice"
+import { createTransaction } from "@/features/transactions/transactionSlice"
+import { editRecurring } from "@/features/recurring/recurringSlice"
+
 
 export const getNextDueDate = (date, frequency) => {
     const next = new Date(date)
@@ -51,23 +51,16 @@ export const runRecurringEngine = (store) => {
             }
 
             // 2. Dispatch Actions
-            store.dispatch(addTransaction(transaction))
-
-            // Update Wallet Balance
-            if (rule.type === 'EXPENSE') {
-                store.dispatch(decreaseBalance({ id: rule.walletId, amount: rule.amount }))
-            } else {
-                store.dispatch(increaseBalance({ id: rule.walletId, amount: rule.amount }))
-            }
+            // Sử dụng thunk của Redux để gọi API
+            // (Thunk sẽ trả về promise, nhưng process rule loop này có thể chạy ko await nếu ko cần strict order)
+            store.dispatch(createTransaction(transaction)).catch(err => console.error(err));
 
             newTransactionsCount++
 
             // 3. Calculate Next Date
             nextDue = getNextDueDate(nextDue, rule.frequency)
-            store.dispatch(updateRuleNextDueDate({
-                ruleId: rule.id,
-                nextDate: nextDue.toISOString()
-            }))
+            // Update rule nextDueDate
+            store.dispatch(editRecurring({ id: rule.id, data: { nextDueDate: nextDue.toISOString() } }));
         }
     })
 

@@ -6,6 +6,7 @@ import { configureStore } from '@reduxjs/toolkit'
 import { TransactionForm } from './TransactionForm'
 import walletReducer from '@/features/wallets/walletSlice'
 import transactionReducer from '@/features/transactions/transactionSlice'
+import familyReducer from '@/features/families/familySlice'
 
 // Mock Tabs to avoid Radix UI issues in JSDOM
 vi.mock('../../ui/tabs', () => ({
@@ -43,7 +44,8 @@ const createMockStore = (preloadedState) => {
     return configureStore({
         reducer: {
             wallets: walletReducer,
-            transactions: transactionReducer
+            transactions: transactionReducer,
+            families: familyReducer
         },
         preloadedState
     })
@@ -56,7 +58,7 @@ const mockWallets = [
 
 describe('TransactionForm Transfer Feature', () => {
     it('should switch to Transfer mode and show correct fields', async () => {
-        const store = createMockStore({ wallets: { wallets: mockWallets } })
+        const store = createMockStore({ wallets: { wallets: mockWallets }, families: { activeFamilyId: null, families: [] } })
         render(
             <Provider store={store}>
                 <TransactionForm />
@@ -82,7 +84,7 @@ describe('TransactionForm Transfer Feature', () => {
     })
 
     it.skip('should dispatch correct actions on valid Transfer', async () => {
-        const store = createMockStore({ wallets: { wallets: mockWallets } })
+        const store = createMockStore({ wallets: { wallets: mockWallets }, families: { activeFamilyId: null, families: [] } })
         store.dispatch = vi.fn((action) => {
             console.log('Action Dispatched:', JSON.stringify(action, null, 2))
         })

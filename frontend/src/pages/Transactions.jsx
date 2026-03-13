@@ -1,5 +1,6 @@
-import { useState } from "react"
-import { useSelector } from "react-redux"
+import { useState, useEffect } from "react"
+import { useSelector, useDispatch } from "react-redux"
+import { fetchTransactions } from "@/features/transactions/transactionSlice"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -14,26 +15,46 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Download, FileText, FileSpreadsheet } from "lucide-react"
-import { exportToCSV, exportToPDF } from "@/services/exportService"
+import { Download, FileText, FileSpreadsheet, Upload } from "lucide-react"
+import { exportToCSV, exportToPDF, exportToExcel } from "@/services/exportService"
 import { useTranslation } from "react-i18next"
+import { openImportModal, closeImportModal } from "@/features/ui/uiSlice"
+import { ImportTransactionsModal } from "@/components/features/transactions/ImportTransactionsModal"
 
 export function Transactions() {
     const { t } = useTranslation();
-    const { transactions } = useSelector(state => state.transactions)
+    const dispatch = useDispatch();
+    const { transactions, pagination } = useSelector(state => state.transactions)
+    const { wallets } = useSelector(state => state.wallets)
+    const { activeFamilyId } = useSelector(state => state.families)
+    const { isImportModalOpen } = useSelector(state => state.ui)
     const [activeTab, setActiveTab] = useState('history') // 'history' | 'recurring'
     const [isAddRuleOpen, setIsAddRuleOpen] = useState(false)
 
     const [searchTerm, setSearchTerm] = useState('')
+    const [currentPage, setCurrentPage] = useState(1)
 
-    // Filter transactions based on search term
-    const filteredTransactions = transactions.filter(t => {
-        if (!t) return false;
-        const desc = t.description || '';
-        const cat = t.category_id || '';
-        return desc.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            cat.toLowerCase().includes(searchTerm.toLowerCase());
-    })
+    // Gọi API mỗi khi filter/trang thay đổi
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            dispatch(fetchTransactions({
+                page: currentPage,
+                limit: pagination?.itemsPerPage || 50,
+                search: searchTerm,
+            }));
+        }, 500); // Debounce 500ms
+        
+        return () => clearTimeout(timer);
+    }, [dispatch, searchTerm, currentPage, pagination?.itemsPerPage]);
+
+    // Lọc theo wallet context nếu là view Family (vẫn giữ phụ trợ ở frontend khi render)
+    const contextWallets = wallets.filter(w =>
+        activeFamilyId ? w.family_id === activeFamilyId : !w.family_id
+    )
+    const contextWalletIds = contextWallets.map(w => w.id)
+    const filteredTransactions = transactions.filter(t =>
+        contextWalletIds.includes(t.wallet_id)
+    )
 
 
 
@@ -45,6 +66,9 @@ export function Transactions() {
                     <p className="text-muted-foreground">{t('transactions.desc')}</p>
                 </div>
                 <div className="flex gap-2">
+                    <Button variant="outline" className="text-blue-600 border-blue-200 hover:bg-blue-50" onClick={() => dispatch(openImportModal())}>
+                        <Upload className="mr-2 h-4 w-4" /> Import CSV
+                    </Button>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline">
@@ -57,6 +81,9 @@ export function Transactions() {
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => exportToCSV(filteredTransactions)}>
                                 <FileSpreadsheet className="mr-2 h-4 w-4" /> {t('transactions.exportCSV')}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => exportToExcel(filteredTransactions)}>
+                                <FileSpreadsheet className="mr-2 h-4 w-4" /> {t('transactions.exportExcel')}
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
@@ -98,6 +125,30 @@ export function Transactions() {
 
                     <div className="space-y-6">
                         <VirtualizedTransactionList transactions={filteredTransactions} />
+                        
+                        {/* Pagination UI */}
+                        {pagination?.totalPages > 1 && (
+                            <div className="flex justify-center items-center gap-4 mt-6">
+                                <Button 
+                                    variant="outline" 
+                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                    disabled={currentPage === 1}
+                                >
+                                    {t('common.prev', 'Trang trước')}
+                                </Button>
+                                <span className="text-sm">
+                                    {t('common.page', 'Trang')} {pagination.currentPage} / {pagination.totalPages} 
+                                    (Tổng: {pagination.totalItems})
+                                </span>
+                                <Button 
+                                    variant="outline" 
+                                    onClick={() => setCurrentPage(p => Math.min(pagination.totalPages, p + 1))}
+                                    disabled={currentPage === pagination.totalPages}
+                                >
+                                    {t('common.next', 'Trang sau')}
+                                </Button>
+                            </div>
+                        )}
                     </div>
                 </>
             ) : (
@@ -111,6 +162,12 @@ export function Transactions() {
             >
                 <RecurringRuleForm onSuccess={() => setIsAddRuleOpen(false)} />
             </Modal>
+
+            {/* Import Modal */}
+            <ImportTransactionsModal
+                isOpen={isImportModalOpen}
+                onClose={() => dispatch(closeImportModal())}
+            />
         </div>
     )
 }

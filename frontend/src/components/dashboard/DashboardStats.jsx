@@ -1,20 +1,22 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { formatCurrency } from "@/lib/utils"
-import { Wallet, ArrowRightLeft, TrendingUp, TrendingDown } from "lucide-react"
+import { Wallet, ArrowRightLeft, TrendingUp, TrendingDown, Scale } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 export function DashboardStats({ wallets, transactions }) {
     const { t } = useTranslation();
-    const totalBalance = wallets.reduce((acc, w) => acc + w.balance, 0)
+    const totalBalance = wallets.reduce((acc, w) => acc + (parseFloat(w.balance) || 0), 0)
 
     // Simple calculation for income/expense
     const totalIncome = transactions
         .filter(t => t.type === 'INCOME')
-        .reduce((acc, t) => acc + t.amount, 0)
+        .reduce((acc, t) => acc + (parseFloat(t.amount) || 0), 0)
 
     const totalExpense = transactions
         .filter(t => t.type === 'EXPENSE')
-        .reduce((acc, t) => acc + t.amount, 0)
+        .reduce((acc, t) => acc + (parseFloat(t.amount) || 0), 0)
+
+    const unassignedMoney = totalIncome - totalExpense;
 
     return (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -69,16 +71,23 @@ export function DashboardStats({ wallets, transactions }) {
                 </CardContent>
             </Card>
 
-            {/* Transactions - Glassmorphism/Neutral */}
-            <Card className="bg-card/50 backdrop-blur-sm shadow-sm border-muted/50">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">{t('dashboard.stats.transactions')}</CardTitle>
-                    <ArrowRightLeft className="h-4 w-4 text-muted-foreground" />
+            {/* Zero-Based Budgeting: Unassigned Money */}
+            <Card className={`border-none shadow-sm relative overflow-hidden backdrop-blur-sm ${unassignedMoney >= 0 ? 'bg-emerald-500/10' : 'bg-destructive/10'}`}>
+                <div className="absolute top-0 right-0 p-4 opacity-10">
+                    <Scale className={`h-24 w-24 ${unassignedMoney >= 0 ? 'text-emerald-500' : 'text-destructive'}`} />
+                </div>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 z-10 relative">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                        {t('dashboard.stats.unassigned')}
+                    </CardTitle>
+                    <Scale className={`h-4 w-4 ${unassignedMoney >= 0 ? 'text-emerald-500' : 'text-destructive'}`} />
                 </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold text-foreground">{transactions.length}</div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                        {t('dashboard.stats.totalRecords')}
+                <CardContent className="z-10 relative">
+                    <div className={`text-2xl font-bold ${unassignedMoney >= 0 ? 'text-emerald-600' : 'text-destructive'}`}>
+                        {unassignedMoney > 0 ? '+' : ''}{formatCurrency(unassignedMoney)}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                        <ArrowRightLeft className="w-3 h-3" /> {transactions.length} {t('dashboard.stats.totalRecords')}
                     </p>
                 </CardContent>
             </Card>

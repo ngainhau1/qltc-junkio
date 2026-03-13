@@ -12,3 +12,25 @@ postgres_data/
 # Bỏ qua file hệ thống
 .DS_Store
 Thumbs.db
+
+# Bỏ qua build output
+frontend/dist/
+
+# Bỏ qua log files
+*.log
+backend/error.log
+
+# Bỏ qua test & debug output
+test_*.js
+*_test.js
+**/test-results.json
+security_*.txt
+
+# Bỏ qua build & lint output
+**/build_*.txt
+**/build.log
+**/lint_*.txt
+**/lint_*.json
+
+# Bỏ qua thư mục tài liệu
+doc/

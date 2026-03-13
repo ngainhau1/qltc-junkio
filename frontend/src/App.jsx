@@ -2,15 +2,15 @@ import { useEffect } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
 import { Toaster, toast } from 'sonner'
-import { setWallets } from "@/features/wallets/walletSlice"
-import { setTransactions } from "@/features/transactions/transactionSlice"
-import { addFamily } from "@/features/families/familySlice"
-import { FakerService } from "@/services/fakerService"
+import { io } from "socket.io-client"
+import { fetchCurrentUser } from "@/features/auth/authSlice"
 import { MainLayout } from "@/components/layout/MainLayout"
 import { AuthLayout } from "@/components/layout/AuthLayout"
 import { PrivateRoutes } from "@/components/auth/PrivateRoutes"
 import { LoginPage } from "@/pages/auth/LoginPage"
 import { RegisterPage } from "@/pages/auth/RegisterPage"
+import { ForgotPasswordPage } from "@/pages/auth/ForgotPasswordPage"
+import { ResetPasswordPage } from "@/pages/auth/ResetPasswordPage"
 import { Dashboard } from "@/pages/Dashboard"
 import { Transactions } from "@/pages/Transactions"
 import { Wallets } from "@/pages/Wallets"
@@ -19,48 +19,39 @@ import { Reports } from "@/pages/Reports"
 import { Settings } from "@/pages/Settings"
 import { Goals } from "@/pages/Goals"
 import { Profile } from "@/pages/Profile"
+import { MobileMenu } from "@/pages/MobileMenu"
+import { Forecast } from "@/pages/Forecast"
+import { AdminDashboard } from "@/pages/AdminDashboard"
+import { fetchWallets } from "@/features/wallets/walletSlice"
+import { fetchFamilies } from "@/features/families/familySlice"
+import { fetchGoals } from "@/features/goals/goalsSlice"
+import { fetchRecurring } from "@/features/recurring/recurringSlice"
+import { fetchTransactions } from "@/features/transactions/transactionSlice"
 
 import { runRecurringEngine } from "@/services/recurringService"
 import { store } from "@/store"
 
 function App() {
   const dispatch = useDispatch()
-  const { isAuthenticated } = useSelector(state => state.auth)
-  const { transactions } = useSelector(state => state.transactions)
+  const { isAuthenticated, token, user } = useSelector(state => state.auth)
 
+  // 1. Check Auth Session on Mount
   useEffect(() => {
-    // 1. Check Auth & Seed Data
-    if (isAuthenticated) {
-      const state = store.getState()
-      const { families } = state.families
-
-      if (transactions.length === 0) {
-        // Only seed if we are logged in (e.g. Demo User) but have no data
-        const { user } = state.auth
-        if (user) {
-          const data = FakerService.initData(user.id)
-          dispatch(setWallets(data.wallets))
-          dispatch(setTransactions(data.transactions))
-          if (data.family) dispatch(addFamily(data.family))
-          // Recurring rules seed
-          if (data.recurringRules) {
-            // Logic for rules
-          }
-        }
-      } else if (families.length === 0) {
-        // Fix: Check if families are missing but other data exists (HMR/Migration case)
-        const { user } = state.auth
-        if (user) {
-          // Generate just a family
-          const newFamily = FakerService.generateFamily(user.id, user.name)
-          dispatch(addFamily(newFamily))
-          toast.info("Đã tạo tự động Gia Đình mặc định cho bạn.", { duration: 3000 })
-        }
-      }
+    if (token && !user) {
+      dispatch(fetchCurrentUser());
     }
+  }, [dispatch, token, user]);
 
-    // 3. Run Recurring Checks (Safe to run multiple times as it checks dates)
+  // 2. Fetch App Data when Authenticated
+  useEffect(() => {
     if (isAuthenticated) {
+      dispatch(fetchWallets());
+      dispatch(fetchFamilies());
+      dispatch(fetchGoals());
+      dispatch(fetchRecurring());
+      dispatch(fetchTransactions()); // Tạm lấy tất cả hoặc theo range filter ở transactionSlice
+      
+      // Khởi động trình quét recurring
       const count = runRecurringEngine(store)
       if (count > 0) {
         toast.success(`Đã tự động tạo ${count} giao dịch định kỳ đến hạn.`, {
@@ -68,7 +59,43 @@ function App() {
         })
       }
     }
-  }, [dispatch, isAuthenticated, transactions.length])
+  }, [dispatch, isAuthenticated]);
+
+  // 3. Setup WebSocket push notifications
+  useEffect(() => {
+    let socket;
+    if (isAuthenticated && user) {
+      // Kết nối đến root domain của API (bỏ /api)
+      const socketUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace('/api', '');
+      socket = io(socketUrl, {
+        withCredentials: true
+      });
+
+      socket.on('connect', () => {
+        // Đăng ký nhận thông báo cá nhân
+        socket.emit('join_user_room', user.id);
+      });
+
+      // Lắng nghe sự kiện thông báo thời gian thực
+      socket.on('NEW_NOTIFICATION', (data) => {
+        if (data.type === 'alert') {
+          toast.error(data.message, { duration: 8000 });
+        } else if (data.type === 'success') {
+          toast.success(data.message);
+        } else {
+          toast.info(data.message);
+        }
+      });
+    }
+
+    return () => {
+      if (socket) {
+        socket.disconnect();
+      }
+    };
+  }, [isAuthenticated, user]);
+
+  // (Optional) Remove old Run Recurring Checks logic if not needed separately
 
   return (
     <Router>
@@ -78,6 +105,8 @@ function App() {
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
         </Route>
 
         {/* Private Routes - App */}
@@ -91,6 +120,9 @@ function App() {
             <Route path="/reports" element={<Reports />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/menu" element={<MobileMenu />} />
+            <Route path="/forecast" element={<Forecast />} />
+            <Route path="/admin" element={<AdminDashboard />} />
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>

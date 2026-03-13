@@ -2,7 +2,7 @@ import { useFormik } from "formik"
 import * as Yup from "yup"
 import { useDispatch } from "react-redux"
 import { Link, useNavigate } from "react-router-dom"
-import { login } from "@/features/auth/authSlice"
+import { loginUser } from "@/features/auth/authSlice"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -17,7 +17,7 @@ export function LoginPage() {
     // Validation Schema
     const LoginSchema = Yup.object().shape({
         email: Yup.string().email(t('auth.emailInvalid')).required(t('auth.emailRequired')),
-        password: Yup.string().min(6, t('auth.passwordMin')).required(t('auth.passwordRequired')),
+        password: Yup.string().required(t('auth.passwordRequired')),
     })
 
     const dispatch = useDispatch()
@@ -27,25 +27,23 @@ export function LoginPage() {
 
     const formik = useFormik({
         initialValues: {
-            email: "demo@junkio.com",
-            password: "password123",
+            email: "",
+            password: "",
         },
         validationSchema: LoginSchema,
         onSubmit: async (values) => {
-            setIsLoading(true)
-            // Simulator API Call delay
-            setTimeout(() => {
-                const mockUser = {
-                    id: 'u-1',
-                    name: values.email.split('@')[0],
-                    email: values.email,
-                    role: 'MEMBER'
-                }
-                dispatch(login(mockUser))
-                toast.success(t('auth.loginSuccess'))
-                navigate("/") // Redirect to Dashboard
-                setIsLoading(false)
-            }, 1000)
+            setIsLoading(true);
+            try {
+                // Submit credentials to the real backend
+                await dispatch(loginUser({ email: values.email, password: values.password })).unwrap();
+                toast.success(t('auth.loginSuccess'));
+                navigate("/");
+            } catch (error) {
+                // Error structure comes from rejectWithValue in thunk
+                toast.error(error || t('auth.loginFailed', 'Đăng nhập không thành công, vui lòng thử lại'));
+            } finally {
+                setIsLoading(false);
+            }
         },
     })
 
@@ -70,7 +68,7 @@ export function LoginPage() {
                         <Input
                             id="email"
                             type="email"
-                            placeholder="name@example.com"
+                            placeholder={t('auth.emailPlaceholder')}
                             className="pl-9"
                             {...formik.getFieldProps("email")}
                         />
@@ -83,16 +81,16 @@ export function LoginPage() {
                 <div className="space-y-2">
                     <div className="flex items-center justify-between">
                         <Label htmlFor="password">{t('auth.password')}</Label>
-                        <a href="#" className="text-sm font-medium text-emerald-600 hover:text-emerald-500 hover:underline">
+                        <Link to="/forgot-password" className="text-sm font-medium text-emerald-600 hover:text-emerald-500 hover:underline">
                             {t('auth.forgotPassword')}
-                        </a>
+                        </Link>
                     </div>
                     <div className="relative">
                         <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input
                             id="password"
                             type={showPassword ? "text" : "password"}
-                            placeholder="••••••••"
+                            placeholder={t('auth.passwordPlaceholder')}
                             className="pl-9 pr-10"
                             {...formik.getFieldProps("password")}
                         />
