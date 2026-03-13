@@ -5,6 +5,9 @@ const initialState = {
     transactions: [],
     loading: false,
     error: null,
+    // Detail view state
+    selectedTransaction: null,
+    isDetailLoading: false,
     filter: {
         startDate: null,
         endDate: null,
@@ -21,11 +24,22 @@ export const fetchTransactions = createAsyncThunk(
     'transactions/fetchTransactions',
     async (params, { rejectWithValue }) => {
         try {
-            // params could include query strings for filtering
             const response = await api.get('/transactions', { params });
-            return response.data; // Expected array or paginated object
+            return response.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || 'Lỗi tải giao dịch');
+        }
+    }
+);
+
+export const fetchTransactionById = createAsyncThunk(
+    'transactions/fetchTransactionById',
+    async (id, { rejectWithValue }) => {
+        try {
+            const response = await api.get(`/transactions/${id}`);
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || 'Lỗi tải chi tiết giao dịch');
         }
     }
 );
@@ -38,6 +52,18 @@ export const createTransaction = createAsyncThunk(
             return response.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || 'Lỗi thêm giao dịch');
+        }
+    }
+);
+
+export const deleteTransaction = createAsyncThunk(
+    'transactions/deleteTransaction',
+    async (id, { rejectWithValue }) => {
+        try {
+            await api.delete(`/transactions/${id}`);
+            return id;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || 'Lỗi xóa giao dịch');
         }
     }
 );
@@ -86,6 +112,9 @@ const transactionSlice = createSlice({
         setFilter: (state, action) => {
             state.filter = { ...state.filter, ...action.payload };
         },
+        clearSelectedTransaction: (state) => {
+            state.selectedTransaction = null;
+        },
     },
     extraReducers: (builder) => {
         builder
@@ -111,8 +140,29 @@ const transactionSlice = createSlice({
                 state.loading = false;
                 state.error = action.payload;
             })
+            // Fetch Transaction By ID
+            .addCase(fetchTransactionById.pending, (state) => {
+                state.isDetailLoading = true;
+                state.selectedTransaction = null;
+            })
+            .addCase(fetchTransactionById.fulfilled, (state, action) => {
+                state.isDetailLoading = false;
+                state.selectedTransaction = action.payload;
+            })
+            .addCase(fetchTransactionById.rejected, (state) => {
+                state.isDetailLoading = false;
+            })
+            // Create
             .addCase(createTransaction.fulfilled, (state, action) => {
                 state.transactions.unshift(action.payload);
+            })
+            // Delete
+            .addCase(deleteTransaction.fulfilled, (state, action) => {
+                const deletedId = action.payload;
+                state.transactions = state.transactions.filter(t => t.id !== deletedId);
+                if (state.selectedTransaction?.id === deletedId) {
+                    state.selectedTransaction = null;
+                }
             })
             // Approve Debt updates
             .addCase(approveDebt.fulfilled, (state, action) => {
@@ -136,11 +186,10 @@ const transactionSlice = createSlice({
             })
             // Settle Debt
             .addCase(settleDebts.fulfilled, () => {
-                // Tùy theo logic API trả về, bạn có thể gọi lại fetchTransactions ở Component 
-                // hoặc cập nhật state cục bộ tại đây.
+                // Gọi lại fetchTransactions ở Component sau khi settle
             })
     },
 });
 
-export const { setFilter } = transactionSlice.actions;
+export const { setFilter, clearSelectedTransaction } = transactionSlice.actions;
 export default transactionSlice.reducer;

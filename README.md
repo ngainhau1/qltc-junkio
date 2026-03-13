@@ -1,131 +1,244 @@
 <div align="center">
- <img src="https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/wallet.svg" alt="Junkio Logo" width="120" />
- <h1>Junkio Expense Tracker</h1>
- 
- <p><strong>Ứng dụng Quản lý Tài chính, Theo dõi Chi tiêu Cá nhân & Gia đình </strong></p>
+  <img src="https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/wallet.svg" alt="Junkio Logo" width="120" />
+  <h1>Junkio Expense Tracker</h1>
+  <p><strong>Ứng dụng Quản lý Tài chính Cá nhân &amp; Gia đình — Full-Stack</strong></p>
 
- <p>
- <img src="https://img.shields.io/badge/React-19.0-61DAFB?logo=react&logoColor=black" alt="React" />
- <img src="https://img.shields.io/badge/Vite-6.0-646CFF?logo=vite&logoColor=white" alt="Vite" />
- <img src="https://img.shields.io/badge/TailwindCSS-3.4-38B2AC?logo=tailwindcss&logoColor=white" alt="Tailwind" />
- <img src="https://img.shields.io/badge/Redux-Toolkit-764ABC?logo=redux&logoColor=white" alt="Redux" />
- <img src="https://img.shields.io/badge/i18next-Ph%C3%A2n%20Lo%E1%BA%A1i%20%C4%90a%20Ng%C3%B4n%20Ng%E1%BB%AF-26A69A?logo=i18next&logoColor=white" alt="i18next" />
- </p>
+  <p>
+    <img src="https://img.shields.io/badge/React-19.0-61DAFB?logo=react&logoColor=black" alt="React" />
+    <img src="https://img.shields.io/badge/Vite-6.0-646CFF?logo=vite&logoColor=white" alt="Vite" />
+    <img src="https://img.shields.io/badge/Node.js-18+-339933?logo=node.js&logoColor=white" alt="Node.js" />
+    <img src="https://img.shields.io/badge/Express-4.x-000000?logo=express&logoColor=white" alt="Express" />
+    <img src="https://img.shields.io/badge/PostgreSQL-15-4169E1?logo=postgresql&logoColor=white" alt="PostgreSQL" />
+    <img src="https://img.shields.io/badge/Socket.IO-4.x-010101?logo=socket.io&logoColor=white" alt="Socket.IO" />
+    <img src="https://img.shields.io/badge/Redux-Toolkit-764ABC?logo=redux&logoColor=white" alt="Redux" />
+    <img src="https://img.shields.io/badge/Jest-29-C21325?logo=jest&logoColor=white" alt="Jest" />
+  </p>
 </div>
 
 ---
 
-## Giới Thiệu (Introduction)
+## Giới Thiệu
 
-**Junkio Expense Tracker** là một giải pháp quản lý tài chính toàn diện dành cho Cá nhân và Gia đình. Được thiết kế với triết lý **Mobile-First** (Ưu tiên Thiết bị di động), ứng dụng này không chỉ cho phép bạn theo dõi dòng tiền phức tạp qua vô số ví khác nhau, mà còn được tích hợp chuẩn trải nghiệm Native App cực kì mượt mà (Bottom Sheet, vuốt chạm không cấn viền).
+**Junkio Expense Tracker** là ứng dụng quản lý tài chính toàn diện dạng **Full-Stack** dành cho cá nhân và gia đình.
 
-Bất kể bạn muốn theo dõi chi tiêu cá nhân cơ bản hay quản lý nợ phức tạp trong một nhóm, *Junkio* đều sẵn sàng phục vụ.
-
----
-
-## 🛠️ Công Nghệ Sử Dụng (Tech Stack)
-
-Dự án này là một Single Page Application (SPA), được cấu trúc hoàn toàn dưới dạng Khối Frontend hiện đại nhằm đảm bảo tốc độ render tuyệt đối, nói không với giật lag:
-
-- **Khung Kiến Trúc (Core)**: [React 19](https://react.dev/), [Vite](https://vitejs.dev/) (Build tool siêu tốc độ), [React Router DOM v7](https://reactrouter.com/) (Điều hướng Client-side).
-- **Quản Lý Trạng Thái (State Management)**: [Redux Toolkit](https://redux-toolkit.js.org/) (Chia thành nhiều Slices thông minh quản lý Auth, Wallets, Transactions, Settings để không reload trang).
-- **Giao Diện & Styling**: [TailwindCSS v3](https://tailwindcss.com/), [Shadcn UI](https://ui.shadcn.com/) + [Radix UI](https://www.radix-ui.com/) (Hệ thống Component chuyên nghiệp, hỗ trợ trợ năng Accessibility).
-- **Icon Vector**: [Lucide React](https://lucide.dev/).
-- **Kiểm Định Form (Forms & Validation)**: [Formik](https://formik.org/) và [Yup](https://github.com/jquense/yup) (Cảnh báo định dạng Email, mật khẩu mượt mà bên dưới dòng nhập).
-- **Trực Quan Dữ Liệu (Charts)**: [Recharts](https://recharts.org/) (Cho các biểu đồ Area và Donut sinh động).
-- **Cơ sở hạ tầng & Tiện ích**: 
- - Đa ngôn ngữ: `i18next` & `react-i18next`.
- - Ngày tháng: `date-fns` (Dễ dàng format thời gian theo Locale).
- - Trích xuất File (Export Data): Tính năng tạo PDF qua `jsPDF` & Export Excel nhờ `xlsx` / `PapaParse`.
+- **Frontend**: React 19 + Vite, Mobile-First, Progressive Web App
+- **Backend**: Node.js/Express REST API, JWT Auth, Socket.IO real-time
+- **Database**: PostgreSQL với Sequelize ORM
 
 ---
 
-## Các Tính Năng Cốt Lõi & Hướng Dẫn Sử Dụng
+## Công Nghệ Sử Dụng
 
-Đây không chỉ là một App liệt kê ví tiền. Nó là vũ khí tài chính cá nhân mang theo bên mình mọi lúc. Dưới đây là cách sử dụng từng Cụm tính năng:
+### Frontend
+| Thư viện | Mô tả |
+|---|---|
+| React 19 + Vite 6 | Core framework + build tool |
+| React Router DOM v7 | Điều hướng client-side |
+| Redux Toolkit | Quản lý state (Auth, Wallets, Transactions...) |
+| TailwindCSS v3 + Shadcn/UI | Giao diện + component library |
+| Recharts | Biểu đồ Area, Donut |
+| i18next | Đa ngôn ngữ (Tiếng Việt / English) |
+| date-fns | Format ngày giờ theo locale |
+| socket.io-client | Nhận real-time notifications |
 
-### 1. Bảng Khảo Sát & Báo Cáo (Dashboard & Reports)
-- **Tính năng**: Tổng quan hóa mọi dòng tiền (Income vs Expense) của bạn thông qua các Biểu đồ tương tác (Area Chart cho dòng thời gian, Donut Chart cho từng danh mục). Bạn cũng có thể xuất thẳng các Báo Cáo giao dịch đang lọc thành **File PDF** hay **Excel (CSV)**.
-- **Cách dùng**: Từ trang `Dashboard`, sử dụng nút lọc khoảng thời gian (7 Ngày / 30 Ngày / Tất Cả) để xem Biểu đồ tự giãn nở theo số liệu ví thực tế. Ở màn hình `Báo Cáo (Reports)`, bấm *Export* để tải dữ liệu về máy lưu trữ.
-
-### 2. Quản Lý Ví & Dòng Tiền Đa Nguồn (Wallets)
-- **Tính năng**: Cho phép cá nhân hóa từng dòng thu qua Ví Tiền Mặt, Thẻ Tín Dụng, hay Cố Tiết Kiệm (Savings).
-- **Cách dùng**: Bấm "Thêm Ví mới", cấu hình số dư ban đầu. Từ đó về sau, mọi thao tác khai báo "Thêm giao dịch" trên hệ thống đều sẽ bắt bạn gán giao dịch đó vào Ví cụ thể, bảo đảm không bị thất thoát một đồng.
-
-### 3. Tổ Đội & Giải Thuật Chia Nợ (Family Hub)
-- **Tính năng**: Giải quyết vấn đề nhức nhối khi ăn chung, ở chung! Hệ thống được trang bị **Thuật toán Tham lam (Greedy Algorithm)** tự động rút gọn đường đi của dòng tiền trong nhóm. Thay vì "A nợ B, B nợ C", App sẽ chốt lại ngắn gọn "A trực tiếp trả cho C".
-- **Cách dùng**: Tạo một Giao dịch nhóm (Ví dụ: "Đi ăn Buffet") -> Chọn "Ngô Ngân" là người Cầm ví (Paid By) -> Tại Mode chia đều, AI sẽ tính ra tổng số tiền mỗi cá nhân (Thành viên 1, Thành viên 2) đang nợ Ngân. Bấm vào nút `Thanh Toán Nợ (Settle Debt)`, hệ thống sẽ sinh ra các giao dịch trừ tiền bù tự động. Cực nhàn!
-
-### 4. Hũ Mục Tiêu Tích Lũy (Goals)
-- **Tính năng**: Chia nhỏ tham vọng của bạn (`Mua Xe Oto`, `Học Phí Đại Học`) thành tiến trình thực tế. Cung cấp Giao diện Thanh tiến độ (Progress Bar) phần trăm.
-- **Cách dùng**: Thiết lập Mục Tiêu Giá Trị Cần Đạt (Target). Bất kể khi nào bạn có tiền nhàn rỗi, hãy bấm nút `Nạp Tiền (Deposit)` vào hũ để quan sát Thanh Tiến Độ nhích lên. Cảm xúc vô cùng "thỏa mãn"!
-
-### 5. Siêu Việt Hóa Bản Địa (i18n & Format)
-- **Tính năng**: Không bị giới hạn ngôn ngữ. Dự án được Việt hóa và Anh hóa 100% (Từ Modal thông báo đến Header biểu đồ). Format đồng tiền và Ngày tháng sẽ tự động thay đổi bám theo loại ngôn ngữ bạn chọn.
-- **Cách dùng**: Mở bảng Navigation (Desktop) hoặc nút hình răng cưa dưới đáy màn (Mobile), chọn phần **Cài Đặt (Settings)**. Từ đó bạn thoải mái "Chuyển Đổi" cấu hình:
- - Ngôn ngữ: `Tiếng Việt` ↔ `English`.
- - Tiền tệ: `Việt Nam Đồng (₫)` ↔ `Đô La Mỹ ($)`. 
- - (*Màn hình sẽ load ngay lập tức mà không cần refetch lại trang Web!*)
-
-### 6. Trải nghiệm Điện thoại Thông minh (PWA-Ready Mobile-First)
-- **Tính năng**: App sinh ra là để chạy trên Smartphone.
-- **Trải nghiệm thao tác**: Vuốt dọc xuống màn hình bạn sẽ thấy cụm **Navigation dán dính mép dưới** hệt như Facebook hay Zalo. Với nút bấm nổi trung tâm **(FAB - Floating Action Button)** để điền thu chi chỉ trong 1 chạm. Bất kì form nhập liệu nào cũng sẽ tuân thủ định dạng Drawer (Kéo trượt từ dưới lên như iOS), giúp nút lệnh không còn bị bao phủ bởi Bàn Phím Ảo.
+### Backend
+| Thư viện | Mô tả |
+|---|---|
+| Node.js 18+ / Express 4 | REST API server |
+| Sequelize + PostgreSQL | ORM + database |
+| JWT (jsonwebtoken) | Access Token (15m) + Refresh Token (7d) |
+| bcrypt | Mã hóa mật khẩu |
+| Socket.IO | Real-time push notifications |
+| Nodemailer | Gửi email reset mật khẩu |
+| express-validator | Validate & sanitize input |
+| jest + supertest | Backend testing |
+| json2csv, pdfkit | Export CSV/PDF server-side |
 
 ---
 
-## Hướng Dẫn Cài Đặt (Getting Started)
+## Tính Năng Chính
 
-Được đóng gói vô cùng tinh giản bằng Vite, bạn có thể triển khai hệ thống cực kì nhanh gọn trên máy cá nhân theo các lệnh bên dưới:
+### Quản lý Tài chính
+- **Giao dịch**: Tạo/xem/xóa thu chi, import CSV, export CSV/PDF/Excel
+- **Chi tiết giao dịch**: Click vào bất kỳ giao dịch nào để xem đầy đủ thông tin, ví, danh mục và trạng thái chia tiền
+- **Ví tiền**: Quản lý nhiều ví (tiền mặt, thẻ, tiết kiệm), tự động cập nhật số dư
+- **Danh mục**: Phân loại thu chi
+- **Tìm kiếm & Phân trang**: Filter theo ngày, loại, danh mục; phân trang server-side
 
-### Yêu Cầu Máy Chủ
-Đảm bảo bạn đã cài đặt [Node.js](https://nodejs.org/) (Khuyến nghị phiên bản v18 trở lên).
+### Gia Đình & Chia Nợ
+- **Family Hub**: Quản lý chi tiêu nhóm, mời thành viên
+- **Thuật toán Greedy**: Tự động tối ưu hóa các khoản nợ trong nhóm (A nợ B, B nợ C → A trả thẳng C)
+- **Chia giao dịch**: Tạo giao dịch chia đều/tùy chỉnh giữa các thành viên
 
-### Nhập môn Cài đặt Mã Nguồn
+### Mục Tiêu & Ngân sách
+- **Goals**: Hũ tiết kiệm với thanh tiến độ, nạp tiền từng đợt
+- **Budget**: Đặt hạn mức chi tiêu theo danh mục, cảnh báo real-time khi vượt
 
-1. **Clone mã nguồn (Tải về):**
- ```bash
- git clone https://github.com/ngainhau1/qltc-junkio.git
- ```
+### Thông Báo Real-time
+- Socket.IO gửi push notification đến browser khi có cảnh báo ngân sách, nợ mới
+- Toast notification tức thì, không cần refresh trang
 
-2. **Truy cập thư mục UI Frontend:**
- ```bash
- cd Junkio-Expense-Tracker/frontend
- ```
+### Xác Thực & Bảo Mật
+- Đăng ký/đăng nhập với JWT (Access 15m + Refresh 7d trong httpOnly cookie)
+- **Quên mật khẩu**: Gửi email reset link qua Nodemailer
+- Role-based access: `member` / `admin`
+- Input validation với express-validator
 
-3. **Tải các gói Thư viện phụ thuộc (Dependencies):**
- ```bash
- npm install
- ```
+### Admin Dashboard
+- Thống kê tổng quan: users, wallets, goals, budgets
+- Biểu đồ: User Growth, Top Categories, Weekly Activity
+- Quản lý người dùng: filter, đổi role, xóa tài khoản
+- Financial Overview: Revenue Trends, Top Spenders, Budget Compliance
 
-4. **Kích hoạt máy chủ mô phỏng Dev (Khởi Chạy):**
- ```bash
- npm run dev
- ```
-
-5. Sau khi Terminal báo chạy thành công, truy cập `http://localhost:5173` bằng Trình duyệt và Tận hưởng thôi! 
-
----
-
-## Kiểm Thử Hệ Thống (Testing & Build)
-Dự án được bảo vệ nghiêm ngặt để chuẩn bị triển khai lên Vercel / Netlify. Mọi thao tác lỗi cú pháp (Syntax) hay Khai báo dư biến đều sẽ bị chặn đứng bằng Linter.
-
-- **Dọn Dẹp Code rác (Check Linting)**: 
- ```bash
- npm run lint
- ```
-- **Xây Dựng Đóng Gói (Production Build)**: 
- ```bash
- npm run build
- ```
- *(Sản phẩm Web Build sẽ được nén lại bên trong thư mục mang tên `/dist`).*
+### Trải Nghiệm Di Động
+- Bottom navigation bar dán mép dưới màn hình
+- FAB (Floating Action Button) thêm giao dịch 1 chạm
+- Form dạng Bottom Sheet (kéo từ dưới lên như iOS)
+- Responsive hoàn toàn từ 320px đến 4K
 
 ---
 
-## ‍ Đóng Góp Ý Kiến (Contributing)
-Dự án được xây dựng với mục tiêu chia sẻ tri thức qua mã nguồn mở (Open-Source). Bạn thoải mái khởi tạo Pull Request (PR) hay Issues để chèn thêm tính năng Đồng Bộ Dữ liệu với Backend thực tế, hoặc dịch thêm các ngôn ngữ Nhật, Hàn, Pháp cực kì thuận lợi nhờ công nghệ `json` của i18n!
+## Hướng Dẫn Cài Đặt
 
-Cảm ơn vì đã ghé qua! 
+### Yêu Cầu
+- [Node.js](https://nodejs.org/) v18 trở lên
+- [PostgreSQL](https://www.postgresql.org/) v15 trở lên
+- [Git](https://git-scm.com/)
+
+### 1. Clone Mã Nguồn
+
+```bash
+git clone https://github.com/ngainhau1/qltc-junkio.git
+cd qltc-junkio
+```
+
+### 2. Cài Đặt Backend
+
+```bash
+cd backend
+npm install
+```
+
+Tạo file `.env` trong thư mục `backend/`:
+
+```env
+PORT=5000
+NODE_ENV=development
+
+# Database
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=junkio
+DB_USER=postgres
+DB_PASS=yourpassword
+
+# JWT
+JWT_SECRET=your_super_secret_jwt_key_here
+JWT_REFRESH_SECRET=your_super_secret_refresh_key_here
+
+# Email (Nodemailer - dùng Gmail App Password)
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USER=your@gmail.com
+EMAIL_PASS=your_app_password_here
+
+# Frontend URL (dùng cho CORS và email reset link)
+VITE_FRONTEND_URL=http://localhost:5173
+```
+
+Tạo database và chạy migrations:
+
+```bash
+# Tạo database trong PostgreSQL trước
+createdb junkio
+
+# Chạy migrations
+npx sequelize-cli db:migrate
+
+# (Tùy chọn) Seed dữ liệu mẫu
+npx sequelize-cli db:seed:all
+
+# Khởi động backend server
+npm run dev
+# → Server chạy tại http://localhost:5000
+```
+
+### 3. Cài Đặt Frontend
+
+```bash
+cd ../frontend
+npm install
+npm run dev
+# → App chạy tại http://localhost:5173
+```
+
+---
+
+## API Endpoints
+
+Dự án cung cấp sẵn **Postman Collection** để test toàn bộ API:
+
+```
+doc/Junkio.postman_collection.json    ← 9 requests đầy đủ
+doc/Junkio.postman_environment.json   ← Environment variables
+```
+
+**Import vào Postman**: File → Import → chọn cả 2 file trên → chọn environment **"Junkio Dev"** → chạy **Login** trước (token tự động lưu).
+
+### Các nhóm API chính
+
+| Nhóm | Endpoint | Mô tả |
+|---|---|---|
+| **Auth** | `POST /api/auth/register` | Đăng ký |
+| | `POST /api/auth/login` | Đăng nhập → JWT |
+| | `POST /api/auth/forgot-password` | Gửi email reset |
+| | `POST /api/auth/reset-password` | Đặt mật khẩu mới |
+| **Transactions** | `GET /api/transactions?page=1&limit=10` | Danh sách + filter + phân trang |
+| | `POST /api/transactions` | Tạo giao dịch |
+| | `GET /api/transactions/:id` | Chi tiết (kèm Wallet, Category, Shares) |
+| | `DELETE /api/transactions/:id` | Xóa |
+| | `GET /api/transactions/export` | Export CSV/PDF |
+| | `POST /api/transactions/import` | Import CSV |
+| **Wallets** | `GET /api/wallets` | Danh sách ví |
+| **Admin** | `GET /api/admin/analytics` | Thống kê tổng quan |
+| | `GET /api/admin/users` | Quản lý users |
+
+---
+
+## Kiểm Thử
+
+```bash
+cd backend
+npm test
+# → Chạy 7 test suites, 24+ test cases với Jest + Supertest
+```
+
+Bao gồm:
+- `tests/auth.test.js` — Đăng ký, đăng nhập, validation input
+- `tests/transaction.test.js` — CRUD giao dịch, validation số tiền âm
+- `tests/admin.test.js` — Admin endpoints
+- `tests/budgetAlertService.test.js` — Cảnh báo ngân sách
+- `tests/cronJobs.test.js` — Recurring transactions
+
+---
+
+## CI/CD
+
+GitHub Actions pipeline tại `.github/workflows/ci.yml`:
+- Lint backend với ESLint
+- Chạy Jest test suite tự động khi push/PR
+
+---
+
+## Đóng Góp
+
+Pull Request và Issues luôn được chào đón. Các hướng mở rộng tiềm năng:
+- Đồng bộ ngân hàng qua Open Banking API
+- Dịch thêm ngôn ngữ (Nhật, Hàn, Pháp) qua `i18n json`
+- Mobile app (React Native / Expo)
+
+---
 
 <div align="center">
- <sub>Sản phẩm được dệt nên bởi Đam mê & Sự cầu toàn. Tiêu chuẩn code 100% Quality.</sub>
+  <sub>Sản phẩm được xây dựng với đam mê. Full-Stack — từ Database đến UI.</sub>
 </div>

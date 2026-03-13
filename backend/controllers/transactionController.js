@@ -3,6 +3,36 @@ const { Op } = require('sequelize');
 const { Parser } = require('json2csv');
 const PDFDocument = require('pdfkit');
 
+// Lấy chi tiết 1 giao dịch (kèm Wallet, Category, Shares với User)
+exports.getTransactionById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const transaction = await Transaction.findOne({
+            where: { id, user_id: req.user.id },
+            include: [
+                { model: Wallet, attributes: ['id', 'name'] },
+                { model: Category, attributes: ['id', 'name'] },
+                {
+                    model: sequelize.models.TransactionShare,
+                    as: 'Shares',
+                    include: [
+                        { model: User, as: 'User', attributes: ['id', 'name', 'email'] }
+                    ]
+                }
+            ]
+        });
+
+        if (!transaction) {
+            return res.status(404).json({ message: 'Giao dịch không tồn tại' });
+        }
+
+        res.status(200).json(transaction);
+    } catch (error) {
+        console.error('Lỗi lấy chi tiết giao dịch:', error);
+        res.status(500).json({ message: error.message || 'Lỗi lấy chi tiết giao dịch' });
+    }
+};
+
 // Lấy danh sách giao dịch với Pagination và Filters
 exports.getTransactions = async (req, res) => {
     try {
