@@ -1,14 +1,14 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useSelector, useDispatch } from "react-redux"
-import { fetchTransactions } from "@/features/transactions/transactionSlice"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { fetchTransactions, fetchTransactionById } from "@/features/transactions/transactionSlice"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { ArrowUpRight, ArrowDownLeft, Plus, History, Repeat } from "lucide-react"
+import { Plus, History, Repeat } from "lucide-react"
 import { RecurringRulesList } from "@/components/features/recurring/RecurringRulesList"
 import { RecurringRuleForm } from "@/components/features/recurring/RecurringRuleForm"
 import { Modal } from "@/components/ui/modal"
 import { VirtualizedTransactionList } from "@/components/features/transactions/VirtualizedTransactionList"
+import { TransactionDetailModal } from "@/components/features/transactions/TransactionDetailModal"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -30,9 +30,15 @@ export function Transactions() {
     const { isImportModalOpen } = useSelector(state => state.ui)
     const [activeTab, setActiveTab] = useState('history') // 'history' | 'recurring'
     const [isAddRuleOpen, setIsAddRuleOpen] = useState(false)
+    const [isDetailOpen, setIsDetailOpen] = useState(false)
 
     const [searchTerm, setSearchTerm] = useState('')
     const [currentPage, setCurrentPage] = useState(1)
+
+    const handleRowClick = useCallback((transaction) => {
+        dispatch(fetchTransactionById(transaction.id));
+        setIsDetailOpen(true);
+    }, [dispatch]);
 
     // Gọi API mỗi khi filter/trang thay đổi
     useEffect(() => {
@@ -124,7 +130,7 @@ export function Transactions() {
                     </div>
 
                     <div className="space-y-6">
-                        <VirtualizedTransactionList transactions={filteredTransactions} />
+                        <VirtualizedTransactionList transactions={filteredTransactions} onRowClick={handleRowClick} />
                         
                         {/* Pagination UI */}
                         {pagination?.totalPages > 1 && (
@@ -167,6 +173,12 @@ export function Transactions() {
             <ImportTransactionsModal
                 isOpen={isImportModalOpen}
                 onClose={() => dispatch(closeImportModal())}
+            />
+
+            {/* Transaction Detail Modal */}
+            <TransactionDetailModal
+                isOpen={isDetailOpen}
+                onClose={() => setIsDetailOpen(false)}
             />
         </div>
     )

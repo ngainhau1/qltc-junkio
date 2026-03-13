@@ -1,11 +1,11 @@
 import { useMemo, memo } from 'react';
 import { formatCurrency, formatDateString } from "@/lib/utils";
-import { ArrowUpRight, ArrowDownLeft } from "lucide-react";
+import { ArrowUpRight, ArrowDownLeft, ChevronRight } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useTranslation } from "react-i18next";
 
-// Row Item Component (Adapted for standard list)
-const TransactionRow = memo(({ item }) => {
+// Row Item Component
+const TransactionRow = memo(({ item, onRowClick }) => {
     // Render Date Header
     if (item.type === 'HEADER') {
         return (
@@ -17,40 +17,57 @@ const TransactionRow = memo(({ item }) => {
 
     // Render Transaction Item
     const t = item.transaction;
+    const isIncome = t.type === 'INCOME';
+
     return (
         <div className="px-4 w-full">
-            <div className="flex items-center justify-between py-3 border-b h-full hover:bg-muted/50 transition-colors rounded-lg px-2">
+            <div
+                className="flex items-center justify-between py-3 border-b h-full hover:bg-muted/50 transition-colors rounded-lg px-2 cursor-pointer group"
+                onClick={() => onRowClick && onRowClick(t)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => e.key === 'Enter' && onRowClick && onRowClick(t)}
+                aria-label={`Xem chi tiết: ${t.description || 'Giao dịch'}`}
+            >
                 <div className="flex items-center gap-4">
-                    <div className={`flex h-10 w-10 items-center justify-center rounded-full border ${t.type === 'INCOME' ? 'bg-green-100 border-green-200' : 'bg-red-100 border-red-200'}`}>
-                        {t.type === 'INCOME'
-                            ? <ArrowDownLeft className={`h-5 w-5 ${t.type === 'INCOME' ? 'text-green-600' : 'text-red-600'}`} />
-                            : <ArrowUpRight className={`h-5 w-5 ${t.type === 'INCOME' ? 'text-green-600' : 'text-red-600'}`} />
+                    <div className={`flex h-10 w-10 items-center justify-center rounded-full border ${isIncome ? 'bg-green-100 border-green-200' : 'bg-red-100 border-red-200'}`}>
+                        {isIncome
+                            ? <ArrowDownLeft className="h-5 w-5 text-green-600" />
+                            : <ArrowUpRight className="h-5 w-5 text-red-600" />
                         }
                     </div>
                     <div>
-                        <p className="font-medium truncate max-w-[200px]">{t.description}</p>
-                        <p className="text-xs text-muted-foreground capitalize">{t.category_id}</p>
+                        <p className="font-medium truncate max-w-[200px]">{t.description || '—'}</p>
+                        <p className="text-xs text-muted-foreground capitalize">
+                            {t.Category?.name || t.category_id || '—'}
+                        </p>
                     </div>
                 </div>
-                <div className={`font-semibold ${t.type === 'INCOME' ? 'text-green-600' : 'text-red-600'}`}>
-                    {t.type === 'INCOME' ? '+' : '-'}{formatCurrency(t.amount)}
+                <div className="flex items-center gap-2">
+                    <span className={`font-semibold ${isIncome ? 'text-green-600' : 'text-red-600'}`}>
+                        {isIncome ? '+' : '-'}{formatCurrency(t.amount)}
+                    </span>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors" />
                 </div>
             </div>
         </div>
     );
 });
 
-export function VirtualizedTransactionList({ transactions }) {
-    const { t } = useTranslation()
-    // 1. Flatten Data: Convert grouped object to flat list with Headers
+TransactionRow.displayName = 'TransactionRow';
+
+export function VirtualizedTransactionList({ transactions, onRowClick }) {
+    const { t } = useTranslation();
+
+    // Flatten Data: Convert grouped object to flat list with Headers
     const flatData = useMemo(() => {
         const groups = transactions.reduce((acc, transaction) => {
             const rawDate = transaction.date || transaction.transaction_date;
-            if (!rawDate) return acc; // Skip invalid transactions
+            if (!rawDate) return acc;
 
             try {
                 const dateObj = new Date(rawDate);
-                if (isNaN(dateObj.getTime())) return acc; // Skip invalid dates
+                if (isNaN(dateObj.getTime())) return acc;
 
                 const date = formatDateString(rawDate);
                 if (!acc[date]) {
@@ -64,18 +81,16 @@ export function VirtualizedTransactionList({ transactions }) {
         }, {});
 
         const flattened = [];
-        // Sort dates descending (newest first)
         const sortedDates = Object.keys(groups).sort((a, b) => {
-            // Convert dd/mm/yyyy to yyyy-mm-dd for sorting
             const [d1, m1, y1] = a.split('/');
             const [d2, m2, y2] = b.split('/');
             return new Date(`${y2}-${m2}-${d2}`) - new Date(`${y1}-${m1}-${d1}`);
         });
 
         sortedDates.forEach(date => {
-            flattened.push({ type: 'HEADER', date }); // Add Header
-            groups[date].forEach(t => {
-                flattened.push({ type: 'ITEM', transaction: t }); // Add Items
+            flattened.push({ type: 'HEADER', date });
+            groups[date].forEach(tx => {
+                flattened.push({ type: 'ITEM', transaction: tx });
             });
         });
         return flattened;
@@ -93,13 +108,12 @@ export function VirtualizedTransactionList({ transactions }) {
     }
 
     return (
-        <div
-            className="h-[600px] w-full border rounded-md bg-background overflow-y-auto"
-        >
+        <div className="h-[600px] w-full border rounded-md bg-background overflow-y-auto">
             {flatData.map((item) => (
                 <TransactionRow
                     key={item.type === 'HEADER' ? `header-${item.date}` : `item-${item.transaction.id}`}
                     item={item}
+                    onRowClick={onRowClick}
                 />
             ))}
         </div>

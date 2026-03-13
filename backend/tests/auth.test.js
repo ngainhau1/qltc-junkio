@@ -105,3 +105,37 @@ describe('Auth API Endpoints', () => {
         expect(res.statusCode).toEqual(400);
     });
 });
+
+describe('Auth Validation (Input Rules)', () => {
+    it('should reject register with invalid email format', async () => {
+        const res = await request(app)
+            .post('/api/auth/register')
+            .send({
+                name: 'Bad Email User',
+                email: 'not-an-email',
+                password: 'password123'
+            });
+
+        expect([400, 422]).toContain(res.statusCode);
+    });
+
+    it('should reject register with password shorter than 6 characters', async () => {
+        const res = await request(app)
+            .post('/api/auth/register')
+            .send({
+                name: 'Short Pass User',
+                email: 'shortpass@example.com',
+                password: '123'
+            });
+
+        expect([400, 422]).toContain(res.statusCode);
+    });
+
+    it('should reject register when required fields are missing', async () => {
+        const res = await request(app)
+            .post('/api/auth/register')
+            .send({ email: 'onlyemail@example.com' });
+
+        expect([400, 422]).toContain(res.statusCode);
+    });
+});
