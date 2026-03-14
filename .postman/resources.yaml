@@ -1,0 +1,9 @@
+# Use this workspace to collaborate
+workspace:
+  id: 3bcc1f5a-1831-46e7-85b8-50efc0622a82
+
+localResources:
+  collections:
+    - ..\doc\Junkio.postman_collection.json
+  environments:
+    - ..\doc\Junkio.postman_environment.json

@@ -1,10 +1,12 @@
 import { useFormik } from "formik"
 import * as Yup from "yup"
 import { useDispatch, useSelector } from "react-redux"
+import { useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { createTransaction } from "@/features/transactions/transactionSlice"
+import { fetchCategories } from "@/features/categories/categorySlice"
 import { addNotification } from "@/features/notifications/notificationsSlice"
 import { formatCurrency } from "@/lib/utils"
 import { ArrowRight } from "lucide-react"
@@ -16,11 +18,7 @@ const createYupSchema = (t) => Yup.object({
     date: Yup.date().required(t('transactionForm.validations.reqDate')),
     type: Yup.string().oneOf(['EXPENSE', 'INCOME', 'TRANSFER']).required(t('transactionForm.validations.reqType')),
     walletId: Yup.string().required(t('transactionForm.validations.reqWallet')),
-    categoryId: Yup.string().when('type', {
-        is: (type) => type !== 'TRANSFER',
-        then: (schema) => schema.required(t('transactionForm.validations.reqCategory')),
-        otherwise: (schema) => schema.notRequired()
-    }),
+    categoryId: Yup.string().notRequired(),
     destinationWalletId: Yup.string().when('type', {
         is: 'TRANSFER',
         then: (schema) => schema.required(t('transactionForm.validations.reqDestWallet')).notOneOf([Yup.ref('walletId')], t('transactionForm.validations.diffWallet')),
@@ -33,6 +31,12 @@ export function TransactionForm({ onSuccess }) {
     const dispatch = useDispatch()
     const { wallets } = useSelector(state => state.wallets)
     const { activeFamilyId } = useSelector(state => state.families)
+    const { categories } = useSelector(state => state.categories)
+
+    // Fetch categories khi mount
+    useEffect(() => {
+        dispatch(fetchCategories());
+    }, [dispatch]);
 
     // Filter wallets based on context
     const contextWallets = wallets.filter(w =>
@@ -54,7 +58,7 @@ export function TransactionForm({ onSuccess }) {
             type: 'EXPENSE',
             walletId: defaultWalletId,
             destinationWalletId: defaultDestWalletId,
-            categoryId: 'general',
+            categoryId: '',  // sẽ được set khi categories load
         },
         validationSchema: createYupSchema(t),
         onSubmit: async (values) => {
@@ -64,7 +68,7 @@ export function TransactionForm({ onSuccess }) {
                 transaction_date: new Date(values.date).toISOString(),
                 type: values.type,
                 wallet_id: values.walletId,
-                category_id: values.type === 'TRANSFER' ? null : values.categoryId,
+                category_id: values.type === 'TRANSFER' ? null : (values.categoryId || null),
                 destination_wallet_id: values.type === 'TRANSFER' ? values.destinationWalletId : null,
             }
 
@@ -226,14 +230,19 @@ export function TransactionForm({ onSuccess }) {
                             value={formik.values.categoryId}
                             onChange={formik.handleChange}
                         >
-                            <option value="general">{t('transactionForm.categories.general')}</option>
-                            <option value="food">{t('transactionForm.categories.food')}</option>
-                            <option value="transport">{t('transactionForm.categories.transport')}</option>
-                            <option value="shopping">{t('transactionForm.categories.shopping')}</option>
-                            <option value="utilities">{t('transactionForm.categories.utilities')}</option>
-                            <option value="entertainment">{t('transactionForm.categories.entertainment')}</option>
-                            <option value="health">{t('transactionForm.categories.health')}</option>
-                            <option value="income">{t('transactionForm.categories.income')}</option>
+                            <option value="">{t('transactionForm.categories.general', 'Chung (không phân loại)')}</option>
+                            {categories
+                                .filter(cat =>
+                                    formik.values.type === 'INCOME'
+                                        ? cat.type === 'INCOME'
+                                        : cat.type === 'EXPENSE'
+                                )
+                                .map(cat => (
+                                    <option key={cat.id} value={cat.id}>
+                                        {cat.name}
+                                    </option>
+                                ))
+                            }
                         </select>
                     </div>
                 )}

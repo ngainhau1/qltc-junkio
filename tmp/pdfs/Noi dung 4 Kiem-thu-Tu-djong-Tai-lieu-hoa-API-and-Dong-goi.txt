@@ -1,0 +1,393 @@
+Kiểm thử Tự động, Tài liệu hóa
+API & Đóng gói
+Bài 4 - Thực hành phát triển ứng dụng Web
+DOCKER API DOCS TESTING
+CASE STUDY
+CodeLearning Platform
+Xuyên suốt bài học hôm nay, chúng ta sẽ áp dụng các khái niệm vào dự án thực tế:
+CodeLearning - nền tảng bán khóa học lập trình trực tuyến. Hệ thống bao gồm Backend
+API (Node.js), Frontend (React), Database (MySQL) và Redis Cache. Đây là mô hình chuẩn
+của một ứng dụng web hiện đại, tương tự như các startup công nghệ đang vận hành.
+CHƯƠNG 1
+Tài liệu hóa API
+API Documentation với Swagger/OpenAPI
+Vấn đề: Mất kết nối giữa Backend & Frontend
+Tình huống thực tế
+Backend Developer hoàn thành API đăng ký người dùng, nhưng Frontend Developer không
+biết:
+• Endpoint là gì? POST /register hay /api/users?
+• Gửi dữ liệu gì? Email, username, password?
+• Response trả về như thế nào khi thành công/thất bại?
+• Token được lưu ở đâu? Header hay body?
+Kết quả: Lãng phí thời gian hỏi qua Slack/Email, tích hợp sai, debug mất hàng giờ.
+Giải pháp: Bản vẽ kỹ thuật cho API
+Không có tài liệu Có tài liệu chuẩn
+• Developer hỏi đi hỏi lại • Tự tra cứu mọi lúc
+• Tích hợp sai format • Biết chính xác input/output
+• Thời gian debug tăng gấp 3 • Test API ngay trên web
+"API Documentation là cầu nối giữa Backend và Frontend. Không có nó, team sẽ làm việc trong bóng tối."
+Swagger (OpenAPI): Tiêu chuẩn
+toàn cầu
+Swagger là gì? Lợi ích chính
+Swagger là bộ công cụ mã nguồn mở • Tự động sinh từ code (annotations)
+giúp thiết kế, xây dựng và tài liệu hóa
+• Interactive UI: Test API trực tiếp
+RESTful API theo chuẩn OpenAPI
+• Chuẩn quốc tế: Dễ chia sẻ với đối tác
+Specification (OAS). Được hàng triệu
+developer trên thế giới sử dụng.
+• Code generation: Sinh client SDK tự
+động
+Cấu trúc tài liệu API chuẩn
+01 02 03
+Endpoint Information Request Parameters Response Models
+URL + HTTP Method: Xác định rõ địa chỉ và hành Input Schema: Mô tả chi tiết dữ liệu đầu vào - Output Schema: Định nghĩa cấu trúc response cho
+động (GET, POST, PUT, DELETE). Ví dụ: POST Body, Query params, Headers. Bao gồm kiểu dữ từng HTTP status code (200, 400, 401, 500...). Gồm
+/api/orders liệu, bắt buộc hay không, giá trị mặc định. cả trường hợp thành công và thất bại.
+04 05
+Authentication Example & Try it out
+Security Schema: Ghi rõ phương thức xác thực (Bearer Token, API Key, Live Testing: Cung cấp ví dụ minh họa và cho phép test API trực tiếp trên giao
+OAuth2...) và scope quyền truy cập. diện tài liệu.
+Demo: API Đặt mua khóa học
+POST /API/ORDERS
+Request Body Response 200 (Success)
+{ {
+"course_id": 1, "message": "Order created successfully",
+"payment_method": "momo", "order_id": 99,
+"coupon_code": "SALE2024" "total_amount": 299000,
+} "payment_url": "https://momo.vn/pay/xyz"
+}
+Headers
+Response 402 (Payment Required)
+Authorization: Bearer eyJhbGc...
+Content-Type: application/json {
+"error": "Balance not enough",
+"required": 299000,
+"current_balance": 50000
+}
+Tự động sinh tài liệu từ Code
+Thay vì viết tài liệu Word thủ công (dễ sai lệch với code thực tế), Swagger cho phép
+annotation trực tiếp trong source code. Mỗi khi code thay đổi, tài liệu tự động cập nhật.
+Frontend developer có thể click "Try it out" để test API ngay trên trình duyệt, không cần
+Postman.
+Pro Tip: Thêm Swagger vào CI/CD pipeline để tự động publish docs lên môi
+trường staging/production sau mỗi lần deploy.
+Lợi ích của API Documentation
+Tăng tốc phát triển Onboarding nhanh chóng
+Frontend và Backend làm việc song song, không phải chờ đợi nhau. Developer mới vào team có thể tự học và tích hợp API trong vài giờ
+Giảm 40-60% thời gian tích hợp. thay vì vài ngày.
+Giảm lỗi tích hợp Hợp tác với đối tác
+Contract rõ ràng giữa services, tránh bug do hiểu sai format dữ Dễ dàng chia sẻ API với bên thứ 3, khách hàng B2B có thể tự tích
+liệu. hợp.
+CHƯƠNG 2
+Kiểm thử Tự động
+Automated Testing & Performance Optimization
+Manual Testing vs Automated Testing
+Kiểm thử thủ công (Manual) Kiểm thử tự động (Automated)
+• Tester mở Postman, điền từng field • Viết script test một lần duy nhất
+• Click "Send" cho 100 API khác nhau • Chạy 1000 test cases trong 1 phút
+• Copy kết quả vào Excel để báo cáo • Tự động báo cáo lỗi qua Slack/Email
+• Lặp lại mỗi khi có thay đổi code • Tích hợp vào CI/CD pipeline
+Vấn đề: Mất 2-3 giờ mỗi lần test toàn bộ hệ thống Lợi ích: Tiết kiệm 90% thời gian, phát hiện lỗi sớm
+Postman Collection Runner
+Postman Collection Runner cho phép chạy hàng loạt API tests theo trình tự định sẵn. Bạn
+có thể import dữ liệu từ CSV/JSON để test với nhiều bộ dữ liệu khác nhau (ví dụ: 50 tài
+khoản user khác nhau). Kết quả được hiển thị dưới dạng dashboard trực quan với số lượng
+passed/failed tests.
+1
+Tạo Collection
+Nhóm các API requests liên quan vào một collection (ví dụ: "User Authentication
+Flow")
+2
+Thêm Tests
+Viết script kiểm tra trong tab "Tests" của mỗi request
+3
+Run Collection
+Click "Run" để thực thi toàn bộ collection, xem báo cáo chi tiết
+Viết Test Scripts trong Postman
+Postman sử dụng JavaScript để viết test assertions. Các script này chạy sau khi nhận response từ server.
+Test 1: Kiểm tra Status Code
+pm.test("Status code is 200", function () {
+pm.response.to.have.status(200);
+});
+Test 2: Kiểm tra Response Body
+pm.test("Response contains token", function () {
+var jsonData = pm.response.json();
+pm.expect(jsonData.token).to.not.be.null;
+pm.expect(jsonData.token).to.be.a('string');
+});
+Test 3: Lưu biến cho request tiếp theo
+// Lưu token để dùng cho API khác
+var jsonData = pm.response.json();
+pm.environment.set("auth_token", jsonData.token);
+Kịch bản Test: Luồng mua khóa học
+1. Đăng ký tài khoản
+POST /api/register → Lưu user_id
+2. Đăng nhập
+POST /api/login → Lưu auth_token
+3. Xem danh sách khóa học
+GET /api/courses → Lấy course_id đầu tiên
+4. Thêm vào giỏ hàng
+POST /api/cart → Verify cart_item_id
+5. Thanh toán
+POST /api/checkout → Kiểm tra order_id và payment_url
+Cả quy trình này chạy tự động trong 5 giây, thay vì 10 phút test thủ công!
+Vấn đề kinh điển: N+1 Query Problem
+Đây là lỗi phổ biến nhất gây chậm API. Xảy ra khi code thực hiện 1 query lấy danh sách, sau đó N queries riêng lẻ để lấy thông tin chi tiết của từng item.
+Ví dụ: Hiển thị danh sách học viên kèm thông tin khóa học đã mua
+// BAD: N+1 Query
+SELECT * FROM users; // 1 query: lấy 100 users
+// Sau đó loop qua từng user:
+SELECT * FROM enrollments WHERE user_id = 1; // Query #2
+SELECT * FROM enrollments WHERE user_id = 2; // Query #3
+...
+SELECT * FROM enrollments WHERE user_id = 100; // Query #101
+// Tổng cộng: 1 + 100 = 101 queries!
+So sánh: Before vs After Eager Loading
+Before: N+1 Queries After: Eager Loading
+// 101 queries // Chỉ 1 query với JOIN
+SELECT * FROM users; SELECT users.*, enrollments.*
+for each user: FROM users
+SELECT * FROM enrollments LEFT JOIN enrollments
+WHERE user_id = ? ON users.id = enrollments.user_id
+2.5s 101 120ms 1
+Response Time DB Queries Response Time DB Queries
+Chậm không chấp nhận được Quá tải database Nhanh hơn 20 lần! Tối ưu hoàn hảo
+Eager Loading trong thực tế
+Hầu hết các ORM (Object-Relational Mapping) framework đều hỗ trợ Eager Loading.
+Sequelize (Node.js)
+const users = await User.findAll({
+include: [{
+model: Enrollment,
+include: [Course] // Nested include
+}]
+});
+// 1 query với JOIN thay vì N+1 queries
+Laravel Eloquent (PHP)
+$users = User::with('enrollments.course')->get();
+// Tự động eager load relationships
+Best Practice: Luôn sử dụng include hoặc with khi cần truy vấn dữ liệu liên quan. Bật query logging để phát hiện N+1 trong development.
+Caching với Redis: Tăng tốc API
+Vấn đề Code ví dụ (Node.js + Redis)
+Danh sách khóa học hiển thị trên homepage được query từ MySQL mỗi khi user truy
+// Kiểm tra cache trước
+cập. Với 10,000 requests/giờ, database bị quá tải.
+let courses = await redis.get('courses:list');
+Giải pháp: Redis Cache
+if (!courses) {
+Lưu kết quả query vào Redis (bộ nhớ RAM) với TTL (Time To Live) = 5 phút. Các
+// Cache miss: Query từ DB
+requests sau đọc từ cache, không cần query database.
+courses = await Course.findAll();
+// Lưu vào cache, expire sau 5 phút
+await redis.set(
+'courses:list',
+JSON.stringify(courses),
+'EX', 300
+);
+}
+return courses;
+Kiến trúc Caching trong CodeLearning
+MySQL Database Redis Cache Layer Node.js API
+Single Source of Truth: Lưu trữ toàn bộ dữ liệu gốc Speed Booster: Lưu temporary data trong RAM. Smart Router: Kiểm tra Redis trước, nếu không có
+(users, courses, orders). Đọc/ghi chậm hơn RAM Truy xuất nhanh gấp 100 lần database. Expire tự mới query MySQL. Write-through cache khi có
+nhưng persistent. động. update.
+Cache Strategies: Khi nào invalidate?
+Time-based (TTL) Event-based Hybrid Approach
+Cache tự động expire sau X giây/phút. Phù Xóa cache ngay khi có update. Ví dụ: Khi Kết hợp cả hai: TTL dài (1 giờ) + xóa thủ công
+hợp với dữ liệu ít thay đổi như danh sách admin tạo khóa học mới, xóa cache khi update. Balance giữa freshness và
+khóa học. courses:list. performance.
+redis.set('key', value, 'EX', 300) await redis.del('courses:list')
+Monitoring & Performance Metrics
+95% 45ms 80%
+Cache Hit Rate Avg Response Time DB Load Reduction
+Tỷ lệ request đọc từ cache thay vì database Giảm từ 890ms xuống 45ms nhờ Redis Giảm tải cho MySQL, tăng khả năng mở rộng
+Sử dụng công cụ như New Relic, Datadog hoặc Grafana để theo dõi metrics này theo thời gian thực. Set up alert khi cache hit rate giảm dưới 80% hoặc
+response time tăng đột biến.
+CHƯƠNG 3
+Docker & Containerization
+Đóng gói ứng dụng thành Container
+Vấn đề: "Works on My Machine"
+Dev: "Code chạy ngon lành trên máy tôi, không biết sao lên server lại lỗi?"
+Ops: "Máy bạn Node.js 18, server đang dùng Node.js 14. MySQL của bạn 8.0, server là
+5.7..."
+Vấn đề môi trường không đồng nhất (environment inconsistency) gây lãng phí hàng giờ
+debug. Mỗi developer có cấu hình khác nhau, server production lại khác nữa. Docker sinh
+ra để giải quyết vấn đề này bằng cách đóng gói toàn bộ môi trường chạy vào một "thùng
+container".
+Container vs Virtual Machine
+Virtual Machine (Cách cũ) Container (Docker)
+• Mỗi VM chạy một OS riêng (Ubuntu, Windows...) • Chia sẻ kernel của host OS
+• Nặng (vài GB), khởi động chậm (phút) • Nhẹ (vài MB), khởi động cực nhanh (giây)
+• Tốn nhiều tài nguyên: CPU, RAM, Disk • Hiệu quả: Chạy hàng chục containers trên 1 server
+Container cô lập về filesystem, network, process nhưng dùng chung kernel. Giống như các căn hộ trong một tòa nhà (chung nền móng) thay vì xây nhiều ngôi nhà riêng biệt
+(VM).
+Khái niệm cốt lõi: Image & Container
+Docker Image Docker Container
+Khuôn đúc (Template) Bánh đúc (Instance)
+• File read-only chứa OS, code, dependencies • Runtime instance của Image, đang chạy
+• Build một lần, dùng mãi mãi • Có thể start/stop/restart nhiều lần
+• Lưu trữ trên Docker Hub hoặc Registry • Mỗi container có filesystem riêng
+• Ví dụ: node:18-alpine, mysql:8.0 • Ví dụ: codelearning-api, codelearning-db
+Tương tự như Class vs Object trong lập trình: Image là class, Container là object được khởi tạo từ class đó.
+Dockerfile: Công thức nấu ăn
+Dockerfile là text file chứa các lệnh để build Docker Image. Mỗi dòng lệnh tạo ra một "layer" trong image.
+Dockerfile cho Backend Node.js (CodeLearning)
+# Bước 1: Chọn base image
+FROM node:18-alpine
+# Bước 2: Tạo thư mục làm việc
+WORKDIR /app
+# Bước 3: Copy package.json và cài dependencies
+COPY package*.json ./
+RUN npm install --production
+# Bước 4: Copy toàn bộ source code
+COPY . .
+# Bước 5: Expose port
+EXPOSE 3000
+# Bước 6: Lệnh chạy ứng dụng
+CMD ["node", "server.js"]
+Build & Run Docker Image
+01 02
+Build Image Kiểm tra Image
+Đóng gói code thành image Xem danh sách images đã build
+docker build -t codelearning-api:1.0 . docker images
+03 04
+Run Container Xem Logs
+Chạy container từ image Debug khi có lỗi
+docker run -d -p 3000:3000 \ docker logs -f api
+--name api codelearning-api:1.0
+Giải thích: -d = detached mode (chạy nền), -p 3000:3000 = map port host:container, --name = đặt tên container
+Docker Compose: Nhạc trưởng
+điều phối
+Ứng dụng thực tế thường cần nhiều containers: API, Database, Cache, Queue... Docker
+Compose cho phép định nghĩa và chạy multi-container application bằng một file YAML duy
+nhất.
+Không có Docker Compose Với Docker Compose
+# Phải chạy thủ công từng # Một lệnh duy nhất
+lệnh docker-compose up -d
+docker run mysql
+docker run redis # Tất cả containers tự
+docker run backend động:
+docker network create ... # - Được tạo và liên kết
+# Dễ quên, khó quản lý # - Chia sẻ network riêng
+# - Start theo đúng thứ tự
+Kiến trúc hệ thống CodeLearning
+Backend API Frontend
+Node.js + Express, port 3000 React SPA, port 80
+Redis Cache MySQL Database
+Session & cache, port 6379 Lưu trữ data, port 3306
+Các containers giao tiếp với nhau qua internal network, không cần expose ra ngoài. Chỉ Frontend và API expose port để user truy cập.
+File docker-compose.yml chi tiết
+version: '3.8'
+services:
+# Backend API Service
+backend:
+build: ./backend
+container_name: codelearning-api
+ports:
+- "3000:3000"
+environment:
+- DB_HOST=database
+- DB_USER=root
+- DB_PASS=secret123
+- REDIS_HOST=cache
+depends_on:
+- database
+- cache
+networks:
+- codelearning-net
+# MySQL Database Service
+database:
+image: mysql:8.0
+container_name: codelearning-db
+environment:
+- MYSQL_ROOT_PASSWORD=secret123
+- MYSQL_DATABASE=codelearning
+volumes:
+- db-data:/var/lib/mysql
+networks:
+- codelearning-net
+# Redis Cache Service
+cache:
+image: redis:7-alpine
+container_name: codelearning-redis
+networks:
+- codelearning-net
+# Frontend Service
+frontend:
+build: ./frontend
+container_name: codelearning-web
+ports:
+- "80:80"
+depends_on:
+- backend
+networks:
+- codelearning-net
+volumes:
+db-data:
+networks:
+codelearning-net:
+driver: bridge
+Phân tích docker-compose.yml
+Services
+1
+Định nghĩa các containers cần chạy. Mỗi service = 1 container. Có thể build từ Dockerfile (build) hoặc pull từ registry (image).
+Ports
+2
+Map port từ host vào container theo format "host:container". Ví dụ: 3000:3000 nghĩa là truy cập localhost:3000 sẽ forward vào port 3000 bên trong
+container.
+Environment
+3
+Truyền biến môi trường vào container. Backend dùng DB_HOST=database để kết nối MySQL (tên service = hostname trong network).
+Depends_on
+4
+Xác định thứ tự khởi động. Backend phải đợi database và cache start xong mới chạy. Tránh lỗi connection refused.
+Volumes
+5
+Lưu trữ persistent data. MySQL data được mount vào volume db-data, không mất khi container restart.
+Networks
+6
+Tạo mạng riêng cho các containers giao tiếp. Cô lập với containers khác trên cùng host.
+One Command Deployment
+docker-compose up -d
+Chỉ cần một lệnh duy nhất, toàn bộ hệ thống sẽ tự động:
+Build Custom Images
+Pull Images
+Build backend và frontend images từ Dockerfile trong thư mục tương ứng
+Tải MySQL và Redis images từ Docker Hub nếu chưa có local
+Start Containers
+Create Network
+Khởi động containers theo thứ tự: database → cache → backend → frontend
+Tạo bridge network codelearning-net để containers kết nối với nhau
+Dùng docker-compose down để dừng và xóa toàn bộ containers. Dùng docker-compose logs -f [service] để xem logs.
+TỔNG KẾT
+Từ Code đến Production
+1
+1. Viết Code
+Develop API endpoints với Express.js, tích hợp MySQL & Redis
+2
+2. Tài liệu hóa
+Swagger tự động sinh API docs từ annotations
+3
+3. Kiểm thử
+Postman Collection Runner chạy automated tests
+4
+4. Tối ưu
+Fix N+1 queries, implement Redis caching
+5
+5. Đóng gói
+Dockerfile + Docker Compose containerize toàn bộ stack
+6
+6. Deploy
+Push lên server, chạy docker-compose up -d → Done!
+Bài tập về nhà
+1 2
+Cài đặt Docker Desktop Viết Dockerfile cho Backend
+Download từ docker.com, cài đặt cho Windows/Mac/Linux. Verify bằng lệnh Tạo Dockerfile trong thư mục backend project của bạn. Build thành công và
+docker --version trong terminal. chạy container. Screenshot terminal khi container đang running.
+3 4
+Tích hợp Swagger Viết Test Scripts
+Thêm Swagger vào ít nhất 3 API endpoints. Chụp ảnh màn hình Swagger UI Tạo Postman collection với 5 requests, mỗi request có ít nhất 2 test assertions.
+đang hiển thị API docs, có thể "Try it out" được. Export collection thành JSON file nộp lên LMS.
+Deadline: Cuối tuần này (Chủ nhật 23:59). Nộp qua LMS, folder có tên: Bai4_HoTen_MSSV
+preencoded.png preencoded.png

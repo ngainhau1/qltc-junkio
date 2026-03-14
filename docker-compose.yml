@@ -28,21 +28,13 @@ services:
       PORT: 5000
     depends_on:
       - db # Chỉ chạy khi Database đã khởi động xong
-    volumes:
-      - ./backend:/app # Map code máy thật vào container để sửa code là cập nhật ngay
-      - /app/node_modules # Giữ nguyên node_modules của container
 
-  # --- DỊCH VỤ 3: FRONTEND (REACT) ---
+  # --- DỊCH VỤ 3: FRONTEND (REACT + NGINX) ---
   web:
-    build: ./frontend # Dựng từ Dockerfile trong thư mục frontend
+    build: ./frontend  # Multi-stage: Node build → Nginx serve
     container_name: junkio_web
     ports:
-      - "5173:5173"
-    environment:
-      - VITE_API_URL=http://localhost:5000 # API Backend
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
+      - "80:80"        # Nginx serve tại port 80
     depends_on:
       - api
 

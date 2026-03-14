@@ -137,10 +137,17 @@ const authSlice = createSlice({
             })
             .addCase(fetchCurrentUser.fulfilled, (state, action) => {
                 state.loading = false;
+                if (!action.payload) {
+                    state.isAuthenticated = false;
+                    state.user = null;
+                    state.token = null;
+                    localStorage.removeItem('auth_token');
+                    return;
+                }
                 state.isAuthenticated = true;
                 state.user = {
                     ...action.payload,
-                    avatarUrl: action.payload.avatar || `https://api.dicebear.com/7.x/notionists/svg?seed=${action.payload.name}`
+                    avatarUrl: action.payload.avatar || `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(action.payload.name || 'user')}`
                 };
             })
             .addCase(fetchCurrentUser.rejected, (state) => {

@@ -8,6 +8,7 @@ import uiReducer from '../features/ui/uiSlice';
 import notificationsReducer from '../features/notifications/notificationsSlice';
 import goalsReducer from '../features/goals/goalsSlice';
 import settingsReducer from '../features/settings/settingsSlice';
+import categoryReducer from '../features/categories/categorySlice';
 
 export const store = configureStore({
     reducer: {
@@ -20,5 +21,6 @@ export const store = configureStore({
         notifications: notificationsReducer,
         goals: goalsReducer,
         settings: settingsReducer,
+        categories: categoryReducer,
     },
 });

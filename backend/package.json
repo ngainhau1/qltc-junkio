@@ -59,15 +59,15 @@
       "eslint --fix"
     ]
   },
-    "jest": {
-        "testEnvironment": "node",
-        "moduleNameMapper": {
-            "^uuid$": "<rootDir>/tests/__mocks__/uuid-mock.js"
-        },
-        "coveragePathIgnorePatterns": [
-            "/node_modules/",
-            "/migrations/",
-            "/seeders/"
-        ]
-    }
+  "jest": {
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "^uuid$": "<rootDir>/tests/__mocks__/uuid-mock.js"
+    },
+    "coveragePathIgnorePatterns": [
+      "/node_modules/",
+      "/migrations/",
+      "/seeders/"
+    ]
+  }
 }

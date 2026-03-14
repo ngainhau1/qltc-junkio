@@ -1,0 +1,12 @@
+node_modules
+.env
+.env.*
+*.test.js
+tests/
+tmp/
+uploads/
+*.log
+.git
+.gitignore
+README.md
+scripts/

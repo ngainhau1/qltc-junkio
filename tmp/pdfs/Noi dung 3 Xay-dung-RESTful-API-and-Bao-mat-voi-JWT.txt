@@ -1,0 +1,523 @@
+Xây dựng RESTful API & Bảo
+mật với JWT
+Bài 3: Thực hành phát triển ứng dụng Web - Case Study: CodeLearning Platform
+CHƯƠNG 1
+Kiến trúc RESTful API
+Định nghĩa & Cơ bản Thiết kế URL HTTP & Response
+API là cầu nối giữa Frontend và Backend, cho Cấu trúc Resource chuẩn cho CodeLearning Methods, Status Codes và cấu trúc trả về
+phép giao tiếp dữ liệu
+API là cầu nối giữa Frontend và Backend
+Khái niệm
+API (Application Programming Interface) là tập hợp các quy tắc và giao thức cho
+phép các ứng dụng khác nhau giao tiếp với nhau. Trong phát triển Web, API đóng
+vai trò như một "người phiên dịch" giữa phần giao diện người dùng (Frontend) và
+phần xử lý logic, cơ sở dữ liệu (Backend).
+Khi người dùng thực hiện một hành động trên website (click nút, submit form),
+Frontend sẽ gửi request đến API, Backend xử lý và trả về kết quả.
+Web truyền thống vs RESTful API
+Web truyền thống
+Server trả về HTML đầy đủ
+• Reload toàn bộ trang
+• Khó tái sử dụng cho Mobile
+• Logic lẫn giao diện
+RESTful API
+Server chỉ trả về JSON data
+• Cập nhật một phần trang
+• Dùng chung cho Web/Mobile/Desktop
+• Tách biệt Frontend và Backend
+Tại sao chọn JSON?
+Nhẹ & Hiệu quả Dễ đọc & Debug Đa nền tảng
+Kích thước file nhỏ hơn XML, tốc độ truyền tải Cấu trúc rõ ràng với cặp key-value, Tất cả ngôn ngữ lập trình đều hỗ trợ parse
+nhanh. Phù hợp cho kết nối mạng di động developer dễ dàng kiểm tra và sửa lỗi ngay JSON. Web (JavaScript), Mobile
+hoặc băng thông hạn chế. trong browser hoặc Postman. (Swift/Kotlin), Backend (PHP/Node/Python)
+đều sử dụng được.
+{
+"course_id": 101,
+"title": "Lập trình Web cơ bản",
+"price": 299000,
+"instructor": "Nguyễn Văn A"
+}
+Thiết kế URL Resource cho CodeLearning
+URL trong RESTful API phải thể hiện "tài nguyên" (Resource) chứ không phải "hành động" (Action). Sử dụng danh từ số nhiều và HTTP Methods để biểu thị thao tác.
+Sai - Dùng động từ trong URL
+/get-all-courses
+/create-new-course
+/update-course-price
+/delete-course-by-id
+URL chứa động từ, khó mở rộng và không tuân theo chuẩn REST
+Đúng - Dùng danh từ + HTTP Method
+GET /api/courses (Lấy danh sách)
+POST /api/courses (Tạo mới)
+PUT /api/courses/101 (Cập nhật khóa 101)
+DELETE /api/courses/101 (Xóa khóa 101)
+URL ngắn gọn, rõ ràng, HTTP Method quyết định hành động
+HTTP Methods - Động từ của API
+GET POST
+Lấy dữ liệu, không thay đổi trạng thái Tạo mới tài nguyên
+• Xem danh sách khóa học: GET /api/courses • Tạo khóa học mới: POST /api/courses
+• Xem chi tiết khóa: GET /api/courses/101 • Đăng ký tài khoản: POST /api/register
+PUT / PATCH DELETE
+Cập nhật tài nguyên đã tồn tại Xóa tài nguyên
+• Sửa giá khóa học: PUT /api/courses/101 • Xóa khóa học: DELETE /api/courses/101
+• PUT: Cập nhật toàn bộ, PATCH: Cập nhật một phần • Thường yêu cầu quyền Admin
+HTTP Status Codes - Ngôn ngữ của Server
+Status Code là mã trạng thái mà Server gửi về để báo hiệu kết quả xử lý request. Frontend dựa vào mã này để xử lý logic tiếp theo.
+2xx - Success (Thành công) 4xx - Client Error (Lỗi phía Client) 5xx - Server Error (Lỗi phía Server)
+200 OK: Request thành công, có dữ liệu trả về 400 Bad Request: Thiếu dữ liệu hoặc format sai 500 Internal Server Error: Lỗi không xác định ở
+Server
+201 Created: Tạo mới thành công (VD: Tạo đơn 401 Unauthorized: Chưa đăng nhập hoặc token
+hàng, đăng ký tài khoản) không hợp lệ 503 Service Unavailable: Server quá tải hoặc bảo
+trì
+403 Forbidden: Không có quyền truy cập
+404 Not Found: Không tìm thấy tài nguyên
+Cấu trúc Response chuẩn
+Tại sao cần chuẩn hóa? Response thành công
+Frontend cần biết chính xác request có thành công không, có dữ liệu gì,
+{
+và thông báo lỗi là gì. Một cấu trúc thống nhất giúp code dễ maintain và
+"status": "success",
+mở rộng.
+"message": "Lấy danh sách khóa học thành công",
+3 thành phần bắt buộc: "data": [
+{
+• status: "success" hoặc "error"
+"id": 101,
+• message: Thông báo cho user "title": "Lập trình Web cơ bản",
+• data: Dữ liệu trả về (null nếu lỗi) "price": 299000
+},
+{
+"id": 102,
+"title": "Thiết kế UI/UX chuyên nghiệp",
+"price": 399000
+}
+]
+}
+Response lỗi
+{
+"status": "error",
+"message": "Khóa học không tồn tại",
+"data": null
+}
+CHƯƠNG 2
+Lập trình API Resources & CRUD
+Từ lý thuyết đến thực hành: Xây dựng API cho CodeLearning Platform
+Controller là gì?
+Nơi xử lý logic nghiệp vụ Tách biệt từng tầng
+Controller nhận request từ Route, xử lý các quy tắc nghiệp vụ (business Controller giúp code có cấu trúc rõ ràng theo mô hình MVC. Route chỉ
+logic), gọi Model để tương tác với Database, và trả về Response. định tuyến, Controller xử lý, Model làm việc với DB. Mỗi tầng một nhiệm
+vụ riêng.
+Ví dụ: CourseController sẽ có các method như index() (lấy danh sách), store() (tạo mới), update() (cập nhật), destroy() (xóa).
+Luồng dữ liệu trong RESTful API
+1. Request
+User gửi HTTP request (VD: POST /api/courses)
+2. Route
+Route mapping request đến Controller tương ứng
+3. Controller
+Xử lý logic: Validate input, gọi Model
+4. Model
+Tương tác với Database (Insert/Update/Delete/Select)
+5. Response
+Controller trả JSON về cho Frontend
+Validation - Kiểm tra dữ liệu đầu vào
+Tại sao phải Validate? Request hợp lệ
+Dữ liệu từ user không đáng tin. Hacker có thể gửi dữ liệu độc hại (SQL Injection,
+{
+XSS). Validate giúp đảm bảo dữ liệu hợp lệ trước khi lưu vào Database.
+"title": "Lập trình Python nâng cao",
+Các quy tắc Validate cho "Tạo khóa học" "price": 499000,
+"description": "Khóa học dành cho người đã biết Python
+• title: Bắt buộc, tối thiểu 10 ký tự
+cơ bản",
+• price: Bắt buộc, phải là số, lớn hơn 0
+"instructor_id": 5
+• description: Không bắt buộc, tối đa 500 ký tự }
+• instructor_id: Bắt buộc, phải tồn tại trong bảng users
+Request không hợp lệ
+{
+"title": "ABC",
+"price": -100,
+"instructor_id": 999
+}
+Lỗi: title quá ngắn, price âm, instructor_id không tồn tại
+Demo Code: API Create Course (Node.js)
+// routes/courses.js
+const express = require('express');
+const router = express.Router();
+const CourseController = require('../controllers/CourseController');
+router.post('/courses', CourseController.store);
+module.exports = router;
+// controllers/CourseController.js
+const Course = require('../models/Course');
+exports.store = async (req, res) => {
+try {
+// 1. Validate input
+const { title, price, description, instructor_id } = req.body;
+if (!title || title.length < 10) {
+return res.status(400).json({
+status: 'error',
+message: 'Tiêu đề phải có ít nhất 10 ký tự',
+data: null
+});
+}
+if (!price || price <= 0) {
+return res.status(400).json({
+status: 'error',
+message: 'Giá khóa học phải lớn hơn 0',
+data: null
+});
+}
+// 2. Tạo course mới trong DB
+const newCourse = await Course.create({
+title, price, description, instructor_id
+});
+// 3. Trả về response thành công
+return res.status(201).json({
+status: 'success',
+message: 'Tạo khóa học thành công',
+data: newCourse
+});
+} catch (error) {
+return res.status(500).json({
+status: 'error',
+message: 'Lỗi server: ' + error.message,
+data: null
+});
+}
+};
+API Resource/Transformer
+Khi lấy dữ liệu từ Database, không phải lúc nào cũng muốn trả về toàn bộ các cột. Resource giúp format và chọn lọc dữ liệu trước khi gửi về Frontend.
+Lý do sử dụng Ví dụ Case Study
+• Ẩn thông tin nhạy cảm (password, token) Khi trả về thông tin khóa học, ta muốn:
+• Format dữ liệu (ngày tháng, tiền tệ) • Ẩn cột created_at, updated_at
+• Kết hợp dữ liệu từ nhiều bảng
+• Format giá từ 299000 thành "299.000 đ"
+• Tạo cấu trúc JSON đẹp hơn
+• Thêm tên instructor thay vì chỉ có instructor_id
+Trả về thô từ DB Qua Resource Transform
+{ {
+"id": 101, "id": 101,
+"title": "Lập trình Web", "title": "Lập trình Web",
+"price": 299000, "price_formatted": "299.000 đ",
+"instructor_id": 5, "instructor": {
+"created_at": "2024-01-15T08:30:00", "id": 5,
+"updated_at": "2024-01-20T10:15:00" "name": "Nguyễn Văn A"
+} }
+}
+CRUD Operations - Tổng hợp
+READ - Đọc dữ liệu
+GET /api/courses - Lấy tất cả
+GET /api/courses/101 - Lấy chi tiết
+CREATE - Tạo mới
+POST /api/courses
+Body: JSON chứa title, price, description
+UPDATE - Cập nhật
+PUT /api/courses/101
+Body: JSON chứa dữ liệu cần sửa
+DELETE - Xóa
+DELETE /api/courses/101
+Thường yêu cầu xác thực Admin
+CHƯƠNG 3
+Bảo mật & Xác thực với JWT
+Phần quan trọng nhất: Làm sao để bảo vệ API khỏi truy cập trái phép?
+Vấn đề của Session truyền thống
+Cơ chế Session/Cookie
+Khi user đăng nhập, Server tạo một Session ID và lưu vào Database hoặc
+Memory. Session ID này được gửi về Browser dưới dạng Cookie. Mỗi request sau
+đó, Browser tự động gửi Cookie lên, Server kiểm tra Session ID để biết user là ai.
+Nhược điểm
+• Khó Scale: Khi có nhiều server, phải đồng bộ Session giữa các server
+• Không phù hợp Mobile: Mobile app không hỗ trợ Cookie tốt
+• Tốn tài nguyên: Phải lưu Session trong Database/Memory
+Kết luận: Session phù hợp cho Web app đơn giản, nhưng với RESTful API phục vụ đa nền tảng (Web + Mobile), JWT là giải pháp tốt hơn.
+JWT (JSON Web Token) - Tấm vé thông
+hành số
+JWT là gì?
+JWT là một chuỗi mã hóa chứa thông tin user (id, role, email) được ký bởi Server. Client
+giữ token này và gửi kèm mỗi request. Server chỉ cần verify chữ ký mà không cần truy vấn
+Database.
+Ưu điểm của JWT
+• Không cần lưu Session trên Server (Stateless)
+• Dễ dàng Scale ra nhiều server
+• Phù hợp cho cả Web và Mobile
+• Có thể tự chứa thông tin user (self-contained)
+Cấu trúc JWT: Header.Payload.Signature
+Một token JWT gồm 3 phần, ngăn cách nhau bởi dấu chấm (.). Mỗi phần được encode bằng Base64.
+01 02 03
+Header (Phần đầu) Payload (Nội dung) Signature (Chữ ký)
+Chứa loại token (typ: "JWT") và thuật toán mã hóa Chứa thông tin user (claims): user_id, email, role, thời Được tạo bằng cách mã hóa Header + Payload +
+(alg: "HS256", "RS256",...) gian hết hạn (exp) Secret Key. Server dùng chữ ký này để xác minh token
+không bị giả mạo.
+{ {
+"alg": "HS256", "user_id": 15, HMACSHA256(
+"typ": "JWT" "email": base64(header) + "." +
+} "student@codelearning.vn", base64(payload),
+"role": "student", secret_key
+"exp": 1735689600 )
+}
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxNSwiZW1haWwiOiJzdHVkZW50QGNvZGVsZWFybmluZy52biIsInJvbGUiOiJzdHVkZW50
+IiwiZXhwIjoxNzM1Njg5NjAwfQ.Xj8F9_kN2mZ5tQpL7wYrE4vU3cJ8hG6sK1oP0iR9dA
+Sơ đồ luồng đăng nhập (Login Flow)
+Bước 3: Trả Token về Client
+Bước 2: Server kiểm tra Database
+Server trả về response chứa token. Frontend lưu
+Bước 1: Client gửi
+Backend tìm user theo email, so sánh password token vào localStorage hoặc sessionStorage.
+Username/Password
+(đã hash). Nếu đúng, tạo JWT token chứa thông
+User nhập thông tin đăng nhập trên Form,
+tin user (id, email, role) và ký bằng secret key.
+{
+Frontend gửi POST request đến /api/login
+"status": "success",
+const token = jwt.sign( "message": "Đăng nhập thành
+POST /api/login { user_id: 15, email: công",
+Body: { "student@...", role: "student" }, "data": {
+"email": SECRET_KEY, "token": "eyJhbGci...",
+"student@codelearning.vn", { expiresIn: '7d' } "user": {
+"password": "123456" ); "id": 15,
+}
+"name": "Nguyễn Văn B"
+}
+}
+}
+Sơ đồ luồng xác thực (Authentication Flow)
+Sau khi đăng nhập và nhận được token, mỗi khi gọi API bảo mật, Client phải gửi kèm token trong Header.
+1
+Client gửi Request kèm Token
+Đặt token vào Header Authorization với format: Bearer <token>
+GET /api/courses/101/lessons
+Headers:
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+2
+Middleware chặn và kiểm tra Token
+Trước khi vào Controller, Middleware "auth" sẽ verify token bằng secret key. Nếu hợp lệ, giải
+mã payload để lấy thông tin user.
+3
+Cho phép truy cập hoặc từ chối
+Nếu token hợp lệ → Request đi tiếp đến Controller
+Nếu token không hợp lệ hoặc hết hạn → Trả về 401 Unauthorized
+Middleware là gì? - "Người gác cổng"
+Khái niệm Demo Code Middleware (Node.js)
+Middleware là một lớp xử lý nằm giữa Request và Controller. Nó có thể kiểm tra,
+// middleware/auth.js
+chỉnh sửa hoặc chặn request trước khi nó đến được Controller.
+const jwt = require('jsonwebtoken');
+Vai trò của Auth Middleware
+module.exports = (req, res, next) => {
+• Đọc token từ Header Authorization try {
+• Verify token bằng secret key // Lấy token từ Header
+const token = req.headers.authorization?.split('
+• Nếu hợp lệ: Cho phép request tiếp tục, gắn thông tin user vào request
+')[1];
+• Nếu không hợp lệ: Trả về lỗi 401, không cho vào Controller
+if (!token) {
+return res.status(401).json({
+status: 'error',
+message: 'Vui lòng đăng nhập',
+data: null
+});
+}
+// Verify token
+const decoded = jwt.verify(token,
+process.env.SECRET_KEY);
+// Gắn thông tin user vào request
+req.user = decoded;
+// Cho phép request tiếp tục
+next();
+} catch (error) {
+return res.status(401).json({
+status: 'error',
+message: 'Token không hợp lệ hoặc hết hạn',
+data: null
+});
+}
+};
+Áp dụng Middleware trong Case Study
+Trong hệ thống CodeLearning, các route như "Xem bài học", "Xem video" chỉ dành cho user đã mua khóa học. Ta cần bảo vệ các route này bằng Middleware.
+// routes/lessons.js
+const express = require('express');
+const router = express.Router();
+const LessonController = require('../controllers/LessonController');
+const authMiddleware = require('../middleware/auth');
+// Route công khai - Không cần đăng nhập
+router.get('/courses', LessonController.getPublicCourses);
+// Route bảo mật - Phải đăng nhập (có token)
+router.get('/lessons/:id/video', authMiddleware, LessonController.getVideo);
+router.get('/my-courses', authMiddleware, LessonController.getMyCourses);
+module.exports = router;
+Request đến Middleware chặn Token hợp lệ?
+GET /lessons/5/video Kiểm tra token trong Header Nếu YES → Controller, Nếu NO → 401
+Chi tiết Logic Middleware trong Case Study
+Trường hợp 1: Không có Token Trường hợp 2: Token giả mạo Trường hợp 3: Token hợp lệ
+User chưa đăng nhập, gọi API xem video User gửi token nhưng đã bị sửa đổi hoặc User gửi token đúng, chưa hết hạn
+tạo bằng secret key khác
+GET /lessons/5/video Headers:
+Headers: (không có Headers: Authorization: Bearer
+Authorization) Authorization: Bearer eyJhbGci...
+abc123fake
+Kết quả: Middleware trả về 401 với message Kết quả: Middleware verify thành công, gắn
+"Vui lòng đăng nhập" req.user = {user_id: 15, role:
+Kết quả: jwt.verify() throw error, "student"}, cho phép vào Controller
+Middleware trả về 401 với message "Token
+không hợp lệ"
+Phân quyền (Authorization) - Kiểm tra vai trò
+Xác thực (Authentication) chỉ biết "bạn là ai". Phân quyền (Authorization) quyết định "bạn được làm gì". Trong CodeLearning, có 3 role: Admin, Instructor,
+Student.
+Admin Instructor (Giảng viên) Student (Học viên)
+• Xem, tạo, sửa, xóa tất cả khóa học • Tạo và chỉnh sửa khóa học của mình • Xem danh sách khóa học công khai
+• Quản lý user • Xem danh sách học viên đã mua • Mua khóa học
+• Xem báo cáo doanh thu • Không được xóa khóa học của người • Xem video bài học (chỉ khóa đã mua)
+khác
+• Không được tạo, sửa, xóa khóa học
+Middleware kiểm tra Role
+Tạo Middleware checkRole Áp dụng trong Route
+Sau khi xác thực thành công, ta kiểm tra role của user có đủ quyền truy cập route
+const authMiddleware = require('../middleware/auth');
+không.
+const checkRole = require('../middleware/checkRole');
+// middleware/checkRole.js
+// Chỉ Admin mới được xóa khóa học
+module.exports = (allowedRoles) => {
+router.delete(
+return (req, res, next) => {
+'/courses/:id',
+// req.user đã được gắn bởi authMiddleware
+authMiddleware,
+const userRole = req.user.role;
+checkRole(['admin']),
+CourseController.destroy
+if (!allowedRoles.includes(userRole)) {
+);
+return res.status(403).json({
+status: 'error',
+// Admin và Instructor được tạo khóa học
+message: 'Bạn không có quyền truy cập',
+router.post(
+data: null
+'/courses',
+});
+authMiddleware,
+}
+checkRole(['admin', 'instructor']),
+CourseController.store
+next();
+);
+};
+};
+// Student chỉ xem khóa đã mua
+router.get(
+'/my-courses',
+authMiddleware,
+checkRole(['student']),
+CourseController.getMyCourses
+);
+Bảo mật nâng cao: Refresh Token
+Vấn đề: Access Token có thời gian sống ngắn
+Để bảo mật, Access Token thường có exp (expire time) chỉ 15 phút hoặc 1 giờ. Nhưng
+việc bắt user đăng nhập lại liên tục rất khó chịu.
+Giải pháp: Dùng Refresh Token
+Khi đăng nhập, Server trả về 2 token:
+• Access Token: Thời gian ngắn (15 phút), dùng để gọi API
+• Refresh Token: Thời gian dài (7 ngày hoặc 30 ngày), lưu trong Database, dùng để
+xin cấp lại Access Token mới
+Khi Access Token hết hạn, Frontend gọi POST /api/refresh với Refresh Token để
+lấy Access Token mới mà không cần user đăng nhập lại.
+CHƯƠNG 4
+Kiểm thử API với Postman
+Công cụ không thể thiếu của Backend Developer
+Giới thiệu Postman
+API Testing Tool Tổ chức Collection Environment & Variables
+Postman là phần mềm giúp test API mà không Nhóm các API theo chức năng (Auth, Courses, Lưu base URL, token vào biến để tái sử dụng. VD:
+cần viết code Frontend. Bạn có thể gửi request, Users,...). Mỗi collection có thể chia nhỏ thành {{base_url}}/api/login, {{token}}. Khi
+xem response, lưu collection các API để test sau folder và request. Dễ dàng share cho team. đổi server chỉ cần sửa 1 chỗ.
+này.
+Hướng dẫn test API Login
+Các bước thực hiện Body JSON
+1. Mở Postman, tạo request mới
+{
+2. Chọn method POST
+"email": "student@codelearning.vn",
+3. Nhập URL: "password": "123456"
+http://localhost:3000/api/login }
+4. Tab Body → Chọn raw → Chọn JSON
+5. Nhập nội dung JSON (xem bên phải)
+Response mẫu (200 OK)
+6. Click Send
+7. Xem response ở phần dưới
+{
+8. Copy token từ response để dùng cho "status": "success",
+request khác "message": "Đăng nhập thành công",
+"data": {
+"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+"user": {
+"id": 15,
+"name": "Nguyễn Văn B",
+"email": "student@codelearning.vn",
+"role": "student"
+}
+}
+}
+Hướng dẫn test API có bảo mật (Protected Route)
+Sau khi có token từ API Login, ta cần gửi token đó trong Header Authorization để test các API yêu cầu xác thực.
+Bước 2: Tạo request mới
+Bước 1: Copy Token
+Method: GET, URL: http://localhost:3000/api/my-courses
+Từ response của API Login, copy giá trị token (chuỗi dài bắt đầu bằng
+eyJ...)
+Bước 4: Send và kiểm tra
+Bước 3: Thêm Token vào Header
+Click Send. Nếu token hợp lệ → 200 OK + dữ liệu. Nếu token sai → 401
+Tab Authorization → Type: Bearer Token → Paste token vào ô Token Unauthorized.
+Hoặc tab Headers → Key: Authorization, Value: Bearer eyJhbGci...
+Demo: Test luồng hoàn chỉnh trong Postman
+1
+1. Đăng ký tài khoản
+POST /api/register
+Body: { 2 2. Đăng nhập
+"name": "Nguyễn Văn C",
+POST /api/login
+"email": "newuser@test.com",
+"password": "123456"
+Body: {
+}
+"email": "newuser@test.com",
+"password": "123456"
+}
+Response: 201 Created với thông tin user mới
+3
+3. Lấy danh sách khóa học (Public)
+Response: 200 OK, nhận được token
+GET /api/courses
+Không cần token, trả về danh sách tất cả khóa học
+4
+4. Xem khóa học đã mua (Protected)
+GET /api/my-courses
+Header: Authorization: Bearer <token>
+5
+5. Xem video bài học (Protected + Enrolled)
+Response: Danh sách khóa học user đã đăng ký
+GET /api/lessons/5/video
+Header: Token + Kiểm tra user có mua khóa học này không
+Response: URL video hoặc 403 Forbidden
+Tổng kết & Bài tập thực hành
+Kiến thức đã học Bài tập về nhà
+• RESTful API: Thiết kế URL Resource, HTTP Methods, Status Codes 1. API Đăng ký: Viết API POST /api/register cho phép tạo tài khoản
+mới. Validate: email phải unique, password tối thiểu 6 ký tự
+• Controller & CRUD: Xử lý logic nghiệp vụ, Validation
+2. API Đăng nhập: Viết API POST /api/login trả về JWT token. Thời
+• JWT: Cấu trúc, Luồng đăng nhập, Luồng xác thực
+gian expire: 7 ngày
+• Middleware: Auth Middleware, Role-based Authorization
+3. API Lấy danh sách khóa học: GET /api/courses trả về tất cả khóa
+• Postman: Test API Login, Protected routes
+học (public, không cần token)
+4. API Profile: GET /api/me (protected) trả về thông tin user đang đăng
+nhập
+5. Test tất cả API trên bằng Postman và chụp màn hình kết quả
+Cảm ơn các bạn
+đã theo dõi!
+4 35 100%
+Chương học Slides Backend Skills
+Từ lý thuyết đến thực hành Nội dung chi tiết, dễ hiểu Sẵn sàng xây dựng API thực
+tế
+Hẹn gặp lại ở Bài 4: Tích hợp Payment Gateway & Deployment
