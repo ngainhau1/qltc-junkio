@@ -32,11 +32,11 @@ export function Reports() {
 
     const incomeTotal = transactions
         .filter(t => t.type === 'INCOME')
-        .reduce((sum, t) => sum + t.amount, 0)
+        .reduce((sum, t) => sum + Number(t.amount || 0), 0)
 
     const expenseTotal = transactions
         .filter(t => t.type === 'EXPENSE')
-        .reduce((sum, t) => sum + t.amount, 0)
+        .reduce((sum, t) => sum + Number(t.amount || 0), 0)
 
     const summaryData = [
         { name: t('reports.income'), amount: incomeTotal },
@@ -53,7 +53,7 @@ export function Reports() {
                 // For now we map static IDs to names if possible or use ID
                 acc[cat] = { name: cat, value: 0 }
             }
-            acc[cat].value += t.amount
+            acc[cat].value += Number(t.amount || 0)
             return acc
         }, {})
 

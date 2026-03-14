@@ -13,10 +13,10 @@ exports.getDashboard = async (req, res) => {
             order: [['createdAt', 'DESC']], limit: 10,
             attributes: ['id', 'name', 'email', 'role', 'createdAt']
         });
-        res.json({ totalUsers, totalTransactions, totalFamilies, recentUsers });
+        res.success({ totalUsers, totalTransactions, totalFamilies, recentUsers });
     } catch (error) {
         console.error('Admin dashboard error:', error);
-        res.status(500).json({ message: 'Server error' });
+        res.error('Server error', 500);
     }
 };
 
@@ -87,7 +87,7 @@ exports.getAnalytics = async (req, res) => {
             raw: true
         });
 
-        res.json({
+        res.success({
             stats: { totalWallets, totalGoals, totalBudgets },
             userGrowth: userGrowth.map(u => ({ month: new Date(u.month).toLocaleDateString('vi-VN', { month: 'short', year: '2-digit' }), count: parseInt(u.count) })),
             topCategories: topCategories.map(c => ({ 
@@ -100,7 +100,7 @@ exports.getAnalytics = async (req, res) => {
         });
     } catch (error) {
         console.error('Admin analytics error:', error);
-        res.status(500).json({ message: 'Server error' });
+        res.error('Server error', 500);
     }
 };
 
@@ -225,10 +225,10 @@ exports.getLogs = async (req, res) => {
             include: [{ model: User, attributes: ['id', 'name', 'email'] }]
         });
         
-        res.json({ logs: rows, total: count, page: parseInt(page), totalPages: Math.ceil(count / parseInt(limit)) });
+        res.success({ logs: rows, total: count, page: parseInt(page), totalPages: Math.ceil(count / parseInt(limit)) });
     } catch (error) {
         console.error('Admin getLogs error:', error);
-        res.status(500).json({ message: 'Server error' });
+        res.error('Server error', 500);
     }
 };
 
@@ -236,7 +236,7 @@ exports.getLogs = async (req, res) => {
 exports.getFinancialOverview = async (req, res) => {
     try {
         const { Op } = require('sequelize');
-        const { sequelize, Wallet, Transaction, User, Budget } = require('../models');
+        const { sequelize, Wallet, Transaction, Budget } = require('../models');
 
         // 1. System wallets total
         const systemBalanceResult = await Wallet.sum('balance');
@@ -312,7 +312,7 @@ exports.getFinancialOverview = async (req, res) => {
             ? Math.round(((totalBudgetCount - overBudgetCount) / totalBudgetCount) * 100) 
             : 100;
 
-        res.json({
+        res.success({
             systemBalance,
             revenueTrends,
             topSpenders,
@@ -321,6 +321,6 @@ exports.getFinancialOverview = async (req, res) => {
 
     } catch (error) {
         console.error('Admin getFinancialOverview error:', error);
-        res.status(500).json({ message: 'Server error' });
+        res.error('Server error', 500);
     }
 };

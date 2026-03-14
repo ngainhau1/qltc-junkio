@@ -43,6 +43,13 @@ const processQueue = (error, token = null) => {
 
 api.interceptors.response.use(
     (response) => {
+        const payload = response.data;
+        // Unwrap standardized envelope { status, message, data } for successful responses
+        if (response.status >= 200 && response.status < 300 &&
+            payload && typeof payload === 'object' && 'data' in payload && 'status' in payload) {
+            response._meta = payload;
+            response.data = payload.data;
+        }
         return response;
     },
     async (error) => {

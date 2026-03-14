@@ -11,8 +11,6 @@ const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcrypt');
 const { sequelize, User, Family, FamilyMember, Wallet, Category, Transaction, Budget, Goal } = require('../models');
 
-const sleep = (ms) => new Promise(r => setTimeout(r, ms));
-
 const DEMO_EMAIL  = 'demo@junkio.com';
 const DEMO_PASS   = 'demo123';
 const ADMIN_EMAIL = 'admin@junkio.com';

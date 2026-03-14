@@ -13,7 +13,7 @@ jest.mock('../middleware/auditMiddleware', () => () => (req, res, next) => next(
 
 // Mock Data
 // Setup In-Memory DB
-const mockSequelize = new Sequelize('sqlite::memory:', { logging: false });
+const mockSequelize = new Sequelize({ dialect: 'sqlite', storage: ':memory:', logging: false });
 
 const mockUser = mockSequelize.define('User', {
     id: { type: require('sequelize').DataTypes.UUID, defaultValue: require('sequelize').DataTypes.UUIDV4, primaryKey: true },
@@ -44,8 +44,10 @@ beforeAll(async () => {
     await mockSequelize.sync({ force: true });
 
     const authRoutes = require('../routes/authRoutes');
+    const responseMiddleware = require('../middleware/responseMiddleware');
     app = express();
     app.use(express.json());
+    app.use(responseMiddleware);
     app.use('/api/auth', authRoutes);
 });
 
@@ -64,8 +66,8 @@ describe('Auth API Endpoints', () => {
             });
 
         expect(res.statusCode).toEqual(200);
-        expect(res.body).toHaveProperty('user');
-        expect(res.body.user.email).toEqual('testauth@example.com');
+        expect(res.body).toHaveProperty('data');
+        expect(res.body.data.user.email).toEqual('testauth@example.com');
     });
 
     it('should fail registration with existing email', async () => {
@@ -78,7 +80,7 @@ describe('Auth API Endpoints', () => {
             });
 
         expect(res.statusCode).toEqual(400);
-        expect(res.body).toHaveProperty('msg');
+        expect(res.body).toHaveProperty('message');
     });
     
     it('should login an existing user', async () => {
@@ -90,8 +92,8 @@ describe('Auth API Endpoints', () => {
             });
 
         expect(res.statusCode).toEqual(200);
-        expect(res.body).toHaveProperty('token');
-        expect(res.body.user.email).toEqual('testauth@example.com');
+        expect(res.body.data).toHaveProperty('token');
+        expect(res.body.data.user.email).toEqual('testauth@example.com');
     });
 
     it('should fail login with wrong password', async () => {

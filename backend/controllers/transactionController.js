@@ -2,6 +2,22 @@ const { Transaction, Wallet, User, Category, sequelize } = require('../models');
 const { Op } = require('sequelize');
 const { Parser } = require('json2csv');
 const PDFDocument = require('pdfkit');
+const crypto = require('crypto');
+const { client: redis, connectRedis } = require('../utils/redisClient');
+
+const CACHE_TTL_SECONDS = 300; // 5 minutes
+
+const clearUserTransactionCache = async (userId) => {
+    try {
+        await connectRedis();
+        const keys = await redis.keys(`transactions:${userId}:*`);
+        if (keys.length > 0) {
+            await redis.del(keys);
+        }
+    } catch (err) {
+        console.warn('Clear cache failed:', err.message);
+    }
+};
 
 // Lấy chi tiết 1 giao dịch (kèm Wallet, Category, Shares với User)
 exports.getTransactionById = async (req, res) => {
@@ -23,13 +39,13 @@ exports.getTransactionById = async (req, res) => {
         });
 
         if (!transaction) {
-            return res.status(404).json({ message: 'Giao dịch không tồn tại' });
+            return res.error('Giao dịch không tồn tại', 404);
         }
 
-        res.status(200).json(transaction);
+        res.success(transaction);
     } catch (error) {
         console.error('Lỗi lấy chi tiết giao dịch:', error);
-        res.status(500).json({ message: error.message || 'Lỗi lấy chi tiết giao dịch' });
+        res.error(error.message || 'Lỗi lấy chi tiết giao dịch', 500);
     }
 };
 
@@ -75,6 +91,20 @@ exports.getTransactions = async (req, res) => {
             whereClause.description = { [Op.like]: `%${search}%` };
         }
 
+        // Cache key per user + query params
+        const cacheKey = `transactions:${req.user.id}:${crypto.createHash('md5').update(JSON.stringify(req.query)).digest('hex')}`;
+
+        try {
+            await connectRedis();
+            const cached = await redis.get(cacheKey);
+            if (cached) {
+                const parsed = JSON.parse(cached);
+                return res.success(parsed, 'Transactions (cache)');
+            }
+        } catch (cacheErr) {
+            console.warn('Cache get failed, fallback to DB:', cacheErr.message);
+        }
+
         const { count, rows: transactions } = await Transaction.findAndCountAll({
             where: whereClause,
             include: [
@@ -87,15 +117,27 @@ exports.getTransactions = async (req, res) => {
             offset: parseInt(offset, 10)
         });
 
-        res.status(200).json({
+        res.success({
             transactions,
             totalItems: count,
             totalPages: Math.ceil(count / limit),
             currentPage: parseInt(page, 10)
         });
+
+        // Write cache (TTL 5 phút)
+        try {
+            await redis.setEx(cacheKey, CACHE_TTL_SECONDS, JSON.stringify({
+                transactions,
+                totalItems: count,
+                totalPages: Math.ceil(count / limit),
+                currentPage: parseInt(page, 10)
+            }));
+        } catch (cacheErr) {
+            console.warn('Cache set failed:', cacheErr.message);
+        }
     } catch (error) {
         console.error('Lỗi lấy danh sách giao dịch:', error);
-        res.status(500).json({ message: error.message || 'Lỗi lấy danh sách giao dịch' });
+        res.error(error.message || 'Lỗi lấy danh sách giao dịch', 500);
     }
 };
 
@@ -104,18 +146,18 @@ exports.createTransaction = async (req, res) => {
     const { wallet_id, category_id, amount, type, description, date, family_id, shares } = req.body;
 
     if (!wallet_id || !amount || !type) {
-        return res.status(400).json({ message: 'wallet_id, amount and type are required' });
+        return res.error('wallet_id, amount and type are required', 400);
     }
 
     // Security: Validate amount is a positive number
     const parsedAmount = parseFloat(amount);
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
-        return res.status(400).json({ message: 'Số tiền phải lớn hơn 0' });
+        return res.error('Số tiền phải lớn hơn 0', 400);
     }
 
     // Security: Validate transaction type
     if (!['INCOME', 'EXPENSE'].includes(type)) {
-        return res.status(400).json({ message: 'Loại giao dịch không hợp lệ' });
+        return res.error('Loại giao dịch không hợp lệ', 400);
     }
 
     const t = await sequelize.transaction();
@@ -160,11 +202,12 @@ exports.createTransaction = async (req, res) => {
         await wallet.save({ transaction: t });
 
         await t.commit();
-        res.status(201).json(transaction);
+        await clearUserTransactionCache(req.user.id);
+        res.success(transaction, 'Tạo giao dịch thành công', 201);
     } catch (error) {
         await t.rollback();
         console.error('Lỗi tạo giao dịch:', error);
-        res.status(500).json({ message: 'Lỗi tạo giao dịch: ' + error.message });
+        res.error('Lỗi tạo giao dịch: ' + error.message, 500);
     }
 };
 
@@ -181,7 +224,7 @@ exports.deleteTransaction = async (req, res) => {
 
         if (!transaction) {
             await t.rollback();
-            return res.status(404).json({ message: 'Giao dịch không tồn tại hoặc bạn không có quyền' });
+            return res.error('Giao dịch không tồn tại hoặc bạn không có quyền', 404);
         }
 
         const wallet = await Wallet.findByPk(transaction.wallet_id, { transaction: t });
@@ -201,11 +244,12 @@ exports.deleteTransaction = async (req, res) => {
         await transaction.destroy({ transaction: t });
         await t.commit();
 
-        res.status(200).json({ message: 'Xóa giao dịch thành công' });
+        await clearUserTransactionCache(req.user.id);
+        res.success(null, 'Xóa giao dịch thành công');
     } catch (error) {
         await t.rollback();
         console.error('Lỗi xóa giao dịch:', error);
-        res.status(500).json({ message: 'Lỗi xóa giao dịch: ' + error.message });
+        res.error('Lỗi xóa giao dịch: ' + error.message, 500);
     }
 };
 
@@ -213,11 +257,11 @@ exports.createTransfer = async (req, res) => {
     const { from_wallet_id, to_wallet_id, amount, description, date } = req.body;
 
     if (!from_wallet_id || !to_wallet_id || !amount) {
-        return res.status(400).json({ message: 'from_wallet_id, to_wallet_id, and amount are required' });
+        return res.error('from_wallet_id, to_wallet_id, and amount are required', 400);
     }
 
     if (amount <= 0) {
-        return res.status(400).json({ message: 'Amount must be greater than zero' });
+        return res.error('Amount must be greater than zero', 400);
     }
 
     // Bắt đầu một Transaction database để đảm bảo tính Acid (Atomicity)
@@ -267,16 +311,16 @@ exports.createTransfer = async (req, res) => {
         // NẾU TẤT CẢ THÀNH CÔNG, CHẤP NHẬN TOÀN BỘ (COMMIT)
         await t.commit();
 
-        res.status(200).json({
-            message: 'Chuyển tiền thành công',
+        await clearUserTransactionCache(req.user.id);
+        res.success({
             from_wallet_balance: fromWallet.balance,
             to_wallet_balance: toWallet.balance
-        });
+        }, 'Chuyển tiền thành công');
 
     } catch (error) {
         await t.rollback();
         console.error('Lỗi giao dịch chuyển tiền, đã Rollback:', error);
-        res.status(500).json({ message: 'Lỗi giao dịch chuyển tiền: ' + error.message });
+        res.error('Lỗi giao dịch chuyển tiền: ' + error.message, 500);
     }
 };
 
@@ -284,7 +328,7 @@ exports.importTransactions = async (req, res) => {
     const { transactions } = req.body;
 
     if (!transactions || !Array.isArray(transactions) || transactions.length === 0) {
-        return res.status(400).json({ message: 'Danh sách giao dịch không hợp lệ' });
+        return res.error('Danh sách giao dịch không hợp lệ', 400);
     }
 
     const t = await sequelize.transaction();
@@ -342,15 +386,15 @@ exports.importTransactions = async (req, res) => {
 
         await t.commit();
 
-        res.status(200).json({
-            message: 'Nhập dữ liệu thành công',
+        await clearUserTransactionCache(req.user.id);
+        res.success({
             importedCount: transactionsToCreate.length
-        });
+        }, 'Nhập dữ liệu thành công');
 
     } catch (error) {
         await t.rollback();
         console.error('Lỗi import dữ liệu, đã Rollback:', error);
-        res.status(500).json({ message: 'Lỗi khi nhập dữ liệu: ' + error.message });
+        res.error('Lỗi khi nhập dữ liệu: ' + error.message, 500);
     }
 };
 
@@ -401,10 +445,10 @@ exports.exportTransactions = async (req, res) => {
 
             doc.end();
         } else {
-            return res.status(400).json({ message: 'Định dạng export không được hỗ trợ' });
+            return res.error('Định dạng export không được hỗ trợ', 400);
         }
     } catch (error) {
         console.error('Lỗi export dữ liệu:', error);
-        res.status(500).json({ message: 'Lỗi export dữ liệu backend' });
+        res.error('Lỗi export dữ liệu backend', 500);
     }
 };

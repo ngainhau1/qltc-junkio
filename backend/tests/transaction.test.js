@@ -20,7 +20,7 @@ jest.mock('../middleware/authMiddleware', () => (req, res, next) => {
 });
 
 // Setup SQLite in-memory models
-const mockSequelize = new Sequelize('sqlite::memory:', { logging: false });
+const mockSequelize = new Sequelize({ dialect: 'sqlite', storage: ':memory:', logging: false });
 
 const mockWallet = mockSequelize.define('Wallet', {
     id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
@@ -57,9 +57,16 @@ const mockTransactionShare = mockSequelize.define('TransactionShare', {
     approval_status: { type: DataTypes.STRING, defaultValue: 'PENDING' }
 });
 
+const mockUser = mockSequelize.define('User', {
+    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    name: DataTypes.STRING,
+    email: DataTypes.STRING
+});
+
 // Setup associations
 mockTransaction.hasMany(mockTransactionShare, { foreignKey: 'transaction_id', as: 'Shares' });
 mockTransactionShare.belongsTo(mockTransaction, { foreignKey: 'transaction_id' });
+mockTransactionShare.belongsTo(mockUser, { foreignKey: 'user_id', as: 'User' });
 mockTransaction.belongsTo(mockWallet, { foreignKey: 'wallet_id' });
 mockTransaction.belongsTo(mockCategory, { foreignKey: 'category_id' });
 
@@ -68,7 +75,7 @@ jest.mock('../models', () => ({
     Transaction: mockTransaction,
     Wallet: mockWallet,
     Category: mockCategory,
-    User: { findByPk: jest.fn() },
+    User: mockUser,
     sequelize: {
         transaction: (cb) => mockSequelize.transaction(cb),
         models: {
@@ -94,8 +101,10 @@ beforeAll(async () => {
 
     // Setup express app
     const transactionRoutes = require('../routes/transactionRoutes');
+    const responseMiddleware = require('../middleware/responseMiddleware');
     app = express();
     app.use(express.json());
+    app.use(responseMiddleware);
     app.use('/api/transactions', transactionRoutes);
 });
 
@@ -183,7 +192,7 @@ describe('Transaction API — Successful Create', () => {
 
         // 201 created hoặc 200 tùy implementation
         expect([200, 201]).toContain(res.statusCode);
-        expect(res.body).toHaveProperty('id');
-        expect(parseFloat(res.body.amount)).toEqual(150000);
+        expect(res.body.data).toHaveProperty('id');
+        expect(parseFloat(res.body.data.amount)).toEqual(150000);
     });
 });

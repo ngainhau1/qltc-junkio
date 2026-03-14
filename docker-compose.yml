@@ -12,6 +12,11 @@ services:
       - "5432:5432" # Cho phép máy ngoài truy cập vào DB qua cổng 5432
     volumes:
       - postgres_data:/var/lib/postgresql/data # Lưu dữ liệu vĩnh viễn, tắt Docker không mất
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # --- DỊCH VỤ 2: BACKEND (NODEJS) ---
   api:
@@ -26,8 +31,19 @@ services:
       DB_PASS: password123
       DB_NAME: expense_tracker_db
       PORT: 5000
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      VITE_FRONTEND_URL: http://localhost
     depends_on:
-      - db # Chỉ chạy khi Database đã khởi động xong
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
 
   # --- DỊCH VỤ 3: FRONTEND (REACT + NGINX) ---
   web:
@@ -36,7 +52,23 @@ services:
     ports:
       - "80:80"        # Nginx serve tại port 80
     depends_on:
-      - api
+      api:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # --- DỊCH VỤ 4: REDIS CACHE ---
+  redis:
+    image: redis:7-alpine
+    container_name: junkio_cache
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
 
 volumes:
   postgres_data: # Khai báo nơi lưu dữ liệu DB

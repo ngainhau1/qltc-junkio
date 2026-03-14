@@ -52,7 +52,7 @@ exports.getDashboardStats = async (req, res) => {
             include: [{ model: Category, attributes: ['name', 'icon'] }]
         });
 
-        res.json({
+        res.success({
             stats: {
                 totalAssets,
                 totalIncome,
@@ -64,7 +64,7 @@ exports.getDashboardStats = async (req, res) => {
         });
     } catch (error) {
         console.error('Error fetching dashboard analytics:', error);
-        res.status(500).json({ message: 'Server error' });
+        res.error('Server error', 500);
     }
 };
 
@@ -76,9 +76,9 @@ exports.getReports = async (req, res) => {
 
         // Basic grouping logic for charts
         // E.g., expense by category
-        res.json({ message: 'Reports data will be aggregated here based on queries' });
+        res.success({ message: 'Reports data will be aggregated here based on queries' });
     } catch (error) {
         console.error('Error fetching reports:', error);
-        res.status(500).json({ message: 'Server error' });
+        res.error('Server error', 500);
     }
 };

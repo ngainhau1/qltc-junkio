@@ -8,7 +8,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # 4. Cài đặt thư viện
-RUN npm install
+RUN apk add --no-cache curl && npm install
 
 # 5. Copy toàn bộ code còn lại vào container
 COPY . .

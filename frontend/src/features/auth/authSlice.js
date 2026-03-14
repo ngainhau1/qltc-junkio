@@ -15,9 +15,9 @@ export const loginUser = createAsyncThunk(
     async (credentials, { rejectWithValue }) => {
         try {
             const response = await api.post('/auth/login', credentials);
-            return response.data; // { token, user: {id, name, email, role} }
+            return response.data; // already unwrapped by interceptor
         } catch (error) {
-            return rejectWithValue(error.response?.data?.msg || 'Đăng nhập thất bại');
+            return rejectWithValue(error.response?.data?.message || 'Đăng nhập thất bại');
         }
     }
 );
@@ -27,9 +27,9 @@ export const registerUser = createAsyncThunk(
     async (userData, { rejectWithValue }) => {
         try {
             const response = await api.post('/auth/register', userData);
-            return response.data; // { token, user }
+            return response.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.msg || 'Đăng ký thất bại');
+            return rejectWithValue(error.response?.data?.message || 'Đăng ký thất bại');
         }
     }
 );
@@ -41,7 +41,7 @@ export const fetchCurrentUser = createAsyncThunk(
             const response = await api.get('/auth/me');
             return response.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.msg || 'Phiên đăng nhập hết hạn');
+            return rejectWithValue(error.response?.data?.message || 'Phiên đăng nhập hết hạn');
         }
     }
 );
@@ -55,9 +55,9 @@ export const uploadUserAvatar = createAsyncThunk(
                     'Content-Type': 'multipart/form-data'
                 }
             });
-            return response.data; // { msg: "...", avatarUrl: "..." }
+            return response.data; // { avatarUrl }
         } catch (error) {
-            return rejectWithValue(error.response?.data?.msg || 'Lỗi khi tải ảnh lên');
+            return rejectWithValue(error.response?.data?.message || 'Lỗi khi tải ảnh lên');
         }
     }
 );
@@ -100,13 +100,14 @@ const authSlice = createSlice({
             })
             .addCase(loginUser.fulfilled, (state, action) => {
                 state.loading = false;
-                state.isAuthenticated = true;
-                state.token = action.payload.token;
-                state.user = {
-                    ...action.payload.user,
-                    avatarUrl: action.payload.user.avatar || `https://api.dicebear.com/7.x/notionists/svg?seed=${action.payload.user.name}`
-                };
-                localStorage.setItem('auth_token', action.payload.token);
+                const { token, user } = action.payload || {};
+                state.isAuthenticated = Boolean(token && user);
+                state.token = token || null;
+                state.user = user ? {
+                    ...user,
+                    avatarUrl: user.avatar || `https://api.dicebear.com/7.x/notionists/svg?seed=${user.name}`
+                } : null;
+                if (token) localStorage.setItem('auth_token', token);
             })
             .addCase(loginUser.rejected, (state, action) => {
                 state.loading = false;
@@ -119,13 +120,14 @@ const authSlice = createSlice({
             })
             .addCase(registerUser.fulfilled, (state, action) => {
                 state.loading = false;
-                state.isAuthenticated = true;
-                state.token = action.payload.token;
-                state.user = {
-                    ...action.payload.user,
-                    avatarUrl: action.payload.user.avatar || `https://api.dicebear.com/7.x/notionists/svg?seed=${action.payload.user.name}`
-                };
-                localStorage.setItem('auth_token', action.payload.token);
+                const { token, user } = action.payload || {};
+                state.isAuthenticated = Boolean(token && user);
+                state.token = token || null;
+                state.user = user ? {
+                    ...user,
+                    avatarUrl: user.avatar || `https://api.dicebear.com/7.x/notionists/svg?seed=${user.name}`
+                } : null;
+                if (token) localStorage.setItem('auth_token', token);
             })
             .addCase(registerUser.rejected, (state, action) => {
                 state.loading = false;
@@ -145,9 +147,10 @@ const authSlice = createSlice({
                     return;
                 }
                 state.isAuthenticated = true;
+                const user = action.payload;
                 state.user = {
-                    ...action.payload,
-                    avatarUrl: action.payload.avatar || `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(action.payload.name || 'user')}`
+                    ...user,
+                    avatarUrl: user.avatar || `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(user.name || 'user')}`
                 };
             })
             .addCase(fetchCurrentUser.rejected, (state) => {
@@ -164,8 +167,8 @@ const authSlice = createSlice({
             })
             .addCase(uploadUserAvatar.fulfilled, (state, action) => {
                 state.loading = false;
-                if (state.user) {
-                    state.user.avatarUrl = action.payload.avatarUrl;
+                if (state.user && action.payload) {
+                    state.user.avatarUrl = action.payload.avatarUrl || state.user.avatarUrl;
                 }
             })
             .addCase(uploadUserAvatar.rejected, (state, action) => {
