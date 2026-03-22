@@ -1,6 +1,20 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '@/lib/api';
 
+const normalizeNotification = (notification) => {
+    const isRead = Boolean(notification?.isRead ?? notification?.is_read);
+    const createdAt = notification?.createdAt || notification?.created_at || new Date().toISOString();
+
+    return {
+        ...notification,
+        title: notification?.title || notification?.type || 'Notification',
+        createdAt,
+        created_at: createdAt,
+        isRead,
+        is_read: isRead,
+    };
+};
+
 const initialState = {
     items: [],
     loading: false,
@@ -48,7 +62,7 @@ const notificationsSlice = createSlice({
     initialState,
     reducers: {
         addNotification: (state, action) => {
-            state.items.unshift(action.payload);
+            state.items.unshift(normalizeNotification(action.payload));
         },
         clearAll: (state) => {
             state.items = [];
@@ -61,17 +75,22 @@ const notificationsSlice = createSlice({
             })
             .addCase(fetchNotifications.fulfilled, (state, action) => {
                 state.loading = false;
-                state.items = action.payload; // Replace with server data
+                state.items = Array.isArray(action.payload)
+                    ? action.payload.map(normalizeNotification)
+                    : [];
             })
             .addCase(fetchNotifications.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
             })
             .addCase(markAllNotificationsRead.fulfilled, (state) => {
-                state.items.forEach(n => { n.isRead = true; n.is_read = true; }); // Support both js snake and camel case if any
+                state.items.forEach((notification) => {
+                    notification.isRead = true;
+                    notification.is_read = true;
+                });
             })
             .addCase(markSingleNotificationRead.fulfilled, (state, action) => {
-                const notification = state.items.find(n => n.id === action.payload.id);
+                const notification = state.items.find((item) => item.id === action.payload.id);
                 if (notification) {
                     notification.isRead = true;
                     notification.is_read = true;
@@ -83,6 +102,7 @@ const notificationsSlice = createSlice({
 export const { addNotification, clearAll } = notificationsSlice.actions;
 
 // Selectors
-export const selectUnreadCount = (state) => state.notifications.items.filter(n => !n.isRead && !n.is_read).length;
+export const selectUnreadCount = (state) =>
+    state.notifications.items.filter((notification) => !notification.isRead).length;
 
 export default notificationsSlice.reducer;

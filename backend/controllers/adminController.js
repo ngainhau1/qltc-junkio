@@ -1,5 +1,6 @@
 const { User, Transaction, Wallet, Family, Goal, Budget, Category, sequelize } = require('../models');
 const { Op, fn, col } = require('sequelize');
+const { success, error: sendError } = require('../utils/responseHelper');
 
 // GET /api/admin/dashboard
 exports.getDashboard = async (req, res) => {
@@ -13,10 +14,29 @@ exports.getDashboard = async (req, res) => {
             order: [['createdAt', 'DESC']], limit: 10,
             attributes: ['id', 'name', 'email', 'role', 'createdAt']
         });
-        res.success({ totalUsers, totalTransactions, totalFamilies, recentUsers });
+
+        // Use mock res to fetch from the other endpoints
+        const createMockRes = () => ({
+            status: function() { return this; },
+            json: function(payload) { this.payload = payload; return this; }
+        });
+
+        const resAnalytics = createMockRes();
+        await exports.getAnalytics(req, resAnalytics);
+        const analyticsData = resAnalytics.payload?.data || {};
+
+        const resFinancial = createMockRes();
+        await exports.getFinancialOverview(req, resFinancial);
+        const financialData = resFinancial.payload?.data || {};
+
+        success(res, { 
+            totalUsers, totalTransactions, totalFamilies, recentUsers,
+            analytics: analyticsData,
+            financialOverview: financialData
+        }, 'Thành công');
     } catch (error) {
         console.error('Admin dashboard error:', error);
-        res.error('Server error', 500);
+        sendError(res, 'Server error', 500);
     }
 };
 
@@ -87,7 +107,7 @@ exports.getAnalytics = async (req, res) => {
             raw: true
         });
 
-        res.success({
+        success(res, {
             stats: { totalWallets, totalGoals, totalBudgets },
             userGrowth: userGrowth.map(u => ({ month: new Date(u.month).toLocaleDateString('vi-VN', { month: 'short', year: '2-digit' }), count: parseInt(u.count) })),
             topCategories: topCategories.map(c => ({ 
@@ -97,10 +117,10 @@ exports.getAnalytics = async (req, res) => {
                 total: parseFloat(c.total) 
             })),
             weeklyActivity: weeklyActivity.map(a => ({ date: new Date(a.date).toLocaleDateString('vi-VN', { weekday: 'short' }), count: parseInt(a.count) }))
-        });
+        }, 'Thành công');
     } catch (error) {
         console.error('Admin analytics error:', error);
-        res.error('Server error', 500);
+        sendError(res, 'Server error', 500);
     }
 };
 
@@ -127,10 +147,10 @@ exports.listUsers = async (req, res) => {
             attributes: { exclude: ['password_hash'] },
             order: [['createdAt', 'DESC']]
         });
-        res.json({ users: rows, total: count, page: parseInt(page), totalPages: Math.ceil(count / parseInt(limit)) });
+        success(res, { users: rows, total: count, page: parseInt(page), totalPages: Math.ceil(count / parseInt(limit)) }, 'Thành công');
     } catch (error) {
         console.error('Admin listUsers error:', error);
-        res.status(500).json({ message: 'Server error' });
+        sendError(res, 'Server error', 500);
     }
 };
 
@@ -141,16 +161,16 @@ exports.getUserDetail = async (req, res) => {
             attributes: { exclude: ['password_hash'] },
             include: [
                 { model: Wallet, attributes: ['id', 'name', 'balance', 'currency'] },
-                { model: Family, attributes: ['id', 'name'], through: { attributes: [] } } // Assuming many-to-many or direct depends on associations
+                { model: Family, as: 'Families', attributes: ['id', 'name'], through: { attributes: [] } }
             ]
         });
-        if (!user) return res.status(404).json({ message: 'User not found' });
+        if (!user) return sendError(res, 'User not found', 404);
         
         const transactionCount = await Transaction.count({ where: { user_id: user.id } });
-        res.json({ ...user.toJSON(), transactionCount });
+        success(res, { ...user.toJSON(), transactionCount }, 'Thành công');
     } catch (error) {
         console.error('Admin getUserDetail error:', error);
-        res.status(500).json({ message: 'Server error' });
+        sendError(res, 'Server error', 500);
     }
 };
 
@@ -158,14 +178,14 @@ exports.getUserDetail = async (req, res) => {
 exports.deleteUser = async (req, res) => {
     try {
         const user = await User.findByPk(req.params.id);
-        if (!user) return res.status(404).json({ message: 'User not found' });
-        if (user.id === req.user.id) return res.status(400).json({ message: 'Cannot delete yourself' });
+        if (!user) return sendError(res, 'User not found', 404);
+        if (user.id === req.user.id) return sendError(res, 'Cannot delete yourself', 400);
 
         await user.destroy();
-        res.json({ message: 'Xóa người dùng thành công' });
+        success(res, null, 'Xóa người dùng thành công');
     } catch (error) {
         console.error('Admin deleteUser error:', error);
-        res.status(500).json({ message: 'Server error' });
+        sendError(res, 'Server error', 500);
     }
 };
 
@@ -175,15 +195,15 @@ exports.toggleLock = async (req, res) => {
         const user = await User.findByPk(req.params.id, {
             attributes: { exclude: ['password_hash'] }
         });
-        if (!user) return res.status(404).json({ message: 'User not found' });
-        if (user.id === req.user.id) return res.status(400).json({ message: 'Cannot lock yourself' });
+        if (!user) return sendError(res, 'User not found', 404);
+        if (user.id === req.user.id) return sendError(res, 'Cannot lock yourself', 400);
 
         user.is_locked = !user.is_locked;
         await user.save();
-        res.json({ message: user.is_locked ? 'Account locked' : 'Account unlocked', user });
+        success(res, { user }, user.is_locked ? 'Account locked' : 'Account unlocked');
     } catch (error) {
         console.error('Admin toggleLock error:', error);
-        res.status(500).json({ message: 'Server error' });
+        sendError(res, 'Server error', 500);
     }
 };
 
@@ -191,21 +211,21 @@ exports.toggleLock = async (req, res) => {
 exports.changeRole = async (req, res) => {
     try {
         const { role } = req.body;
-        if (!['member', 'admin'].includes(role)) {
-            return res.status(400).json({ message: 'Invalid role' });
+        if (!['member', 'staff', 'admin'].includes(role)) {
+            return sendError(res, 'Invalid role', 400);
         }
         const user = await User.findByPk(req.params.id, {
             attributes: { exclude: ['password_hash'] }
         });
-        if (!user) return res.status(404).json({ message: 'User not found' });
-        if (user.id === req.user.id) return res.status(400).json({ message: 'Cannot change own role' });
+        if (!user) return sendError(res, 'User not found', 404);
+        if (user.id === req.user.id) return sendError(res, 'Cannot change own role', 400);
 
         user.role = role;
         await user.save();
-        res.json({ message: `Role changed to ${role}`, user });
+        success(res, { user }, `Role changed to ${role}`);
     } catch (error) {
         console.error('Admin changeRole error:', error);
-        res.status(500).json({ message: 'Server error' });
+        sendError(res, 'Server error', 500);
     }
 };
 
@@ -225,10 +245,10 @@ exports.getLogs = async (req, res) => {
             include: [{ model: User, attributes: ['id', 'name', 'email'] }]
         });
         
-        res.success({ logs: rows, total: count, page: parseInt(page), totalPages: Math.ceil(count / parseInt(limit)) });
+        success(res, { logs: rows, total: count, page: parseInt(page), totalPages: Math.ceil(count / parseInt(limit)) }, 'Thành công');
     } catch (error) {
         console.error('Admin getLogs error:', error);
-        res.error('Server error', 500);
+        sendError(res, 'Server error', 500);
     }
 };
 
@@ -236,7 +256,7 @@ exports.getLogs = async (req, res) => {
 exports.getFinancialOverview = async (req, res) => {
     try {
         const { Op } = require('sequelize');
-        const { sequelize, Wallet, Transaction, Budget } = require('../models');
+        const { sequelize, Wallet, Transaction, User, Budget } = require('../models');
 
         // 1. System wallets total
         const systemBalanceResult = await Wallet.sum('balance');
@@ -254,7 +274,7 @@ exports.getFinancialOverview = async (req, res) => {
                 type,
                 SUM("amount") AS total
             FROM "Transactions"
-            WHERE "date" >= :sixMonthsAgo AND "type" IN ('income', 'expense') AND "deletedAt" IS NULL
+            WHERE "date" >= :sixMonthsAgo AND "type" IN ('INCOME', 'EXPENSE')
             GROUP BY DATE_TRUNC('month', "date"), type
             ORDER BY month ASC
         `, {
@@ -282,7 +302,7 @@ exports.getFinancialOverview = async (req, res) => {
         const topSpendersRaw = await sequelize.query(`
             SELECT u.id, u.name, u.email, SUM(CAST(t.amount AS numeric)) as total_spent
             FROM "Users" u
-            JOIN "Transactions" t ON u.id = t.user_id AND t.type = 'expense' AND t."deletedAt" IS NULL
+            JOIN "Transactions" t ON u.id = t.user_id AND t.type = 'EXPENSE'
             GROUP BY u.id
             ORDER BY total_spent DESC
             LIMIT 5
@@ -302,7 +322,7 @@ exports.getFinancialOverview = async (req, res) => {
             const spent = await Transaction.sum('amount', {
                 where: {
                     category_id: b.category_id,
-                    type: 'expense',
+                    type: 'EXPENSE',
                     date: { [Op.gte]: b.start_date, [Op.lte]: b.end_date }
                 }
             });
@@ -312,15 +332,15 @@ exports.getFinancialOverview = async (req, res) => {
             ? Math.round(((totalBudgetCount - overBudgetCount) / totalBudgetCount) * 100) 
             : 100;
 
-        res.success({
+        success(res, {
             systemBalance,
             revenueTrends,
             topSpenders,
             budgetCompliance
-        });
+        }, 'Thành công');
 
     } catch (error) {
         console.error('Admin getFinancialOverview error:', error);
-        res.error('Server error', 500);
+        sendError(res, 'Server error', 500);
     }
 };

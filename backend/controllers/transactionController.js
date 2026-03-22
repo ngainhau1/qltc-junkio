@@ -2,54 +2,73 @@ const { Transaction, Wallet, User, Category, sequelize } = require('../models');
 const { Op } = require('sequelize');
 const { Parser } = require('json2csv');
 const PDFDocument = require('pdfkit');
-const crypto = require('crypto');
-const { client: redis, connectRedis } = require('../utils/redisClient');
+const { success, error: sendError } = require('../utils/responseHelper');
+const { getAccessibleWalletIds, getAccessibleWallets } = require('../utils/accessScope');
 
-const CACHE_TTL_SECONDS = 300; // 5 minutes
+const getAccessibleWallet = async (walletId, userId, transaction) => {
+    const { wallets } = await getAccessibleWallets({
+        userId,
+        transaction
+    });
 
-const clearUserTransactionCache = async (userId) => {
-    try {
-        await connectRedis();
-        const keys = await redis.keys(`transactions:${userId}:*`);
-        if (keys.length > 0) {
-            await redis.del(keys);
-        }
-    } catch (err) {
-        console.warn('Clear cache failed:', err.message);
-    }
+    return wallets.find((wallet) => wallet.id === walletId) || null;
 };
 
-// Lấy chi tiết 1 giao dịch (kèm Wallet, Category, Shares với User)
+const buildTransactionWhere = ({ walletIds, filters }) => {
+    const whereClause = {
+        wallet_id: { [Op.in]: walletIds }
+    };
+
+    if (filters.startDate && filters.endDate) {
+        whereClause.date = { [Op.between]: [new Date(filters.startDate), new Date(filters.endDate)] };
+    } else if (filters.startDate) {
+        whereClause.date = { [Op.gte]: new Date(filters.startDate) };
+    } else if (filters.endDate) {
+        whereClause.date = { [Op.lte]: new Date(filters.endDate) };
+    }
+
+    if (filters.type) whereClause.type = filters.type;
+    if (filters.wallet_id) whereClause.wallet_id = filters.wallet_id;
+    if (filters.category_id) whereClause.category_id = filters.category_id;
+    if (filters.search) whereClause.description = { [Op.like]: `%${filters.search}%` };
+
+    return whereClause;
+};
+
+// GET /api/transactions/:id
 exports.getTransactionById = async (req, res) => {
     try {
         const { id } = req.params;
+        const { walletIds } = await getAccessibleWalletIds({ userId: req.user.id });
+
         const transaction = await Transaction.findOne({
-            where: { id, user_id: req.user.id },
+            where: {
+                id,
+                wallet_id: { [Op.in]: walletIds }
+            },
             include: [
                 { model: Wallet, attributes: ['id', 'name'] },
                 { model: Category, attributes: ['id', 'name'] },
                 {
                     model: sequelize.models.TransactionShare,
                     as: 'Shares',
-                    include: [
-                        { model: User, as: 'User', attributes: ['id', 'name', 'email'] }
-                    ]
+                    include: [{ model: User, as: 'User', attributes: ['id', 'name', 'email'] }]
                 }
             ]
         });
 
         if (!transaction) {
-            return res.error('Giao dịch không tồn tại', 404);
+            return sendError(res, 'Giao dich khong ton tai', 404);
         }
 
-        res.success(transaction);
-    } catch (error) {
-        console.error('Lỗi lấy chi tiết giao dịch:', error);
-        res.error(error.message || 'Lỗi lấy chi tiết giao dịch', 500);
+        success(res, transaction, 'Lay thong tin giao dich thanh cong');
+    } catch (err) {
+        console.error('getTransactionById error:', err);
+        sendError(res, 'Loi lay chi tiet giao dich', 500);
     }
 };
 
-// Lấy danh sách giao dịch với Pagination và Filters
+// GET /api/transactions
 exports.getTransactions = async (req, res) => {
     try {
         const {
@@ -60,52 +79,36 @@ exports.getTransactions = async (req, res) => {
             type,
             search,
             wallet_id,
-            category_id
+            category_id,
+            context,
+            family_id
         } = req.query;
 
-        const offset = (page - 1) * limit;
+        const { walletIds } = await getAccessibleWalletIds({
+            userId: req.user.id,
+            context,
+            familyId: family_id
+        });
 
-        const whereClause = { user_id: req.user.id };
-
-        if (startDate && endDate) {
-            whereClause.date = { [Op.between]: [new Date(startDate), new Date(endDate)] };
-        } else if (startDate) {
-            whereClause.date = { [Op.gte]: new Date(startDate) };
-        } else if (endDate) {
-            whereClause.date = { [Op.lte]: new Date(endDate) };
+        if (wallet_id && !walletIds.includes(wallet_id)) {
+            return success(res, {
+                transactions: [],
+                totalItems: 0,
+                totalPages: 0,
+                currentPage: Number(page)
+            }, 'Lay danh sach thanh cong');
         }
 
-        if (type) {
-            whereClause.type = type;
-        }
+        const whereClause = buildTransactionWhere({
+            walletIds,
+            filters: { startDate, endDate, type, search, wallet_id, category_id }
+        });
 
-        if (wallet_id) {
-            whereClause.wallet_id = wallet_id;
-        }
+        const pageNum = Number(page);
+        const perPage = Number(limit);
+        const offset = (pageNum - 1) * perPage;
 
-        if (category_id) {
-            whereClause.category_id = category_id;
-        }
-
-        if (search) {
-            whereClause.description = { [Op.like]: `%${search}%` };
-        }
-
-        // Cache key per user + query params
-        const cacheKey = `transactions:${req.user.id}:${crypto.createHash('md5').update(JSON.stringify(req.query)).digest('hex')}`;
-
-        try {
-            await connectRedis();
-            const cached = await redis.get(cacheKey);
-            if (cached) {
-                const parsed = JSON.parse(cached);
-                return res.success(parsed, 'Transactions (cache)');
-            }
-        } catch (cacheErr) {
-            console.warn('Cache get failed, fallback to DB:', cacheErr.message);
-        }
-
-        const { count, rows: transactions } = await Transaction.findAndCountAll({
+        const { count, rows } = await Transaction.findAndCountAll({
             where: whereClause,
             include: [
                 { model: Wallet, attributes: ['id', 'name'] },
@@ -113,77 +116,53 @@ exports.getTransactions = async (req, res) => {
                 { model: sequelize.models.TransactionShare, as: 'Shares' }
             ],
             order: [['date', 'DESC']],
-            limit: parseInt(limit, 10),
-            offset: parseInt(offset, 10)
+            limit: perPage,
+            offset
         });
 
-        res.success({
-            transactions,
+        success(res, {
+            transactions: rows,
             totalItems: count,
-            totalPages: Math.ceil(count / limit),
-            currentPage: parseInt(page, 10)
-        });
-
-        // Write cache (TTL 5 phút)
-        try {
-            await redis.setEx(cacheKey, CACHE_TTL_SECONDS, JSON.stringify({
-                transactions,
-                totalItems: count,
-                totalPages: Math.ceil(count / limit),
-                currentPage: parseInt(page, 10)
-            }));
-        } catch (cacheErr) {
-            console.warn('Cache set failed:', cacheErr.message);
-        }
-    } catch (error) {
-        console.error('Lỗi lấy danh sách giao dịch:', error);
-        res.error(error.message || 'Lỗi lấy danh sách giao dịch', 500);
+            totalPages: Math.ceil(count / perPage),
+            currentPage: pageNum
+        }, 'Lay danh sach thanh cong');
+    } catch (err) {
+        console.error('getTransactions error:', err);
+        sendError(res, 'Loi lay danh sach giao dich', 500);
     }
 };
 
-// Tạo giao dịch thông thường (INCOME / EXPENSE) & Giao dịch Gia Đình (Shared Expenses)
+// POST /api/transactions
 exports.createTransaction = async (req, res) => {
     const { wallet_id, category_id, amount, type, description, date, family_id, shares } = req.body;
 
-    if (!wallet_id || !amount || !type) {
-        return res.error('wallet_id, amount and type are required', 400);
-    }
-
-    // Security: Validate amount is a positive number
-    const parsedAmount = parseFloat(amount);
-    if (isNaN(parsedAmount) || parsedAmount <= 0) {
-        return res.error('Số tiền phải lớn hơn 0', 400);
-    }
-
-    // Security: Validate transaction type
-    if (!['INCOME', 'EXPENSE'].includes(type)) {
-        return res.error('Loại giao dịch không hợp lệ', 400);
-    }
-
     const t = await sequelize.transaction();
-
     try {
-        const wallet = await Wallet.findByPk(wallet_id, { transaction: t });
+        const wallet = await getAccessibleWallet(wallet_id, req.user.id, t);
         if (!wallet) {
-            throw new Error('Ví không tồn tại');
+            await t.rollback();
+            return sendError(res, 'Vi khong ton tai hoac ban khong co quyen truy cap', 404);
         }
 
-        // Tạo giao dịch
+        const parsedAmount = parseFloat(amount);
+        if (type === 'EXPENSE' && parseFloat(wallet.balance) < parsedAmount) {
+            await t.rollback();
+            return sendError(res, 'So du vi khong du', 400);
+        }
+
         const transaction = await Transaction.create({
             user_id: req.user.id,
             wallet_id,
-            category_id: (category_id === 'general' || !category_id) ? null : category_id,
-            amount,
+            category_id: category_id || null,
+            amount: parsedAmount,
             type,
             description,
             date: date || new Date(),
-            transaction_date: date || new Date(),
-            family_id: family_id || null
+            family_id: family_id || wallet.family_id || null
         }, { transaction: t });
 
-        // Nếu là giao dịch chia tiền gia đình (có shares)
-        if (shares && Array.isArray(shares) && shares.length > 0) {
-            const sharesToCreate = shares.map(share => ({
+        if (Array.isArray(shares) && shares.length > 0) {
+            const sharesToCreate = shares.map((share) => ({
                 transaction_id: transaction.id,
                 user_id: share.user_id,
                 amount: share.amount,
@@ -193,25 +172,21 @@ exports.createTransaction = async (req, res) => {
             await sequelize.models.TransactionShare.bulkCreate(sharesToCreate, { transaction: t });
         }
 
-        // Cập nhật số dư ví
-        if (type === 'INCOME') {
-            wallet.balance = parseFloat(wallet.balance) + parseFloat(amount);
-        } else if (type === 'EXPENSE') {
-            wallet.balance = parseFloat(wallet.balance) - parseFloat(amount);
-        }
+        wallet.balance = type === 'INCOME'
+            ? parseFloat(wallet.balance) + parsedAmount
+            : parseFloat(wallet.balance) - parsedAmount;
         await wallet.save({ transaction: t });
 
         await t.commit();
-        await clearUserTransactionCache(req.user.id);
-        res.success(transaction, 'Tạo giao dịch thành công', 201);
-    } catch (error) {
+        success(res, transaction, 'Tao giao dich thanh cong', 201);
+    } catch (err) {
         await t.rollback();
-        console.error('Lỗi tạo giao dịch:', error);
-        res.error('Lỗi tạo giao dịch: ' + error.message, 500);
+        console.error('createTransaction error:', err);
+        sendError(res, `Loi tao giao dich: ${err.message}`, 500);
     }
 };
 
-// Xóa giao dịch
+// DELETE /api/transactions/:id
 exports.deleteTransaction = async (req, res) => {
     const { id } = req.params;
     const t = await sequelize.transaction();
@@ -224,19 +199,15 @@ exports.deleteTransaction = async (req, res) => {
 
         if (!transaction) {
             await t.rollback();
-            return res.error('Giao dịch không tồn tại hoặc bạn không có quyền', 404);
+            return sendError(res, 'Giao dich khong ton tai hoac ban khong co quyen', 404);
         }
 
         const wallet = await Wallet.findByPk(transaction.wallet_id, { transaction: t });
-
-        // Hoàn tiền lại ví
         if (wallet) {
             if (transaction.type === 'INCOME') {
                 wallet.balance = parseFloat(wallet.balance) - parseFloat(transaction.amount);
-            } else if (transaction.type === 'EXPENSE' || transaction.type === 'TRANSFER_OUT') {
+            } else {
                 wallet.balance = parseFloat(wallet.balance) + parseFloat(transaction.amount);
-            } else if (transaction.type === 'TRANSFER_IN') {
-                wallet.balance = parseFloat(wallet.balance) - parseFloat(transaction.amount);
             }
             await wallet.save({ transaction: t });
         }
@@ -244,169 +215,167 @@ exports.deleteTransaction = async (req, res) => {
         await transaction.destroy({ transaction: t });
         await t.commit();
 
-        await clearUserTransactionCache(req.user.id);
-        res.success(null, 'Xóa giao dịch thành công');
-    } catch (error) {
+        success(res, null, 'Xoa giao dich thanh cong');
+    } catch (err) {
         await t.rollback();
-        console.error('Lỗi xóa giao dịch:', error);
-        res.error('Lỗi xóa giao dịch: ' + error.message, 500);
+        console.error('deleteTransaction error:', err);
+        sendError(res, `Loi xoa giao dich: ${err.message}`, 500);
     }
 };
 
+// POST /api/transactions/transfer
 exports.createTransfer = async (req, res) => {
     const { from_wallet_id, to_wallet_id, amount, description, date } = req.body;
 
-    if (!from_wallet_id || !to_wallet_id || !amount) {
-        return res.error('from_wallet_id, to_wallet_id, and amount are required', 400);
-    }
-
-    if (amount <= 0) {
-        return res.error('Amount must be greater than zero', 400);
-    }
-
-    // Bắt đầu một Transaction database để đảm bảo tính Acid (Atomicity)
     const t = await sequelize.transaction();
-
     try {
-        // 1. Kiểm tra ví nguồn
-        const fromWallet = await Wallet.findByPk(from_wallet_id, { transaction: t });
+        const parsedAmount = parseFloat(amount);
+        const fromWallet = await getAccessibleWallet(from_wallet_id, req.user.id, t);
         if (!fromWallet) {
-            throw new Error('Ví nguồn không tồn tại');
+            await t.rollback();
+            return sendError(res, 'Vi nguon khong ton tai hoac ban khong co quyen truy cap', 404);
         }
 
-        // 2. Kiểm tra ví đích
-        const toWallet = await Wallet.findByPk(to_wallet_id, { transaction: t });
+        const toWallet = await getAccessibleWallet(to_wallet_id, req.user.id, t);
         if (!toWallet) {
-            throw new Error('Ví đích không tồn tại');
+            await t.rollback();
+            return sendError(res, 'Vi dich khong ton tai hoac ban khong co quyen truy cap', 404);
         }
 
-        // 3. Trừ tiền ví nguồn
-        fromWallet.balance = parseFloat(fromWallet.balance) - parseFloat(amount);
-        await fromWallet.save({ transaction: t });
+        if (parsedAmount <= 0) {
+            await t.rollback();
+            return sendError(res, 'So tien chuyen phai lon hon 0', 400);
+        }
+        if (parseFloat(fromWallet.balance) < parsedAmount) {
+            await t.rollback();
+            return sendError(res, 'So du vi nguon khong du', 400);
+        }
 
-        // 4. Cộng tiền ví đích
-        toWallet.balance = parseFloat(toWallet.balance) + parseFloat(amount);
+        fromWallet.balance = parseFloat(fromWallet.balance) - parsedAmount;
+        toWallet.balance = parseFloat(toWallet.balance) + parsedAmount;
+        await fromWallet.save({ transaction: t });
         await toWallet.save({ transaction: t });
 
-        // 5. Ghi lại lịch sử giao dịch (Transaction Log)
-
-        // Log trừ tiền (EXPENSE từ ví nguồn)
         await Transaction.create({
-            amount: amount,
+            user_id: req.user.id,
+            amount: parsedAmount,
             date: date || new Date(),
-            description: description || `Chuyển tiền tới ví ${toWallet.name}`,
+            description: description || `Chuyen tien toi vi ${toWallet.name}`,
             type: 'TRANSFER_OUT',
             wallet_id: from_wallet_id,
+            family_id: fromWallet.family_id || null
         }, { transaction: t });
 
-        // Log cộng tiền (INCOME tới ví đích)
         await Transaction.create({
-            amount: amount,
+            user_id: req.user.id,
+            amount: parsedAmount,
             date: date || new Date(),
-            description: description || `Nhận tiền từ ví ${fromWallet.name}`,
+            description: description || `Nhan tien tu vi ${fromWallet.name}`,
             type: 'TRANSFER_IN',
             wallet_id: to_wallet_id,
+            family_id: toWallet.family_id || null
         }, { transaction: t });
 
-        // NẾU TẤT CẢ THÀNH CÔNG, CHẤP NHẬN TOÀN BỘ (COMMIT)
         await t.commit();
-
-        await clearUserTransactionCache(req.user.id);
-        res.success({
+        success(res, {
             from_wallet_balance: fromWallet.balance,
             to_wallet_balance: toWallet.balance
-        }, 'Chuyển tiền thành công');
-
-    } catch (error) {
+        }, 'Chuyen tien thanh cong');
+    } catch (err) {
         await t.rollback();
-        console.error('Lỗi giao dịch chuyển tiền, đã Rollback:', error);
-        res.error('Lỗi giao dịch chuyển tiền: ' + error.message, 500);
+        console.error('createTransfer error:', err);
+        sendError(res, `Loi giao dich chuyen tien: ${err.message}`, 500);
     }
 };
 
+// POST /api/transactions/import
 exports.importTransactions = async (req, res) => {
     const { transactions } = req.body;
-
     if (!transactions || !Array.isArray(transactions) || transactions.length === 0) {
-        return res.error('Danh sách giao dịch không hợp lệ', 400);
+        return sendError(res, 'Danh sach giao dich khong hop le', 400);
     }
 
     const t = await sequelize.transaction();
 
     try {
-        // Collect unique wallet IDs to fetch them at once
-        const walletIds = [...new Set(transactions.map(tx => tx.wallet_id))];
-        const wallets = await Wallet.findAll({
-            where: { id: { [Op.in]: walletIds } },
+        const walletIds = [...new Set(transactions.map((tx) => tx.wallet_id))];
+        const { wallets } = await getAccessibleWallets({
+            userId: req.user.id,
             transaction: t
         });
 
         const walletMap = {};
-        wallets.forEach(w => { walletMap[w.id] = w; });
+        wallets
+            .filter((wallet) => walletIds.includes(wallet.id))
+            .forEach((wallet) => {
+                walletMap[wallet.id] = wallet;
+            });
 
         const transactionsToCreate = [];
 
         for (const tx of transactions) {
             const wallet = walletMap[tx.wallet_id];
-            if (!wallet) {
-                // Ignore transactions pointing to non-existent wallets
-                continue;
-            }
+            if (!wallet) continue;
 
-            const amount = parseFloat(tx.amount);
-            if (isNaN(amount) || amount <= 0) continue;
+            const parsedAmount = parseFloat(tx.amount);
+            if (Number.isNaN(parsedAmount) || parsedAmount <= 0) continue;
 
-            // 1. Prepare transaction for creation
             transactionsToCreate.push({
-                user_id: req.user.id, // Authenticated user
+                user_id: req.user.id,
                 wallet_id: tx.wallet_id,
-                category_id: tx.category_id || 'general',
-                amount: amount,
+                category_id: tx.category_id || null,
+                amount: parsedAmount,
                 type: tx.type === 'INCOME' ? 'INCOME' : 'EXPENSE',
                 description: tx.description || 'Imported Transaction',
                 date: tx.date ? new Date(tx.date) : new Date(),
-                transaction_date: tx.date ? new Date(tx.date) : new Date()
+                family_id: wallet.family_id || null
             });
 
-            // 2. Adjust wallet balance locally
-            if (tx.type === 'INCOME') {
-                wallet.balance = parseFloat(wallet.balance) + amount;
-            } else {
-                wallet.balance = parseFloat(wallet.balance) - amount;
-            }
+            wallet.balance = tx.type === 'INCOME'
+                ? parseFloat(wallet.balance) + parsedAmount
+                : parseFloat(wallet.balance) - parsedAmount;
         }
 
-        // Save all updated wallet balances
         for (const wallet of Object.values(walletMap)) {
             await wallet.save({ transaction: t });
         }
 
-        // Bulk insert all valid transactions
         await Transaction.bulkCreate(transactionsToCreate, { transaction: t });
-
         await t.commit();
 
-        await clearUserTransactionCache(req.user.id);
-        res.success({
-            importedCount: transactionsToCreate.length
-        }, 'Nhập dữ liệu thành công');
-
-    } catch (error) {
+        success(res, { importedCount: transactionsToCreate.length }, 'Nhap du lieu thanh cong');
+    } catch (err) {
         await t.rollback();
-        console.error('Lỗi import dữ liệu, đã Rollback:', error);
-        res.error('Lỗi khi nhập dữ liệu: ' + error.message, 500);
+        console.error('importTransactions error:', err);
+        sendError(res, `Loi khi nhap du lieu: ${err.message}`, 500);
     }
 };
 
+// GET /api/transactions/export
 exports.exportTransactions = async (req, res) => {
     try {
-        const { type, startDate, endDate, format = 'csv' } = req.query;
-        const whereClause = { user_id: req.user.id };
-        
-        if (type) whereClause.type = type;
-        if (startDate && endDate) {
-            whereClause.date = { [Op.between]: [new Date(startDate), new Date(endDate)] };
-        }
+        const {
+            type,
+            startDate,
+            endDate,
+            search,
+            wallet_id,
+            category_id,
+            context,
+            family_id,
+            format = 'csv'
+        } = req.query;
+
+        const { walletIds } = await getAccessibleWalletIds({
+            userId: req.user.id,
+            context,
+            familyId: family_id
+        });
+
+        const whereClause = buildTransactionWhere({
+            walletIds,
+            filters: { startDate, endDate, type, search, wallet_id, category_id }
+        });
 
         const transactions = await Transaction.findAll({
             where: whereClause,
@@ -419,14 +388,15 @@ exports.exportTransactions = async (req, res) => {
 
         if (format === 'csv') {
             const fields = ['id', 'amount', 'type', 'description', 'date', 'Wallet.name', 'Category.name'];
-            const opts = { fields };
-            const parser = new Parser(opts);
+            const parser = new Parser({ fields });
             const csv = parser.parse(transactions);
 
             res.header('Content-Type', 'text/csv');
             res.attachment('transactions.csv');
             return res.send(csv);
-        } else if (format === 'pdf') {
+        }
+
+        if (format === 'pdf') {
             const doc = new PDFDocument();
             res.setHeader('Content-Type', 'application/pdf');
             res.setHeader('Content-Disposition', 'attachment; filename="transactions.pdf"');
@@ -435,20 +405,21 @@ exports.exportTransactions = async (req, res) => {
             doc.fontSize(16).text('BAO CAO GIAO DICH', { align: 'center' });
             doc.moveDown();
 
-            transactions.forEach(tx => {
-                doc.fontSize(12).text(`Ngay: ${new Date(tx.date).toLocaleDateString('vi-VN')} | Loại: ${tx.type} | Số tiền: ${tx.amount}`);
-                doc.text(`Ví: ${tx.Wallet ? tx.Wallet.name : 'N/A'} | Nội dung: ${tx.description}`);
+            transactions.forEach((tx) => {
+                doc.fontSize(12).text(`Ngay: ${new Date(tx.date).toLocaleDateString('vi-VN')} | Loai: ${tx.type} | So tien: ${tx.amount}`);
+                doc.text(`Vi: ${tx.Wallet ? tx.Wallet.name : 'N/A'} | Noi dung: ${tx.description}`);
                 doc.moveDown(0.5);
                 doc.rect(doc.x, doc.y, 400, 0.5).fill('#CCCCCC');
                 doc.moveDown(0.5);
             });
 
             doc.end();
-        } else {
-            return res.error('Định dạng export không được hỗ trợ', 400);
+            return;
         }
-    } catch (error) {
-        console.error('Lỗi export dữ liệu:', error);
-        res.error('Lỗi export dữ liệu backend', 500);
+
+        return sendError(res, 'Dinh dang export khong duoc ho tro', 400);
+    } catch (err) {
+        console.error('exportTransactions error:', err);
+        sendError(res, 'Loi export du lieu backend', 500);
     }
 };

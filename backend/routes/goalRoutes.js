@@ -2,6 +2,12 @@ const express = require('express');
 const router = express.Router();
 const goalController = require('../controllers/goalController');
 const authMiddleware = require('../middleware/authMiddleware');
+const {
+    validateCreateGoal,
+    validateUpdateGoal,
+    validateDepositGoal,
+    validateDeleteGoal
+} = require('../validators/goalValidator');
 
 router.use(authMiddleware);
 
@@ -34,7 +40,7 @@ router.get('/', goalController.getGoals);
  *     responses:
  *       201: { description: Tạo thành công }
  */
-router.post('/', goalController.createGoal);
+router.post('/', validateCreateGoal, goalController.createGoal);
 
 /**
  * @swagger
@@ -50,7 +56,7 @@ router.post('/', goalController.createGoal);
  *     responses:
  *       200: { description: Cập nhật thành công }
  */
-router.put('/:id', goalController.updateGoal);
+router.put('/:id', validateUpdateGoal, goalController.updateGoal);
 
 /**
  * @swagger
@@ -66,7 +72,7 @@ router.put('/:id', goalController.updateGoal);
  *     responses:
  *       200: { description: Nạp tiền thành công }
  */
-router.post('/:id/deposit', goalController.deposit);
+router.post('/:id/deposit', validateDepositGoal, goalController.deposit);
 
 /**
  * @swagger
@@ -82,6 +88,6 @@ router.post('/:id/deposit', goalController.deposit);
  *     responses:
  *       200: { description: Xóa thành công }
  */
-router.delete('/:id', goalController.deleteGoal);
+router.delete('/:id', validateDeleteGoal, goalController.deleteGoal);
 
 module.exports = router;

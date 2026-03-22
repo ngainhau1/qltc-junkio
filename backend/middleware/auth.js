@@ -1,6 +1,10 @@
 const jwt = require('jsonwebtoken');
+const jwtSecret = process.env.JWT_SECRET || (process.env.NODE_ENV === 'test' ? 'test-secret' : undefined);
 
 module.exports = (req, res, next) => {
+    if (!jwtSecret) {
+        return res.status(500).json({ msg: 'Server missing JWT secret' });
+    }
     // Get token from header
     const token = req.header('x-auth-token');
 
@@ -11,7 +15,7 @@ module.exports = (req, res, next) => {
 
     // Verify token
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
+        const decoded = jwt.verify(token, jwtSecret);
         req.user = decoded.user;
         next();
     } catch (err) {

@@ -1,4 +1,5 @@
 const { Budget, Category } = require('../models');
+const { success, error, notFound, serverError, created } = require('../utils/responseHelper');
 
 // GET /api/budgets
 exports.getBudgets = async (req, res) => {
@@ -18,10 +19,10 @@ exports.getBudgets = async (req, res) => {
             include: [{ model: Category, attributes: ['id', 'name', 'icon'] }]
         });
 
-        res.json(budgets);
-    } catch (error) {
-        console.error('Error fetching budgets:', error);
-        res.status(500).json({ message: 'Server error' });
+        success(res, budgets, 'Lấy danh sách ngân sách thành công');
+    } catch (err) {
+        console.error('Error fetching budgets:', err);
+        serverError(res, 'Lỗi Server: Không thể tải ngân sách');
     }
 };
 
@@ -38,10 +39,10 @@ exports.createBudget = async (req, res) => {
             family_id
         });
 
-        res.status(201).json(newBudget);
-    } catch (error) {
-        console.error('Error creating budget:', error);
-        res.status(500).json({ message: 'Server error' });
+        created(res, newBudget, 'Tạo ngân sách mới thành công');
+    } catch (err) {
+        console.error('Error creating budget:', err);
+        serverError(res, 'Lỗi Server: Không thể tạo ngân sách');
     }
 };
 
@@ -52,7 +53,7 @@ exports.updateBudget = async (req, res) => {
         const { amount_limit, start_date, end_date } = req.body;
 
         const budget = await Budget.findByPk(id);
-        if (!budget) return res.status(404).json({ message: 'Budget not found' });
+        if (!budget) return notFound(res, 'Ngân sách không tồn tại');
 
         await budget.update({
             amount_limit: amount_limit !== undefined ? amount_limit : budget.amount_limit,
@@ -60,10 +61,10 @@ exports.updateBudget = async (req, res) => {
             end_date: end_date !== undefined ? end_date : budget.end_date
         });
 
-        res.json(budget);
-    } catch (error) {
-        console.error('Error updating budget:', error);
-        res.status(500).json({ message: 'Server error' });
+        success(res, budget, 'Cập nhật ngân sách thành công');
+    } catch (err) {
+        console.error('Error updating budget:', err);
+        serverError(res, 'Lỗi Server: Không thể cập nhật ngân sách');
     }
 };
 
@@ -72,12 +73,12 @@ exports.deleteBudget = async (req, res) => {
     try {
         const { id } = req.params;
         const budget = await Budget.findByPk(id);
-        if (!budget) return res.status(404).json({ message: 'Budget not found' });
+        if (!budget) return notFound(res, 'Ngân sách không tồn tại');
 
         await budget.destroy();
-        res.json({ message: 'Budget deleted successfully' });
-    } catch (error) {
-        console.error('Error deleting budget:', error);
-        res.status(500).json({ message: 'Server error' });
+        success(res, null, 'Đã xóa ngân sách thành công');
+    } catch (err) {
+        console.error('Error deleting budget:', err);
+        serverError(res, 'Lỗi Server: Không thể xóa ngân sách');
     }
 };

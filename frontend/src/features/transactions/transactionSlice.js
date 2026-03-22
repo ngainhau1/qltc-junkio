@@ -1,33 +1,39 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import api from '@/lib/api';
+import { buildTransactionQueryFromState } from '@/features/finance/context';
 
 const initialState = {
     transactions: [],
     loading: false,
     error: null,
-    // Detail view state
     selectedTransaction: null,
     isDetailLoading: false,
     filter: {
-        startDate: null,
-        endDate: null,
-        categoryId: null,
-        walletId: null,
+        startDate: '',
+        endDate: '',
+        categoryId: '',
+        walletId: '',
+        search: '',
+        type: '',
     },
     pagination: {
         currentPage: 1,
-        itemsPerPage: 50
-    }
+        itemsPerPage: 50,
+        totalItems: 0,
+        totalPages: 0,
+    },
 };
 
 export const fetchTransactions = createAsyncThunk(
     'transactions/fetchTransactions',
-    async (params, { rejectWithValue }) => {
+    async (params = {}, { getState, rejectWithValue }) => {
         try {
-            const response = await api.get('/transactions', { params });
+            const response = await api.get('/transactions', {
+                params: buildTransactionQueryFromState(getState(), params),
+            });
             return response.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Lỗi tải giao dịch');
+            return rejectWithValue(error.response?.data?.message || 'Loi tai giao dich');
         }
     }
 );
@@ -39,7 +45,7 @@ export const fetchTransactionById = createAsyncThunk(
             const response = await api.get(`/transactions/${id}`);
             return response.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Lỗi tải chi tiết giao dịch');
+            return rejectWithValue(error.response?.data?.message || 'Loi tai chi tiet giao dich');
         }
     }
 );
@@ -51,7 +57,19 @@ export const createTransaction = createAsyncThunk(
             const response = await api.post('/transactions', txData);
             return response.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Lỗi thêm giao dịch');
+            return rejectWithValue(error.response?.data?.message || 'Loi them giao dich');
+        }
+    }
+);
+
+export const createTransfer = createAsyncThunk(
+    'transactions/createTransfer',
+    async (transferData, { rejectWithValue }) => {
+        try {
+            const response = await api.post('/transactions/transfer', transferData);
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || 'Loi chuyen khoan');
         }
     }
 );
@@ -63,7 +81,7 @@ export const deleteTransaction = createAsyncThunk(
             await api.delete(`/transactions/${id}`);
             return id;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Lỗi xóa giao dịch');
+            return rejectWithValue(error.response?.data?.message || 'Loi xoa giao dich');
         }
     }
 );
@@ -75,7 +93,7 @@ export const approveDebt = createAsyncThunk(
             const response = await api.put(`/debts/${shareId}/approve`);
             return { shareId, data: response.data };
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Lỗi duyệt nợ');
+            return rejectWithValue(error.response?.data?.message || 'Loi duyet no');
         }
     }
 );
@@ -87,7 +105,7 @@ export const rejectDebt = createAsyncThunk(
             const response = await api.put(`/debts/${shareId}/reject`);
             return { shareId, data: response.data };
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Lỗi từ chối nợ');
+            return rejectWithValue(error.response?.data?.message || 'Loi tu choi no');
         }
     }
 );
@@ -99,11 +117,10 @@ export const settleDebts = createAsyncThunk(
             const response = await api.post('/debts/settle', settleData);
             return response.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Lỗi thanh toán nợ');
+            return rejectWithValue(error.response?.data?.message || 'Loi thanh toan no');
         }
     }
 );
-
 
 const transactionSlice = createSlice({
     name: 'transactions',
@@ -111,6 +128,14 @@ const transactionSlice = createSlice({
     reducers: {
         setFilter: (state, action) => {
             state.filter = { ...state.filter, ...action.payload };
+            state.pagination.currentPage = 1;
+        },
+        setCurrentPage: (state, action) => {
+            state.pagination.currentPage = action.payload;
+        },
+        setItemsPerPage: (state, action) => {
+            state.pagination.itemsPerPage = action.payload;
+            state.pagination.currentPage = 1;
         },
         clearSelectedTransaction: (state) => {
             state.selectedTransaction = null;
@@ -124,23 +149,18 @@ const transactionSlice = createSlice({
             })
             .addCase(fetchTransactions.fulfilled, (state, action) => {
                 state.loading = false;
-                if (action.payload.transactions) {
-                    state.transactions = action.payload.transactions;
-                    state.pagination = {
-                        currentPage: action.payload.currentPage,
-                        totalItems: action.payload.totalItems,
-                        totalPages: action.payload.totalPages,
-                        itemsPerPage: state.pagination.itemsPerPage
-                    };
-                } else {
-                    state.transactions = action.payload;
-                }
+                state.transactions = action.payload?.transactions ?? [];
+                state.pagination = {
+                    ...state.pagination,
+                    currentPage: action.payload?.currentPage ?? state.pagination.currentPage,
+                    totalItems: action.payload?.totalItems ?? state.pagination.totalItems,
+                    totalPages: action.payload?.totalPages ?? state.pagination.totalPages,
+                };
             })
             .addCase(fetchTransactions.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
             })
-            // Fetch Transaction By ID
             .addCase(fetchTransactionById.pending, (state) => {
                 state.isDetailLoading = true;
                 state.selectedTransaction = null;
@@ -149,47 +169,62 @@ const transactionSlice = createSlice({
                 state.isDetailLoading = false;
                 state.selectedTransaction = action.payload;
             })
-            .addCase(fetchTransactionById.rejected, (state) => {
+            .addCase(fetchTransactionById.rejected, (state, action) => {
                 state.isDetailLoading = false;
+                state.error = action.payload;
             })
-            // Create
-            .addCase(createTransaction.fulfilled, (state, action) => {
-                state.transactions.unshift(action.payload);
+            .addCase(createTransaction.pending, (state) => {
+                state.error = null;
             })
-            // Delete
+            .addCase(createTransaction.fulfilled, (state) => {
+                state.error = null;
+            })
+            .addCase(createTransaction.rejected, (state, action) => {
+                state.error = action.payload;
+            })
+            .addCase(createTransfer.pending, (state) => {
+                state.error = null;
+            })
+            .addCase(createTransfer.fulfilled, (state) => {
+                state.error = null;
+            })
+            .addCase(createTransfer.rejected, (state, action) => {
+                state.error = action.payload;
+            })
             .addCase(deleteTransaction.fulfilled, (state, action) => {
-                const deletedId = action.payload;
-                state.transactions = state.transactions.filter(t => t.id !== deletedId);
-                if (state.selectedTransaction?.id === deletedId) {
+                state.error = null;
+                if (state.selectedTransaction?.id === action.payload) {
                     state.selectedTransaction = null;
                 }
             })
-            // Approve Debt updates
+            .addCase(deleteTransaction.rejected, (state, action) => {
+                state.error = action.payload;
+            })
             .addCase(approveDebt.fulfilled, (state, action) => {
                 const { shareId } = action.payload;
-                state.transactions.forEach(t => {
-                    if (t.shares) {
-                        const share = t.shares.find(s => s.id === shareId);
+                state.transactions.forEach((transaction) => {
+                    const shares = transaction.Shares || transaction.shares;
+                    if (shares) {
+                        const share = shares.find((item) => item.id === shareId);
                         if (share) share.approval_status = 'APPROVED';
                     }
                 });
             })
-            // Reject Debt updates
             .addCase(rejectDebt.fulfilled, (state, action) => {
                 const { shareId } = action.payload;
-                state.transactions.forEach(t => {
-                    if (t.shares) {
-                        const share = t.shares.find(s => s.id === shareId);
+                state.transactions.forEach((transaction) => {
+                    const shares = transaction.Shares || transaction.shares;
+                    if (shares) {
+                        const share = shares.find((item) => item.id === shareId);
                         if (share) share.approval_status = 'REJECTED';
                     }
                 });
             })
-            // Settle Debt
-            .addCase(settleDebts.fulfilled, () => {
-                // Gọi lại fetchTransactions ở Component sau khi settle
-            })
+            .addCase(settleDebts.rejected, (state, action) => {
+                state.error = action.payload;
+            });
     },
 });
 
-export const { setFilter, clearSelectedTransaction } = transactionSlice.actions;
+export const { setFilter, setCurrentPage, setItemsPerPage, clearSelectedTransaction } = transactionSlice.actions;
 export default transactionSlice.reducer;

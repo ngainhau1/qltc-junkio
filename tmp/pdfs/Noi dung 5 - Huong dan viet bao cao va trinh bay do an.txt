@@ -1,0 +1,362 @@
+--- Page 1 ---
+Hướng dẫn Viết Báo cáo & Trình
+bày Đề án
+Khóa học thực hành 35 giờ | Case Study: Website Bán Sách E-book & Khóa học Online
+
+--- Page 2 ---
+GIỚI THIỆU
+Chào mừng đến với khóa học
+Mục tiêu học tập Thời lượng khóa học
+• Tổng hợp báo cáo kỹ thuật chuyên sâu 35 giờ học thực hành
+• Mô tả kiến trúc hệ thống hiện đại
+Kết hợp giữa lý thuyết và thực hành trên Project mẫu thực tế
+• Trình bày Demo sản phẩm chuyên nghiệp
+• Chứng minh tính ưu việt của công nghệ
+
+--- Page 3 ---
+Case Study: Website Bán Sách &
+Khóa học
+Sản phẩm Công nghệ Ứng dụng
+Website bán sách điện tử Kiến trúc hiện đại với Project mẫu xuyên suốt
+E-book và các khóa học Frontend, Backend API, khóa học để thực hành
+trực tuyến Database
+
+--- Page 4 ---
+CHƯƠNG 1
+Tổng quan Báo cáo Kỹ thuật
+Báo cáo Kỹ thuật Demo Sản phẩm Đánh giá
+Tài liệu mô tả chi tiết hệ thống, kiến trúc, và Trình diễn thực tế các tính năng và luồng xử Chứng minh hiệu quả và tính ưu việt của giải
+công nghệ sử dụng lý của hệ thống pháp công nghệ
+
+--- Page 5 ---
+Tại sao Báo cáo Kỹ thuật quan trọng?
+Báo cáo kỹ thuật là tài liệu then chốt giúp các bên liên quan hiểu rõ hệ thống của bạn. Nó
+không chỉ mô tả "cái gì" mà còn giải thích "tại sao" và "như thế nào".
+Một báo cáo tốt giúp:
+• Developer mới nhanh chóng nắm bắt dự án
+• Khách hàng tin tưởng vào giải pháp
+• Team duy trì và phát triển hệ thống dễ dàng
+• Chứng minh năng lực chuyên môn của bạn
+
+--- Page 6 ---
+Cấu trúc Báo cáo Kỹ thuật Chuẩn
+01 02
+Giới thiệu Dự án Kiến trúc Hệ thống
+Mục tiêu, phạm vi, và tổng quan hệ thống System Architecture, các thành phần chính
+03 04
+Sơ đồ Luồng Dữ liệu Tài liệu API
+Data Flow Diagram, mô tả luồng xử lý API Specification, endpoints, request/response
+05 06
+Database Schema Công nghệ Sử dụng
+Thiết kế cơ sở dữ liệu, quan hệ giữa các bảng Tech stack, framework, và công cụ phát triển
+
+--- Page 7 ---
+PHẦN 1
+Kiến trúc Hệ thống (System
+Architecture)
+
+--- Page 8 ---
+Kiến trúc 3 Tầng của Website Bán Sách
+Frontend (Client Side)
+Giao diện người dùng - React.js hoặc Vue.js
+• Hiển thị danh sách sách, khóa học
+• Xử lý giỏ hàng, thanh toán
+• Quản lý tài khoản người dùng
+Backend API (Server Side)
+Xử lý logic nghiệp vụ - Node.js Express hoặc Django
+• Xác thực người dùng (Authentication)
+• Xử lý đơn hàng, thanh toán
+• Quản lý nội dung sách, khóa học
+Database (Data Layer)
+Lưu trữ dữ liệu - PostgreSQL hoặc MongoDB
+• Thông tin sách, khóa học
+• Dữ liệu người dùng, đơn hàng
+• Lịch sử giao dịch
+
+--- Page 9 ---
+Sơ đồ Kiến trúc Chi tiết
+Frontend (React)
+Giao diện người dùng
+Backend API (Node.js)
+Payment Gateway Kiến trúc 3 tầng
+Xử lý thanh toán an toàn
+Xử lý nghiệp vụ và REST
+Redis Cache
+PostgreSQL
+Tăng tốc truy xuất dữ liệu
+Lưu trữ dữ liệu quan hệ
+Sơ đồ trên mô tả luồng dữ liệu và các thành phần chính của hệ thống. Mỗi tầng có trách nhiệm riêng biệt, giúp dễ dàng bảo trì và mở rộng.
+
+--- Page 10 ---
+Các Thành phần Công nghệ
+React.js Node.js + Express
+Thư viện JavaScript để xây dựng giao diện người dùng động, Runtime và framework để xây dựng RESTful API hiệu suất cao
+component-based
+PostgreSQL Redis Cache
+Hệ quản trị cơ sở dữ liệu quan hệ mạnh mẽ, hỗ trợ ACID Caching để tăng tốc độ truy xuất dữ liệu thường xuyên
+
+--- Page 11 ---
+Lợi ích của Kiến trúc 3 Tầng
+Tách biệt Trách nhiệm
+Mỗi tầng xử lý một phần công việc cụ thể, dễ quản lý
+Dễ Mở rộng
+Có thể scale từng tầng độc lập khi lượng người dùng tăng
+Bảo trì Đơn giản
+Sửa lỗi hoặc thêm tính năng không ảnh hưởng toàn bộ hệ thống
+Bảo mật Tốt hơn
+Database không tiếp xúc trực tiếp với người dùng
+
+--- Page 12 ---
+Mô tả Kiến trúc trong Báo cáo
+Lưu ý quan trọng: Khi viết phần kiến trúc, hãy sử dụng sơ đồ trực quan kèm theo giải thích chi tiết. Tránh chỉ liệt kê công nghệ mà không giải thích
+lý do lựa chọn và cách chúng tương tác với nhau.
+Các yếu tố cần có trong mô tả:
+1. Sơ đồ kiến trúc tổng quan: Vẽ bằng draw.io, Lucidchart hoặc công cụ tương tự
+2. Giải thích từng thành phần: Vai trò, công nghệ sử dụng, lý do lựa chọn
+3. Luồng tương tác: Mô tả cách các tầng giao tiếp với nhau
+4. Công nghệ và Tool: Version cụ thể, framework, thư viện đi kèm
+
+--- Page 13 ---
+PHẦN 2
+Sơ đồ Luồng Dữ liệu API
+
+--- Page 14 ---
+Luồng Dữ liệu: Mua Sách trên Website
+1
+Bước 1: Người dùng chọn sách
+Frontend gửi GET request đến /api/books để lấy danh sách sách
+2
+Bước 2: Thêm vào giỏ hàng
+POST /api/cart với book_id, Frontend lưu tạm giỏ hàng
+3
+Bước 3: Xác nhận đơn hàng
+POST /api/orders, Backend xác thực thông tin và tạo order_id
+4
+Bước 4: Thanh toán
+POST /api/payment, tích hợp Payment Gateway (VNPay, Momo)
+5
+Bước 5: Xác nhận thanh toán
+Backend nhận callback, cập nhật trạng thái đơn hàng trong Database
+6
+Bước 6: Gửi E-book
+Backend gửi email với link download, lưu lịch sử mua hàng
+
+--- Page 15 ---
+Chi tiết Luồng API: Từ Frontend đến Database
+Phản hồi ngược lại
+User trên Browser
+Kết quả trả về qua các tầng
+Gửi request HTTP
+PostgreSQL Database
+Luồng dữ liệu chi Frontend React
+tiết
+Thực hiện truy vấn dữ liệu Nhận request và gọi API
+API REST
+Backend Express
+Truyền tới Backend Express
+Xử lý logic nghiệp vụ
+
+--- Page 16 ---
+Request và Response trong Luồng API
+Request từ Frontend Response từ Backend
+POST /api/orders Status: 201 Created
+Headers: { Body: {
+"Authorization": "Bearer token123", "success": true,
+"Content-Type": "application/json" "order_id": "ORD-2024-001",
+} "total": 199000,
+Body: { "payment_url": "https://..."
+"book_id": 456, }
+"quantity": 1,
+"payment_method": "vnpay"
+}
+Đây là ví dụ thực tế về cách dữ liệu được trao đổi giữa Frontend và Backend qua API.
+
+--- Page 17 ---
+Các loại API trong Hệ thống
+1 2
+Authentication API Books API
+/api/auth/register, /api/auth/login, /api/auth/logout /api/books, /api/books/:id, /api/books/search
+Xác thực người dùng, tạo JWT token Quản lý danh sách sách, tìm kiếm, chi tiết
+3 4
+Orders API Payment API
+/api/orders, /api/orders/:id, /api/orders/history /api/payment/create, /api/payment/callback
+Tạo đơn hàng, xem lịch sử mua hàng Tích hợp cổng thanh toán, xử lý callback
+
+--- Page 18 ---
+Vẽ Sơ đồ Luồng Dữ liệu Hiệu quả
+Các bước thực hiện
+1. Xác định điểm bắt đầu: Thường là hành động của người dùng (click nút, nhập form)
+2. Liệt kê các bước xử lý: Request gửi đi, API nhận, xử lý logic, truy vấn DB
+3. Mô tả dữ liệu: Dữ liệu gì được gửi đi, nhận về ở mỗi bước
+4. Vẽ sơ đồ: Dùng mũi tên chỉ hướng luồng, ghi rõ endpoint và method
+5. Thêm ghi chú: Giải thích logic phức tạp hoặc xử lý lỗi
+
+--- Page 19 ---
+PHẦN 3
+Tài liệu Đặc tả API (API Specification)
+
+--- Page 20 ---
+Tài liệu API là gì?
+API Documentation (Tài liệu API) là hướng dẫn chi tiết về cách sử dụng các API endpoint trong hệ thống. Nó giống như "sổ tay hướng dẫn" cho developer,
+giúp họ hiểu cách gọi API, tham số cần truyền, và kết quả trả về.
+Endpoint Parameters
+URL và HTTP method (GET, POST, PUT, DELETE) Tham số truyền vào: query, path, body, headers
+Response Examples
+Cấu trúc dữ liệu trả về, status code, error messages Ví dụ request/response thực tế để dễ hiểu
+
+--- Page 21 ---
+Ví dụ: Tài liệu API "Lấy danh sách sách"
+GET /api/books
+Mô tả: Lấy danh sách tất cả sách có sẵn trên hệ thống, hỗ trợ phân trang và tìm kiếm
+Parameter Type Description
+page integer Số trang (mặc định: 1)
+limit integer Số sách mỗi trang (mặc định: 20)
+category string Lọc theo danh mục (optional)
+search string Từ khóa tìm kiếm (optional)
+Response 200: Trả về mảng books với thông tin: id, title, author, price, cover_image, description
+
+--- Page 22 ---
+Cấu trúc Tài liệu API Chuẩn
+Tổng quan API
+Base URL, Authentication method, Rate limiting
+Danh sách Endpoints
+Nhóm theo chức năng: Auth, Books, Orders, Users
+Chi tiết từng Endpoint
+Method, URL, Parameters, Request/Response examples
+Error Codes
+Danh sách mã lỗi và cách xử lý
+Examples & Tutorials
+Code examples trong nhiều ngôn ngữ
+
+--- Page 23 ---
+Công cụ Viết Tài liệu API
+Swagger / OpenAPI Postman ReadMe.io
+Chuẩn công nghiệp để định nghĩa API, tự động tạo Test API và tự động generate documentation từ Platform chuyên nghiệp để host API
+UI tương tác collections documentation với search, versioning
+
+--- Page 24 ---
+Best Practices Viết Tài liệu API
+Nên làm ✓ Không nên ✗
+• Cung cấp ví dụ request/response đầy đủ • Giả định developer biết hết về hệ thống
+• Giải thích rõ ràng từng parameter • Bỏ qua các edge cases và lỗi
+• Liệt kê tất cả error codes có thể xảy ra • Dùng thuật ngữ kỹ thuật không giải thích
+• Cập nhật khi có thay đổi API • Để tài liệu lỗi thời (outdated)
+• Thêm code examples bằng nhiều ngôn ngữ • Thiếu ví dụ thực tế
+• Có phần "Getting Started" dễ hiểu • Không có search hoặc navigation
+
+--- Page 25 ---
+CHƯƠNG 2
+Kỹ năng Demo Sản phẩm
+
+--- Page 26 ---
+Tại sao Demo quan trọng?
+"Một Demo tốt có thể thuyết phục khách hàng hơn 100 trang tài liệu kỹ thuật"
+Demo sản phẩm là cơ hội để bạn:
+• Chứng minh sản phẩm hoạt động thực tế - không chỉ là lý thuyết
+• Làm nổi bật tính năng ưu việt của công nghệ bạn sử dụng
+• Tạo ấn tượng với khách hàng, giám khảo qua trải nghiệm trực quan
+• Nhận phản hồi ngay lập tức để cải thiện sản phẩm
+
+--- Page 27 ---
+Cấu trúc Demo Chuẩn
+01 02 03
+Giới thiệu (2 phút) Demo Frontend (5 phút) Demo Backend API (5 phút)
+Problem statement và giải pháp của bạn Trình diễn giao diện, user experience, tính năng Dùng Postman để show luồng xử lý ngầm, API
+chính calls
+04 05
+Demo Database (3 phút) Highlights & Q&A (5 phút)
+Kiểm tra dữ liệu được lưu đúng, query results Nhấn mạnh điểm mạnh, trả lời câu hỏi
+
+--- Page 28 ---
+Demo Frontend: Luồng Mua Sách
+Khi demo frontend, hãy tập trung vào trải nghiệm người dùng. Đừng chỉ click qua các màn hình, mà hãy kể câu chuyện của một khách hàng thực tế.
+Ví dụ kịch bản:
+"Tôi là Minh, một sinh viên muốn học lập trình. Tôi vào trang chủ, tìm kiếm 'JavaScript', hệ thống hiển thị kết quả ngay lập tức với filter theo giá và rating. Tôi
+chọn một cuốn sách, xem preview vài trang, thấy phù hợp nên thêm vào giỏ hàng. Sau đó, tôi thanh toán qua VNPay, và sau 3 giây nhận được email với link
+download E-book."
+
+--- Page 29 ---
+Demo Backend API với Postman
+Tại sao dùng Postman?
+Postman giúp bạn trực quan hóa những gì đang xảy ra "phía sau
+hậu trường" của Frontend.
+• Gửi request HTTP trực tiếp
+• Xem response real-time
+• Test nhiều scenarios
+• Chứng minh API hoạt động đúng
+
+--- Page 30 ---
+Kịch bản Demo API với Postman
+1. Đăng ký tài khoản
+POST /api/auth/register → Show response: user_id, token được
+tạo
+2. Login
+POST /api/auth/login → Nhận JWT token để authenticate các
+request sau
+3. Lấy danh sách sách
+GET /api/books?category=programming → Show JSON array với
+book details
+4. Tạo đơn hàng
+POST /api/orders với book_id → Show order_id được tạo trong
+Database
+5. Kiểm tra Database
+Query trực tiếp PostgreSQL để confirm đơn hàng đã lưu
+
+--- Page 31 ---
+Trình diễn Luồng Dữ liệu Hoàn chỉnh
+Frontend gửi POST
+Người dùng nhập
+Backend xử lý
+Database lưu
+Trong demo, hãy mở cả 3 cửa sổ: Frontend, Postman (API), và Database client để khán giả thấy dữ liệu chảy qua toàn bộ hệ thống.
+
+--- Page 32 ---
+Mẹo Demo Chuyên nghiệp
+Chuẩn bị kỹ Kể Câu chuyện
+• Test demo nhiều lần trước • Dùng kịch bản người dùng thực
+• Chuẩn bị dữ liệu mẫu • Giải thích "tại sao" không chỉ "cái gì"
+• Có plan B nếu lỗi • Liên kết các bước với nhau
+Nhấn mạnh Điểm mạnh Tương tác
+• Tốc độ xử lý nhanh • Mời khán giả test thử
+• UX mượt mà, responsive • Trả lời câu hỏi tự tin
+• Xử lý lỗi thông minh • Nhận feedback tích cực
+
+--- Page 33 ---
+Những Lỗi Thường gặp khi Demo
+Tránh những điều này ✓ Làm thay vào đó
+1. Demo quá nhanh: Khán giả không kịp theo dõi 1. Demo từ từ và rõ ràng
+2. Không giải thích: Click qua các màn hình mà không nói gì 2. Giải thích mỗi bước đang làm gì
+3. Lỗi không xử lý: Panic khi có lỗi xảy ra 3. Chuẩn bị cách xử lý lỗi
+4. Quá kỹ thuật: Nói thuật ngữ khán giả không hiểu 4. Dùng ngôn ngữ đơn giản, ví dụ thực tế
+5. Thiếu context: Không giải thích tại sao tính năng này quan trọng 5. Liên kết với business value
+
+--- Page 34 ---
+TỔNG KẾT
+Checklist Hoàn thành Đề án
+Báo cáo Kỹ thuật Hoàn chỉnh Demo Sản phẩm Thuyết phục Presentation Skills
+• Sơ đồ kiến trúc hệ thống rõ ràng • Tự tin, rõ ràng khi trình bày
+• Kịch bản demo rõ ràng và mạch lạc
+• Sơ đồ luồng dữ liệu chi tiết • Trả lời câu hỏi chuyên nghiệp
+• Trình diễn Frontend → API → Database
+• Tài liệu API đầy đủ với examples • Tương tác tốt với khán giả
+• Giải thích công nghệ và lý do lựa
+• Sử dụng Postman để show API xử lý
+chọn
+• Nhấn mạnh tính ưu việt của giải pháp
+
+--- Page 35 ---
+Bạn đã sẵn sàng!
+Với kiến thức từ khóa học này,
+Bước tiếp theo
+bạn có đủ kỹ năng để:
+Áp dụng ngay vào Case Study
+• Viết báo cáo kỹ thuật chuyên nghiệp
+website bán sách của bạn.
+Viết báo cáo, chuẩn bị demo,
+• Trình bày demo sản phẩm thuyết
+và thực hành nhiều lần để
+phục
+hoàn thiện kỹ năng!
+• Làm việc với các dự án thực tế
+• Tự tin trong môi trường làm việc
+Chúc các bạn thành công!

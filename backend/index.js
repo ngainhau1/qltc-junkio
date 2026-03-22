@@ -61,7 +61,14 @@ app.use('/api/forecast', require('./routes/forecastRoutes'));
 // Swagger API Documentation (truy cập: /api-docs)
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./config/swagger');
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use('/swagger-assets', express.static(path.join(__dirname, 'public', 'swagger')));
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+    explorer: true,
+    customJs: '/swagger-assets/swagger-custom.js',
+    swaggerOptions: {
+        persistAuthorization: true
+    }
+}));
 
 // Cấu hình kết nối Database (Lấy từ biến môi trường Docker)
 // Lưu ý: 'host' là tên service trong docker-compose ('db')

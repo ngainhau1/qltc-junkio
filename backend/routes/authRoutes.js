@@ -1,8 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
-const auth = require('../middleware/authMiddleware');
-const { uploadAvatar } = require('../middleware/uploadMiddleware');
 const audit = require('../middleware/auditMiddleware');
 const authValidator = require('../validators/authValidator');
 
@@ -94,45 +92,90 @@ router.post('/register', authValidator.validateRegister, audit('USER_REGISTER', 
  */
 router.post('/login', authValidator.validateLogin, audit('USER_LOGIN', 'USER'), authController.login);
 
-// @route   POST api/auth/refresh-token
-router.post('/refresh-token', authController.refreshToken);
-
 /**
  * @swagger
- * /api/auth/me:
- *   get:
- *     summary: Lấy thông tin người dùng hiện tại
+ * /api/auth/refresh-token:
+ *   post:
+ *     summary: Làm mới Access Token từ Refresh Token (cookie)
  *     tags: [Auth]
- *     security:
- *       - bearerAuth: []
+ *     security: []
+ *     description: Gửi cookie refresh_token, server trả access token mới
  *     responses:
  *       200:
- *         description: Thông tin user
+ *         description: Token mới
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 id:
- *                   type: string
- *                 name:
- *                   type: string
- *                 email:
- *                   type: string
- *                 role:
+ *                 token:
  *                   type: string
  *       401:
- *         description: Chưa đăng nhập hoặc token hết hạn
+ *         description: Không có refresh token
+ *       403:
+ *         description: Refresh token hết hạn hoặc không hợp lệ
  */
-router.get('/me', auth, authController.getMe);
+router.post('/refresh-token', authController.refreshToken);
 
-// @route   POST api/auth/avatar
-router.post('/avatar', auth, uploadAvatar.single('avatar'), authController.updateAvatar);
 
-// @route   POST api/auth/forgot-password
+
+/**
+ * @swagger
+ * /api/auth/forgot-password:
+ *   post:
+ *     summary: Gửi email khôi phục mật khẩu
+ *     tags: [Auth]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: user@junkio.com
+ *     responses:
+ *       200:
+ *         description: Email khôi phục đã được gửi
+ *       404:
+ *         description: Email không tồn tại
+ */
 router.post('/forgot-password', authValidator.validateForgotPassword, authController.forgotPassword);
 
-// @route   POST api/auth/reset-password/:token
+/**
+ * @swagger
+ * /api/auth/reset-password/{token}:
+ *   post:
+ *     summary: Đặt lại mật khẩu bằng token khôi phục
+ *     tags: [Auth]
+ *     security: []
+ *     parameters:
+ *       - in: path
+ *         name: token
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Token khôi phục từ email
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [password]
+ *             properties:
+ *               password:
+ *                 type: string
+ *                 example: newPassword123
+ *     responses:
+ *       200:
+ *         description: Mật khẩu đã được đặt lại
+ *       400:
+ *         description: Token không hợp lệ hoặc đã hết hạn
+ */
 router.post('/reset-password/:token', authValidator.validateResetPassword, authController.resetPassword);
 
 module.exports = router;

@@ -9,7 +9,11 @@
     "start": "node index.js",
     "dev": "nodemon index.js",
     "prepare": "husky",
-    "postman:test": "newman run ../doc/Junkio.postman_collection.json -e ../doc/Junkio.postman_environment.json"
+    "postman:test": "newman run ../doc/Junkio.postman_collection.json -e ../doc/Junkio.postman_environment.json",
+    "test:smoke": "npm test -- --runTestsByPath tests/auth.test.js tests/transaction.test.js",
+    "test:newman": "node scripts/run-newman.js",
+    "test:all-api": "npm run test:smoke && npm run test:newman",
+    "check:admin": "node scripts/admin-check.js"
   },
   "keywords": [],
   "author": "",
@@ -37,10 +41,11 @@
     "pg-hstore": "^2.3.4",
     "redis": "^4.7.1",
     "sequelize": "^6.37.1",
+    "sequelize-cli": "^6.6.2",
     "socket.io": "^4.8.3",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
-    "uuid": "^13.0.0"
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",

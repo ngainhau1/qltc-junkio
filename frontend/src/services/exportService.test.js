@@ -27,15 +27,12 @@ describe('exportService', () => {
         expect(document.body.removeChild).toHaveBeenCalled();
     });
 
-    it('should generate valid PDF', () => {
+    it('should generate valid PDF', async () => {
         const transactions = [
             { date: '2024-01-01', description: 'Test PDF', amount: 200, type: 'INCOME' }
         ];
 
-        // We just want to ensure it runs without error (doc.autoTable is found)
-        // and doc.save is called.
-        // We know jsPDF is used internally.
-        expect(() => exportToPDF(transactions)).not.toThrow();
+        await expect(exportToPDF(transactions)).resolves.toBeUndefined();
     });
 });
 

@@ -1,6 +1,10 @@
 const jwt = require('jsonwebtoken');
+const jwtSecret = process.env.JWT_SECRET || (process.env.NODE_ENV === 'test' ? 'test-secret' : undefined);
 
 const authMiddleware = (req, res, next) => {
+    if (!jwtSecret) {
+        return res.status(500).json({ message: 'Server missing JWT secret' });
+    }
     // Get token from the header (Authorization: Bearer <token>)
     const authHeader = req.header('Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -11,7 +15,7 @@ const authMiddleware = (req, res, next) => {
 
     try {
         // Verify token
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
+        const decoded = jwt.verify(token, jwtSecret);
 
         // Add user string/object from payload
         req.user = decoded.user;

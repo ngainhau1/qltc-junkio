@@ -34,6 +34,13 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       VITE_FRONTEND_URL: http://localhost
+      AUTO_SEED: "true"
+      JWT_SECRET: super-secret-change-me
+      JWT_REFRESH_SECRET: super-refresh-change-me
+      EMAIL_HOST:
+      EMAIL_PORT: 587
+      EMAIL_USER:
+      EMAIL_PASS:
     depends_on:
       db:
         condition: service_healthy

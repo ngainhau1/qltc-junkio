@@ -2,6 +2,13 @@ const express = require('express');
 const router = express.Router();
 const transactionController = require('../controllers/transactionController');
 const authMiddleware = require('../middleware/authMiddleware');
+const {
+    validateTransactionCreate,
+    validateTransactionTransfer,
+    validateTransactionImport,
+    validateTransactionParams,
+    validateTransactionQuery
+} = require('../validators/transactionValidator');
 
 /**
  * @swagger
@@ -54,7 +61,7 @@ const authMiddleware = require('../middleware/authMiddleware');
  *       401:
  *         description: Chưa xác thực
  */
-router.get('/', authMiddleware, transactionController.getTransactions);
+router.get('/', authMiddleware, validateTransactionQuery, transactionController.getTransactions);
 
 /**
  * @swagger
@@ -102,16 +109,110 @@ router.get('/', authMiddleware, transactionController.getTransactions);
  *       401:
  *         description: Chưa xác thực
  */
-router.post('/', authMiddleware, transactionController.createTransaction);
+router.post('/', authMiddleware, validateTransactionCreate, transactionController.createTransaction);
 
-// Chuyển khoản (Transfer)
-router.post('/transfer', authMiddleware, transactionController.createTransfer);
+/**
+ * @swagger
+ * /api/transactions/transfer:
+ *   post:
+ *     summary: Chuyển khoản giữa 2 ví
+ *     tags: [Transactions]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [from_wallet_id, to_wallet_id, amount]
+ *             properties:
+ *               from_wallet_id:
+ *                 type: string
+ *                 format: uuid
+ *               to_wallet_id:
+ *                 type: string
+ *                 format: uuid
+ *               amount:
+ *                 type: number
+ *                 example: 500000
+ *               description:
+ *                 type: string
+ *                 example: Chuyển tiền tiết kiệm
+ *     responses:
+ *       201:
+ *         description: Chuyển khoản thành công
+ *       400:
+ *         description: Số dư không đủ hoặc dữ liệu không hợp lệ
+ */
+router.post('/transfer', authMiddleware, validateTransactionTransfer, transactionController.createTransfer);
 
-// Nhập dữ liệu (Import CSV)
-router.post('/import', authMiddleware, transactionController.importTransactions);
+/**
+ * @swagger
+ * /api/transactions/import:
+ *   post:
+ *     summary: Nhập giao dịch từ file CSV
+ *     tags: [Transactions]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [wallet_id, transactions]
+ *             properties:
+ *               wallet_id:
+ *                 type: string
+ *                 format: uuid
+ *               transactions:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *     responses:
+ *       200:
+ *         description: Import thành công
+ *       400:
+ *         description: Dữ liệu không hợp lệ
+ */
+router.post('/import', authMiddleware, validateTransactionImport, transactionController.importTransactions);
 
-// Xuất dữ liệu (Export CSV/PDF)
-router.get('/export', authMiddleware, transactionController.exportTransactions);
+/**
+ * @swagger
+ * /api/transactions/export:
+ *   get:
+ *     summary: Xuất giao dịch ra CSV/PDF
+ *     tags: [Transactions]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: format
+ *         schema:
+ *           type: string
+ *           enum: [csv, pdf]
+ *           default: csv
+ *       - in: query
+ *         name: startDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - in: query
+ *         name: endDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *     responses:
+ *       200:
+ *         description: File xuất thành công
+ *         content:
+ *           application/octet-stream:
+ *             schema:
+ *               type: string
+ *               format: binary
+ */
+router.get('/export', authMiddleware, validateTransactionQuery, transactionController.exportTransactions);
 
 /**
  * @swagger
@@ -136,7 +237,7 @@ router.get('/export', authMiddleware, transactionController.exportTransactions);
  *       401:
  *         description: Chưa xác thực
  */
-router.get('/:id', authMiddleware, transactionController.getTransactionById);
+router.get('/:id', authMiddleware, validateTransactionParams, transactionController.getTransactionById);
 
 /**
  * @swagger
@@ -161,7 +262,6 @@ router.get('/:id', authMiddleware, transactionController.getTransactionById);
  *       401:
  *         description: Chưa xác thực
  */
-router.delete('/:id', authMiddleware, transactionController.deleteTransaction);
+router.delete('/:id', authMiddleware, validateTransactionParams, transactionController.deleteTransaction);
 
 module.exports = router;
-

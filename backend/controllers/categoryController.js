@@ -1,4 +1,5 @@
 const { Category } = require('../models');
+const { success, error, notFound, serverError, created } = require('../utils/responseHelper');
 
 // GET /api/categories
 exports.getCategories = async (req, res) => {
@@ -6,10 +7,10 @@ exports.getCategories = async (req, res) => {
         const categories = await Category.findAll({
             // could include parent/child relation if needed
         });
-        res.json(categories);
-    } catch (error) {
-        console.error('Error fetching categories:', error);
-        res.status(500).json({ message: 'Server error' });
+        success(res, categories, 'Lấy danh sách danh mục thành công');
+    } catch (err) {
+        console.error('Error fetching categories:', err);
+        serverError(res, 'Lỗi Server: Không thể tải danh mục');
     }
 };
 
@@ -25,10 +26,10 @@ exports.createCategory = async (req, res) => {
             icon: icon || 'Circle'
         });
 
-        res.status(201).json(newCategory);
-    } catch (error) {
-        console.error('Error creating category:', error);
-        res.status(500).json({ message: 'Server error' });
+        created(res, newCategory, 'Tạo danh mục mới thành công');
+    } catch (err) {
+        console.error('Error creating category:', err);
+        serverError(res, 'Lỗi Server: Không thể tạo danh mục');
     }
 };
 
@@ -39,7 +40,7 @@ exports.updateCategory = async (req, res) => {
         const { name, type, icon } = req.body;
 
         const category = await Category.findByPk(id);
-        if (!category) return res.status(404).json({ message: 'Category not found' });
+        if (!category) return notFound(res, 'Danh mục không tồn tại');
 
         await category.update({
             name: name !== undefined ? name : category.name,
@@ -47,10 +48,10 @@ exports.updateCategory = async (req, res) => {
             icon: icon !== undefined ? icon : category.icon
         });
 
-        res.json(category);
-    } catch (error) {
-        console.error('Error updating category:', error);
-        res.status(500).json({ message: 'Server error' });
+        success(res, category, 'Cập nhật danh mục thành công');
+    } catch (err) {
+        console.error('Error updating category:', err);
+        serverError(res, 'Lỗi Server: Không thể cập nhật danh mục');
     }
 };
 
@@ -59,12 +60,12 @@ exports.deleteCategory = async (req, res) => {
     try {
         const { id } = req.params;
         const category = await Category.findByPk(id);
-        if (!category) return res.status(404).json({ message: 'Category not found' });
+        if (!category) return notFound(res, 'Danh mục không tồn tại');
 
         await category.destroy();
-        res.json({ message: 'Category deleted successfully' });
-    } catch (error) {
-        console.error('Error deleting category:', error);
-        res.status(500).json({ message: 'Server error' });
+        success(res, null, 'Đã xóa danh mục thành công');
+    } catch (err) {
+        console.error('Error deleting category:', err);
+        serverError(res, 'Lỗi Server: Không thể xóa danh mục');
     }
 };

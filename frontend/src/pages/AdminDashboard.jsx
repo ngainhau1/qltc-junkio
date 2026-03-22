@@ -33,6 +33,13 @@ export function AdminDashboard() {
     const [logTotal, setLogTotal] = useState(0)
     const [logAction, setLogAction] = useState('ALL')
 
+    const roleLabel = (role) => {
+        if (role === 'admin') return t('admin.roleAdmin')
+        if (role === 'member') return t('admin.roleMember')
+        if (role === 'staff') return t('admin.roleStaff', 'Staff')
+        return role
+    }
+
     useEffect(() => {
         fetchAnalytics()
         fetchFinancialOverview()
@@ -397,6 +404,7 @@ export function AdminDashboard() {
                         >
                             <option value="all">{t("admin.all")}</option>
                             <option value="admin">{t("admin.roleAdmin")}</option>
+                            <option value="staff">{t("admin.roleStaff", "Staff")}</option>
                             <option value="member">{t("admin.roleMember")}</option>
                         </select>
                         <select 
@@ -435,10 +443,11 @@ export function AdminDashboard() {
                                                 onChange={(e) => changeRole(u.id, e.target.value)}
                                             >
                                                 <option value="admin">{t("admin.roleAdmin")}</option>
+                                                <option value="staff">{t("admin.roleStaff", "Staff")}</option>
                                                 <option value="member">{t("admin.roleMember")}</option>
                                             </select>
                                         ) : (
-                                            <Badge variant="default">{u.role}</Badge>
+                                            <Badge variant="default">{roleLabel(u.role)}</Badge>
                                         )}
                                     </td>
                                     <td className="py-3 px-2">
@@ -585,7 +594,7 @@ export function AdminDashboard() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <p className="text-sm font-medium text-muted-foreground">{t("admin.colRole")}</p>
-                                    <Badge variant={userDetail.role === "admin" ? "default" : "secondary"}>{userDetail.role}</Badge>
+                                    <Badge variant={userDetail.role === "admin" ? "default" : "secondary"}>{roleLabel(userDetail.role)}</Badge>
                                 </div>
                                 <div>
                                     <p className="text-sm font-medium text-muted-foreground">{t("admin.colStatus")}</p>
@@ -594,11 +603,11 @@ export function AdminDashboard() {
                             </div>
                             <div className="grid grid-cols-3 gap-4 border-t pt-4">
                                 <div className="text-center">
-                                    <p className="text-2xl font-bold">{userDetail.wallets?.length || 0}</p>
+                                    <p className="text-2xl font-bold">{userDetail.wallets?.length || userDetail.Wallets?.length || 0}</p>
                                     <p className="text-xs text-muted-foreground">{t("admin.userWallets")}</p>
                                 </div>
                                 <div className="text-center">
-                                    <p className="text-2xl font-bold">{userDetail.families?.length || 0}</p>
+                                    <p className="text-2xl font-bold">{userDetail.families?.length || userDetail.Families?.length || 0}</p>
                                     <p className="text-xs text-muted-foreground">{t("admin.userFamilies")}</p>
                                 </div>
                                 <div className="text-center">

@@ -14,6 +14,13 @@ const { checkBudgetAlerts } = require('../services/budgetAlertService');
 const { __mocks } = require('../models');
 const { mockBudget, mockTransaction, mockNotification } = __mocks;
 
+jest.mock('../config/socket', () => ({
+    getIO: jest.fn(() => ({
+        to: jest.fn().mockReturnThis(),
+        emit: jest.fn()
+    }))
+}));
+
 describe('budgetAlertService', () => {
     beforeEach(() => {
         jest.clearAllMocks();

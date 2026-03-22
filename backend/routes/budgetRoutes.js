@@ -2,6 +2,11 @@ const express = require('express');
 const router = express.Router();
 const budgetController = require('../controllers/budgetController');
 const authMiddleware = require('../middleware/authMiddleware');
+const {
+    validateCreateBudget,
+    validateUpdateBudget,
+    validateDeleteBudget
+} = require('../validators/budgetValidator');
 
 router.use(authMiddleware);
 
@@ -41,7 +46,7 @@ router.get('/', budgetController.getBudgets);
  *     responses:
  *       201: { description: Ngân sách được tạo }
  */
-router.post('/', budgetController.createBudget);
+router.post('/', validateCreateBudget, budgetController.createBudget);
 
 /**
  * @swagger
@@ -57,7 +62,7 @@ router.post('/', budgetController.createBudget);
  *     responses:
  *       200: { description: Cập nhật thành công }
  */
-router.put('/:id', budgetController.updateBudget);
+router.put('/:id', validateUpdateBudget, budgetController.updateBudget);
 
 /**
  * @swagger
@@ -73,6 +78,6 @@ router.put('/:id', budgetController.updateBudget);
  *     responses:
  *       200: { description: Xóa thành công }
  */
-router.delete('/:id', budgetController.deleteBudget);
+router.delete('/:id', validateDeleteBudget, budgetController.deleteBudget);
 
 module.exports = router;

@@ -1,4 +1,5 @@
 const { Goal, Wallet, Transaction } = require('../models');
+const { success, error: sendError, notFound, serverError, created } = require('../utils/responseHelper');
 
 // GET /api/goals
 // Lấy danh sách mục tiêu của user
@@ -9,10 +10,10 @@ exports.getGoals = async (req, res) => {
             where: { user_id: userId },
             order: [['created_at', 'DESC']]
         });
-        res.json(goals);
-    } catch (error) {
-        console.error('Error fetching goals:', error);
-        res.status(500).json({ message: error.message || 'Server error' });
+        success(res, goals, 'Lấy danh sách mục tiêu thành công');
+    } catch (err) {
+        console.error('Error fetching goals:', err);
+        serverError(res, err.message || 'Lỗi Server: Không thể tải mục tiêu');
     }
 };
 
@@ -34,10 +35,10 @@ exports.createGoal = async (req, res) => {
             user_id: userId
         });
 
-        res.status(201).json(newGoal);
-    } catch (error) {
-        console.error('Error creating goal:', error);
-        res.status(500).json({ message: 'Server error' });
+        created(res, newGoal, 'Tạo mục tiêu thành công');
+    } catch (err) {
+        console.error('Error creating goal:', err);
+        serverError(res, 'Lỗi Server: Không thể tạo mục tiêu');
     }
 };
 
@@ -51,7 +52,7 @@ exports.updateGoal = async (req, res) => {
 
         const goal = await Goal.findOne({ where: { id, user_id: userId } });
 
-        if (!goal) return res.status(404).json({ message: 'Goal not found' });
+        if (!goal) return notFound(res, 'Mục tiêu không tồn tại');
 
         await goal.update({
             name: name !== undefined ? name : goal.name,
@@ -62,10 +63,10 @@ exports.updateGoal = async (req, res) => {
             status: status !== undefined ? status : goal.status
         });
 
-        res.json(goal);
-    } catch (error) {
-        console.error('Error updating goal:', error);
-        res.status(500).json({ message: 'Server error' });
+        success(res, goal, 'Cập nhật mục tiêu thành công');
+    } catch (err) {
+        console.error('Error updating goal:', err);
+        serverError(res, 'Lỗi Server: Không thể cập nhật mục tiêu');
     }
 };
 
@@ -77,18 +78,18 @@ exports.deposit = async (req, res) => {
         const userId = req.user.id;
         const { amount, wallet_id } = req.body;
 
-        if (!amount || amount <= 0) return res.status(400).json({ message: 'Invalid amount' });
-        if (!wallet_id) return res.status(400).json({ message: 'Wallet ID is required' });
+        if (!amount || amount <= 0) return sendError(res, 'Số tiền không hợp lệ', 400);
+        if (!wallet_id) return sendError(res, 'Vui lòng cung cấp ID ví', 400);
 
         const goal = await Goal.findOne({ where: { id, user_id: userId } });
-        if (!goal) return res.status(404).json({ message: 'Goal not found' });
+        if (!goal) return notFound(res, 'Mục tiêu không tồn tại');
 
         const wallet = await Wallet.findByPk(wallet_id);
-        if (!wallet) return res.status(404).json({ message: 'Wallet not found' });
+        if (!wallet) return notFound(res, 'Ví không tồn tại');
 
         // Authorization cho wallet nên có, nhưng tạm bỏ qua kiểm tra sâu ở đây
         if (parseFloat(wallet.balance) < parseFloat(amount)) {
-            return res.status(400).json({ message: 'Insufficient wallet balance' });
+            return sendError(res, 'Số dư ví không đủ', 400);
         }
 
         const sequelize = require('../models/index').sequelize;
@@ -116,10 +117,10 @@ exports.deposit = async (req, res) => {
             return goal;
         });
 
-        res.json(result);
-    } catch (error) {
-        console.error('Error depositing to goal:', error);
-        res.status(500).json({ message: 'Server error' });
+        success(res, result, 'Nạp tiền vào mục tiêu thành công');
+    } catch (err) {
+        console.error('Error depositing to goal:', err);
+        serverError(res, 'Lỗi Server: Không thể nạp tiền');
     }
 };
 
@@ -131,12 +132,12 @@ exports.deleteGoal = async (req, res) => {
         const userId = req.user.id;
 
         const goal = await Goal.findOne({ where: { id, user_id: userId } });
-        if (!goal) return res.status(404).json({ message: 'Goal not found' });
+        if (!goal) return notFound(res, 'Mục tiêu không tồn tại');
 
         await goal.destroy();
-        res.json({ message: 'Goal deleted successfully' });
-    } catch (error) {
-        console.error('Error deleting goal:', error);
-        res.status(500).json({ message: 'Server error' });
+        success(res, null, 'Đã xóa mục tiêu thành công');
+    } catch (err) {
+        console.error('Error deleting goal:', err);
+        serverError(res, 'Lỗi Server: Không thể xóa mục tiêu');
     }
 };

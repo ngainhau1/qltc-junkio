@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const notificationController = require('../controllers/notificationController');
 const auth = require('../middleware/authMiddleware');
+const { validateBroadcast, validateNotificationParam } = require('../validators/notificationValidator');
 
 /**
  * @swagger
@@ -10,68 +11,112 @@ const auth = require('../middleware/authMiddleware');
  *   description: Thông báo hệ thống
  */
 
-// @route   GET api/notifications
-// @desc    Get user notifications
-// @access  Private
 /**
  * @swagger
  * /api/notifications:
  *   get:
- *     summary: Lấy danh sách thông báo của tôi
+ *     summary: Lấy danh sách thông báo của tôi (tối đa 50)
  *     tags: [Notifications]
- *     security: [ { bearerAuth: [] } ]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
- *       200: { description: Danh sách thông báo }
+ *       200:
+ *         description: Danh sách thông báo
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                   type:
+ *                     type: string
+ *                   message:
+ *                     type: string
+ *                   isRead:
+ *                     type: boolean
+ *                   created_at:
+ *                     type: string
+ *                     format: date-time
  */
 router.get('/', auth, notificationController.getNotifications);
 
-// @route   PUT api/notifications/read-all
-// @desc    Mark all user notifications as read
-// @access  Private
 /**
  * @swagger
  * /api/notifications/read-all:
  *   put:
  *     summary: Đánh dấu tất cả thông báo đã đọc
  *     tags: [Notifications]
- *     security: [ { bearerAuth: [] } ]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
- *       200: { description: Thành công }
+ *       200:
+ *         description: Thành công
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 msg:
+ *                   type: string
+ *                   example: All notifications marked as read
  */
 router.put('/read-all', auth, notificationController.markAllAsRead);
 
-// @route   PUT api/notifications/:id/read
-// @desc    Mark a single user notification as read
-// @access  Private
 /**
  * @swagger
  * /api/notifications/{id}/read:
  *   put:
  *     summary: Đánh dấu 1 thông báo đã đọc
  *     tags: [Notifications]
- *     security: [ { bearerAuth: [] } ]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: ID thông báo
  *     responses:
- *       200: { description: Thành công }
+ *       200:
+ *         description: Thành công
+ *       404:
+ *         description: Notification not found
  */
-router.put('/:id/read', auth, notificationController.markAsRead);
+router.put('/:id/read', auth, validateNotificationParam, notificationController.markAsRead);
 
-// @route   POST api/notifications/broadcast
-// @desc    Admin broadcasts a message to all users
-// @access  Private (Admin only logic inside)
 /**
  * @swagger
  * /api/notifications/broadcast:
  *   post:
  *     summary: Gửi broadcast tới tất cả user (admin)
  *     tags: [Notifications]
- *     security: [ { bearerAuth: [] } ]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [message]
+ *             properties:
+ *               message:
+ *                 type: string
+ *                 example: Hệ thống sẽ bảo trì vào 22:00 tối nay
+ *               type:
+ *                 type: string
+ *                 example: SYSTEM
  *     responses:
- *       200: { description: Đã gửi broadcast }
+ *       200:
+ *         description: Đã gửi broadcast
+ *       403:
+ *         description: Chỉ admin mới có quyền
  */
-router.post('/broadcast', auth, notificationController.adminBroadcast);
+router.post('/broadcast', auth, validateBroadcast, notificationController.adminBroadcast);
 
 module.exports = router;

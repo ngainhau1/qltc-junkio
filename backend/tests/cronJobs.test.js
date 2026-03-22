@@ -23,6 +23,13 @@ jest.mock('../models', () => {
     };
 });
 
+jest.mock('../config/socket', () => ({
+    getIO: jest.fn(() => ({
+        to: jest.fn().mockReturnThis(),
+        emit: jest.fn()
+    }))
+}));
+
 const { startCronJobs } = require('../services/cronJobs');
 const cron = require('node-cron');
 const { __mocks } = require('../models');

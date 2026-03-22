@@ -29,8 +29,8 @@ export function RecurringRulesList() {
     }
 
     return (
-        <div className="space-y-4">
-            {rules.map(rule => (
+            <div className="space-y-4">
+                {rules.map(rule => (
                 <Card key={rule.id} className={rule.active ? "" : "opacity-60 grayscale"}>
                     <CardContent className="p-4 flex items-center justify-between">
                         <div className="flex items-center gap-4">
@@ -55,7 +55,7 @@ export function RecurringRulesList() {
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                onClick={() => dispatch(editRecurring({ id: rule.id, data: { active: !rule.active } }))}
+                                onClick={() => dispatch(editRecurring({ id: rule.id, data: { is_active: !rule.active } }))}
                                 title={rule.active ? t('transactions.recurring.pauseBtn') : t('transactions.recurring.activateBtn')}
                             >
                                 {rule.active ? <Power className="h-4 w-4 text-green-600" /> : <PowerOff className="h-4 w-4 text-muted-foreground" />}

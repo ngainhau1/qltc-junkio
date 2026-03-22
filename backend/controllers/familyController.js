@@ -1,5 +1,6 @@
 const { Family, FamilyMember, User, Wallet } = require('../models');
 const { Op } = require('sequelize');
+const { success, created, error: sendError, notFound, serverError } = require('../utils/responseHelper');
 
 // GET /api/families
 // Get all families user is part of
@@ -49,10 +50,10 @@ exports.getUserFamilies = async (req, res) => {
             return familyJson;
         });
 
-        res.json(families);
-    } catch (error) {
-        console.error('Error fetching families:', error);
-        res.status(500).json({ message: 'Server error' });
+        success(res, families, 'Lấy danh sách gia đình thành công');
+    } catch (err) {
+        console.error('Error fetching families:', err);
+        serverError(res, 'Lỗi Server: Không thể lấy danh sách gia đình');
     }
 };
 
@@ -63,7 +64,7 @@ exports.createFamily = async (req, res) => {
         const userId = req.user.id;
         const { name } = req.body;
 
-        if (!name) return res.status(400).json({ message: 'Family name is required' });
+        if (!name) return sendError(res, 'Vui lòng nhập tên gia đình', 400);
 
         const sequelize = require('../models/index').sequelize;
 
@@ -93,10 +94,10 @@ exports.createFamily = async (req, res) => {
             return family;
         });
 
-        res.status(201).json(result);
-    } catch (error) {
-        console.error('Error creating family:', error);
-        res.status(500).json({ message: 'Server error' });
+        created(res, result, 'Tạo gia đình thành công');
+    } catch (err) {
+        console.error('Error creating family:', err);
+        serverError(res, 'Lỗi Server: Không thể tạo gia đình');
     }
 };
 
@@ -109,7 +110,7 @@ exports.getFamilyDetails = async (req, res) => {
 
         // Ensure user is member
         const memberCheck = await FamilyMember.findOne({ where: { family_id: id, user_id: userId } });
-        if (!memberCheck) return res.status(403).json({ message: 'You are not a member of this family' });
+        if (!memberCheck) return sendError(res, 'Bạn không phải là thành viên của gia đình này', 403);
 
         const family = await Family.findByPk(id, {
             include: [
@@ -126,12 +127,12 @@ exports.getFamilyDetails = async (req, res) => {
             ]
         });
 
-        if (!family) return res.status(404).json({ message: 'Family not found' });
+        if (!family) return notFound(res, 'Gia đình không tồn tại');
 
-        res.json(family);
-    } catch (error) {
-        console.error('Error fetching family details:', error);
-        res.status(500).json({ message: 'Server error' });
+        success(res, family, 'Lấy thông tin gia đình thành công');
+    } catch (err) {
+        console.error('Error fetching family details:', err);
+        serverError(res, 'Lỗi Server: Không thể lấy thông tin gia đình');
     }
 };
 
@@ -146,14 +147,14 @@ exports.addMember = async (req, res) => {
         // Check if caller is Admin
         const caller = await FamilyMember.findOne({ where: { family_id: id, user_id: userId } });
         if (!caller || caller.role !== 'ADMIN') {
-            return res.status(403).json({ message: 'Only Admins can add members' });
+            return sendError(res, 'Chỉ Admin mới có thể thêm thành viên', 403);
         }
 
         const userToAdd = await User.findOne({ where: { email } });
-        if (!userToAdd) return res.status(404).json({ message: 'User with this email not found' });
+        if (!userToAdd) return notFound(res, 'Không tìm thấy người dùng với email này');
 
         const existingMember = await FamilyMember.findOne({ where: { family_id: id, user_id: userToAdd.id } });
-        if (existingMember) return res.status(400).json({ message: 'User is already a member' });
+        if (existingMember) return sendError(res, 'Người dùng đã là thành viên', 400);
 
         const newMember = await FamilyMember.create({
             family_id: id,
@@ -162,10 +163,10 @@ exports.addMember = async (req, res) => {
             joined_at: new Date()
         });
 
-        res.status(201).json(newMember);
-    } catch (error) {
-        console.error('Error adding member:', error);
-        res.status(500).json({ message: 'Server error' });
+        created(res, newMember, 'Thêm thành viên thành công');
+    } catch (err) {
+        console.error('Error adding member:', err);
+        serverError(res, 'Lỗi Server: Không thể thêm thành viên');
     }
 };
 
@@ -180,21 +181,21 @@ exports.removeMember = async (req, res) => {
 
         // Can remove oneself, or Admin can remove anyone
         if (caller.user_id !== userIdToRemove && caller.role !== 'ADMIN') {
-            return res.status(403).json({ message: 'Not authorized to remove this member' });
+            return sendError(res, 'Không có quyền xóa thành viên này', 403);
         }
 
         // Cannot remove the owner
         const family = await Family.findByPk(id);
         if (family.owner_id === userIdToRemove) {
-            return res.status(400).json({ message: 'Cannot remove the family owner' });
+            return sendError(res, 'Không thể xóa chủ gia đình', 400);
         }
 
         await FamilyMember.destroy({ where: { family_id: id, user_id: userIdToRemove } });
 
-        res.json({ message: 'Member removed successfully' });
-    } catch (error) {
-        console.error('Error removing member:', error);
-        res.status(500).json({ message: 'Server error' });
+        success(res, null, 'Đã xóa thành viên thành công');
+    } catch (err) {
+        console.error('Error removing member:', err);
+        serverError(res, 'Lỗi Server: Không thể xóa thành viên');
     }
 };
 
@@ -206,10 +207,10 @@ exports.deleteFamily = async (req, res) => {
         const callerId = req.user.id;
 
         const family = await Family.findByPk(id);
-        if (!family) return res.status(404).json({ message: 'Family not found' });
+        if (!family) return notFound(res, 'Gia đình không tồn tại');
 
         if (family.owner_id !== callerId) {
-            return res.status(403).json({ message: 'Only the owner can delete the family' });
+            return sendError(res, 'Chỉ chủ gia đình mới được quyền xóa', 403);
         }
 
         const sequelize = require('../models/index').sequelize;
@@ -223,9 +224,9 @@ exports.deleteFamily = async (req, res) => {
             await family.destroy({ transaction: t });
         });
 
-        res.json({ message: 'Family deleted successfully' });
-    } catch (error) {
-        console.error('Error deleting family:', error);
-        res.status(500).json({ message: 'Server error' });
+        success(res, null, 'Xóa gia đình thành công');
+    } catch (err) {
+        console.error('Error deleting family:', err);
+        serverError(res, 'Lỗi Server: Không thể xóa gia đình');
     }
 };

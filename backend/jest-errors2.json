@@ -1,0 +1,30 @@
+[
+  {
+    "test": "GET /api/admin/users should return paginated list of users",
+    "mess": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\nExpected: \u001b[32m200\u001b[39m\nReceived: \u001b[31m500\u001b[39m\n    at Object.toEqual (D:\\Junkio-Expense-Tracker\\backend\\tests\\admin.test.js:120:32)\n    at processTicksAndRejections (node:internal/process/task_queues:103:5)"
+  },
+  {
+    "test": "GET /api/admin/analytics should return system stats",
+    "mess": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\nExpected: \u001b[32m200\u001b[39m\nReceived: \u001b[31m500\u001b[39m\n    at Object.toEqual (D:\\Junkio-Expense-Tracker\\backend\\tests\\admin.test.js:128:32)\n    at processTicksAndRejections (node:internal/process/task_queues:103:5)"
+  },
+  {
+    "test": "DELETE /api/admin/users/:id should soft delete user",
+    "mess": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\nExpected: \u001b[32m200\u001b[39m\nReceived: \u001b[31m422\u001b[39m\n    at Object.toEqual (D:\\Junkio-Expense-Tracker\\backend\\tests\\admin.test.js:135:32)\n    at processTicksAndRejections (node:internal/process/task_queues:103:5)"
+  },
+  {
+    "test": "should return 400 when amount is negative",
+    "mess": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: \u001b[32m/lớn hơn 0|Invalid value/i\u001b[39m\nReceived string:  \u001b[31m\"[{\\\"type\\\":\\\"field\\\",\\\"value\\\":\\\"mocked-tx-uuid\\\",\\\"msg\\\":\\\"wallet_id phải là UUID\\\",\\\"path\\\":\\\"wallet_id\\\",\\\"location\\\":\\\"body\\\"},{\\\"type\\\":\\\"field\\\",\\\"value\\\":-100,\\\"msg\\\":\\\"amount phải > 0\\\",\\\"path\\\":\\\"amount\\\",\\\"location\\\":\\\"body\\\"}]\"\u001b[39m\n    at Object.toMatch (D:\\Junkio-Expense-Tracker\\backend\\tests\\transaction.test.js:142:69)\n    at processTicksAndRejections (node:internal/process/task_queues:103:5)"
+  },
+  {
+    "test": "should create a transaction and return 201",
+    "mess": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoContain\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // indexOf\u001b[22m\n\nExpected value: \u001b[32m422\u001b[39m\nReceived array: \u001b[31m[200, 201]\u001b[39m\n    at Object.toContain (D:\\Junkio-Expense-Tracker\\backend\\tests\\transaction.test.js:196:28)\n    at processTicksAndRejections (node:internal/process/task_queues:103:5)"
+  },
+  {
+    "test": "should register a new user successfully",
+    "mess": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\nExpected: \u001b[32m200\u001b[39m\nReceived: \u001b[31m500\u001b[39m\n    at Object.toEqual (D:\\Junkio-Expense-Tracker\\backend\\tests\\auth.test.js:70:32)\n    at processTicksAndRejections (node:internal/process/task_queues:103:5)"
+  },
+  {
+    "test": "should login an existing user",
+    "mess": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\nExpected: \u001b[32m200\u001b[39m\nReceived: \u001b[31m500\u001b[39m\n    at Object.toEqual (D:\\Junkio-Expense-Tracker\\backend\\tests\\auth.test.js:96:32)\n    at processTicksAndRejections (node:internal/process/task_queues:103:5)"
+  }
+]

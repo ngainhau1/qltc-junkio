@@ -11,6 +11,7 @@ module.exports = {
         // Users
         const adminId = uuidv4();
         const userId = uuidv4();
+        const staffId = uuidv4();
         await queryInterface.bulkInsert('Users', [
             {
                 id: adminId,
@@ -27,6 +28,15 @@ module.exports = {
                 email: 'demo_user@junkio.com',
                 password_hash: passwordHash,
                 role: 'member',
+                createdAt: now,
+                updatedAt: now
+            },
+            {
+                id: staffId,
+                name: 'Demo Staff',
+                email: 'demo_staff@junkio.com',
+                password_hash: passwordHash,
+                role: 'staff',
                 createdAt: now,
                 updatedAt: now
             }
@@ -58,6 +68,14 @@ module.exports = {
                 role: 'member',
                 createdAt: now,
                 updatedAt: now
+            },
+            {
+                id: uuidv4(),
+                family_id: familyId,
+                user_id: staffId,
+                role: 'member',
+                createdAt: now,
+                updatedAt: now
             }
         ], {});
 
@@ -83,9 +101,11 @@ module.exports = {
         const adminWalletId = uuidv4();
         const userWalletId = uuidv4();
         const familyWalletId = uuidv4();
+        const staffWalletId = uuidv4();
         await queryInterface.bulkInsert('Wallets', [
             { id: adminWalletId, name: 'Ví Tiền Mặt', balance: 12000000, currency: 'VND', user_id: adminId, family_id: null, createdAt: now, updatedAt: now },
             { id: userWalletId, name: 'Ví Tiết Kiệm', balance: 8000000, currency: 'VND', user_id: userId, family_id: null, createdAt: now, updatedAt: now },
+            { id: staffWalletId, name: 'Ví Nhân Viên', balance: 3500000, currency: 'VND', user_id: staffId, family_id: null, createdAt: now, updatedAt: now },
             { id: familyWalletId, name: 'Quỹ Gia Đình', balance: 5000000, currency: 'VND', user_id: null, family_id: familyId, createdAt: now, updatedAt: now }
         ], {});
 

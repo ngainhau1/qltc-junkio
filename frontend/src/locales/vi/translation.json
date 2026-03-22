@@ -131,7 +131,9 @@
                 "nameRequired": "Vui lòng nhập tên ví",
                 "balanceRequired": "Vui lòng nhập số dư ban đầu",
                 "balanceMin": "Số dư không được âm",
-                "typeRequired": "Vui lòng chọn loại ví"
+                "typeRequired": "Vui lòng chọn loại ví",
+                "duplicateName": "Tên ví đã tồn tại. Vui lòng chọn tên khác.",
+                "saveFailed": "Không thể lưu ví. Vui lòng thử lại."
             }
         }
     },
@@ -522,6 +524,7 @@
         "viewProfile": "Xem Hồ sơ",
         "userDetails": "Chi tiết Người dùng",
         "roleAdmin": "Quản trị",
+        "roleStaff": "Nhân viên",
         "roleMember": "Thành viên",
         "statusActive": "Hoạt động",
         "statusLocked": "Đã khóa",

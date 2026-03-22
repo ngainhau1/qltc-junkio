@@ -2,6 +2,11 @@ const express = require('express');
 const router = express.Router();
 const walletController = require('../controllers/walletController');
 const authMiddleware = require('../middleware/authMiddleware');
+const {
+    validateCreateWallet,
+    validateUpdateWallet,
+    validateDeleteWallet
+} = require('../validators/walletValidator');
 
 router.use(authMiddleware);
 
@@ -75,7 +80,7 @@ router.get('/', walletController.getUserWallets);
  *       401:
  *         description: Chưa xác thực
  */
-router.post('/', walletController.createWallet);
+router.post('/', validateCreateWallet, walletController.createWallet);
 
 /**
  * @swagger
@@ -107,7 +112,7 @@ router.post('/', walletController.createWallet);
  *       404:
  *         description: Không tìm thấy ví
  */
-router.put('/:id', walletController.updateWallet);
+router.put('/:id', validateUpdateWallet, walletController.updateWallet);
 
 /**
  * @swagger
@@ -129,7 +134,7 @@ router.put('/:id', walletController.updateWallet);
  *       404:
  *         description: Không tìm thấy ví
  */
-router.delete('/:id', walletController.deleteWallet);
+router.delete('/:id', validateDeleteWallet, walletController.deleteWallet);
 
 module.exports = router;
 

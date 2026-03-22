@@ -1,33 +1,18 @@
-import { useSelector } from "react-redux"
-import { Button } from "@/components/ui/button"
-import { DashboardStats } from "@/components/dashboard/DashboardStats"
-import { RecentTransactions } from "@/components/dashboard/RecentTransactions"
-import { FinancialChart } from "@/components/dashboard/FinancialChart"
-import { useTranslation } from "react-i18next"
+import { useSelector } from 'react-redux';
+import { DashboardStats } from '@/components/dashboard/DashboardStats';
+import { RecentTransactions } from '@/components/dashboard/RecentTransactions';
+import { FinancialChart } from '@/components/dashboard/FinancialChart';
+import { useTranslation } from 'react-i18next';
 
 export function Dashboard() {
     const { t } = useTranslation();
-    const { transactions } = useSelector(state => state.transactions)
-    const { wallets } = useSelector(state => state.wallets)
-    const { activeFamilyId } = useSelector(state => state.families)
-
-    // Filter wallets based on context:
-    // If a family is active, show only family wallets.
-    // Otherwise, show only personal wallets (no family_id).
-    const contextWallets = wallets.filter(w =>
-        activeFamilyId ? w.family_id === activeFamilyId : !w.family_id
-    )
-
-    const contextWalletIds = contextWallets.map(w => w.id)
-
-    // Filter transactions to only those belonging to the context wallets
-    const contextTransactions = transactions.filter(t =>
-        contextWalletIds.includes(t.wallet_id)
-    )
+    const { stats, recentTransactions, cashflowSeries, loading } = useSelector(
+        (state) => state.analytics.dashboard
+    );
 
     return (
         <div className="space-y-6">
-            <header className="flex justify-between items-center mb-8">
+            <header className="mb-8 flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">{t('dashboard.title')}</h1>
                     <p className="text-muted-foreground">{t('dashboard.desc')}</p>
@@ -38,20 +23,23 @@ export function Dashboard() {
                 </div>
             </header>
 
-            {/* Stats Row */}
-            <DashboardStats wallets={contextWallets} transactions={contextTransactions} />
+            <DashboardStats stats={stats} />
 
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-                {/* Main Chart Area */}
-                <div className="col-span-4 lg:col-span-4">
-                    <FinancialChart transactions={contextTransactions} />
+            {loading ? (
+                <div className="flex min-h-[280px] items-center justify-center rounded-xl border bg-card">
+                    <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
                 </div>
+            ) : (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+                    <div className="col-span-4 lg:col-span-4">
+                        <FinancialChart data={cashflowSeries} />
+                    </div>
 
-                {/* Recent Transactions List */}
-                <div className="col-span-3 lg:col-span-3">
-                    <RecentTransactions transactions={contextTransactions} />
+                    <div className="col-span-3 lg:col-span-3">
+                        <RecentTransactions transactions={recentTransactions} />
+                    </div>
                 </div>
-            </div>
+            )}
         </div>
-    )
+    );
 }

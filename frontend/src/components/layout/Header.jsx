@@ -46,6 +46,11 @@ export function Header() {
                     >
                         <span className="text-sm font-medium">
                             {t('header.hello')} <span className="font-bold">{user?.name || t('header.user')}</span>
+                            {user?.role && (
+                                <span className="ml-2 inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold uppercase text-emerald-700 border border-emerald-100">
+                                    {user.role}
+                                </span>
+                            )}
                         </span>
                         <img
                             src={user?.avatarUrl?.startsWith('/uploads') ? `${serverUrl}${user.avatarUrl}` : (user?.avatarUrl || `https://api.dicebear.com/7.x/notionists/svg?seed=${user?.name || 'demo'}`)}

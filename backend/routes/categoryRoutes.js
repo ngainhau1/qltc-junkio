@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const categoryController = require('../controllers/categoryController');
 const authMiddleware = require('../middleware/authMiddleware');
+const { validateCreateCategory, validateUpdateCategory, validateDeleteCategory } = require('../validators/categoryValidator');
 
 router.use(authMiddleware);
 
@@ -18,9 +19,30 @@ router.use(authMiddleware);
  *   get:
  *     summary: Lấy danh sách danh mục
  *     tags: [Categories]
- *     security: [ { bearerAuth: [] } ]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
- *       200: { description: Danh sách categories }
+ *       200:
+ *         description: Danh sách categories
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                   name:
+ *                     type: string
+ *                   type:
+ *                     type: string
+ *                     enum: [INCOME, EXPENSE]
+ *                   icon:
+ *                     type: string
+ *                   parent_id:
+ *                     type: string
+ *                     nullable: true
  */
 router.get('/', categoryController.getCategories);
 
@@ -30,7 +52,8 @@ router.get('/', categoryController.getCategories);
  *   post:
  *     summary: Tạo danh mục mới
  *     tags: [Categories]
- *     security: [ { bearerAuth: [] } ]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -38,10 +61,28 @@ router.get('/', categoryController.getCategories);
  *           schema:
  *             type: object
  *             required: [name, type]
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: Ăn uống
+ *               type:
+ *                 type: string
+ *                 enum: [INCOME, EXPENSE]
+ *                 example: EXPENSE
+ *               parent_id:
+ *                 type: string
+ *                 format: uuid
+ *                 nullable: true
+ *               icon:
+ *                 type: string
+ *                 example: Utensils
  *     responses:
- *       201: { description: Tạo thành công }
+ *       201:
+ *         description: Tạo thành công
+ *       400:
+ *         description: Dữ liệu không hợp lệ
  */
-router.post('/', categoryController.createCategory);
+router.post('/', validateCreateCategory, categoryController.createCategory);
 
 /**
  * @swagger
@@ -49,15 +90,35 @@ router.post('/', categoryController.createCategory);
  *   put:
  *     summary: Cập nhật danh mục
  *     tags: [Categories]
- *     security: [ { bearerAuth: [] } ]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               type:
+ *                 type: string
+ *                 enum: [INCOME, EXPENSE]
+ *               icon:
+ *                 type: string
  *     responses:
- *       200: { description: Cập nhật thành công }
+ *       200:
+ *         description: Cập nhật thành công
+ *       404:
+ *         description: Không tìm thấy danh mục
  */
-router.put('/:id', categoryController.updateCategory);
+router.put('/:id', validateUpdateCategory, categoryController.updateCategory);
 
 /**
  * @swagger
@@ -65,14 +126,21 @@ router.put('/:id', categoryController.updateCategory);
  *   delete:
  *     summary: Xóa danh mục
  *     tags: [Categories]
- *     security: [ { bearerAuth: [] } ]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
  *     responses:
- *       200: { description: Xóa thành công }
+ *       200:
+ *         description: Xóa thành công
+ *       404:
+ *         description: Không tìm thấy danh mục
  */
-router.delete('/:id', categoryController.deleteCategory);
+router.delete('/:id', validateDeleteCategory, categoryController.deleteCategory);
 
 module.exports = router;

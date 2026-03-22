@@ -1,78 +1,124 @@
-import { useState, useEffect, useCallback } from "react"
-import { useSelector, useDispatch } from "react-redux"
-import { fetchTransactions, fetchTransactionById } from "@/features/transactions/transactionSlice"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Plus, History, Repeat } from "lucide-react"
-import { RecurringRulesList } from "@/components/features/recurring/RecurringRulesList"
-import { RecurringRuleForm } from "@/components/features/recurring/RecurringRuleForm"
-import { Modal } from "@/components/ui/modal"
-import { VirtualizedTransactionList } from "@/components/features/transactions/VirtualizedTransactionList"
-import { TransactionDetailModal } from "@/components/features/transactions/TransactionDetailModal"
+import { useCallback, useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+    fetchTransactionById,
+    fetchTransactions,
+    setCurrentPage,
+    setFilter,
+} from '@/features/transactions/transactionSlice';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { History, Plus, Repeat } from 'lucide-react';
+import { RecurringRulesList } from '@/components/features/recurring/RecurringRulesList';
+import { RecurringRuleForm } from '@/components/features/recurring/RecurringRuleForm';
+import { Modal } from '@/components/ui/modal';
+import { VirtualizedTransactionList } from '@/components/features/transactions/VirtualizedTransactionList';
+import { TransactionDetailModal } from '@/components/features/transactions/TransactionDetailModal';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Download, FileText, FileSpreadsheet, Upload } from "lucide-react"
-import { exportToCSV, exportToPDF, exportToExcel } from "@/services/exportService"
-import { useTranslation } from "react-i18next"
-import { openImportModal, closeImportModal } from "@/features/ui/uiSlice"
-import { ImportTransactionsModal } from "@/components/features/transactions/ImportTransactionsModal"
+} from '@/components/ui/dropdown-menu';
+import { Download, FileSpreadsheet, FileText, Upload } from 'lucide-react';
+import {
+    exportTransactionRowsToCSV,
+    exportTransactionRowsToExcel,
+    exportTransactionRowsToPDF,
+    fetchAllTransactionsForExport,
+} from '@/services/exportService';
+import { useTranslation } from 'react-i18next';
+import { closeImportModal, openImportModal } from '@/features/ui/uiSlice';
+import { ImportTransactionsModal } from '@/components/features/transactions/ImportTransactionsModal';
+import { buildTransactionQueryFromState } from '@/features/finance/context';
+import { toast } from 'sonner';
 
 export function Transactions() {
     const { t } = useTranslation();
     const dispatch = useDispatch();
-    const { transactions, pagination } = useSelector(state => state.transactions)
-    const { wallets } = useSelector(state => state.wallets)
-    const { activeFamilyId } = useSelector(state => state.families)
-    const { isImportModalOpen } = useSelector(state => state.ui)
-    const [activeTab, setActiveTab] = useState('history') // 'history' | 'recurring'
-    const [isAddRuleOpen, setIsAddRuleOpen] = useState(false)
-    const [isDetailOpen, setIsDetailOpen] = useState(false)
+    const { transactions, pagination, filter, loading } = useSelector((state) => state.transactions);
+    const { activeFamilyId } = useSelector((state) => state.families);
+    const { isImportModalOpen } = useSelector((state) => state.ui);
+    const [activeTab, setActiveTab] = useState('history');
+    const [isAddRuleOpen, setIsAddRuleOpen] = useState(false);
+    const [isDetailOpen, setIsDetailOpen] = useState(false);
 
-    const [searchTerm, setSearchTerm] = useState('')
-    const [currentPage, setCurrentPage] = useState(1)
+    const handleRowClick = useCallback(
+        (transaction) => {
+            dispatch(fetchTransactionById(transaction.id));
+            setIsDetailOpen(true);
+        },
+        [dispatch]
+    );
 
-    const handleRowClick = useCallback((transaction) => {
-        dispatch(fetchTransactionById(transaction.id));
-        setIsDetailOpen(true);
-    }, [dispatch]);
-
-    // Gọi API mỗi khi filter/trang thay đổi
     useEffect(() => {
+        dispatch(setCurrentPage(1));
+    }, [dispatch, activeFamilyId]);
+
+    useEffect(() => {
+        if (activeTab !== 'history') {
+            return undefined;
+        }
+
         const timer = setTimeout(() => {
-            dispatch(fetchTransactions({
-                page: currentPage,
-                limit: pagination?.itemsPerPage || 50,
-                search: searchTerm,
-            }));
-        }, 500); // Debounce 500ms
-        
+            dispatch(fetchTransactions());
+        }, 350);
+
         return () => clearTimeout(timer);
-    }, [dispatch, searchTerm, currentPage, pagination?.itemsPerPage]);
+    }, [
+        activeTab,
+        activeFamilyId,
+        dispatch,
+        filter.categoryId,
+        filter.endDate,
+        filter.search,
+        filter.startDate,
+        filter.type,
+        filter.walletId,
+        pagination.currentPage,
+        pagination.itemsPerPage,
+    ]);
 
-    // Lọc theo wallet context nếu là view Family (vẫn giữ phụ trợ ở frontend khi render)
-    const contextWallets = wallets.filter(w =>
-        activeFamilyId ? w.family_id === activeFamilyId : !w.family_id
-    )
-    const contextWalletIds = contextWallets.map(w => w.id)
-    const filteredTransactions = transactions.filter(t =>
-        contextWalletIds.includes(t.wallet_id)
-    )
+    const handleExport = async (format) => {
+        try {
+            const query = buildTransactionQueryFromState({
+                transactions: {
+                    filter,
+                    pagination,
+                },
+                families: { activeFamilyId },
+            });
+            const allTransactions = await fetchAllTransactionsForExport(query);
 
+            if (format === 'pdf') {
+                await exportTransactionRowsToPDF(allTransactions, t('reports.exportTitle'));
+                return;
+            }
 
+            if (format === 'csv') {
+                exportTransactionRowsToCSV(allTransactions);
+                return;
+            }
+
+            await exportTransactionRowsToExcel(allTransactions);
+        } catch (error) {
+            toast.error(error?.message || t('transactions.exportError', 'Khong the xuat du lieu'));
+        }
+    };
 
     return (
         <div className="space-y-6">
-            <header className="flex justify-between items-center">
+            <header className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">{t('transactions.title')}</h1>
                     <p className="text-muted-foreground">{t('transactions.desc')}</p>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline" className="text-blue-600 border-blue-200 hover:bg-blue-50" onClick={() => dispatch(openImportModal())}>
+                    <Button
+                        variant="outline"
+                        className="border-blue-200 text-blue-600 hover:bg-blue-50"
+                        onClick={() => dispatch(openImportModal())}
+                    >
                         <Upload className="mr-2 h-4 w-4" /> Import CSV
                     </Button>
                     <DropdownMenu>
@@ -82,13 +128,13 @@ export function Transactions() {
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
-                            <DropdownMenuItem onClick={() => exportToPDF(filteredTransactions)}>
+                            <DropdownMenuItem onClick={() => handleExport('pdf')}>
                                 <FileText className="mr-2 h-4 w-4" /> {t('transactions.exportPDF')}
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => exportToCSV(filteredTransactions)}>
+                            <DropdownMenuItem onClick={() => handleExport('csv')}>
                                 <FileSpreadsheet className="mr-2 h-4 w-4" /> {t('transactions.exportCSV')}
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => exportToExcel(filteredTransactions)}>
+                            <DropdownMenuItem onClick={() => handleExport('xlsx')}>
                                 <FileSpreadsheet className="mr-2 h-4 w-4" /> {t('transactions.exportExcel')}
                             </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -102,17 +148,16 @@ export function Transactions() {
                 </div>
             </header>
 
-            {/* Tabs Toggle */}
-            <div className="flex p-1 bg-muted rounded-lg w-fit">
+            <div className="flex w-fit rounded-lg bg-muted p-1">
                 <button
                     onClick={() => setActiveTab('history')}
-                    className={`px-4 py-2 text-sm font-medium rounded-md transition-all flex items-center gap-2 ${activeTab === 'history' ? 'bg-background shadow-sm text-foreground border border-border' : 'text-muted-foreground hover:text-foreground'}`}
+                    className={`flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-all ${activeTab === 'history' ? 'border border-border bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                 >
                     <History className="h-4 w-4" /> {t('transactions.tabs.history')}
                 </button>
                 <button
                     onClick={() => setActiveTab('recurring')}
-                    className={`px-4 py-2 text-sm font-medium rounded-md transition-all flex items-center gap-2 ${activeTab === 'recurring' ? 'bg-background shadow-sm text-foreground border border-border' : 'text-muted-foreground hover:text-foreground'}`}
+                    className={`flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-all ${activeTab === 'recurring' ? 'border border-border bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                 >
                     <Repeat className="h-4 w-4" /> {t('transactions.tabs.recurring')}
                 </button>
@@ -124,32 +169,36 @@ export function Transactions() {
                         <Input
                             placeholder={t('transactions.search')}
                             className="max-w-xs"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            value={filter.search}
+                            onChange={(event) => dispatch(setFilter({ search: event.target.value }))}
                         />
                     </div>
 
                     <div className="space-y-6">
-                        <VirtualizedTransactionList transactions={filteredTransactions} onRowClick={handleRowClick} />
-                        
-                        {/* Pagination UI */}
-                        {pagination?.totalPages > 1 && (
-                            <div className="flex justify-center items-center gap-4 mt-6">
-                                <Button 
-                                    variant="outline" 
-                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                                    disabled={currentPage === 1}
+                        {loading ? (
+                            <div className="flex min-h-[320px] items-center justify-center rounded-xl border bg-card">
+                                <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+                            </div>
+                        ) : (
+                            <VirtualizedTransactionList transactions={transactions} onRowClick={handleRowClick} />
+                        )}
+
+                        {pagination.totalPages > 1 && (
+                            <div className="mt-6 flex items-center justify-center gap-4">
+                                <Button
+                                    variant="outline"
+                                    onClick={() => dispatch(setCurrentPage(Math.max(1, pagination.currentPage - 1)))}
+                                    disabled={pagination.currentPage === 1}
                                 >
-                                    {t('common.prev', 'Trang trước')}
+                                    {t('common.prev', 'Trang truoc')}
                                 </Button>
                                 <span className="text-sm">
-                                    {t('common.page', 'Trang')} {pagination.currentPage} / {pagination.totalPages} 
-                                    (Tổng: {pagination.totalItems})
+                                    {t('common.page', 'Trang')} {pagination.currentPage} / {pagination.totalPages} (Tong: {pagination.totalItems})
                                 </span>
-                                <Button 
-                                    variant="outline" 
-                                    onClick={() => setCurrentPage(p => Math.min(pagination.totalPages, p + 1))}
-                                    disabled={currentPage === pagination.totalPages}
+                                <Button
+                                    variant="outline"
+                                    onClick={() => dispatch(setCurrentPage(Math.min(pagination.totalPages, pagination.currentPage + 1)))}
+                                    disabled={pagination.currentPage === pagination.totalPages}
                                 >
                                     {t('common.next', 'Trang sau')}
                                 </Button>
@@ -161,25 +210,13 @@ export function Transactions() {
                 <RecurringRulesList />
             )}
 
-            <Modal
-                isOpen={isAddRuleOpen}
-                onClose={() => setIsAddRuleOpen(false)}
-                title={t('transactions.addRecurringTitle')}
-            >
+            <Modal isOpen={isAddRuleOpen} onClose={() => setIsAddRuleOpen(false)} title={t('transactions.addRecurringTitle')}>
                 <RecurringRuleForm onSuccess={() => setIsAddRuleOpen(false)} />
             </Modal>
 
-            {/* Import Modal */}
-            <ImportTransactionsModal
-                isOpen={isImportModalOpen}
-                onClose={() => dispatch(closeImportModal())}
-            />
+            <ImportTransactionsModal isOpen={isImportModalOpen} onClose={() => dispatch(closeImportModal())} />
 
-            {/* Transaction Detail Modal */}
-            <TransactionDetailModal
-                isOpen={isDetailOpen}
-                onClose={() => setIsDetailOpen(false)}
-            />
+            <TransactionDetailModal isOpen={isDetailOpen} onClose={() => setIsDetailOpen(false)} />
         </div>
-    )
+    );
 }

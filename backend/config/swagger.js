@@ -6,9 +6,10 @@ const options = {
         info: {
             title: 'Junkio Expense Tracker API',
             version: '1.0.0',
-            description: 'API documentation for Junkio Expense Tracker'
+            description: 'API documentation for Junkio Expense Tracker. Tip: login first, then use the token in Authorize (BearerAuth).'
         },
-        servers: [{ url: 'http://localhost:5000' }],
+        // Use relative server so Swagger works with both localhost and 127.0.0.1 (avoid CORS host mismatch).
+        servers: [{ url: '/' }],
         components: {
             securitySchemes: {
                 bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }

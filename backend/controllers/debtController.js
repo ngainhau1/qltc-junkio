@@ -1,4 +1,6 @@
 const { TransactionShare, Transaction, Wallet, User, sequelize, Notification } = require('../models');
+const { success, error: sendError, notFound, serverError } = require('../utils/responseHelper');
+const { serializeNotification } = require('../utils/notificationPresenter');
 
 // GET /api/debts/pending
 exports.getPendingDebts = async (req, res) => {
@@ -15,10 +17,10 @@ exports.getPendingDebts = async (req, res) => {
                 include: [{ model: User, attributes: ['id', 'name'] }]
             }]
         });
-        res.json(pendingShares);
+        success(res, pendingShares, 'Lấy danh sách nợ chờ duyệt thành công');
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: 'Lỗi lấy danh sách nợ chờ duyệt.' });
+        serverError(res, 'Lỗi hệ thống: Lỗi lấy danh sách nợ chờ duyệt.');
     }
 };
 
@@ -26,15 +28,15 @@ exports.getPendingDebts = async (req, res) => {
 exports.approveShare = async (req, res) => {
     try {
         const share = await TransactionShare.findByPk(req.params.shareId);
-        if (!share) return res.status(404).json({ message: 'Không tìm thấy khoản nợ.' });
-        if (share.user_id !== req.user.id) return res.status(403).json({ message: 'Không có quyền duyệt nợ thay người khác.' });
+        if (!share) return notFound(res, 'Không tìm thấy khoản nợ.');
+        if (share.user_id !== req.user.id) return sendError(res, 'Không có quyền duyệt nợ thay người khác.', 403);
 
         share.approval_status = 'APPROVED';
         await share.save();
-        res.json({ message: 'Đã chấp nhận khoản nợ', share });
+        success(res, share, 'Đã chấp nhận khoản nợ');
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: 'Lỗi hệ thống.' });
+        serverError(res, 'Lỗi hệ thống.');
     }
 };
 
@@ -42,15 +44,15 @@ exports.approveShare = async (req, res) => {
 exports.rejectShare = async (req, res) => {
     try {
         const share = await TransactionShare.findByPk(req.params.shareId);
-        if (!share) return res.status(404).json({ message: 'Không tìm thấy khoản nợ.' });
-        if (share.user_id !== req.user.id) return res.status(403).json({ message: 'Không có quyền từ chối nợ thay người khác.' });
+        if (!share) return notFound(res, 'Không tìm thấy khoản nợ.');
+        if (share.user_id !== req.user.id) return sendError(res, 'Không có quyền từ chối nợ thay người khác.', 403);
 
         share.approval_status = 'REJECTED';
         await share.save();
-        res.json({ message: 'Đã từ chối khoản nợ', share });
+        success(res, share, 'Đã từ chối khoản nợ');
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: 'Lỗi hệ thống.' });
+        serverError(res, 'Lỗi hệ thống.');
     }
 };
 
@@ -62,7 +64,7 @@ exports.settleDebt = async (req, res) => {
 
     // Security: Validate amount
     if (!amount || parseFloat(amount) <= 0) {
-        return res.status(400).json({ message: 'Số tiền thanh toán phải lớn hơn 0' });
+        return sendError(res, 'Số tiền thanh toán phải lớn hơn 0', 400);
     }
 
     const t = await sequelize.transaction();
@@ -148,18 +150,18 @@ exports.settleDebt = async (req, res) => {
                     message: `Bạn vừa nhận được khoản trả nợ ${amount} từ người dùng có ID ${from_user_id}.`
                 });
                 const io = require('../config/socket').getIO();
-                io.to(to_user_id).emit('NEW_NOTIFICATION', notif);
+                io.to(to_user_id).emit('NEW_NOTIFICATION', serializeNotification(notif));
             }
         } catch (err) {
             console.error('Socket emit error:', err);
         }
 
-        res.json({ message: 'Thanh toán bù trừ thành công' });
+        success(res, null, 'Thanh toán bù trừ thành công');
 
-    } catch (error) {
+    } catch (err) {
         await t.rollback();
-        console.error(error);
-        res.status(500).json({ message: 'Settle Debt failed: ' + error.message });
+        console.error(err);
+        serverError(res, 'Thanh toán nợ thất bại: ' + err.message);
     }
 };
 
@@ -231,13 +233,13 @@ exports.getSimplifiedDebts = async (req, res) => {
             amount: s.amount
         }));
 
-        res.json({
+        success(res, {
             originalTransactions: shares.length,
             simplifiedTransactions: result.length,
             suggestions: result
-        });
-    } catch (error) {
-        console.error('Debt simplification error:', error);
-        res.status(500).json({ message: 'Server error' });
+        }, 'Tối ưu hóa nợ thành công');
+    } catch (err) {
+        console.error('Debt simplification error:', err);
+        serverError(res, 'Lỗi Server');
     }
 };

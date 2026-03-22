@@ -1,4 +1,5 @@
 const { RecurringPattern, Wallet, Category, Transaction } = require('../models');
+const { success, error: sendError, notFound, serverError } = require('../utils/responseHelper');
 
 // GET /api/recurring
 exports.getPatterns = async (req, res) => {
@@ -8,10 +9,10 @@ exports.getPatterns = async (req, res) => {
             where: { user_id: userId },
             order: [['created_at', 'DESC']]
         });
-        res.json(patterns);
+        success(res, patterns, 'Lấy danh sách giao dịch định kỳ thành công');
     } catch (error) {
         console.error('Error fetching recurring patterns:', error);
-        res.status(500).json({ message: error.message || 'Server error' });
+        serverError(res, error.message || 'Server error');
     }
 };
 
@@ -22,7 +23,7 @@ exports.createPattern = async (req, res) => {
         const { wallet_id, category_id, amount, type, description, frequency, next_run_date } = req.body;
 
         if (!wallet_id || !amount || !frequency || !next_run_date) {
-            return res.status(400).json({ message: 'Missing required fields' });
+            return sendError(res, 'Thiếu thông tin bắt buộc', 400);
         }
 
         const pattern = await RecurringPattern.create({
@@ -37,10 +38,10 @@ exports.createPattern = async (req, res) => {
             is_active: true
         });
 
-        res.status(201).json(pattern);
+        success(res, pattern, 'Tạo giao dịch định kỳ thành công', 201);
     } catch (error) {
         console.error('Error creating recurring pattern:', error);
-        res.status(500).json({ message: 'Server error' });
+        serverError(res, 'Server error');
     }
 };
 
@@ -52,7 +53,7 @@ exports.updatePattern = async (req, res) => {
         const { amount, frequency, is_active, next_run_date, description } = req.body;
 
         const pattern = await RecurringPattern.findOne({ where: { id, user_id: userId } });
-        if (!pattern) return res.status(404).json({ message: 'Pattern not found' });
+        if (!pattern) return notFound(res, 'Không tìm thấy giao dịch định kỳ');
 
         await pattern.update({
             amount: amount !== undefined ? amount : pattern.amount,
@@ -62,10 +63,10 @@ exports.updatePattern = async (req, res) => {
             description: description !== undefined ? description : pattern.description
         });
 
-        res.json(pattern);
+        success(res, pattern, 'Cập nhật giao dịch định kỳ thành công');
     } catch (error) {
         console.error('Error updating recurring pattern:', error);
-        res.status(500).json({ message: 'Server error' });
+        serverError(res, 'Server error');
     }
 };
 
@@ -76,13 +77,13 @@ exports.deletePattern = async (req, res) => {
         const userId = req.user.id;
 
         const pattern = await RecurringPattern.findOne({ where: { id, user_id: userId } });
-        if (!pattern) return res.status(404).json({ message: 'Pattern not found' });
+        if (!pattern) return notFound(res, 'Không tìm thấy giao dịch định kỳ');
 
         await pattern.destroy();
-        res.json({ message: 'Recurring pattern deleted successfully' });
+        success(res, null, 'Xóa giao dịch định kỳ thành công');
     } catch (error) {
         console.error('Error deleting recurring pattern:', error);
-        res.status(500).json({ message: 'Server error' });
+        serverError(res, 'Server error');
     }
 };
 
@@ -97,7 +98,7 @@ exports.triggerCron = async (req, res) => {
         });
 
         if (patterns.length === 0) {
-            return res.json({ message: 'Không có giao dịch định kỳ nào cần thực thi hôm nay.' });
+            return success(res, null, 'Không có giao dịch định kỳ nào cần thực thi hôm nay.');
         }
 
         let count = 0;
@@ -144,8 +145,8 @@ exports.triggerCron = async (req, res) => {
                 console.error(`Lỗi chạy cron pattern=${pattern.id}:`, err);
             }
         }
-        res.json({ message: `Đã chạy thành công ${count} giao dịch định kỳ.` });
+        success(res, null, `Đã chạy thành công ${count} giao dịch định kỳ.`);
     } catch (error) {
-        res.status(500).json({ message: 'Lỗi', error: error.message });
+        serverError(res, 'Lỗi ' + error.message);
     }
 };

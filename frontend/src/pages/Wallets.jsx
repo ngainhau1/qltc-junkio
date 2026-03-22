@@ -64,7 +64,8 @@ export function Wallets() {
                                     <div>
                                         <CardTitle className="text-lg">{wallet.name}</CardTitle>
                                         <CardDescription className="capitalize mt-1">
-                                            {activeFamilyId ? t('wallets.familyWallet') : t('wallets.personalWallet')} - {t(`wallets.form.types.${wallet.type}`, { defaultValue: wallet.type })}
+                                            {activeFamilyId ? t('wallets.familyWallet') : t('wallets.personalWallet')}
+                                            {wallet.type ? ` - ${t(`wallets.form.types.${wallet.type}`, { defaultValue: wallet.type })}` : ''}
                                         </CardDescription>
                                     </div>
                                     <DropdownMenu>

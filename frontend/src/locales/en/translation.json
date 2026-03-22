@@ -131,7 +131,9 @@
                 "nameRequired": "Wallet Name is required",
                 "balanceRequired": "Initial Balance is required",
                 "balanceMin": "Balance must be positive",
-                "typeRequired": "Type is required"
+                "typeRequired": "Type is required",
+                "duplicateName": "This wallet name already exists. Please choose another name.",
+                "saveFailed": "Unable to save wallet. Please try again."
             }
         }
     },
@@ -521,6 +523,7 @@
         "viewProfile": "View Profile",
         "userDetails": "User Details",
         "roleAdmin": "Admin",
+        "roleStaff": "Staff",
         "roleMember": "Member",
         "statusActive": "Active",
         "statusLocked": "Locked",

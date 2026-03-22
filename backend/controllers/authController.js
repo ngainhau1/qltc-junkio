@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const { Op } = require('sequelize');
 const { User, Family, FamilyMember } = require('../models');
 const sendEmail = require('../services/emailService');
+const { success, error: sendError } = require('../utils/responseHelper');
 
 // Helpers for Token Generation
 const generateAccessToken = (user) => {
@@ -36,20 +37,20 @@ exports.register = async (req, res) => {
 
     // Security: Input validation
     if (!name || !email || !password) {
-        return res.error('Vui lòng điền đầy đủ thông tin', 400);
+        return sendError(res, 'Vui lòng điền đầy đủ thông tin', 400);
     }
     if (password.length < 6) {
-        return res.error('Mật khẩu phải có ít nhất 6 ký tự', 400);
+        return sendError(res, 'Mật khẩu phải có ít nhất 6 ký tự', 400);
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-        return res.error('Email không hợp lệ', 400);
+        return sendError(res, 'Email không hợp lệ', 400);
     }
 
     try {
         let user = await User.findOne({ where: { email } });
         if (user) {
-            return res.error('User already exists', 400);
+            return sendError(res, 'User already exists', 400);
         }
 
         const salt = await bcrypt.genSalt(10);
@@ -81,10 +82,10 @@ exports.register = async (req, res) => {
 
         setRefreshTokenCookie(res, refreshToken);
 
-        res.success({ token: accessToken, user: { id: user.id, name: user.name, email: user.email } }, 'Đăng ký thành công');
+        success(res, { token: accessToken, user: { id: user.id, name: user.name, email: user.email } }, 'Đăng ký thành công', 201);
     } catch (err) {
         console.error(err.message);
-        res.error('Server error', 500);
+        sendError(res, 'Server error', 500);
     }
 };
 
@@ -93,12 +94,12 @@ exports.login = async (req, res) => {
     try {
         let user = await User.findOne({ where: { email } });
         if (!user) {
-            return res.error('Invalid Credentials', 400);
+            return sendError(res, 'Invalid Credentials', 400);
         }
 
         const isMatch = await bcrypt.compare(password, user.password_hash);
         if (!isMatch) {
-            return res.error('Invalid Credentials', 400);
+            return sendError(res, 'Invalid Credentials', 400);
         }
 
         const accessToken = generateAccessToken(user);
@@ -108,10 +109,10 @@ exports.login = async (req, res) => {
 
         setRefreshTokenCookie(res, refreshToken);
 
-        res.success({ token: accessToken, user: { id: user.id, name: user.name, email: user.email, role: user.role } }, 'Đăng nhập thành công');
+        success(res, { token: accessToken, user: { id: user.id, name: user.name, email: user.email, role: user.role } }, 'Đăng nhập thành công');
     } catch (err) {
         console.error(err.message);
-        res.error('Server error', 500);
+        sendError(res, 'Server error', 500);
     }
 };
 
@@ -119,66 +120,30 @@ exports.refreshToken = async (req, res) => {
     const refreshToken = req.cookies?.refresh_token;
 
     if (!refreshToken) {
-        return res.error('No refresh token provided, please log in', 401);
+        return sendError(res, 'No refresh token provided, please log in', 401);
     }
 
     try {
         const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET || 'refresh_secret_b6d9677116aa4');
 
-        // Generate new access token (keep role to avoid losing permissions)
-        const newAccessToken = generateAccessToken({
-            id: decoded.user.id,
-            role: decoded.user.role
-        });
+        // Generate new access token
+        const newAccessToken = generateAccessToken({ id: decoded.user.id });
 
-        res.success({ token: newAccessToken }, 'Token refreshed');
+        success(res, { token: newAccessToken }, 'Lấy token mới thành công');
     } catch (err) {
         console.error('Refresh token error:', err.message);
-        res.error('Invalid or expired refresh token', 403);
+        sendError(res, 'Invalid or expired refresh token', 403);
     }
 };
 
-exports.getMe = async (req, res) => {
-    try {
-        const user = await User.findByPk(req.user.id, {
-            attributes: { exclude: ['password_hash'] }
-        });
-        res.success(user);
-    } catch (err) {
-        console.error(err.message);
-        res.error('Server Error', 500);
-    }
-};
 
-exports.updateAvatar = async (req, res) => {
-    try {
-        if (!req.file) {
-            return res.error('No file uploaded', 400);
-        }
-
-        const avatarUrl = `/uploads/avatars/${req.file.filename}`;
-
-        const user = await User.findByPk(req.user.id);
-        if (!user) {
-            return res.error('User not found', 404);
-        }
-
-        user.avatar = avatarUrl;
-        await user.save();
-
-        res.success({ avatarUrl }, 'Avatar updated successfully');
-    } catch (err) {
-        console.error('Update avatar error:', err.message);
-        res.error('Server Error', 500);
-    }
-};
 
 exports.forgotPassword = async (req, res) => {
     const { email } = req.body;
     try {
         const user = await User.findOne({ where: { email } });
         if (!user) {
-            return res.error('Người dùng không tồn tại', 404);
+            return sendError(res, 'Người dùng không tồn tại', 404);
         }
 
         const resetToken = crypto.randomBytes(20).toString('hex');
@@ -198,7 +163,7 @@ exports.forgotPassword = async (req, res) => {
             message
         });
 
-        res.success(null, 'Email khôi phục mật khẩu đã được gửi', 200);
+        success(res, null, 'Email khôi phục mật khẩu đã được gửi');
     } catch (err) {
         console.error(err.message);
         const user = await User.findOne({ where: { email } });
@@ -207,7 +172,7 @@ exports.forgotPassword = async (req, res) => {
             user.reset_password_expires = null;
             await user.save();
         }
-        res.error('Lỗi gửi email', 500);
+        sendError(res, 'Lỗi gửi email', 500);
     }
 };
 
@@ -226,7 +191,7 @@ exports.resetPassword = async (req, res) => {
         });
 
         if (!user) {
-            return res.error('Token không hợp lệ hoặc đã hết hạn', 400);
+            return sendError(res, 'Token không hợp lệ hoặc đã hết hạn', 400);
         }
 
         const salt = await bcrypt.genSalt(10);
@@ -236,9 +201,9 @@ exports.resetPassword = async (req, res) => {
 
         await user.save();
 
-        res.success(null, 'Mật khẩu đã được đặt lại thành công', 200);
+        success(res, null, 'Mật khẩu đã được đặt lại thành công');
     } catch (err) {
         console.error(err.message);
-        res.error('Server Error', 500);
+        sendError(res, 'Server Error', 500);
     }
 };

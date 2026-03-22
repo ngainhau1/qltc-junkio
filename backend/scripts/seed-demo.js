@@ -1,8 +1,9 @@
 'use strict';
 /**
- * Script tạo 2 tài khoản demo:
- *   - demo@junkio.com  / demo123  (member, 50 giao dịch mẫu)
- *   - admin@junkio.com / admin123 (admin)
+ * Script tạo 3 tài khoản demo:
+ *   - demo@junkio.com   / demo123   (member, 50 giao dịch mẫu)
+ *   - staff@junkio.com  / staff123  (staff)
+ *   - admin@junkio.com  / admin123  (admin)
  *
  * Chạy: node scripts/seed-demo.js
  */
@@ -13,6 +14,8 @@ const { sequelize, User, Family, FamilyMember, Wallet, Category, Transaction, Bu
 
 const DEMO_EMAIL  = 'demo@junkio.com';
 const DEMO_PASS   = 'demo123';
+const STAFF_EMAIL = 'staff@junkio.com';
+const STAFF_PASS  = 'staff123';
 const ADMIN_EMAIL = 'admin@junkio.com';
 const ADMIN_PASS  = 'admin123';
 
@@ -134,6 +137,7 @@ async function main() {
     // ── 1. Xóa tài khoản cũ nếu có ─────────────────────────────────────────
     console.log('=== BUOC 1: Don dep tai khoan cu ===');
     await deleteIfExists(DEMO_EMAIL);
+    await deleteIfExists(STAFF_EMAIL);
     await deleteIfExists(ADMIN_EMAIL);
 
     // ── 2. Tạo categories (dùng chung) ──────────────────────────────────────
@@ -182,6 +186,19 @@ async function main() {
         currency: 'VND', user_id: demoUser.id, family_id: null
     });
 
+    // ── 4b. Tạo Staff
+    console.log('\n=== BUOC 4b: Tao Staff User ===');
+    const staffPwHash = await bcrypt.hash(STAFF_PASS, 10);
+    const staffUser = await User.create({
+        id: uuidv4(), name: 'Tran Thi Staff', email: STAFF_EMAIL,
+        password_hash: staffPwHash, role: 'staff', is_locked: false
+    });
+    const staffWallet = await Wallet.create({
+        id: uuidv4(), name: 'Ví Staff', balance: 3500000,
+        currency: 'VND', user_id: staffUser.id, family_id: null
+    });
+    console.log(`  Staff: ${STAFF_EMAIL} / ${STAFF_PASS}`);
+
     // ── 5. Tạo Family ────────────────────────────────────────────────────────
     console.log('\n=== BUOC 5: Tao Family ===');
     const family = await Family.create({
@@ -192,6 +209,9 @@ async function main() {
     });
     await FamilyMember.create({
         id: uuidv4(), family_id: family.id, user_id: admin.id, role: 'member'
+    });
+    await FamilyMember.create({
+        id: uuidv4(), family_id: family.id, user_id: staffUser.id, role: 'member'
     });
     console.log(`  Family: ${family.name}`);
 
@@ -270,8 +290,9 @@ async function main() {
     console.log('\n============================================');
     console.log('HOAN THANH! Tai khoan demo san sang:');
     console.log('  Demo User : demo@junkio.com   / demo123');
+    console.log('  Staff     : staff@junkio.com  / staff123');
     console.log('  Admin     : admin@junkio.com  / admin123');
-    console.log('  50 giao dich, 3 goals, 4 budgets, 2 vi');
+    console.log('  50 giao dich, 3 goals, 4 budgets, 3 vi ca nhan + 1 family');
     console.log('============================================');
 
     await sequelize.close();

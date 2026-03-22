@@ -31,6 +31,16 @@ security_*.txt
 **/build.log
 **/lint_*.txt
 **/lint_*.json
+lint*.json
+phaseC-*.txt
 
 # Bỏ qua thư mục tài liệu
 doc/
+
+# Bỏ qua các thư mục agent và AI bots
+.agent/
+.agents/
+_agent/
+_agents/
+.playwright-cli/
+.gemini/

@@ -1,104 +1,185 @@
-import * as XLSX from 'xlsx';
-import jsPDF from 'jspdf';
-import autoTable from "jspdf-autotable";
-import Papa from "papaparse";
-import { formatCurrency, formatDateString } from '@/lib/utils';
-import { robotoBase64 } from './Roboto-Regular-normal';
+import Papa from 'papaparse';
+import api from '@/lib/api';
+import { cleanQueryParams } from '@/features/finance/context';
+import { formatDateString } from '@/lib/utils';
 
-// --- CSV Export ---
-export const exportToCSV = (transactions) => {
-    // 1. Transform data for CSV - Using English to prevent encoding/font issues
-    const data = transactions.map(t => ({
-        'Date': formatDateString(t.date),
-        'Description': t.description || 'No description',
-        'Type': t.type,
-        'Amount': parseFloat(t.amount), // Emit raw number for Excel sum formulas, not text
-        'Category': t.category_id,
-        'Wallet ID': t.wallet_id
-    }));
-
-    // 2. Generate CSV
-    const csv = Papa.unparse(data);
-
-    // 3. Trigger Download
-    // \uFEFF is the UTF-8 Byte Order Mark (BOM). Required for Excel to recognize UTF-8 in CSVs.
-    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+const downloadBlob = (blob, filename) => {
     const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `transactions_${new Date().toISOString().split('T')[0]}.csv`);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
 };
 
-// --- Excel Export ---
-export const exportToExcel = (transactions) => {
-    // Using English headers and Raw Numbers
-    const data = transactions.map(t => ({
-        'Date': formatDateString(t.date),
-        'Description': t.description || 'No description',
-        'Type': t.type,
-        'Amount': parseFloat(t.amount) // Raw Number so Excel treats it as a calculator digit
-    }));
+const getTodaySuffix = () => new Date().toISOString().split('T')[0];
 
-    const worksheet = XLSX.utils.json_to_sheet(data);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Transactions");
+const normalizeRows = (rows) =>
+    rows.map((row) =>
+        Object.fromEntries(
+            Object.entries(row).map(([key, value]) => [key, value ?? ''])
+        )
+    );
 
-    // Auto-size columns slightly
-    worksheet['!cols'] = [
-        { wch: 15 }, // Date
-        { wch: 40 }, // Description
-        { wch: 10 }, // Type
-        { wch: 20 }, // Amount
+const transactionToRow = (transaction) => ({
+    Date: formatDateString(transaction.date || transaction.transaction_date || transaction.createdAt),
+    Description: transaction.description || 'No description',
+    Type: transaction.type,
+    Amount: Number(transaction.amount || 0),
+    Category: transaction.Category?.name || transaction.category_id || '',
+    Wallet: transaction.Wallet?.name || transaction.wallet_id || '',
+});
+
+const reportDataToRows = (reportData) => {
+    const summary = reportData?.summary || {};
+    const expenseByCategory = Array.isArray(reportData?.expenseByCategory) ? reportData.expenseByCategory : [];
+    const cashflowSeries = Array.isArray(reportData?.cashflowSeries) ? reportData.cashflowSeries : [];
+
+    return [
+        {
+            Section: 'Summary',
+            Metric: 'Total Income',
+            Value: Number(summary.totalIncome || 0),
+        },
+        {
+            Section: 'Summary',
+            Metric: 'Total Expense',
+            Value: Number(summary.totalExpense || 0),
+        },
+        {
+            Section: 'Summary',
+            Metric: 'Net',
+            Value: Number(summary.net || 0),
+        },
+        {
+            Section: 'Summary',
+            Metric: 'Transaction Count',
+            Value: Number(summary.transactionCount || 0),
+        },
+        ...expenseByCategory.map((item) => ({
+            Section: 'Expense By Category',
+            Metric: item.name,
+            Value: Number(item.value || 0),
+        })),
+        ...cashflowSeries.map((item) => ({
+            Section: 'Cashflow',
+            Metric: item.date,
+            Income: Number(item.income || 0),
+            Expense: Number(item.expense || 0),
+        })),
     ];
-
-    XLSX.writeFile(workbook, `report_${new Date().toISOString().split('T')[0]}.xlsx`);
 };
 
-// --- PDF Export ---
-export const exportToPDF = (transactions, title = "Transaction Statement") => {
+export const exportRowsToCSV = (rows, filename = `export_${getTodaySuffix()}.csv`) => {
+    const csv = Papa.unparse(normalizeRows(rows));
+    const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' });
+    downloadBlob(blob, filename);
+};
+
+export const exportRowsToExcel = async (
+    rows,
+    filename = `report_${getTodaySuffix()}.xlsx`,
+    sheetName = 'Data'
+) => {
+    const XLSX = await import('xlsx');
+    const worksheet = XLSX.utils.json_to_sheet(normalizeRows(rows));
+    const workbook = XLSX.utils.book_new();
+
+    worksheet['!cols'] = Object.keys(rows[0] || { Data: '' }).map(() => ({ wch: 24 }));
+    XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+    XLSX.writeFile(workbook, filename);
+};
+
+export const exportRowsToPDF = async (
+    rows,
+    {
+        title = 'Report',
+        filename = `report_${getTodaySuffix()}.pdf`,
+    } = {}
+) => {
+    const [{ default: jsPDF }, { default: autoTable }, { robotoBase64 }] = await Promise.all([
+        import('jspdf'),
+        import('jspdf-autotable'),
+        import('./Roboto-Regular-normal'),
+    ]);
+
+    const normalizedRows = normalizeRows(rows);
+    const columns = Object.keys(normalizedRows[0] || { Data: '' });
     const doc = new jsPDF();
 
-    // Still load custom font to safely render user descriptions that might contain Unicode
-    doc.addFileToVFS("Roboto-Regular.ttf", robotoBase64);
-    doc.addFont("Roboto-Regular.ttf", "Roboto", "normal");
-    doc.setFont("Roboto");
-
-    // 1. Header
+    doc.addFileToVFS('Roboto-Regular.ttf', robotoBase64);
+    doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
+    doc.addFont('Roboto-Regular.ttf', 'Roboto', 'bold');
+    doc.setFont('Roboto');
     doc.setFontSize(20);
-    doc.text("JUNKIO EXPENSE TRACKER", 14, 22);
-
+    doc.text('JUNKIO EXPENSE TRACKER', 14, 22);
     doc.setFontSize(14);
     doc.text(title, 14, 32);
-
     doc.setFontSize(10);
     doc.text(`Export Date: ${formatDateString(new Date())}`, 14, 40);
 
-    // 2. Generate Table
     autoTable(doc, {
-        head: [[
-            'Date',
-            'Description',
-            'Type',
-            'Amount'
-        ]],
-        body: transactions.map(t => {
-            const formattedAmount = formatCurrency(t.amount); // Keep string format for PDF visuals
-            return [
-                formatDateString(t.date),
-                t.description || 'No description',
-                t.type === 'INCOME' ? 'INC' : (t.type === 'EXPENSE' ? 'EXP' : 'TRF'),
-                formattedAmount
-            ];
-        }),
+        head: [columns],
+        body: normalizedRows.map((row) => columns.map((column) => row[column])),
         startY: 50,
         theme: 'grid',
-        styles: { font: "Roboto", fontSize: 10 },
-        headStyles: { fillColor: [79, 70, 229] } // Indigo-600
+        styles: { font: 'Roboto', fontSize: 10 },
+        headStyles: { fillColor: [79, 70, 229] },
     });
 
-    // 4. Save
-    doc.save(`report_${new Date().toISOString().split('T')[0]}.pdf`);
+    doc.save(filename);
 };
+
+export const fetchAllTransactionsForExport = async (params = {}) => {
+    const limit = 500;
+    const transactions = [];
+    let page = 1;
+    let totalPages = 1;
+
+    do {
+        const response = await api.get('/transactions', {
+            params: cleanQueryParams({
+                ...params,
+                page,
+                limit,
+            }),
+        });
+
+        const data = response.data;
+        transactions.push(...(data.transactions || []));
+        totalPages = data.totalPages || 1;
+        page += 1;
+    } while (page <= totalPages);
+
+    return transactions;
+};
+
+export const exportTransactionRowsToCSV = (transactions) =>
+    exportRowsToCSV(transactions.map(transactionToRow), `transactions_${getTodaySuffix()}.csv`);
+
+export const exportTransactionRowsToExcel = (transactions) =>
+    exportRowsToExcel(transactions.map(transactionToRow), `transactions_${getTodaySuffix()}.xlsx`, 'Transactions');
+
+export const exportTransactionRowsToPDF = (transactions, title = 'Transaction Statement') =>
+    exportRowsToPDF(transactions.map(transactionToRow), {
+        title,
+        filename: `transactions_${getTodaySuffix()}.pdf`,
+    });
+
+export const exportReportRowsToCSV = (reportData) =>
+    exportRowsToCSV(reportDataToRows(reportData), `report_${getTodaySuffix()}.csv`);
+
+export const exportReportRowsToExcel = (reportData) =>
+    exportRowsToExcel(reportDataToRows(reportData), `report_${getTodaySuffix()}.xlsx`, 'Report');
+
+export const exportReportRowsToPDF = (reportData, title = 'Financial Report') =>
+    exportRowsToPDF(reportDataToRows(reportData), {
+        title,
+        filename: `report_${getTodaySuffix()}.pdf`,
+    });
+
+export const exportToCSV = exportTransactionRowsToCSV;
+export const exportToExcel = exportTransactionRowsToExcel;
+export const exportToPDF = exportTransactionRowsToPDF;

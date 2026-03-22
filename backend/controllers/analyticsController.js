@@ -1,84 +1,181 @@
-const { Transaction, Wallet, FamilyMember, Goal, Category } = require('../models');
+const { Transaction, Wallet, Category } = require('../models');
 const { Op } = require('sequelize');
+const { success, serverError } = require('../utils/responseHelper');
+const { getAccessibleWallets, getAccessibleWalletIds } = require('../utils/accessScope');
+
+const toNumber = (value) => Number(value || 0);
+
+const buildDateWhere = (startDate, endDate) => {
+    if (startDate && endDate) {
+        return { date: { [Op.between]: [new Date(startDate), new Date(endDate)] } };
+    }
+
+    if (startDate) {
+        return { date: { [Op.gte]: new Date(startDate) } };
+    }
+
+    if (endDate) {
+        return { date: { [Op.lte]: new Date(endDate) } };
+    }
+
+    return {};
+};
+
+const buildCashflowSeries = (transactions) => {
+    const grouped = transactions.reduce((accumulator, transaction) => {
+        const sortKey = new Date(transaction.date).toISOString().split('T')[0];
+
+        if (!accumulator[sortKey]) {
+            accumulator[sortKey] = {
+                date: sortKey,
+                income: 0,
+                expense: 0
+            };
+        }
+
+        if (transaction.type === 'INCOME' || transaction.type === 'TRANSFER_IN') {
+            accumulator[sortKey].income += toNumber(transaction.amount);
+        } else if (transaction.type === 'EXPENSE' || transaction.type === 'TRANSFER_OUT') {
+            accumulator[sortKey].expense += toNumber(transaction.amount);
+        }
+
+        return accumulator;
+    }, {});
+
+    return Object.values(grouped).sort((a, b) => a.date.localeCompare(b.date));
+};
+
+const buildExpenseByCategory = (transactions) => {
+    const grouped = transactions.reduce((accumulator, transaction) => {
+        if (transaction.type !== 'EXPENSE') {
+            return accumulator;
+        }
+
+        const key = transaction.Category?.name || transaction.category_id || 'Uncategorized';
+
+        if (!accumulator[key]) {
+            accumulator[key] = { name: key, value: 0 };
+        }
+
+        accumulator[key].value += toNumber(transaction.amount);
+        return accumulator;
+    }, {});
+
+    return Object.values(grouped).sort((a, b) => b.value - a.value);
+};
 
 // GET /api/analytics/dashboard
 exports.getDashboardStats = async (req, res) => {
     try {
+        const { context, family_id, startDate, endDate } = req.query;
         const userId = req.user.id;
 
-        // 1. Get wallets belonging to user or user's families
-        const userFamilies = await FamilyMember.findAll({
-            where: { user_id: userId },
-            attributes: ['family_id']
+        const { wallets } = await getAccessibleWallets({
+            userId,
+            context,
+            familyId: family_id
         });
-        const familyIds = userFamilies.map(f => f.family_id);
+        const walletIds = wallets.map((wallet) => wallet.id);
+        const totalAssets = wallets.reduce((sum, wallet) => sum + toNumber(wallet.balance), 0);
 
-        const wallets = await Wallet.findAll({
-            where: {
-                [Op.or]: [
-                    { user_id: userId },
-                    { family_id: { [Op.in]: familyIds } }
-                ]
-            }
-        });
-
-        const walletIds = wallets.map(w => w.id);
-        const totalAssets = wallets.reduce((sum, w) => sum + parseFloat(w.balance), 0);
-
-        // 2. Get Income and Expenses for the current month
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-
-        const transactionsThisMonth = await Transaction.findAll({
+        const currentMonthTransactions = await Transaction.findAll({
             where: {
                 wallet_id: { [Op.in]: walletIds },
                 date: { [Op.gte]: startOfMonth }
             }
         });
 
-        const totalIncome = transactionsThisMonth
-            .filter(t => t.type === 'INCOME')
-            .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+        const totalIncome = currentMonthTransactions
+            .filter((transaction) => transaction.type === 'INCOME')
+            .reduce((sum, transaction) => sum + toNumber(transaction.amount), 0);
 
-        const totalExpense = transactionsThisMonth
-            .filter(t => t.type === 'EXPENSE')
-            .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+        const totalExpense = currentMonthTransactions
+            .filter((transaction) => transaction.type === 'EXPENSE')
+            .reduce((sum, transaction) => sum + toNumber(transaction.amount), 0);
 
-        // 3. Get Recent Transactions
         const recentTransactions = await Transaction.findAll({
             where: { wallet_id: { [Op.in]: walletIds } },
             order: [['date', 'DESC']],
             limit: 5,
-            include: [{ model: Category, attributes: ['name', 'icon'] }]
+            include: [
+                { model: Category, attributes: ['name', 'icon'] },
+                { model: Wallet, attributes: ['id', 'name'] }
+            ]
         });
 
-        res.success({
+        const cashflowTransactions = await Transaction.findAll({
+            where: {
+                wallet_id: { [Op.in]: walletIds },
+                ...buildDateWhere(startDate, endDate)
+            },
+            order: [['date', 'ASC']]
+        });
+
+        success(res, {
             stats: {
                 totalAssets,
                 totalIncome,
                 totalExpense,
                 activeWalletsCount: wallets.length,
-                transactionsThisMonthCount: transactionsThisMonth.length
+                transactionsThisMonthCount: currentMonthTransactions.length
             },
-            recentTransactions
-        });
+            recentTransactions,
+            cashflowSeries: buildCashflowSeries(cashflowTransactions)
+        }, 'Lay du lieu analytics thanh cong');
     } catch (error) {
         console.error('Error fetching dashboard analytics:', error);
-        res.error('Server error', 500);
+        serverError(res, 'Server error');
     }
 };
 
 // GET /api/analytics/reports
 exports.getReports = async (req, res) => {
     try {
-        const userId = req.user.id;
-        const { year, month } = req.query; // optional params
+        const { context, family_id, startDate, endDate, type, wallet_id, category_id } = req.query;
+        const { walletIds } = await getAccessibleWalletIds({
+            userId: req.user.id,
+            context,
+            familyId: family_id
+        });
 
-        // Basic grouping logic for charts
-        // E.g., expense by category
-        res.success({ message: 'Reports data will be aggregated here based on queries' });
+        const where = {
+            wallet_id: { [Op.in]: walletIds },
+            ...buildDateWhere(startDate, endDate)
+        };
+
+        if (type) where.type = type;
+        if (wallet_id) where.wallet_id = wallet_id;
+        if (category_id) where.category_id = category_id;
+
+        const transactions = await Transaction.findAll({
+            where,
+            include: [
+                { model: Category, attributes: ['name', 'icon'] },
+                { model: Wallet, attributes: ['id', 'name'] }
+            ],
+            order: [['date', 'ASC']]
+        });
+
+        const summary = {
+            totalIncome: transactions
+                .filter((transaction) => transaction.type === 'INCOME' || transaction.type === 'TRANSFER_IN')
+                .reduce((sum, transaction) => sum + toNumber(transaction.amount), 0),
+            totalExpense: transactions
+                .filter((transaction) => transaction.type === 'EXPENSE' || transaction.type === 'TRANSFER_OUT')
+                .reduce((sum, transaction) => sum + toNumber(transaction.amount), 0),
+            transactionCount: transactions.length
+        };
+        summary.net = summary.totalIncome - summary.totalExpense;
+
+        success(res, {
+            summary,
+            expenseByCategory: buildExpenseByCategory(transactions),
+            cashflowSeries: buildCashflowSeries(transactions)
+        }, 'Lay du lieu reports thanh cong');
     } catch (error) {
         console.error('Error fetching reports:', error);
-        res.error('Server error', 500);
+        serverError(res, 'Server error');
     }
 };

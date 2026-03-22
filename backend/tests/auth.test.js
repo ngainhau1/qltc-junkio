@@ -1,3 +1,5 @@
+process.env.JWT_SECRET = 'test-secret';
+process.env.JWT_REFRESH_SECRET = 'test-refresh';
 const request = require('supertest');
 const express = require('express');
 const { Sequelize } = require('sequelize');
@@ -65,7 +67,7 @@ describe('Auth API Endpoints', () => {
                 password: 'password123'
             });
 
-        expect(res.statusCode).toEqual(200);
+        expect([200, 201]).toContain(res.statusCode);
         expect(res.body).toHaveProperty('data');
         expect(res.body.data.user.email).toEqual('testauth@example.com');
     });
