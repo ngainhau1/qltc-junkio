@@ -1,21 +1,24 @@
-const express = require('express');
+﻿const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
+const userController = require('../controllers/userController');
 const audit = require('../middleware/auditMiddleware');
+const authMiddleware = require('../middleware/authMiddleware');
+const { uploadAvatar } = require('../middleware/uploadMiddleware');
 const authValidator = require('../validators/authValidator');
 
 /**
  * @swagger
  * tags:
  *   name: Auth
- *   description: Xác thực người dùng và quản lý phiên đăng nhập
+ *   description: Xac thuc nguoi dung va quan ly phien dang nhap
  */
 
 /**
  * @swagger
  * /api/auth/register:
  *   post:
- *     summary: Đăng ký tài khoản mới
+ *     summary: Dang ky tai khoan moi
  *     tags: [Auth]
  *     security: []
  *     requestBody:
@@ -31,15 +34,17 @@ const authValidator = require('../validators/authValidator');
  *                 example: Nguyen Van A
  *               email:
  *                 type: string
+ *                 format: email
  *                 example: user@junkio.com
  *               password:
  *                 type: string
+ *                 format: password
  *                 example: "123456"
  *     responses:
  *       201:
- *         description: Đăng ký thành công
- *       400:
- *         description: Email đã tồn tại hoặc dữ liệu không hợp lệ
+ *         description: Dang ky thanh cong
+ *       409:
+ *         description: Email da ton tai
  */
 router.post('/register', authValidator.validateRegister, audit('USER_REGISTER', 'USER'), authController.register);
 
@@ -47,7 +52,7 @@ router.post('/register', authValidator.validateRegister, audit('USER_REGISTER', 
  * @swagger
  * /api/auth/login:
  *   post:
- *     summary: Đăng nhập và nhận JWT Token
+ *     summary: Dang nhap va nhan JWT access token
  *     tags: [Auth]
  *     security: []
  *     requestBody:
@@ -60,35 +65,46 @@ router.post('/register', authValidator.validateRegister, audit('USER_REGISTER', 
  *             properties:
  *               email:
  *                 type: string
+ *                 format: email
  *                 example: demo@junkio.com
  *               password:
  *                 type: string
+ *                 format: password
  *                 example: demo123
  *     responses:
  *       200:
- *         description: Đăng nhập thành công
+ *         description: Dang nhap thanh cong
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 token:
+ *                 status:
  *                   type: string
- *                   description: JWT Access Token (hết hạn sau 15 phút)
- *                 user:
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: Dang nhap thanh cong
+ *                 data:
  *                   type: object
  *                   properties:
- *                     id:
+ *                     token:
  *                       type: string
- *                     name:
- *                       type: string
- *                     email:
- *                       type: string
- *                     role:
- *                       type: string
- *                       enum: [member, admin]
+ *                       description: JWT access token het han sau 15 phut
+ *                     user:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                         name:
+ *                           type: string
+ *                         email:
+ *                           type: string
+ *                         role:
+ *                           type: string
+ *                           enum: [member, staff, admin]
  *       400:
- *         description: Email hoặc mật khẩu không đúng
+ *         description: Email hoac mat khau khong dung
  */
 router.post('/login', authValidator.validateLogin, audit('USER_LOGIN', 'USER'), authController.login);
 
@@ -96,34 +112,100 @@ router.post('/login', authValidator.validateLogin, audit('USER_LOGIN', 'USER'), 
  * @swagger
  * /api/auth/refresh-token:
  *   post:
- *     summary: Làm mới Access Token từ Refresh Token (cookie)
+ *     summary: Lam moi access token tu refresh token cookie
  *     tags: [Auth]
  *     security: []
- *     description: Gửi cookie refresh_token, server trả access token mới
+ *     description: Gui cookie refresh_token, server tra access token moi cung thong tin user toi thieu.
  *     responses:
  *       200:
- *         description: Token mới
+ *         description: Lam moi token thanh cong
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 token:
+ *                 status:
  *                   type: string
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     token:
+ *                       type: string
+ *                     user:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                         name:
+ *                           type: string
+ *                         email:
+ *                           type: string
+ *                         role:
+ *                           type: string
+ *                           enum: [member, staff, admin]
  *       401:
- *         description: Không có refresh token
+ *         description: Khong co refresh token
  *       403:
- *         description: Refresh token hết hạn hoặc không hợp lệ
+ *         description: Refresh token het han hoac khong hop le
  */
 router.post('/refresh-token', authController.refreshToken);
 
+/**
+ * @swagger
+ * /api/auth/logout:
+ *   post:
+ *     summary: Dang xuat va xoa refresh token cookie
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: Dang xuat thanh cong
+ */
+router.post('/logout', authController.logout);
 
+/**
+ * @swagger
+ * /api/auth/me:
+ *   get:
+ *     summary: Alias tuong thich cho /api/users/me
+ *     description: Compatibility alias. Canonical endpoint la /api/users/me.
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: Thong tin nguoi dung hien tai
+ */
+router.get('/me', authMiddleware, userController.getProfile);
+
+/**
+ * @swagger
+ * /api/auth/avatar:
+ *   post:
+ *     summary: Alias tuong thich cho /api/users/me/avatar
+ *     description: Compatibility alias. Canonical endpoint la /api/users/me/avatar.
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required: [avatar]
+ *             properties:
+ *               avatar:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: Cap nhat avatar thanh cong
+ */
+router.post('/avatar', authMiddleware, uploadAvatar.single('avatar'), userController.updateAvatar);
 
 /**
  * @swagger
  * /api/auth/forgot-password:
  *   post:
- *     summary: Gửi email khôi phục mật khẩu
+ *     summary: Gui email khoi phuc mat khau
  *     tags: [Auth]
  *     security: []
  *     requestBody:
@@ -136,12 +218,13 @@ router.post('/refresh-token', authController.refreshToken);
  *             properties:
  *               email:
  *                 type: string
+ *                 format: email
  *                 example: user@junkio.com
  *     responses:
  *       200:
- *         description: Email khôi phục đã được gửi
+ *         description: Email khoi phuc da duoc gui
  *       404:
- *         description: Email không tồn tại
+ *         description: Email khong ton tai
  */
 router.post('/forgot-password', authValidator.validateForgotPassword, authController.forgotPassword);
 
@@ -149,7 +232,7 @@ router.post('/forgot-password', authValidator.validateForgotPassword, authContro
  * @swagger
  * /api/auth/reset-password/{token}:
  *   post:
- *     summary: Đặt lại mật khẩu bằng token khôi phục
+ *     summary: Dat lai mat khau bang token khoi phuc
  *     tags: [Auth]
  *     security: []
  *     parameters:
@@ -158,7 +241,7 @@ router.post('/forgot-password', authValidator.validateForgotPassword, authContro
  *         required: true
  *         schema:
  *           type: string
- *         description: Token khôi phục từ email
+ *         description: Token khoi phuc tu email
  *     requestBody:
  *       required: true
  *       content:
@@ -169,15 +252,14 @@ router.post('/forgot-password', authValidator.validateForgotPassword, authContro
  *             properties:
  *               password:
  *                 type: string
+ *                 format: password
  *                 example: newPassword123
  *     responses:
  *       200:
- *         description: Mật khẩu đã được đặt lại
+ *         description: Mat khau da duoc dat lai
  *       400:
- *         description: Token không hợp lệ hoặc đã hết hạn
+ *         description: Token khong hop le hoac da het han
  */
 router.post('/reset-password/:token', authValidator.validateResetPassword, authController.resetPassword);
 
 module.exports = router;
-
-

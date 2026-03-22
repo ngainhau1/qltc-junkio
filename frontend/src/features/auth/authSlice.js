@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+﻿import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '@/lib/api';
 
 const initialState = {
@@ -9,15 +9,14 @@ const initialState = {
     error: null
 };
 
-// --- Thunks ---
 export const loginUser = createAsyncThunk(
     'auth/loginUser',
     async (credentials, { rejectWithValue }) => {
         try {
             const response = await api.post('/auth/login', credentials);
-            return response.data; // already unwrapped by interceptor
+            return response.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Đăng nhập thất bại');
+            return rejectWithValue(error.response?.data?.message || 'Dang nhap that bai');
         }
     }
 );
@@ -29,7 +28,7 @@ export const registerUser = createAsyncThunk(
             const response = await api.post('/auth/register', userData);
             return response.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Đăng ký thất bại');
+            return rejectWithValue(error.response?.data?.message || 'Dang ky that bai');
         }
     }
 );
@@ -38,10 +37,10 @@ export const fetchCurrentUser = createAsyncThunk(
     'auth/fetchCurrentUser',
     async (_, { rejectWithValue }) => {
         try {
-            const response = await api.get('/auth/me');
+            const response = await api.get('/users/me');
             return response.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Phiên đăng nhập hết hạn');
+            return rejectWithValue(error.response?.data?.message || 'Phien dang nhap het han');
         }
     }
 );
@@ -50,14 +49,14 @@ export const uploadUserAvatar = createAsyncThunk(
     'auth/uploadUserAvatar',
     async (formData, { rejectWithValue }) => {
         try {
-            const response = await api.post('/auth/avatar', formData, {
+            const response = await api.post('/users/me/avatar', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
             });
-            return response.data; // { avatarUrl }
+            return response.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Lỗi khi tải ảnh lên');
+            return rejectWithValue(error.response?.data?.message || 'Loi khi tai anh len');
         }
     }
 );
@@ -67,9 +66,9 @@ export const updateProfileAsync = createAsyncThunk(
     async (profileData, { rejectWithValue }) => {
         try {
             const response = await api.put('/users/me', profileData);
-            return response.data; // The backend returns the updated user object
+            return response.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.msg || 'Cập nhật hồ sơ thất bại');
+            return rejectWithValue(error.response?.data?.message || 'Cap nhat ho so that bai');
         }
     }
 );
@@ -84,7 +83,6 @@ const authSlice = createSlice({
             state.token = null;
             state.error = null;
             localStorage.removeItem('auth_token');
-            // Tùy chọn: Gọi API backend để clear Http-only cookie 'refresh_token' nếu có Route
             api.post('/auth/logout').catch(() => { });
         },
         clearAuthError: (state) => {
@@ -93,7 +91,6 @@ const authSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
-            // Login
             .addCase(loginUser.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -113,7 +110,6 @@ const authSlice = createSlice({
                 state.loading = false;
                 state.error = action.payload;
             })
-            // Register
             .addCase(registerUser.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -133,7 +129,6 @@ const authSlice = createSlice({
                 state.loading = false;
                 state.error = action.payload;
             })
-            // Fetch Current User on Page Load
             .addCase(fetchCurrentUser.pending, (state) => {
                 state.loading = true;
             })
@@ -155,13 +150,11 @@ const authSlice = createSlice({
             })
             .addCase(fetchCurrentUser.rejected, (state) => {
                 state.loading = false;
-                // Nếu fetch me thất bại, nghĩa là token (hoặc refresh cookie) hỏng -> logout
                 state.isAuthenticated = false;
                 state.token = null;
                 state.user = null;
                 localStorage.removeItem('auth_token');
             })
-            // Upload Avatar
             .addCase(uploadUserAvatar.pending, (state) => {
                 state.loading = true;
             })
@@ -175,7 +168,6 @@ const authSlice = createSlice({
                 state.loading = false;
                 state.error = action.payload;
             })
-            // Update Profile
             .addCase(updateProfileAsync.pending, (state) => {
                 state.loading = true;
                 state.error = null;

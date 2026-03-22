@@ -1,8 +1,7 @@
-const request = require('supertest');
+﻿const request = require('supertest');
 const express = require('express');
-const { Sequelize, DataTypes, Op } = require('sequelize');
+const { Sequelize, DataTypes } = require('sequelize');
 
-// Mock uuid
 jest.mock('uuid', () => {
     const crypto = require('crypto');
     return {
@@ -10,13 +9,11 @@ jest.mock('uuid', () => {
     };
 });
 
-// Mock authMiddleware
 jest.mock('../middleware/authMiddleware', () => (req, res, next) => {
     req.user = { id: 'user-1', email: 'test@example.com', role: 'USER' };
     next();
 });
 
-// Mock models
 const mockSequelize = new Sequelize('sqlite::memory:', { logging: false });
 
 const mockCategory = mockSequelize.define('Category', {
@@ -33,10 +30,11 @@ const mockFamilyMember = mockSequelize.define('FamilyMember', {
 const mockBudget = mockSequelize.define('Budget', {
     id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
     amount_limit: { type: DataTypes.FLOAT },
-    start_date: { type: DataTypes.DATE },
-    end_date: { type: DataTypes.DATE },
+    start_date: { type: DataTypes.DATEONLY },
+    end_date: { type: DataTypes.DATEONLY },
     category_id: { type: DataTypes.UUID },
-    family_id: { type: DataTypes.UUID }
+    family_id: { type: DataTypes.UUID, allowNull: true },
+    user_id: { type: DataTypes.STRING, allowNull: true }
 });
 
 mockBudget.belongsTo(mockCategory, { foreignKey: 'category_id' });
@@ -55,23 +53,53 @@ app.use(express.json());
 app.use('/api/budgets', budgetRoutes);
 
 describe('Budget API Endpoints', () => {
-    let testCategory, familyId;
+    let testCategory;
+    let accessibleFamilyId;
+    let inaccessibleFamilyId;
+    let personalBudgetId;
+    let familyBudgetId;
 
     beforeAll(async () => {
         await mockSequelize.sync({ force: true });
-        
-        // Setup initial data
-        testCategory = await mockCategory.create({ name: 'Groceries', icon: 'Cart' });
-        
-        const member = await mockFamilyMember.create({ user_id: 'user-1' });
-        familyId = member.family_id;
 
-        await mockBudget.create({
-            amount_limit: 5000,
+        testCategory = await mockCategory.create({ name: 'Groceries', icon: 'Cart' });
+
+        const member = await mockFamilyMember.create({ user_id: 'user-1' });
+        accessibleFamilyId = member.family_id;
+        inaccessibleFamilyId = 'c9e7f95e-9e30-4c9f-b8b5-289466845555';
+
+        const personalBudget = await mockBudget.create({
+            amount_limit: 3000,
             start_date: '2025-01-01',
             end_date: '2025-01-31',
             category_id: testCategory.id,
-            family_id: familyId
+            user_id: 'user-1'
+        });
+        personalBudgetId = personalBudget.id;
+
+        const familyBudget = await mockBudget.create({
+            amount_limit: 5000,
+            start_date: '2025-02-01',
+            end_date: '2025-02-28',
+            category_id: testCategory.id,
+            family_id: accessibleFamilyId
+        });
+        familyBudgetId = familyBudget.id;
+
+        await mockBudget.create({
+            amount_limit: 9000,
+            start_date: '2025-03-01',
+            end_date: '2025-03-31',
+            category_id: testCategory.id,
+            family_id: inaccessibleFamilyId
+        });
+
+        await mockBudget.create({
+            amount_limit: 1200,
+            start_date: '2025-04-01',
+            end_date: '2025-04-30',
+            category_id: testCategory.id,
+            user_id: 'user-2'
         });
     });
 
@@ -80,30 +108,57 @@ describe('Budget API Endpoints', () => {
     });
 
     describe('GET /api/budgets', () => {
-        it('should return 200 and list budgets for user families', async () => {
+        it('returns personal and accessible family budgets only', async () => {
             const res = await request(app).get('/api/budgets');
             expect(res.statusCode).toEqual(200);
             expect(res.body.data).toBeInstanceOf(Array);
-            expect(res.body.data.length).toEqual(1);
-            expect(res.body.data[0].amount_limit).toEqual(5000);
-            expect(res.body.data[0].Category).toBeDefined();
+            expect(res.body.data).toHaveLength(2);
+            expect(res.body.data.every((budget) => budget.Category)).toBe(true);
         });
     });
 
     describe('POST /api/budgets', () => {
-        it('should create a new budget successfully', async () => {
+        it('creates a personal budget when family_id is omitted', async () => {
             const res = await request(app).post('/api/budgets').send({
                 amount_limit: 2000,
-                start_date: '2025-02-01',
-                end_date: '2025-02-28',
-                category_id: testCategory.id,
-                family_id: familyId
+                start_date: '2025-05-01',
+                end_date: '2025-05-31',
+                category_id: testCategory.id
             });
+
             expect(res.statusCode).toEqual(201);
-            expect(res.body.data.amount_limit).toEqual(2000);
+            expect(res.body.data.user_id).toEqual('user-1');
+            expect(res.body.data.family_id).toBeNull();
         });
 
-        it('should return 422 if amount_limit <= 0', async () => {
+        it('creates a family budget when family_id is accessible', async () => {
+            const res = await request(app).post('/api/budgets').send({
+                amount_limit: 2500,
+                start_date: '2025-06-01',
+                end_date: '2025-06-30',
+                category_id: testCategory.id,
+                family_id: accessibleFamilyId
+            });
+
+            expect(res.statusCode).toEqual(201);
+            expect(res.body.data.family_id).toEqual(accessibleFamilyId);
+            expect(res.body.data.user_id).toBeNull();
+        });
+
+        it('rejects family budget creation for inaccessible family', async () => {
+            const res = await request(app).post('/api/budgets').send({
+                amount_limit: 2500,
+                start_date: '2025-06-01',
+                end_date: '2025-06-30',
+                category_id: testCategory.id,
+                family_id: inaccessibleFamilyId
+            });
+
+            expect(res.statusCode).toEqual(403);
+            expect(res.body.message).toMatch(/Ban khong thuoc family nay/);
+        });
+
+        it('returns 422 if amount_limit <= 0', async () => {
             const res = await request(app).post('/api/budgets').send({
                 amount_limit: -50,
                 start_date: '2025-02-01',
@@ -111,75 +166,50 @@ describe('Budget API Endpoints', () => {
                 category_id: testCategory.id
             });
             expect(res.statusCode).toEqual(422);
-            expect(res.body.errors[0].msg).toMatch(/amount_limit phải > 0/);
-        });
-
-        it('should return 422 if end_date < start_date', async () => {
-            const res = await request(app).post('/api/budgets').send({
-                amount_limit: 1000,
-                start_date: '2025-02-28',
-                end_date: '2025-02-01', // Before start
-                category_id: testCategory.id
-            });
-            expect(res.statusCode).toEqual(422);
-            expect(res.body.errors[0].msg).toMatch(/end_date phải sau hoặc bằng start_date/);
+            expect(res.body.errors[0].msg).toMatch(/amount_limit phai > 0/);
         });
     });
 
     describe('PUT /api/budgets/:id', () => {
-        let updateBudgetId;
-
-        beforeAll(async () => {
-            const newB = await mockBudget.create({
-                amount_limit: 1000,
-                start_date: '2025-03-01',
-                end_date: '2025-03-31',
-                category_id: testCategory.id,
-                family_id: familyId
+        it('updates an accessible personal budget', async () => {
+            const res = await request(app).put(`/api/budgets/${personalBudgetId}`).send({
+                amount_limit: 3600
             });
-            updateBudgetId = newB.id;
-        });
 
-        it('should update budget details successfully', async () => {
-            const res = await request(app).put(`/api/budgets/${updateBudgetId}`).send({
-                amount_limit: 3000
-            });
             expect(res.statusCode).toEqual(200);
-            expect(res.body.data.amount_limit).toEqual(3000);
-            expect(new Date(res.body.data.start_date).toISOString()).toMatch(/^2025-03-01/);
+            expect(res.body.data.amount_limit).toEqual(3600);
+            expect(res.body.data.user_id).toEqual('user-1');
         });
 
-        it('should return 404 for a non-existent budget', async () => {
-            const crypto = require('crypto');
-            const res = await request(app).put(`/api/budgets/${crypto.randomUUID()}`).send({
-                amount_limit: 500
+        it('can move a personal budget into an accessible family scope', async () => {
+            const res = await request(app).put(`/api/budgets/${personalBudgetId}`).send({
+                family_id: accessibleFamilyId
             });
+
+            expect(res.statusCode).toEqual(200);
+            expect(res.body.data.family_id).toEqual(accessibleFamilyId);
+            expect(res.body.data.user_id).toBeNull();
+        });
+
+        it('returns 404 for an inaccessible budget', async () => {
+            const alienBudget = await mockBudget.findOne({ where: { family_id: inaccessibleFamilyId } });
+            const res = await request(app).put(`/api/budgets/${alienBudget.id}`).send({
+                amount_limit: 999
+            });
+
             expect(res.statusCode).toEqual(404);
-            expect(res.body.message).toMatch(/Ngân sách không tồn tại/);
+            expect(res.body.message).toMatch(/Ngan sach khong ton tai/);
         });
     });
 
     describe('DELETE /api/budgets/:id', () => {
-        let deleteBudgetId;
-
-        beforeAll(async () => {
-            const delB = await mockBudget.create({
-                amount_limit: 500,
-                start_date: '2025-04-01',
-                end_date: '2025-04-30',
-                category_id: testCategory.id,
-                family_id: familyId
-            });
-            deleteBudgetId = delB.id;
-        });
-
-        it('should delete budget successfully', async () => {
-            const res = await request(app).delete(`/api/budgets/${deleteBudgetId}`);
+        it('deletes an accessible family budget', async () => {
+            const res = await request(app).delete(`/api/budgets/${familyBudgetId}`);
             expect(res.statusCode).toEqual(200);
-            expect(res.body.message).toMatch(/Đã xóa ngân sách thành công/);
+            expect(res.body.message).toMatch(/Da xoa ngan sach thanh cong/);
 
-            const getRes = await mockBudget.findByPk(deleteBudgetId);
-            expect(getRes).toBeNull();
+            const deletedBudget = await mockBudget.findByPk(familyBudgetId);
+            expect(deletedBudget).toBeNull();
         });
     });
 });

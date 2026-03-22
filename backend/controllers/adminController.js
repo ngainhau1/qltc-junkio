@@ -1,8 +1,21 @@
-const { User, Transaction, Wallet, Family, Goal, Budget, Category, sequelize } = require('../models');
+﻿const { User, Transaction, Wallet, Family, Goal, Budget, Category, sequelize } = require('../models');
 const { Op, fn, col } = require('sequelize');
 const { success, error: sendError } = require('../utils/responseHelper');
 
-// GET /api/admin/dashboard
+const buildSearchWhere = (search) => {
+    if (!search) {
+        return {};
+    }
+
+    const likeOperator = sequelize?.getDialect && sequelize.getDialect() === 'postgres' ? Op.iLike : Op.like;
+    return {
+        [Op.or]: [
+            { name: { [likeOperator]: `%${search}%` } },
+            { email: { [likeOperator]: `%${search}%` } }
+        ]
+    };
+};
+
 exports.getDashboard = async (req, res) => {
     try {
         const [totalUsers, totalTransactions, totalFamilies] = await Promise.all([
@@ -10,37 +23,43 @@ exports.getDashboard = async (req, res) => {
             Transaction.count(),
             Family.count()
         ]);
+
         const recentUsers = await User.findAll({
-            order: [['createdAt', 'DESC']], limit: 10,
+            order: [['createdAt', 'DESC']],
+            limit: 10,
             attributes: ['id', 'name', 'email', 'role', 'createdAt']
         });
 
-        // Use mock res to fetch from the other endpoints
         const createMockRes = () => ({
-            status: function() { return this; },
-            json: function(payload) { this.payload = payload; return this; }
+            status() {
+                return this;
+            },
+            json(payload) {
+                this.payload = payload;
+                return this;
+            }
         });
 
-        const resAnalytics = createMockRes();
-        await exports.getAnalytics(req, resAnalytics);
-        const analyticsData = resAnalytics.payload?.data || {};
+        const analyticsResponse = createMockRes();
+        await exports.getAnalytics(req, analyticsResponse);
 
-        const resFinancial = createMockRes();
-        await exports.getFinancialOverview(req, resFinancial);
-        const financialData = resFinancial.payload?.data || {};
+        const financialResponse = createMockRes();
+        await exports.getFinancialOverview(req, financialResponse);
 
-        success(res, { 
-            totalUsers, totalTransactions, totalFamilies, recentUsers,
-            analytics: analyticsData,
-            financialOverview: financialData
-        }, 'Thành công');
-    } catch (error) {
-        console.error('Admin dashboard error:', error);
-        sendError(res, 'Server error', 500);
+        success(res, {
+            totalUsers,
+            totalTransactions,
+            totalFamilies,
+            recentUsers,
+            analytics: analyticsResponse.payload?.data || {},
+            financialOverview: financialResponse.payload?.data || {}
+        }, 'Thanh cong');
+    } catch (err) {
+        console.error('Admin dashboard error:', err);
+        sendError(res, 'Khong the tai dashboard admin', 500);
     }
 };
 
-// GET /api/admin/analytics
 exports.getAnalytics = async (req, res) => {
     try {
         const [totalWallets, totalGoals, totalBudgets] = await Promise.all([
@@ -49,12 +68,11 @@ exports.getAnalytics = async (req, res) => {
             Budget.count()
         ]);
 
-        // User Growth (6 months)
         const sixMonthsAgo = new Date();
         sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
         sixMonthsAgo.setDate(1);
-        sixMonthsAgo.setHours(0,0,0,0);
-        
+        sixMonthsAgo.setHours(0, 0, 0, 0);
+
         const isSqlite = sequelize?.getDialect && sequelize.getDialect() === 'sqlite';
         const monthExpr = isSqlite
             ? fn('strftime', '%Y-%m', col('createdAt'))
@@ -71,7 +89,6 @@ exports.getAnalytics = async (req, res) => {
             raw: true
         });
 
-        // Top 5 Categories (Expenses)
         const topCategories = await Transaction.findAll({
             where: { type: 'EXPENSE' },
             attributes: [
@@ -87,11 +104,10 @@ exports.getAnalytics = async (req, res) => {
             raw: true
         });
 
-        // Weekly Activity (Current Week Transactions)
         const startOfWeek = new Date();
-        startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay() + (startOfWeek.getDay() === 0 ? -6 : 1)); // Monday
-        startOfWeek.setHours(0,0,0,0);
-        
+        startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay() + (startOfWeek.getDay() === 0 ? -6 : 1));
+        startOfWeek.setHours(0, 0, 0, 0);
+
         const dayExpr = isSqlite
             ? fn('strftime', '%Y-%m-%d', col('createdAt'))
             : fn('date_trunc', 'day', col('createdAt'));
@@ -109,52 +125,60 @@ exports.getAnalytics = async (req, res) => {
 
         success(res, {
             stats: { totalWallets, totalGoals, totalBudgets },
-            userGrowth: userGrowth.map(u => ({ month: new Date(u.month).toLocaleDateString('vi-VN', { month: 'short', year: '2-digit' }), count: parseInt(u.count) })),
-            topCategories: topCategories.map(c => ({ 
-                ...c, 
-                name: c.name || 'Chưa phân loại',
-                icon: c.icon || 'HelpCircle',
-                total: parseFloat(c.total) 
+            userGrowth: userGrowth.map((item) => ({
+                month: new Date(item.month).toLocaleDateString('vi-VN', { month: 'short', year: '2-digit' }),
+                count: parseInt(item.count, 10)
             })),
-            weeklyActivity: weeklyActivity.map(a => ({ date: new Date(a.date).toLocaleDateString('vi-VN', { weekday: 'short' }), count: parseInt(a.count) }))
-        }, 'Thành công');
-    } catch (error) {
-        console.error('Admin analytics error:', error);
-        sendError(res, 'Server error', 500);
+            topCategories: topCategories.map((item) => ({
+                ...item,
+                name: item.name || 'Chua phan loai',
+                icon: item.icon || 'HelpCircle',
+                total: parseFloat(item.total)
+            })),
+            weeklyActivity: weeklyActivity.map((item) => ({
+                date: new Date(item.date).toLocaleDateString('vi-VN', { weekday: 'short' }),
+                count: parseInt(item.count, 10)
+            }))
+        }, 'Thanh cong');
+    } catch (err) {
+        console.error('Admin analytics error:', err);
+        sendError(res, 'Khong the tai analytics admin', 500);
     }
 };
 
-// GET /api/admin/users?page=1&limit=20&search=keyword&role=all&status=all
 exports.listUsers = async (req, res) => {
     try {
         const { page = 1, limit = 20, search, role, status } = req.query;
-        const offset = (parseInt(page) - 1) * parseInt(limit);
-        
-        const where = {};
-        if (search) {
-            where[Op.or] = [
-                { name: { [Op.iLike]: `%${search}%` } },
-                { email: { [Op.iLike]: `%${search}%` } }
-            ];
-        }
+        const pageNumber = parseInt(page, 10);
+        const perPage = parseInt(limit, 10);
+        const offset = (pageNumber - 1) * perPage;
+
+        const where = buildSearchWhere(search);
         if (role && role !== 'all') where.role = role;
         if (status && status !== 'all') {
             where.is_locked = status === 'locked';
         }
 
         const { count, rows } = await User.findAndCountAll({
-            where, offset, limit: parseInt(limit),
+            where,
+            offset,
+            limit: perPage,
             attributes: { exclude: ['password_hash'] },
             order: [['createdAt', 'DESC']]
         });
-        success(res, { users: rows, total: count, page: parseInt(page), totalPages: Math.ceil(count / parseInt(limit)) }, 'Thành công');
-    } catch (error) {
-        console.error('Admin listUsers error:', error);
-        sendError(res, 'Server error', 500);
+
+        success(res, {
+            users: rows,
+            total: count,
+            page: pageNumber,
+            totalPages: Math.ceil(count / perPage)
+        }, 'Thanh cong');
+    } catch (err) {
+        console.error('Admin listUsers error:', err);
+        sendError(res, 'Khong the tai danh sach user', 500);
     }
 };
 
-// GET /api/admin/users/:id
 exports.getUserDetail = async (req, res) => {
     try {
         const user = await User.findByPk(req.params.id, {
@@ -164,112 +188,112 @@ exports.getUserDetail = async (req, res) => {
                 { model: Family, as: 'Families', attributes: ['id', 'name'], through: { attributes: [] } }
             ]
         });
-        if (!user) return sendError(res, 'User not found', 404);
-        
+
+        if (!user) {
+            return sendError(res, 'User khong ton tai', 404);
+        }
+
         const transactionCount = await Transaction.count({ where: { user_id: user.id } });
-        success(res, { ...user.toJSON(), transactionCount }, 'Thành công');
-    } catch (error) {
-        console.error('Admin getUserDetail error:', error);
-        sendError(res, 'Server error', 500);
+        success(res, { ...user.toJSON(), transactionCount }, 'Thanh cong');
+    } catch (err) {
+        console.error('Admin getUserDetail error:', err);
+        sendError(res, 'Khong the tai chi tiet user', 500);
     }
 };
 
-// DELETE /api/admin/users/:id
 exports.deleteUser = async (req, res) => {
     try {
         const user = await User.findByPk(req.params.id);
-        if (!user) return sendError(res, 'User not found', 404);
-        if (user.id === req.user.id) return sendError(res, 'Cannot delete yourself', 400);
+        if (!user) return sendError(res, 'User khong ton tai', 404);
+        if (user.id === req.user.id) return sendError(res, 'Khong duoc xoa chinh minh', 400);
 
         await user.destroy();
-        success(res, null, 'Xóa người dùng thành công');
-    } catch (error) {
-        console.error('Admin deleteUser error:', error);
-        sendError(res, 'Server error', 500);
+        success(res, null, 'Xoa nguoi dung thanh cong');
+    } catch (err) {
+        console.error('Admin deleteUser error:', err);
+        sendError(res, 'Khong the xoa user', 500);
     }
 };
 
-// PUT /api/admin/users/:id/toggle-lock
 exports.toggleLock = async (req, res) => {
     try {
         const user = await User.findByPk(req.params.id, {
             attributes: { exclude: ['password_hash'] }
         });
-        if (!user) return sendError(res, 'User not found', 404);
-        if (user.id === req.user.id) return sendError(res, 'Cannot lock yourself', 400);
+        if (!user) return sendError(res, 'User khong ton tai', 404);
+        if (user.id === req.user.id) return sendError(res, 'Khong duoc khoa chinh minh', 400);
 
         user.is_locked = !user.is_locked;
         await user.save();
-        success(res, { user }, user.is_locked ? 'Account locked' : 'Account unlocked');
-    } catch (error) {
-        console.error('Admin toggleLock error:', error);
-        sendError(res, 'Server error', 500);
+        success(res, { user }, user.is_locked ? 'Khoa tai khoan thanh cong' : 'Mo khoa tai khoan thanh cong');
+    } catch (err) {
+        console.error('Admin toggleLock error:', err);
+        sendError(res, 'Khong the thay doi trang thai khoa', 500);
     }
 };
 
-// PUT /api/admin/users/:id/role
 exports.changeRole = async (req, res) => {
     try {
         const { role } = req.body;
         if (!['member', 'staff', 'admin'].includes(role)) {
-            return sendError(res, 'Invalid role', 400);
+            return sendError(res, 'Role khong hop le', 400);
         }
+
         const user = await User.findByPk(req.params.id, {
             attributes: { exclude: ['password_hash'] }
         });
-        if (!user) return sendError(res, 'User not found', 404);
-        if (user.id === req.user.id) return sendError(res, 'Cannot change own role', 400);
+        if (!user) return sendError(res, 'User khong ton tai', 404);
+        if (user.id === req.user.id) return sendError(res, 'Khong duoc doi role cua chinh minh', 400);
 
         user.role = role;
         await user.save();
-        success(res, { user }, `Role changed to ${role}`);
-    } catch (error) {
-        console.error('Admin changeRole error:', error);
-        sendError(res, 'Server error', 500);
+        success(res, { user }, `Da doi role thanh ${role}`);
+    } catch (err) {
+        console.error('Admin changeRole error:', err);
+        sendError(res, 'Khong the doi role user', 500);
     }
 };
 
-// GET /api/admin/logs?page=1&limit=50&action=USER_LOGIN
 exports.getLogs = async (req, res) => {
     const { AuditLog } = require('../models');
     try {
         const { page = 1, limit = 50, action } = req.query;
-        const offset = (parseInt(page) - 1) * parseInt(limit);
+        const pageNumber = parseInt(page, 10);
+        const perPage = parseInt(limit, 10);
+        const offset = (pageNumber - 1) * perPage;
         const where = action && action !== 'ALL' ? { action } : {};
 
         const { count, rows } = await AuditLog.findAndCountAll({
             where,
             offset,
-            limit: parseInt(limit),
+            limit: perPage,
             order: [['createdAt', 'DESC']],
             include: [{ model: User, attributes: ['id', 'name', 'email'] }]
         });
-        
-        success(res, { logs: rows, total: count, page: parseInt(page), totalPages: Math.ceil(count / parseInt(limit)) }, 'Thành công');
-    } catch (error) {
-        console.error('Admin getLogs error:', error);
-        sendError(res, 'Server error', 500);
+
+        success(res, {
+            logs: rows,
+            total: count,
+            page: pageNumber,
+            totalPages: Math.ceil(count / perPage)
+        }, 'Thanh cong');
+    } catch (err) {
+        console.error('Admin getLogs error:', err);
+        sendError(res, 'Khong the tai audit logs', 500);
     }
 };
 
-// GET /api/admin/financial-overview
 exports.getFinancialOverview = async (req, res) => {
     try {
-        const { Op } = require('sequelize');
-        const { sequelize, Wallet, Transaction, User, Budget } = require('../models');
+        const systemBalance = parseFloat(await Wallet.sum('balance')) || 0;
 
-        // 1. System wallets total
-        const systemBalanceResult = await Wallet.sum('balance');
-        const systemBalance = parseFloat(systemBalanceResult) || 0;
-
-        // 2. Revenue trends (last 6 months income vs expense)
         const sixMonthsAgo = new Date();
         sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
         sixMonthsAgo.setDate(1);
         sixMonthsAgo.setHours(0, 0, 0, 0);
 
         const revenueTrendsRaw = await sequelize.query(`
-            SELECT 
+            SELECT
                 DATE_TRUNC('month', "date") AS month,
                 type,
                 SUM("amount") AS total
@@ -283,22 +307,28 @@ exports.getFinancialOverview = async (req, res) => {
         });
 
         const trendsMap = {};
-        for(let i=0; i<6; i++) {
-            const d = new Date(sixMonthsAgo);
-            d.setMonth(d.getMonth() + i);
-            const m = d.toISOString().slice(0, 7); // YYYY-MM
-            trendsMap[m] = { month: new Date(d).toLocaleDateString('vi-VN', { month: 'short', year: '2-digit' }), income: 0, expense: 0 };
+        for (let index = 0; index < 6; index += 1) {
+            const date = new Date(sixMonthsAgo);
+            date.setMonth(date.getMonth() + index);
+            const monthKey = date.toISOString().slice(0, 7);
+            trendsMap[monthKey] = {
+                month: new Date(date).toLocaleDateString('vi-VN', { month: 'short', year: '2-digit' }),
+                income: 0,
+                expense: 0
+            };
         }
-        revenueTrendsRaw.forEach(r => {
-            const m = new Date(r.month).toISOString().slice(0, 7);
-            if (trendsMap[m]) {
-                trendsMap[m][r.type] = parseFloat(r.total) || 0;
+
+        revenueTrendsRaw.forEach((item) => {
+            const monthKey = new Date(item.month).toISOString().slice(0, 7);
+            if (!trendsMap[monthKey]) {
+                return;
             }
+            const trendKey = item.type === 'INCOME' ? 'income' : 'expense';
+            trendsMap[monthKey][trendKey] = parseFloat(item.total) || 0;
         });
+
         const revenueTrends = Object.values(trendsMap);
 
-
-        // 3. Top 5 spenders
         const topSpendersRaw = await sequelize.query(`
             SELECT u.id, u.name, u.email, SUM(CAST(t.amount AS numeric)) as total_spent
             FROM "Users" u
@@ -307,29 +337,31 @@ exports.getFinancialOverview = async (req, res) => {
             ORDER BY total_spent DESC
             LIMIT 5
         `, { type: sequelize.QueryTypes.SELECT });
-        
-        const topSpenders = topSpendersRaw.map(s => ({
-            ...s,
-            total_spent: parseFloat(s.total_spent) || 0
+
+        const topSpenders = topSpendersRaw.map((item) => ({
+            ...item,
+            total_spent: parseFloat(item.total_spent) || 0
         }));
 
-        // 4. Budget compliance
         const budgets = await Budget.findAll();
         let overBudgetCount = 0;
-        let totalBudgetCount = budgets.length;
 
-        for (const b of budgets) {
+        for (const budget of budgets) {
             const spent = await Transaction.sum('amount', {
                 where: {
-                    category_id: b.category_id,
+                    category_id: budget.category_id,
                     type: 'EXPENSE',
-                    date: { [Op.gte]: b.start_date, [Op.lte]: b.end_date }
+                    date: { [Op.gte]: budget.start_date, [Op.lte]: budget.end_date }
                 }
             });
-            if ((spent || 0) > b.amount) overBudgetCount++;
+
+            if ((spent || 0) > Number(budget.amount_limit || 0)) {
+                overBudgetCount += 1;
+            }
         }
-        const budgetCompliance = totalBudgetCount > 0 
-            ? Math.round(((totalBudgetCount - overBudgetCount) / totalBudgetCount) * 100) 
+
+        const budgetCompliance = budgets.length > 0
+            ? Math.round(((budgets.length - overBudgetCount) / budgets.length) * 100)
             : 100;
 
         success(res, {
@@ -337,10 +369,9 @@ exports.getFinancialOverview = async (req, res) => {
             revenueTrends,
             topSpenders,
             budgetCompliance
-        }, 'Thành công');
-
-    } catch (error) {
-        console.error('Admin getFinancialOverview error:', error);
-        sendError(res, 'Server error', 500);
+        }, 'Thanh cong');
+    } catch (err) {
+        console.error('Admin getFinancialOverview error:', err);
+        sendError(res, 'Khong the tai tong quan tai chinh', 500);
     }
 };

@@ -1,8 +1,6 @@
-const { Goal, Wallet, Transaction } = require('../models');
+﻿const { Goal, Wallet, Transaction, sequelize } = require('../models');
 const { success, error: sendError, notFound, serverError, created } = require('../utils/responseHelper');
 
-// GET /api/goals
-// Lấy danh sách mục tiêu của user
 exports.getGoals = async (req, res) => {
     try {
         const userId = req.user.id;
@@ -10,15 +8,13 @@ exports.getGoals = async (req, res) => {
             where: { user_id: userId },
             order: [['created_at', 'DESC']]
         });
-        success(res, goals, 'Lấy danh sách mục tiêu thành công');
+        success(res, goals, 'Lay danh sach muc tieu thanh cong');
     } catch (err) {
         console.error('Error fetching goals:', err);
-        serverError(res, err.message || 'Lỗi Server: Không thể tải mục tiêu');
+        serverError(res, err.message || 'Khong the tai muc tieu');
     }
 };
 
-// POST /api/goals
-// Tạo mục tiêu mới
 exports.createGoal = async (req, res) => {
     try {
         const userId = req.user.id;
@@ -35,15 +31,13 @@ exports.createGoal = async (req, res) => {
             user_id: userId
         });
 
-        created(res, newGoal, 'Tạo mục tiêu thành công');
+        created(res, newGoal, 'Tao muc tieu thanh cong');
     } catch (err) {
         console.error('Error creating goal:', err);
-        serverError(res, 'Lỗi Server: Không thể tạo mục tiêu');
+        serverError(res, 'Khong the tao muc tieu');
     }
 };
 
-// PUT /api/goals/:id
-// Cập nhật thông tin cơ bản mục tiêu
 exports.updateGoal = async (req, res) => {
     try {
         const { id } = req.params;
@@ -52,7 +46,7 @@ exports.updateGoal = async (req, res) => {
 
         const goal = await Goal.findOne({ where: { id, user_id: userId } });
 
-        if (!goal) return notFound(res, 'Mục tiêu không tồn tại');
+        if (!goal) return notFound(res, 'Muc tieu khong ton tai');
 
         await goal.update({
             name: name !== undefined ? name : goal.name,
@@ -63,81 +57,82 @@ exports.updateGoal = async (req, res) => {
             status: status !== undefined ? status : goal.status
         });
 
-        success(res, goal, 'Cập nhật mục tiêu thành công');
+        success(res, goal, 'Cap nhat muc tieu thanh cong');
     } catch (err) {
         console.error('Error updating goal:', err);
-        serverError(res, 'Lỗi Server: Không thể cập nhật mục tiêu');
+        serverError(res, 'Khong the cap nhat muc tieu');
     }
 };
 
-// POST /api/goals/:id/deposit
-// Nạp tiền vào mục tiêu
 exports.deposit = async (req, res) => {
     try {
         const { id } = req.params;
         const userId = req.user.id;
         const { amount, wallet_id } = req.body;
 
-        if (!amount || amount <= 0) return sendError(res, 'Số tiền không hợp lệ', 400);
-        if (!wallet_id) return sendError(res, 'Vui lòng cung cấp ID ví', 400);
+        if (!amount || amount <= 0) return sendError(res, 'So tien khong hop le', 400);
+        if (!wallet_id) return sendError(res, 'Vui long cung cap ID vi', 400);
 
         const goal = await Goal.findOne({ where: { id, user_id: userId } });
-        if (!goal) return notFound(res, 'Mục tiêu không tồn tại');
+        if (!goal) return notFound(res, 'Muc tieu khong ton tai');
 
         const wallet = await Wallet.findByPk(wallet_id);
-        if (!wallet) return notFound(res, 'Ví không tồn tại');
+        if (!wallet) return notFound(res, 'Vi khong ton tai');
 
-        // Authorization cho wallet nên có, nhưng tạm bỏ qua kiểm tra sâu ở đây
-        if (parseFloat(wallet.balance) < parseFloat(amount)) {
-            return sendError(res, 'Số dư ví không đủ', 400);
+        if (wallet.user_id !== userId || wallet.family_id) {
+            return sendError(res, 'Chi duoc nap muc tieu tu vi ca nhan cua chinh ban', 403);
         }
 
-        const sequelize = require('../models/index').sequelize;
+        if (parseFloat(wallet.balance) < parseFloat(amount)) {
+            return sendError(res, 'So du vi khong du', 400);
+        }
 
-        const result = await sequelize.transaction(async (t) => {
-            // 1. Trừ tiền ví
-            await wallet.update({ balance: parseFloat(wallet.balance) - parseFloat(amount) }, { transaction: t });
+        const result = await sequelize.transaction(async (transaction) => {
+            const nextWalletBalance = parseFloat(wallet.balance) - parseFloat(amount);
+            await wallet.update({ balance: nextWalletBalance }, { transaction });
 
-            // 2. Cộng tiền mục tiêu
-            const newAmount = parseFloat(goal.currentAmount) + parseFloat(amount);
-            const status = newAmount >= goal.targetAmount ? 'ACHIEVED' : 'IN_PROGRESS';
-            await goal.update({ currentAmount: newAmount, status }, { transaction: t });
+            const nextGoalAmount = parseFloat(goal.currentAmount) + parseFloat(amount);
+            const nextStatus = nextGoalAmount >= parseFloat(goal.targetAmount) ? 'ACHIEVED' : 'IN_PROGRESS';
+            await goal.update({ currentAmount: nextGoalAmount, status: nextStatus }, { transaction });
 
-            // 3. (Optional) Tạo Transaction Report lưu lịch sử xuất tiền khỏi ví
             await Transaction.create({
                 user_id: userId,
                 wallet_id: wallet.id,
-                family_id: wallet.family_id,
-                amount: amount,
+                family_id: null,
+                amount,
                 type: 'EXPENSE',
-                description: `Deposit to limit goal: ${goal.name}`,
+                description: `Goal deposit: ${goal.name}`,
                 date: new Date()
-            }, { transaction: t });
+            }, { transaction });
 
-            return goal;
+            return {
+                ...goal.toJSON(),
+                sourceWallet: {
+                    id: wallet.id,
+                    balance: nextWalletBalance
+                }
+            };
         });
 
-        success(res, result, 'Nạp tiền vào mục tiêu thành công');
+        success(res, result, 'Nap tien vao muc tieu thanh cong');
     } catch (err) {
         console.error('Error depositing to goal:', err);
-        serverError(res, 'Lỗi Server: Không thể nạp tiền');
+        serverError(res, 'Khong the nap tien vao muc tieu');
     }
 };
 
-// DELETE /api/goals/:id
-// Xóa mục tiêu
 exports.deleteGoal = async (req, res) => {
     try {
         const { id } = req.params;
         const userId = req.user.id;
 
         const goal = await Goal.findOne({ where: { id, user_id: userId } });
-        if (!goal) return notFound(res, 'Mục tiêu không tồn tại');
+        if (!goal) return notFound(res, 'Muc tieu khong ton tai');
 
         await goal.destroy();
-        success(res, null, 'Đã xóa mục tiêu thành công');
+        success(res, null, 'Da xoa muc tieu thanh cong');
     } catch (err) {
         console.error('Error deleting goal:', err);
-        serverError(res, 'Lỗi Server: Không thể xóa mục tiêu');
+        serverError(res, 'Khong the xoa muc tieu');
     }
 };

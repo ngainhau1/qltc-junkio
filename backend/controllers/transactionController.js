@@ -5,15 +5,6 @@ const PDFDocument = require('pdfkit');
 const { success, error: sendError } = require('../utils/responseHelper');
 const { getAccessibleWalletIds, getAccessibleWallets } = require('../utils/accessScope');
 
-const getAccessibleWallet = async (walletId, userId, transaction) => {
-    const { wallets } = await getAccessibleWallets({
-        userId,
-        transaction
-    });
-
-    return wallets.find((wallet) => wallet.id === walletId) || null;
-};
-
 const buildTransactionWhere = ({ walletIds, filters }) => {
     const whereClause = {
         wallet_id: { [Op.in]: walletIds }
@@ -138,7 +129,17 @@ exports.createTransaction = async (req, res) => {
 
     const t = await sequelize.transaction();
     try {
-        const wallet = await getAccessibleWallet(wallet_id, req.user.id, t);
+        const { wallets } = await getAccessibleWallets({
+            userId: req.user.id,
+            transaction: t
+        });
+
+        if (wallets.length === 0) {
+            await t.rollback();
+            return sendError(res, 'Vui long tao it nhat 1 vi truoc khi tao giao dich', 400);
+        }
+
+        const wallet = wallets.find((accessibleWallet) => accessibleWallet.id === wallet_id) || null;
         if (!wallet) {
             await t.rollback();
             return sendError(res, 'Vi khong ton tai hoac ban khong co quyen truy cap', 404);
@@ -230,13 +231,23 @@ exports.createTransfer = async (req, res) => {
     const t = await sequelize.transaction();
     try {
         const parsedAmount = parseFloat(amount);
-        const fromWallet = await getAccessibleWallet(from_wallet_id, req.user.id, t);
+        const { wallets } = await getAccessibleWallets({
+            userId: req.user.id,
+            transaction: t
+        });
+
+        if (wallets.length === 0) {
+            await t.rollback();
+            return sendError(res, 'Vui long tao it nhat 1 vi truoc khi chuyen tien', 400);
+        }
+
+        const fromWallet = wallets.find((wallet) => wallet.id === from_wallet_id) || null;
         if (!fromWallet) {
             await t.rollback();
             return sendError(res, 'Vi nguon khong ton tai hoac ban khong co quyen truy cap', 404);
         }
 
-        const toWallet = await getAccessibleWallet(to_wallet_id, req.user.id, t);
+        const toWallet = wallets.find((wallet) => wallet.id === to_wallet_id) || null;
         if (!toWallet) {
             await t.rollback();
             return sendError(res, 'Vi dich khong ton tai hoac ban khong co quyen truy cap', 404);
@@ -303,6 +314,11 @@ exports.importTransactions = async (req, res) => {
             userId: req.user.id,
             transaction: t
         });
+
+        if (wallets.length === 0) {
+            await t.rollback();
+            return sendError(res, 'Vui long tao it nhat 1 vi truoc khi nhap giao dich', 400);
+        }
 
         const walletMap = {};
         wallets

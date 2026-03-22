@@ -1,5 +1,6 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+﻿import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '@/lib/api';
+import { fetchWallets } from '@/features/wallets/walletSlice';
 
 const initialState = {
     goals: [],
@@ -7,15 +8,14 @@ const initialState = {
     error: null,
 };
 
-// --- Async Thunks ---
 export const fetchGoals = createAsyncThunk(
     'goals/fetchGoals',
     async (_, { rejectWithValue }) => {
         try {
             const response = await api.get('/goals');
-            return response.data; // array of goals
+            return response.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Lỗi tải mục tiêu');
+            return rejectWithValue(error.response?.data?.message || 'Loi tai muc tieu');
         }
     }
 );
@@ -25,9 +25,9 @@ export const createGoal = createAsyncThunk(
     async (goalData, { rejectWithValue }) => {
         try {
             const response = await api.post('/goals', goalData);
-            return response.data; // new goal obj
+            return response.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Lỗi tạo mục tiêu');
+            return rejectWithValue(error.response?.data?.message || 'Loi tao muc tieu');
         }
     }
 );
@@ -37,9 +37,9 @@ export const editGoal = createAsyncThunk(
     async ({ id, data }, { rejectWithValue }) => {
         try {
             const response = await api.put(`/goals/${id}`, data);
-            return response.data; // updated goal
+            return response.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Lỗi cập nhật mục tiêu');
+            return rejectWithValue(error.response?.data?.message || 'Loi cap nhat muc tieu');
         }
     }
 );
@@ -51,19 +51,20 @@ export const removeGoal = createAsyncThunk(
             await api.delete(`/goals/${id}`);
             return id;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Lỗi xóa mục tiêu');
+            return rejectWithValue(error.response?.data?.message || 'Loi xoa muc tieu');
         }
     }
 );
 
 export const depositAmount = createAsyncThunk(
     'goals/depositAmount',
-    async ({ id, amount, wallet_id }, { rejectWithValue }) => {
+    async ({ id, amount, wallet_id }, { dispatch, rejectWithValue }) => {
         try {
             const response = await api.post(`/goals/${id}/deposit`, { amount, wallet_id });
-            return response.data; // Assuming it returns the updated goal obj
+            dispatch(fetchWallets());
+            return response.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Lỗi nạp tiền');
+            return rejectWithValue(error.response?.data?.message || 'Loi nap tien');
         }
     }
 );
@@ -72,10 +73,9 @@ const goalsSlice = createSlice({
     name: 'goals',
     initialState,
     reducers: {
-        // Local Optimistic updates can be kept if needed.
         updateGoalProgressLocal: (state, action) => {
             const { id, amount } = action.payload;
-            const goal = state.goals.find(g => g.id === id);
+            const goal = state.goals.find((item) => item.id === id);
             if (goal) {
                 goal.currentAmount = Number(goal.currentAmount) + Number(amount);
                 if (goal.currentAmount >= goal.targetAmount) {
@@ -86,7 +86,6 @@ const goalsSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
-            // Fetch Goals
             .addCase(fetchGoals.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -99,8 +98,6 @@ const goalsSlice = createSlice({
                 state.loading = false;
                 state.error = action.payload;
             })
-
-            // Create
             .addCase(createGoal.pending, (state) => {
                 state.loading = true;
             })
@@ -112,23 +109,17 @@ const goalsSlice = createSlice({
                 state.loading = false;
                 state.error = action.payload;
             })
-
-            // Edit
             .addCase(editGoal.fulfilled, (state, action) => {
-                const index = state.goals.findIndex(g => g.id === action.payload.id);
+                const index = state.goals.findIndex((goal) => goal.id === action.payload.id);
                 if (index !== -1) {
                     state.goals[index] = action.payload;
                 }
             })
-
-            // Remove
             .addCase(removeGoal.fulfilled, (state, action) => {
-                state.goals = state.goals.filter(g => g.id !== action.payload);
+                state.goals = state.goals.filter((goal) => goal.id !== action.payload);
             })
-
-            // Deposit
             .addCase(depositAmount.fulfilled, (state, action) => {
-                const index = state.goals.findIndex(g => g.id === action.payload.id);
+                const index = state.goals.findIndex((goal) => goal.id === action.payload.id);
                 if (index !== -1) {
                     state.goals[index] = action.payload;
                 }

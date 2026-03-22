@@ -1,32 +1,32 @@
-# Demo kiểm thử API với Postman (Junkio Expense Tracker)
+﻿# Demo kiá»ƒm thá»­ API vá»›i Postman (Junkio Expense Tracker)
 
-## Chuẩn bị
-- Backend chạy tại `http://localhost:5000`  
+## Chuáº©n bá»‹
+- Backend cháº¡y táº¡i `http://localhost:5000`  
   ```bash
   cd D:\Junkio-Expense-Tracker\backend
   npm install
   npm run dev
   ```
-- Postman desktop đã cài.
+- Postman desktop Ä‘Ã£ cÃ i.
 
 ## Import collection & environment
-1. Mở Postman → **Import** → tab *File*.
-2. Kéo/ chọn 2 file:
+1. Má»Ÿ Postman â†’ **Import** â†’ tab *File*.
+2. KÃ©o/ chá»n 2 file:
    - `D:\Junkio-Expense-Tracker\doc\Junkio.postman_collection.json`
    - `D:\Junkio-Expense-Tracker\doc\Junkio.postman_environment.json`
-3. Ở góc phải, chọn environment **Junkio Dev** (baseUrl = `http://localhost:5000`).
+3. á»ž gÃ³c pháº£i, chá»n environment **Junkio Dev** (baseUrl = `http://localhost:5000`).
 
-## Chuỗi thao tác giả lập demo
+## Chuá»—i thao tÃ¡c giáº£ láº­p demo
 1. **Login**  
-   - Collections → *Junkio Expense Tracker API* → **Auth** → `POST /api/auth/login`.  
+   - Collections â†’ *Junkio Expense Tracker API* â†’ **Auth** â†’ `POST /api/auth/login`.  
    - Body JSON: `{"email":"<your-email>","password":"<your-password>"}`.  
-   - Send. Biến `accessToken` được lưu tự động trong environment.
-2. **Xem thông tin phiên**  
-   - `GET /api/auth/me` → Send → xác nhận 200 và thấy email.
-3. **Lấy ví**  
-   - Folder **Wallets** → `GET /api/wallets` → Send → copy một `id` ví để dùng bước 4.
-4. **Tạo giao dịch**  
-   - Folder **Transactions** → `POST /api/transactions` → Body (raw JSON):  
+   - Send. Biáº¿n `accessToken` Ä‘Æ°á»£c lÆ°u tá»± Ä‘á»™ng trong environment.
+2. **Xem thÃ´ng tin phiÃªn**  
+   - `GET /api/users/me` â†’ Send â†’ xÃ¡c nháº­n 200 vÃ  tháº¥y email.
+3. **Láº¥y vÃ­**  
+   - Folder **Wallets** â†’ `GET /api/wallets` â†’ Send â†’ copy má»™t `id` vÃ­ Ä‘á»ƒ dÃ¹ng bÆ°á»›c 4.
+4. **Táº¡o giao dá»‹ch**  
+   - Folder **Transactions** â†’ `POST /api/transactions` â†’ Body (raw JSON):  
      ```json
      {
        "wallet_id": "<paste-wallet-id>",
@@ -35,24 +35,24 @@
        "description": "Cafe team"
      }
      ```
-   - Send → lưu `id` trả về (gọi là `txId`).
-5. **Danh sách giao dịch**  
-   - `GET /api/transactions` → Send → thấy record vừa tạo.
-6. **Chi tiết giao dịch**  
-   - `GET /api/transactions/:id` → thay `:id` bằng `txId` → Send → xem Wallet/Category/Shares.
-7. **Xóa giao dịch**  
-   - `DELETE /api/transactions/:id` → dùng `txId` → Send → nhận 200.  
-   - (Tùy chọn) Gửi lại `GET /api/transactions` để xác nhận đã xóa.
-8. **Admin analytics** (chỉ khi login bằng tài khoản role=admin)  
-   - Folder **Admin** → `GET /api/admin/analytics` → Send → xem số liệu thống kê.
+   - Send â†’ lÆ°u `id` tráº£ vá» (gá»i lÃ  `txId`).
+5. **Danh sÃ¡ch giao dá»‹ch**  
+   - `GET /api/transactions` â†’ Send â†’ tháº¥y record vá»«a táº¡o.
+6. **Chi tiáº¿t giao dá»‹ch**  
+   - `GET /api/transactions/:id` â†’ thay `:id` báº±ng `txId` â†’ Send â†’ xem Wallet/Category/Shares.
+7. **XÃ³a giao dá»‹ch**  
+   - `DELETE /api/transactions/:id` â†’ dÃ¹ng `txId` â†’ Send â†’ nháº­n 200.  
+   - (TÃ¹y chá»n) Gá»­i láº¡i `GET /api/transactions` Ä‘á»ƒ xÃ¡c nháº­n Ä‘Ã£ xÃ³a.
+8. **Admin analytics** (chá»‰ khi login báº±ng tÃ i khoáº£n role=admin)  
+   - Folder **Admin** â†’ `GET /api/admin/analytics` â†’ Send â†’ xem sá»‘ liá»‡u thá»‘ng kÃª.
 
-## Xử lý nhanh lỗi thường gặp
-- 401: kiểm tra đã chọn env **Junkio Dev** và biến `accessToken` có giá trị; nếu trống hãy login lại.
-- 400 khi tạo giao dịch: chắc chắn `wallet_id` hợp lệ, `amount` > 0, `type` ∈ {`INCOME`, `EXPENSE`}.
-- 404 chi tiết: kiểm tra `txId` đúng và giao dịch chưa bị xóa.
+## Xá»­ lÃ½ nhanh lá»—i thÆ°á»ng gáº·p
+- 401: kiá»ƒm tra Ä‘Ã£ chá»n env **Junkio Dev** vÃ  biáº¿n `accessToken` cÃ³ giÃ¡ trá»‹; náº¿u trá»‘ng hÃ£y login láº¡i.
+- 400 khi táº¡o giao dá»‹ch: cháº¯c cháº¯n `wallet_id` há»£p lá»‡, `amount` > 0, `type` âˆˆ {`INCOME`, `EXPENSE`}.
+- 404 chi tiáº¿t: kiá»ƒm tra `txId` Ä‘Ãºng vÃ  giao dá»‹ch chÆ°a bá»‹ xÃ³a.
 
 ## Seed & Demo Accounts
-- Chạy migrate + seed:
+- Cháº¡y migrate + seed:
   ```bash
   cd D:\Junkio-Expense-Tracker\backend
   npx sequelize-cli db:migrate
@@ -60,4 +60,5 @@
   ```
 - Admin: demo_admin@junkio.com / demo123
 - User:  demo_user@junkio.com / demo123
+
 

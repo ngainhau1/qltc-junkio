@@ -1,4 +1,4 @@
-const bcrypt = require('bcrypt');
+﻿const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { Op } = require('sequelize');
@@ -6,12 +6,11 @@ const { User, Family, FamilyMember } = require('../models');
 const sendEmail = require('../services/emailService');
 const { success, error: sendError } = require('../utils/responseHelper');
 
-// Helpers for Token Generation
 const generateAccessToken = (user) => {
     return jwt.sign(
         { user: { id: user.id, role: user.role } },
         process.env.JWT_SECRET || 'secret',
-        { expiresIn: '15m' } // Hết hạn ngắn
+        { expiresIn: '15m' }
     );
 };
 
@@ -19,7 +18,7 @@ const generateRefreshToken = (user) => {
     return jwt.sign(
         { user: { id: user.id, role: user.role } },
         process.env.JWT_REFRESH_SECRET || 'refresh_secret_b6d9677116aa4',
-        { expiresIn: '7d' } // Hết hạn dài
+        { expiresIn: '7d' }
     );
 };
 
@@ -28,29 +27,36 @@ const setRefreshTokenCookie = (res, token) => {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
-        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 ngày
+        maxAge: 7 * 24 * 60 * 60 * 1000
     });
 };
+
+const buildAuthUser = (user) => ({
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    avatar: user.avatar || null
+});
 
 exports.register = async (req, res) => {
     const { name, email, password } = req.body;
 
-    // Security: Input validation
     if (!name || !email || !password) {
-        return sendError(res, 'Vui lòng điền đầy đủ thông tin', 400);
+        return sendError(res, 'Vui long dien day du thong tin', 400);
     }
     if (password.length < 6) {
-        return sendError(res, 'Mật khẩu phải có ít nhất 6 ký tự', 400);
+        return sendError(res, 'Mat khau phai co it nhat 6 ky tu', 400);
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-        return sendError(res, 'Email không hợp lệ', 400);
+        return sendError(res, 'Email khong hop le', 400);
     }
 
     try {
         let user = await User.findOne({ where: { email } });
         if (user) {
-            return sendError(res, 'User already exists', 400);
+            return sendError(res, 'Email da duoc su dung', 409);
         }
 
         const salt = await bcrypt.genSalt(10);
@@ -63,7 +69,6 @@ exports.register = async (req, res) => {
             role: 'member'
         });
 
-        // Auto Create a default family for the user
         const family = await Family.create({
             name: `${name}'s Family`,
             owner_id: user.id
@@ -77,42 +82,40 @@ exports.register = async (req, res) => {
 
         const accessToken = generateAccessToken(user);
         const refreshToken = generateRefreshToken(user);
-
-        // TODO: Mở rộng, lưu refresh token vào database ở bảng refresh_tokens nếu cần blacklist
-
         setRefreshTokenCookie(res, refreshToken);
 
-        success(res, { token: accessToken, user: { id: user.id, name: user.name, email: user.email } }, 'Đăng ký thành công', 201);
+        success(res, { token: accessToken, user: buildAuthUser(user) }, 'Dang ky thanh cong', 201);
     } catch (err) {
         console.error(err.message);
-        sendError(res, 'Server error', 500);
+        sendError(res, 'Khong the dang ky tai khoan luc nay', 500);
     }
 };
 
 exports.login = async (req, res) => {
     const { email, password } = req.body;
     try {
-        let user = await User.findOne({ where: { email } });
+        const user = await User.findOne({ where: { email } });
         if (!user) {
-            return sendError(res, 'Invalid Credentials', 400);
+            return sendError(res, 'Email hoac mat khau khong dung', 400);
+        }
+
+        if (user.is_locked) {
+            return sendError(res, 'Tai khoan da bi khoa', 403);
         }
 
         const isMatch = await bcrypt.compare(password, user.password_hash);
         if (!isMatch) {
-            return sendError(res, 'Invalid Credentials', 400);
+            return sendError(res, 'Email hoac mat khau khong dung', 400);
         }
 
         const accessToken = generateAccessToken(user);
         const refreshToken = generateRefreshToken(user);
-
-        // TODO: Lưu refresh token vào DB nếu cần tracking device/revoke
-
         setRefreshTokenCookie(res, refreshToken);
 
-        success(res, { token: accessToken, user: { id: user.id, name: user.name, email: user.email, role: user.role } }, 'Đăng nhập thành công');
+        success(res, { token: accessToken, user: buildAuthUser(user) }, 'Dang nhap thanh cong');
     } catch (err) {
         console.error(err.message);
-        sendError(res, 'Server error', 500);
+        sendError(res, 'Khong the dang nhap luc nay', 500);
     }
 };
 
@@ -120,50 +123,67 @@ exports.refreshToken = async (req, res) => {
     const refreshToken = req.cookies?.refresh_token;
 
     if (!refreshToken) {
-        return sendError(res, 'No refresh token provided, please log in', 401);
+        return sendError(res, 'Khong tim thay refresh token, vui long dang nhap lai', 401);
     }
 
     try {
         const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET || 'refresh_secret_b6d9677116aa4');
+        const user = await User.findByPk(decoded.user.id, {
+            attributes: ['id', 'name', 'email', 'role', 'avatar', 'is_locked']
+        });
 
-        // Generate new access token
-        const newAccessToken = generateAccessToken({ id: decoded.user.id });
+        if (!user) {
+            return sendError(res, 'Nguoi dung khong ton tai', 401);
+        }
 
-        success(res, { token: newAccessToken }, 'Lấy token mới thành công');
+        if (user.is_locked) {
+            return sendError(res, 'Tai khoan da bi khoa', 403);
+        }
+
+        const newAccessToken = generateAccessToken(user);
+        success(res, { token: newAccessToken, user: buildAuthUser(user) }, 'Lam moi phien dang nhap thanh cong');
     } catch (err) {
         console.error('Refresh token error:', err.message);
-        sendError(res, 'Invalid or expired refresh token', 403);
+        sendError(res, 'Refresh token khong hop le hoac da het han', 403);
     }
 };
 
+exports.logout = async (req, res) => {
+    res.clearCookie('refresh_token', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict'
+    });
 
+    success(res, null, 'Dang xuat thanh cong');
+};
 
 exports.forgotPassword = async (req, res) => {
     const { email } = req.body;
     try {
         const user = await User.findOne({ where: { email } });
         if (!user) {
-            return sendError(res, 'Người dùng không tồn tại', 404);
+            return sendError(res, 'Nguoi dung khong ton tai', 404);
         }
 
         const resetToken = crypto.randomBytes(20).toString('hex');
         user.reset_password_token = crypto.createHash('sha256').update(resetToken).digest('hex');
-        user.reset_password_expires = Date.now() + 10 * 60 * 1000; // 10 minutes
+        user.reset_password_expires = Date.now() + 10 * 60 * 1000;
 
         await user.save();
 
         const frontendUrl = process.env.VITE_FRONTEND_URL || 'http://localhost:5173';
         const finalResetUrl = `${frontendUrl}/reset-password/${resetToken}`;
 
-        const message = `Bạn nhận được email này vì bạn (hoặc ai đó) đã yêu cầu lấy lại mật khẩu.\n\nVui lòng truy cập đường dẫn sau để đặt lại mật khẩu:\n\n${finalResetUrl}\n\nNếu bạn không yêu cầu, vui lòng bỏ qua email này. Token có hiệu lực trong 10 phút.`;
+        const message = `Ban nhan duoc email nay vi ban (hoac ai do) da yeu cau dat lai mat khau.\n\nVui long truy cap duong dan sau de dat lai mat khau:\n\n${finalResetUrl}\n\nNeu ban khong yeu cau, vui long bo qua email nay. Token co hieu luc trong 10 phut.`;
 
         await sendEmail({
             email: user.email,
-            subject: 'Yêu cầu đặt lại mật khẩu - Junkio Expense Tracker',
+            subject: 'Yeu cau dat lai mat khau - Junkio Expense Tracker',
             message
         });
 
-        success(res, null, 'Email khôi phục mật khẩu đã được gửi');
+        success(res, null, 'Email khoi phuc mat khau da duoc gui');
     } catch (err) {
         console.error(err.message);
         const user = await User.findOne({ where: { email } });
@@ -172,7 +192,7 @@ exports.forgotPassword = async (req, res) => {
             user.reset_password_expires = null;
             await user.save();
         }
-        sendError(res, 'Lỗi gửi email', 500);
+        sendError(res, 'Loi gui email', 500);
     }
 };
 
@@ -191,7 +211,7 @@ exports.resetPassword = async (req, res) => {
         });
 
         if (!user) {
-            return sendError(res, 'Token không hợp lệ hoặc đã hết hạn', 400);
+            return sendError(res, 'Token khong hop le hoac da het han', 400);
         }
 
         const salt = await bcrypt.genSalt(10);
@@ -201,9 +221,9 @@ exports.resetPassword = async (req, res) => {
 
         await user.save();
 
-        success(res, null, 'Mật khẩu đã được đặt lại thành công');
+        success(res, null, 'Mat khau da duoc dat lai thanh cong');
     } catch (err) {
         console.error(err.message);
-        sendError(res, 'Server Error', 500);
+        sendError(res, 'Khong the dat lai mat khau luc nay', 500);
     }
 };

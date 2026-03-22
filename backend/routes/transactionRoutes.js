@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const router = express.Router();
 const transactionController = require('../controllers/transactionController');
 const authMiddleware = require('../middleware/authMiddleware');
@@ -14,52 +14,94 @@ const {
  * @swagger
  * tags:
  *   name: Transactions
- *   description: Quản lý giao dịch thu/chi/chuyển khoản
+ *   description: Quan ly giao dich thu chi, chuyen tien, import va export
  */
 
 /**
  * @swagger
  * /api/transactions:
  *   get:
- *     summary: Lấy danh sách giao dịch (có phân trang và lọc)
+ *     summary: Lay danh sach giao dich co phan trang va filter
  *     tags: [Transactions]
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: query
+ *         name: context
+ *         schema:
+ *           type: string
+ *           enum: [personal, family]
+ *         description: Chon ngu canh du lieu can xem
+ *       - in: query
+ *         name: family_id
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *       - in: query
  *         name: page
  *         schema:
  *           type: integer
  *           default: 1
- *         description: Số trang
  *       - in: query
  *         name: limit
  *         schema:
  *           type: integer
  *           default: 10
- *         description: Số bản ghi mỗi trang
  *       - in: query
  *         name: type
  *         schema:
  *           type: string
- *           enum: [INCOME, EXPENSE, TRANSFER]
- *         description: Lọc theo loại giao dịch
+ *           enum: [INCOME, EXPENSE, TRANSFER_IN, TRANSFER_OUT]
+ *       - in: query
+ *         name: startDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - in: query
+ *         name: endDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - in: query
+ *         name: wallet_id
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *       - in: query
+ *         name: category_id
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Tim theo description
  *     responses:
  *       200:
- *         description: Danh sách giao dịch
+ *         description: Danh sach giao dich thanh cong
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 transactions:
- *                   type: array
- *                 totalItems:
- *                   type: integer
- *                 totalPages:
- *                   type: integer
- *       401:
- *         description: Chưa xác thực
+ *                 status:
+ *                   type: string
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     transactions:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                     totalItems:
+ *                       type: integer
+ *                     totalPages:
+ *                       type: integer
+ *                     currentPage:
+ *                       type: integer
  */
 router.get('/', authMiddleware, validateTransactionQuery, transactionController.getTransactions);
 
@@ -67,7 +109,8 @@ router.get('/', authMiddleware, validateTransactionQuery, transactionController.
  * @swagger
  * /api/transactions:
  *   post:
- *     summary: Tạo giao dịch mới (Thu nhập hoặc Chi phí)
+ *     summary: Tao giao dich moi
+ *     description: Can co it nhat mot vi hop le truoc khi tao giao dich. wallet_id phai thuoc vi ma user co quyen truy cap.
  *     tags: [Transactions]
  *     security:
  *       - bearerAuth: []
@@ -77,14 +120,14 @@ router.get('/', authMiddleware, validateTransactionQuery, transactionController.
  *         application/json:
  *           schema:
  *             type: object
- *             required: [wallet_id, amount, type]
+ *             required: [wallet_id, amount, type, date]
  *             properties:
  *               wallet_id:
  *                 type: string
  *                 format: uuid
- *                 example: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
  *               amount:
  *                 type: number
+ *                 minimum: 0.01
  *                 example: 150000
  *               type:
  *                 type: string
@@ -92,7 +135,7 @@ router.get('/', authMiddleware, validateTransactionQuery, transactionController.
  *                 example: EXPENSE
  *               description:
  *                 type: string
- *                 example: "Cà phê buổi sáng"
+ *                 example: Cafe buoi sang
  *               category_id:
  *                 type: string
  *                 format: uuid
@@ -100,14 +143,14 @@ router.get('/', authMiddleware, validateTransactionQuery, transactionController.
  *               date:
  *                 type: string
  *                 format: date
- *                 example: "2026-03-14"
+ *                 example: 2026-03-14
  *     responses:
  *       201:
- *         description: Tạo giao dịch thành công
+ *         description: Tao giao dich thanh cong
  *       400:
- *         description: Dữ liệu không hợp lệ (amount âm, thiếu wallet_id...)
- *       401:
- *         description: Chưa xác thực
+ *         description: Chua co vi hoac so du vi khong du
+ *       422:
+ *         description: Du lieu body khong hop le
  */
 router.post('/', authMiddleware, validateTransactionCreate, transactionController.createTransaction);
 
@@ -115,7 +158,7 @@ router.post('/', authMiddleware, validateTransactionCreate, transactionControlle
  * @swagger
  * /api/transactions/transfer:
  *   post:
- *     summary: Chuyển khoản giữa 2 ví
+ *     summary: Chuyen tien giua hai vi
  *     tags: [Transactions]
  *     security:
  *       - bearerAuth: []
@@ -135,15 +178,19 @@ router.post('/', authMiddleware, validateTransactionCreate, transactionControlle
  *                 format: uuid
  *               amount:
  *                 type: number
+ *                 minimum: 0.01
  *                 example: 500000
  *               description:
  *                 type: string
- *                 example: Chuyển tiền tiết kiệm
+ *                 example: Chuyen tien tiet kiem
+ *               date:
+ *                 type: string
+ *                 format: date
  *     responses:
  *       201:
- *         description: Chuyển khoản thành công
+ *         description: Chuyen tien thanh cong
  *       400:
- *         description: Số dư không đủ hoặc dữ liệu không hợp lệ
+ *         description: Chua co vi hop le hoac so du khong du
  */
 router.post('/transfer', authMiddleware, validateTransactionTransfer, transactionController.createTransfer);
 
@@ -151,7 +198,7 @@ router.post('/transfer', authMiddleware, validateTransactionTransfer, transactio
  * @swagger
  * /api/transactions/import:
  *   post:
- *     summary: Nhập giao dịch từ file CSV
+ *     summary: Import nhieu giao dich
  *     tags: [Transactions]
  *     security:
  *       - bearerAuth: []
@@ -161,20 +208,37 @@ router.post('/transfer', authMiddleware, validateTransactionTransfer, transactio
  *         application/json:
  *           schema:
  *             type: object
- *             required: [wallet_id, transactions]
+ *             required: [transactions]
  *             properties:
- *               wallet_id:
- *                 type: string
- *                 format: uuid
  *               transactions:
  *                 type: array
+ *                 minItems: 1
  *                 items:
  *                   type: object
+ *                   required: [wallet_id, amount, type, date]
+ *                   properties:
+ *                     wallet_id:
+ *                       type: string
+ *                       format: uuid
+ *                     amount:
+ *                       type: number
+ *                     type:
+ *                       type: string
+ *                       enum: [INCOME, EXPENSE]
+ *                     description:
+ *                       type: string
+ *                     category_id:
+ *                       type: string
+ *                       format: uuid
+ *                       nullable: true
+ *                     date:
+ *                       type: string
+ *                       format: date
  *     responses:
  *       200:
- *         description: Import thành công
+ *         description: Import thanh cong
  *       400:
- *         description: Dữ liệu không hợp lệ
+ *         description: Danh sach rong hoac user chua co vi hop le
  */
 router.post('/import', authMiddleware, validateTransactionImport, transactionController.importTransactions);
 
@@ -182,7 +246,7 @@ router.post('/import', authMiddleware, validateTransactionImport, transactionCon
  * @swagger
  * /api/transactions/export:
  *   get:
- *     summary: Xuất giao dịch ra CSV/PDF
+ *     summary: Export giao dich theo dung bo filter dang dung
  *     tags: [Transactions]
  *     security:
  *       - bearerAuth: []
@@ -194,6 +258,16 @@ router.post('/import', authMiddleware, validateTransactionImport, transactionCon
  *           enum: [csv, pdf]
  *           default: csv
  *       - in: query
+ *         name: context
+ *         schema:
+ *           type: string
+ *           enum: [personal, family]
+ *       - in: query
+ *         name: family_id
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *       - in: query
  *         name: startDate
  *         schema:
  *           type: string
@@ -203,9 +277,28 @@ router.post('/import', authMiddleware, validateTransactionImport, transactionCon
  *         schema:
  *           type: string
  *           format: date
+ *       - in: query
+ *         name: type
+ *         schema:
+ *           type: string
+ *           enum: [INCOME, EXPENSE, TRANSFER_IN, TRANSFER_OUT]
+ *       - in: query
+ *         name: wallet_id
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *       - in: query
+ *         name: category_id
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
- *         description: File xuất thành công
+ *         description: File export thanh cong
  *         content:
  *           application/octet-stream:
  *             schema:
@@ -218,7 +311,7 @@ router.get('/export', authMiddleware, validateTransactionQuery, transactionContr
  * @swagger
  * /api/transactions/{id}:
  *   get:
- *     summary: Lấy chi tiết một giao dịch
+ *     summary: Lay chi tiet mot giao dich trong scope duoc phep
  *     tags: [Transactions]
  *     security:
  *       - bearerAuth: []
@@ -228,14 +321,12 @@ router.get('/export', authMiddleware, validateTransactionQuery, transactionContr
  *         required: true
  *         schema:
  *           type: string
- *         description: ID của giao dịch
+ *           format: uuid
  *     responses:
  *       200:
- *         description: Chi tiết giao dịch (bao gồm Wallet, Category, Shares)
+ *         description: Chi tiet giao dich thanh cong
  *       404:
- *         description: Không tìm thấy giao dịch
- *       401:
- *         description: Chưa xác thực
+ *         description: Khong tim thay giao dich trong scope truy cap
  */
 router.get('/:id', authMiddleware, validateTransactionParams, transactionController.getTransactionById);
 
@@ -243,7 +334,7 @@ router.get('/:id', authMiddleware, validateTransactionParams, transactionControl
  * @swagger
  * /api/transactions/{id}:
  *   delete:
- *     summary: Xóa giao dịch
+ *     summary: Xoa giao dich va hoan tac so du vi
  *     tags: [Transactions]
  *     security:
  *       - bearerAuth: []
@@ -253,14 +344,12 @@ router.get('/:id', authMiddleware, validateTransactionParams, transactionControl
  *         required: true
  *         schema:
  *           type: string
- *         description: ID của giao dịch cần xóa
+ *           format: uuid
  *     responses:
  *       200:
- *         description: Xóa thành công
+ *         description: Xoa giao dich thanh cong
  *       404:
- *         description: Không tìm thấy giao dịch
- *       401:
- *         description: Chưa xác thực
+ *         description: Khong tim thay giao dich trong scope truy cap
  */
 router.delete('/:id', authMiddleware, validateTransactionParams, transactionController.deleteTransaction);
 
