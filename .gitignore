@@ -8,6 +8,9 @@ postgres_data/
 
 # Ignore environment files
 .env
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
 
 # Ignore OS files
 .DS_Store
@@ -38,6 +41,11 @@ phaseC-*.txt
 doc/*
 !doc/qa/
 !doc/qa/**
+
+# Ignore temporary and local Postman workspace state
+tmp/
+.postman/
+postman/
 
 # Ignore QA/browser artifacts
 output/
