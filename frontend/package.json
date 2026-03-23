@@ -8,8 +8,11 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest run",
-    "test:ui": "vitest --ui"
+    "test": "vitest run src",
+    "test:ui": "vitest --ui src",
+    "test:e2e": "playwright test",
+    "test:i18n": "node ./scripts/check-i18n.mjs",
+    "test:qa": "npm run lint && npm run test && npm run build && npm run test:i18n && npm --prefix ../backend run test:smoke && npm --prefix ../backend run check:admin && npm run test:e2e"
   },
   "dependencies": {
     "@faker-js/faker": "^10.2.0",
@@ -63,6 +66,7 @@
     "jsdom": "^28.0.0",
     "tailwindcss-animate": "^1.0.7",
     "vite": "^6.0.0",
-    "vitest": "^4.0.18"
+    "vitest": "^4.0.18",
+    "@playwright/test": "^1.56.1"
   }
 }
