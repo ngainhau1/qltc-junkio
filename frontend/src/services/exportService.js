@@ -95,7 +95,7 @@ export const exportRowsToExcel = async (
 export const exportRowsToPDF = async (
     rows,
     {
-        title = 'Report',
+        title = '',
         filename = `report_${getTodaySuffix()}.pdf`,
     } = {}
 ) => {
@@ -116,7 +116,7 @@ export const exportRowsToPDF = async (
     doc.setFontSize(20);
     doc.text('JUNKIO EXPENSE TRACKER', 14, 22);
     doc.setFontSize(14);
-    doc.text(title, 14, 32);
+    doc.text(title || 'JUNKIO REPORT', 14, 32);
     doc.setFontSize(10);
     doc.text(`Export Date: ${formatDateString(new Date())}`, 14, 40);
 
@@ -162,7 +162,7 @@ export const exportTransactionRowsToCSV = (transactions) =>
 export const exportTransactionRowsToExcel = (transactions) =>
     exportRowsToExcel(transactions.map(transactionToRow), `transactions_${getTodaySuffix()}.xlsx`, 'Transactions');
 
-export const exportTransactionRowsToPDF = (transactions, title = 'Transaction Statement') =>
+export const exportTransactionRowsToPDF = (transactions, title = '') =>
     exportRowsToPDF(transactions.map(transactionToRow), {
         title,
         filename: `transactions_${getTodaySuffix()}.pdf`,
@@ -174,7 +174,7 @@ export const exportReportRowsToCSV = (reportData) =>
 export const exportReportRowsToExcel = (reportData) =>
     exportRowsToExcel(reportDataToRows(reportData), `report_${getTodaySuffix()}.xlsx`, 'Report');
 
-export const exportReportRowsToPDF = (reportData, title = 'Financial Report') =>
+export const exportReportRowsToPDF = (reportData, title = '') =>
     exportRowsToPDF(reportDataToRows(reportData), {
         title,
         filename: `report_${getTodaySuffix()}.pdf`,

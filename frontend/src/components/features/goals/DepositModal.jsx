@@ -24,7 +24,7 @@ export function DepositModal({ isOpen, onClose, goal }) {
     const [selectedWalletId, setSelectedWalletId] = useState(null);
 
     // Filter to only show personal wallets with balance > 0
-    const availableWallets = wallets.filter(w => !w.familyId && w.balance > 0);
+    const availableWallets = wallets.filter((wallet) => !wallet.family_id && !wallet.familyId && Number(wallet.balance) > 0);
 
     const handleDeposit = async () => {
         const numAmount = Number(amount);
@@ -63,7 +63,7 @@ export function DepositModal({ isOpen, onClose, goal }) {
             setAmount('');
             setSelectedWalletId(null);
         } catch (error) {
-            console.error("Lỗi nạp tiền:", error);
+            console.error("Goal deposit failed:", error);
             toast.error(error);
         }
     };
@@ -88,7 +88,12 @@ export function DepositModal({ isOpen, onClose, goal }) {
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title={t('goals.modals.deposit.title')}>
+        <Modal
+            isOpen={isOpen}
+            onClose={onClose}
+            title={t('goals.modals.deposit.title')}
+            contentTestId="goal-deposit-modal"
+        >
             <div className="p-6 space-y-6">
                 {/* Visual Header */}
                 <div className="flex bg-muted/30 p-4 rounded-2xl items-center gap-4 border border-border/50">
@@ -168,6 +173,7 @@ export function DepositModal({ isOpen, onClose, goal }) {
                             {availableWallets.map(wallet => (
                                 <div
                                     key={wallet.id}
+                                    data-testid="goal-deposit-wallet-option"
                                     onClick={() => setSelectedWalletId(wallet.id)}
                                     className={`cursor-pointer rounded-xl border-2 transition-all p-3 flex flex-col justify-center ${selectedWalletId === wallet.id ? 'border-primary bg-primary/5 shadow-sm' : 'border-border/60 hover:border-primary/50 bg-card hover:shadow-sm'}`}
                                 >
@@ -185,6 +191,7 @@ export function DepositModal({ isOpen, onClose, goal }) {
                 <div className="pt-4 flex gap-3 justify-end border-t border-border">
                     <Button variant="ghost" onClick={onClose} className="rounded-xl">{t('goals.modals.deposit.btnCancel')}</Button>
                     <Button
+                        data-testid="goal-deposit-submit"
                         onClick={handleDeposit}
                         disabled={!selectedWalletId || !amount || availableWallets.length === 0}
                         className="rounded-xl px-8 shadow-md hover:shadow-lg transition-all"

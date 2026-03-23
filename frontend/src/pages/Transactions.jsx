@@ -102,7 +102,7 @@ export function Transactions() {
 
             await exportTransactionRowsToExcel(allTransactions);
         } catch (error) {
-            toast.error(error?.message || t('transactions.exportError', 'Khong the xuat du lieu'));
+            toast.error(error?.message || t('transactions.exportError'));
         }
     };
 
@@ -119,7 +119,7 @@ export function Transactions() {
                         className="border-blue-200 text-blue-600 hover:bg-blue-50"
                         onClick={() => dispatch(openImportModal())}
                     >
-                        <Upload className="mr-2 h-4 w-4" /> Import CSV
+                        <Upload className="mr-2 h-4 w-4" /> {t('transactions.import.submit')}
                     </Button>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -190,17 +190,17 @@ export function Transactions() {
                                     onClick={() => dispatch(setCurrentPage(Math.max(1, pagination.currentPage - 1)))}
                                     disabled={pagination.currentPage === 1}
                                 >
-                                    {t('common.prev', 'Trang truoc')}
+                                    {t('common.prev')}
                                 </Button>
                                 <span className="text-sm">
-                                    {t('common.page', 'Trang')} {pagination.currentPage} / {pagination.totalPages} (Tong: {pagination.totalItems})
+                                    {t('common.page')} {pagination.currentPage} / {pagination.totalPages} (Tổng: {pagination.totalItems})
                                 </span>
                                 <Button
                                     variant="outline"
                                     onClick={() => dispatch(setCurrentPage(Math.min(pagination.totalPages, pagination.currentPage + 1)))}
                                     disabled={pagination.currentPage === pagination.totalPages}
                                 >
-                                    {t('common.next', 'Trang sau')}
+                                    {t('common.next')}
                                 </Button>
                             </div>
                         )}

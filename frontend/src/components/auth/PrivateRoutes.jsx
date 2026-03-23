@@ -1,18 +1,17 @@
-
 import { Navigate, Outlet } from "react-router-dom"
 import { useSelector } from "react-redux"
+import { useTranslation } from "react-i18next"
 
 export const PrivateRoutes = () => {
-    const { isAuthenticated, token } = useSelector(state => state.auth)
+    const { t } = useTranslation()
+    const { isAuthenticated, token } = useSelector((state) => state.auth)
 
-    // Nếu có token trong localStorage nhưng fetchCurrentUser chưa xong → hiển thị Loading
-    // Điều này ngăn chặn việc redirect sang /login trước khi API kịp xác minh session
     if (token && !isAuthenticated) {
         return (
-            <div className="flex items-center justify-center h-screen">
+            <div className="flex h-screen items-center justify-center">
                 <div className="flex flex-col items-center gap-3">
                     <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-                    <p className="text-sm text-muted-foreground">Đang khôi phục phiên...</p>
+                    <p className="text-sm text-muted-foreground">{t('common.restoringSession')}</p>
                 </div>
             </div>
         )

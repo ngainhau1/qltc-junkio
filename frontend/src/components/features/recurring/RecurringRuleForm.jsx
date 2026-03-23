@@ -24,8 +24,8 @@ export function RecurringRuleForm({ onSuccess }) {
             .oneOf(['DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY'])
             .required(t('transactions.recurring.form.validation.frequencyRequired')),
         type: Yup.string().oneOf(['EXPENSE', 'INCOME']).required(t('transactions.recurring.form.validation.typeRequired')),
-        walletId: Yup.string().required(t('transactions.recurring.form.validation.walletRequired', 'Vui long chon vi')),
-        startDate: Yup.date().required(t('transactions.recurring.form.validation.startDateRequired', 'Vui long chon ngay bat dau')),
+        walletId: Yup.string().required(t('transactions.recurring.form.validation.walletRequired')),
+        startDate: Yup.date().required(t('transactions.recurring.form.validation.startDateRequired')),
     });
 
     const contextWallets = wallets.filter((wallet) => (activeFamilyId ? wallet.family_id === activeFamilyId : !wallet.family_id));
@@ -156,7 +156,7 @@ export function RecurringRuleForm({ onSuccess }) {
                 >
                     {contextWallets.length === 0 && (
                         <option value="" disabled>
-                            {t('transactions.recurring.form.noWallets', 'Khong co vi nao trong muc nay')}
+                            {t('transactions.recurring.form.noWallets')}
                         </option>
                     )}
                     {contextWallets.map((wallet) => (

@@ -32,12 +32,27 @@ export function AdminDashboard() {
     const [logPage, setLogPage] = useState(1)
     const [logTotal, setLogTotal] = useState(0)
     const [logAction, setLogAction] = useState('ALL')
+    const derivedTotalUsers = analytics?.stats?.totalUsers || analytics?.userGrowth?.reduce((acc, curr) => acc + curr.count, 0) || 0
+    const derivedTotalTransactions =
+        analytics?.stats?.totalTransactions || (analytics?.weeklyActivity?.reduce((acc, curr) => acc + curr.count, 0) || 0) * 10
 
     const roleLabel = (role) => {
         if (role === 'admin') return t('admin.roleAdmin')
         if (role === 'member') return t('admin.roleMember')
-        if (role === 'staff') return t('admin.roleStaff', 'Staff')
+        if (role === 'staff') return t('admin.roleStaff')
         return role
+    }
+
+    const getLogActionLabel = (action) => {
+        const actionKeyMap = {
+            USER_LOGIN: 'admin.action_USER_LOGIN',
+            USER_REGISTER: 'admin.action_USER_REGISTER',
+            ROLE_CHANGED: 'admin.action_ROLE_CHANGED',
+            USER_LOCKED_UNLOCKED: 'admin.action_USER_LOCKED_UNLOCKED',
+            USER_DELETED: 'admin.action_USER_DELETED',
+        }
+
+        return actionKeyMap[action] ? t(actionKeyMap[action]) : String(action || '').replaceAll('_', ' ')
     }
 
     useEffect(() => {
@@ -165,7 +180,7 @@ export function AdminDashboard() {
                         className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === 'overview' ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                         onClick={() => setActiveTab('overview')}
                     >
-                        Overview
+                        {t("admin.overviewTab")}
                     </button>
                     <button 
                         className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === 'logs' ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
@@ -188,7 +203,7 @@ export function AdminDashboard() {
                             </div>
                             <div>
                                 <p className="text-sm text-muted-foreground">{t("admin.totalUsers")}</p>
-                                <p className="text-2xl font-bold">{analytics.stats.totalUsers || analytics.userGrowth.reduce((acc, curr) => acc + curr.count, 0)}</p>
+                                <p className="text-2xl font-bold">{derivedTotalUsers}</p>
                             </div>
                         </div>
                     </Card>
@@ -243,7 +258,7 @@ export function AdminDashboard() {
                             </div>
                             <div>
                                 <p className="text-sm text-muted-foreground">{t("admin.totalTransactions")}</p>
-                                <p className="text-2xl font-bold">{analytics.stats.totalTransactions || analytics.weeklyActivity.reduce((acc, curr) => acc + curr.count, 0) * 10}</p>
+                                <p className="text-2xl font-bold">{derivedTotalTransactions}</p>
                             </div>
                         </div>
                     </Card>
@@ -319,15 +334,15 @@ export function AdminDashboard() {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
                     {/* Revenue Trends */}
                     <Card className="p-6">
-                        <h2 className="text-lg font-semibold mb-4">Lưu lượng dòng tiền (6 tháng)</h2>
+                        <h2 className="text-lg font-semibold mb-4">{t("admin.revenueOverview")}</h2>
                         <ResponsiveContainer width="100%" height={250}>
                             <LineChart data={financial.revenueTrends}>
                                 <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                                 <XAxis dataKey="month" tick={{ fontSize: 12 }} />
                                 <YAxis tick={{ fontSize: 12 }} allowDecimals={false} width={80} tickFormatter={(val) => new Intl.NumberFormat('vi-VN', { notation: "compact" }).format(val)} />
                                 <Tooltip formatter={(value) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value)} />
-                                <Line type="monotone" dataKey="income" name="Thu nhập" stroke="#10b981" strokeWidth={2} dot={{ r: 4 }} />
-                                <Line type="monotone" dataKey="expense" name="Chi tiêu" stroke="#ef4444" strokeWidth={2} dot={{ r: 4 }} />
+                                <Line type="monotone" dataKey="income" name={t('transactions.type.income')} stroke="#10b981" strokeWidth={2} dot={{ r: 4 }} />
+                                <Line type="monotone" dataKey="expense" name={t('transactions.type.expense')} stroke="#ef4444" strokeWidth={2} dot={{ r: 4 }} />
                             </LineChart>
                         </ResponsiveContainer>
                     </Card>
@@ -336,14 +351,14 @@ export function AdminDashboard() {
                     <div className="space-y-6">
                         <div className="grid grid-cols-2 gap-4">
                             <Card className="p-4 bg-primary/5 border-primary/20">
-                                <p className="text-sm font-medium text-muted-foreground mb-1">Tổng Số Dư Hệ Thống</p>
+                                <p className="text-sm font-medium text-muted-foreground mb-1">{t("admin.systemBalance")}</p>
                                 <p className="text-2xl font-bold text-primary">
                                     {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(financial.systemBalance)}
                                 </p>
                             </Card>
                             <Card className="p-4">
                                 <div className="flex justify-between items-center mb-1">
-                                    <p className="text-sm font-medium text-muted-foreground">Tuân thủ ngân sách</p>
+                                    <p className="text-sm font-medium text-muted-foreground">{t("admin.budgetCompliance")}</p>
                                     <span className="text-xs font-bold">{financial.budgetCompliance}%</span>
                                 </div>
                                 <div className="w-full bg-secondary h-2 rounded-full mt-2 overflow-hidden">
@@ -352,12 +367,12 @@ export function AdminDashboard() {
                                         style={{ width: `${financial.budgetCompliance}%` }} 
                                     />
                                 </div>
-                                <p className="text-xs text-muted-foreground mt-2">Dựa trên giới hạn ngân sách chi tiêu</p>
+                                <p className="text-xs text-muted-foreground mt-2">{t("admin.budgetComplianceDesc")}</p>
                             </Card>
                         </div>
                         
                         <Card className="p-4">
-                            <h3 className="text-sm font-semibold mb-3">Top 5 Người Dùng Chi Tiêu Nhiều Nhất</h3>
+                            <h3 className="text-sm font-semibold mb-3">{t("admin.topSpendersTitle")}</h3>
                             {financial.topSpenders?.length > 0 ? (
                                 <div className="space-y-3">
                                     {financial.topSpenders.map((user, idx) => (
@@ -376,7 +391,7 @@ export function AdminDashboard() {
                                     ))}
                                 </div>
                             ) : (
-                                <p className="text-sm text-muted-foreground">Chưa có dữ liệu chi tiêu.</p>
+                                <p className="text-sm text-muted-foreground">{t("admin.noSpendingData")}</p>
                             )}
                         </Card>
                     </div>
@@ -404,7 +419,7 @@ export function AdminDashboard() {
                         >
                             <option value="all">{t("admin.all")}</option>
                             <option value="admin">{t("admin.roleAdmin")}</option>
-                            <option value="staff">{t("admin.roleStaff", "Staff")}</option>
+                            <option value="staff">{t("admin.roleStaff")}</option>
                             <option value="member">{t("admin.roleMember")}</option>
                         </select>
                         <select 
@@ -542,14 +557,14 @@ export function AdminDashboard() {
                                         <span className="absolute -left-[35px] top-1 h-4 w-4 rounded-full bg-background border-2 border-primary" />
                                         <div className="flex flex-col gap-1">
                                             <div className="flex items-center gap-2 flex-wrap">
-                                                <Badge variant={badgeColor} className="text-xs">{t(`admin.action_${log.action}`) || log.action}</Badge>
-                                                <span className="text-sm font-medium">{log.User?.name || 'System / Unknown User'}</span>
+                                                <Badge variant={badgeColor} className="text-xs">{getLogActionLabel(log.action)}</Badge>
+                                                <span className="text-sm font-medium">{log.User?.name || t("admin.unknownUser")}</span>
                                                 <span className="text-xs text-muted-foreground">{new Date(log.createdAt).toLocaleString()}</span>
                                             </div>
                                             {(log.old_value || log.new_value) && (
                                                 <div className="mt-2 bg-muted p-3 rounded-md text-xs font-mono overflow-auto max-w-full">
-                                                    <span className="text-muted-foreground">Entity: {log.entity_type} {log.entity_id ? `(${log.entity_id})` : ''}</span><br/>
-                                                    {log.action === 'ROLE_CHANGED' && log.new_value?.role && `Changed to: ${log.new_value.role}`}
+                                                    <span className="text-muted-foreground">{t("admin.entityLabel")}: {log.entity_type} {log.entity_id ? `(${log.entity_id})` : ''}</span><br/>
+                                                    {log.action === 'ROLE_CHANGED' && log.new_value?.role && t("admin.roleChangedTo", { role: log.new_value.role })}
                                                 </div>
                                             )}
                                         </div>

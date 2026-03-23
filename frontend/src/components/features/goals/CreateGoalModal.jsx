@@ -74,13 +74,18 @@ export function CreateGoalModal({ isOpen, onClose }) {
             setImageUrl(ICONS[0].name);
             onClose();
         } catch (error) {
-            console.error("Lỗi tạo mục tiêu:", error);
+            console.error("Goal creation failed:", error);
             toast.error(error);
         }
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title={t('goals.modals.create.title')}>
+        <Modal
+            isOpen={isOpen}
+            onClose={onClose}
+            title={t('goals.modals.create.title')}
+            contentTestId="create-goal-modal"
+        >
             <div className="p-6 space-y-6">
 
                 {/* Visual Preview */}
@@ -98,7 +103,7 @@ export function CreateGoalModal({ isOpen, onClose }) {
                         <div className="text-center">
                             <h4 className="font-bold text-lg">{name || t('goals.modals.create.previewDefault')}</h4>
                             <p className="text-sm font-medium text-primary">
-                                {t('goals.modals.create.targetPreview')} {targetAmount ? formatCurrency(Number(targetAmount)) : '0 ₫'}
+                                {t('goals.modals.create.targetPreview')} {targetAmount ? formatCurrency(Number(targetAmount)) : formatCurrency(0)}
                             </p>
                         </div>
                     </div>
@@ -175,7 +180,7 @@ export function CreateGoalModal({ isOpen, onClose }) {
 
                 <div className="pt-4 flex gap-3 justify-end border-t border-border">
                     <Button variant="outline" onClick={onClose}>{t('goals.modals.create.btnCancel')}</Button>
-                    <Button onClick={handleCreate}>
+                    <Button data-testid="create-goal-submit" onClick={handleCreate}>
                         {t('goals.modals.create.btnSubmit')}
                     </Button>
                 </div>

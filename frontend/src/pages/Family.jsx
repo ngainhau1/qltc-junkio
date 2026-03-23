@@ -12,7 +12,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
-import { createFamily, setActiveFamily, removeMemberFromFamily } from "@/features/families/familySlice"
+import { createFamily, fetchFamilies, setActiveFamily, removeMemberFromFamily } from "@/features/families/familySlice"
 import { approveDebt, rejectDebt, settleDebts, fetchTransactions } from "@/features/transactions/transactionSlice"
 import { Users, Plus, ArrowRight, MoreHorizontal, Shield, ShieldAlert, LogOut, Check, Copy, Receipt, Target, CheckCircle2, XCircle } from "lucide-react"
 import { simplifyDebts } from "@/utils/debtSimplification"
@@ -34,6 +34,7 @@ export function Family() {
 
     // --- Redux Connected Logic ---
     const activeFamily = families.find(f => f.id === activeFamilyId)
+    const activeFamilyMembers = Array.isArray(activeFamily?.members) ? activeFamily.members : []
 
     // 1. Get Family Wallets
     const familyWalletIds = wallets
@@ -53,7 +54,7 @@ export function Family() {
         if (t.shares && t.shares.length > 0) {
             splitAmongIds = t.shares.map(s => s.user_id);
         } else {
-            splitAmongIds = activeFamily?.members.map(m => m.id) || [];
+            splitAmongIds = activeFamilyMembers.map((member) => member.id);
         }
 
         return {
@@ -86,8 +87,8 @@ export function Family() {
     });
 
     const getMemberName = (id) => {
-        const m = activeFamily?.members.find(m => m.id === id)
-        return m ? m.name : 'Unknown'
+        const member = activeFamilyMembers.find((item) => item.id === id)
+        return member ? member.name : t('common.unknown')
     }
 
     const [settlements, setSettlements] = useState([])
@@ -115,10 +116,11 @@ export function Family() {
 
         try {
             await dispatch(createFamily({ name: newFamilyName, description: newFamilyDesc })).unwrap();
+            await dispatch(fetchFamilies()).unwrap();
             setNewFamilyName("");
             setNewFamilyDesc("");
             setCreateModalOpen(false);
-            toast.success(t('family.modals.create.success', { defaultValue: 'Tạo gia đình thành công' }));
+            toast.success(t('family.modals.create.success'));
         } catch (error) {
             console.error("Lỗi tạo gia đình:", error);
             toast.error(error);
@@ -225,10 +227,17 @@ export function Family() {
                             <div className="space-y-4">
                                 {families.map(family => {
                                     // Find current user's role in this family
-                                    const myRole = family.members.find(m => m.id === user?.id)?.role || 'MEMBER'
+                                    const members = Array.isArray(family.members) ? family.members : []
+                                    const myRole = family.owner_id === user?.id
+                                        ? 'OWNER'
+                                        : family.my_role || members.find((member) => member.id === user?.id)?.role || 'MEMBER'
 
                                     return (
-                                        <div key={family.id} className="border p-4 rounded-lg space-y-4">
+                                        <div
+                                            key={family.id}
+                                            data-testid="family-card"
+                                            className="border p-4 rounded-lg space-y-4"
+                                        >
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-3">
                                                     <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center">
@@ -244,12 +253,13 @@ export function Family() {
                                                             )}
                                                         </div>
                                                         <p className="text-xs text-muted-foreground">
-                                                            {t('family.list.members', { count: family.members.length })} • {t('family.list.role', { role: myRole })}
+                                                            {t('family.list.members', { count: members.length })} • {t('family.list.role', { role: myRole })}
                                                         </p>
                                                     </div>
                                                 </div>
                                                 <div className="flex gap-2">
                                                     <Button
+                                                        data-testid="family-switch-button"
                                                         variant={activeFamilyId === family.id ? "default" : "outline"}
                                                         size="sm"
                                                         onClick={() => dispatch(setActiveFamily(activeFamilyId === family.id ? null : family.id))}
@@ -264,7 +274,7 @@ export function Family() {
                                                 <div className="mt-4 border-t pt-4">
                                                     <h4 className="text-sm font-semibold mb-3">{t('family.list.memberListTitle')}</h4>
                                                     <div className="space-y-3">
-                                                        {family.members.map(member => (
+                                                        {members.map(member => (
                                                             <div key={member.id} className="flex items-center justify-between bg-muted/30 p-2 rounded-md">
                                                                 <div className="flex items-center gap-3">
                                                                     <div className="h-8 w-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold">
@@ -281,7 +291,7 @@ export function Family() {
                                                                     <DropdownMenu>
                                                                         <DropdownMenuTrigger asChild>
                                                                             <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
-                                                                                <span className="sr-only">Open menu</span>
+                                                                                <span className="sr-only">{t('family.actions.openMenu')}</span>
                                                                                 <MoreHorizontal className="h-4 w-4" />
                                                                             </Button>
                                                                         </DropdownMenuTrigger>

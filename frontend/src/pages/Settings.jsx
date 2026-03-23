@@ -333,7 +333,7 @@ function AccountSettings() {
 
     const handleBroadcast = async (e) => {
         e.preventDefault();
-        if (!broadcastMsg.trim()) return toast.error('Nội dung không được để trống');
+        if (!broadcastMsg.trim()) return toast.error(t('settings.account.broadcastEmpty'));
         setIsSending(true);
         try {
             const res = await api.post('/notifications/broadcast', {
@@ -341,11 +341,11 @@ function AccountSettings() {
                 message: broadcastMsg,
                 type: 'SYSTEM'
             });
-            toast.success(res.data.msg || 'Đã gửi thông báo thành công!');
+            toast.success(res.data.msg || t('settings.account.broadcastSuccess'));
             setBroadcastTitle('');
             setBroadcastMsg('');
         } catch (error) {
-            toast.error(error.response?.data?.msg || 'Gửi thất bại');
+            toast.error(error.response?.data?.msg || t('settings.account.broadcastFailed'));
         } finally {
             setIsSending(false);
         }
@@ -361,8 +361,8 @@ function AccountSettings() {
                 {/* Change Password Area */}
                 <div className="rounded-xl border p-5 space-y-4">
                     <div className="space-y-1">
-                        <Label className="text-base font-semibold">Đổi mật khẩu</Label>
-                        <p className="text-sm text-muted-foreground">Để bảo vệ tài khoản, xin vui lòng không chia sẻ mật khẩu của bạn.</p>
+                        <Label className="text-base font-semibold">{t('settings.account.changePasswordTitle')}</Label>
+                        <p className="text-sm text-muted-foreground">{t('settings.account.changePasswordDesc')}</p>
                     </div>
                     <form className="space-y-4 max-w-sm" onSubmit={async (e) => {
                         e.preventDefault();
@@ -371,34 +371,33 @@ function AccountSettings() {
                         const confirmPassword = e.target.confirmPassword.value;
 
                         if (!currentPassword || !newPassword || !confirmPassword) {
-                            return toast.error("Vui lòng điền đầy đủ các trường");
+                            return toast.error(t('settings.account.fillAllFields'));
                         }
                         if (newPassword !== confirmPassword) {
-                            return toast.error("Mật khẩu xác nhận không khớp");
+                            return toast.error(t('settings.account.passwordConfirmMismatch'));
                         }
                         
                         try {
-                            // Using standard API call since authSlice doesn't have changePassword thunk yet
                             await api.put('/users/me/password', { currentPassword, newPassword });
-                            toast.success("Thay đổi mật khẩu thành công!");
+                            toast.success(t('settings.account.passwordUpdateSuccess'));
                             e.target.reset();
                         } catch (error) {
-                            toast.error(error.response?.data?.message || "Đổi mật khẩu thất bại");
+                            toast.error(error.response?.data?.message || t('settings.account.passwordUpdateFailed'));
                         }
                     }}>
                         <div className="space-y-2">
-                            <Label htmlFor="currentPassword">Mật khẩu hiện tại</Label>
+                            <Label htmlFor="currentPassword">{t('settings.account.currentPassword')}</Label>
                             <input id="currentPassword" type="password" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" required />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="newPassword">Mật khẩu mới</Label>
+                            <Label htmlFor="newPassword">{t('settings.account.newPassword')}</Label>
                             <input id="newPassword" type="password" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" required minLength="6" />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="confirmPassword">Xác nhận Mật khẩu mới</Label>
+                            <Label htmlFor="confirmPassword">{t('settings.account.confirmNewPassword')}</Label>
                             <input id="confirmPassword" type="password" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" required minLength="6" />
                         </div>
-                        <Button type="submit">Cập nhật mật khẩu</Button>
+                        <Button type="submit">{t('settings.account.updatePasswordBtn')}</Button>
                     </form>
                 </div>
 
@@ -422,34 +421,34 @@ function AccountSettings() {
                     <div className="border-t border-border/50 my-6 mx-6"></div>
                     <CardHeader className="pt-0">
                         <CardTitle className="text-xl text-primary flex items-center gap-2">
-                            <Shield className="w-5 h-5" /> Admin Panel - Broadcast
+                            <Shield className="w-5 h-5" /> {t('settings.account.broadcastTitle')}
                         </CardTitle>
-                        <CardDescription>Gửi thông báo tới toàn bộ người dùng trong hệ thống (Hành động Quản trị).</CardDescription>
+                        <CardDescription>{t('settings.account.broadcastDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleBroadcast} className="space-y-4 max-w-lg border rounded-lg p-5 bg-card">
                             <div className="space-y-2">
-                                <Label>Tiêu đề (Tùy chọn)</Label>
+                                <Label>{t('settings.account.broadcastOptionalTitle')}</Label>
                                 <input
                                     type="text"
                                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                                    placeholder="Thêm tính năng mới, Khuyến mãi..."
+                                    placeholder={t('settings.account.broadcastTitlePlaceholder')}
                                     value={broadcastTitle}
                                     onChange={e => setBroadcastTitle(e.target.value)}
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label>Nội dung thông báo *</Label>
+                                <Label>{t('settings.account.broadcastMessage')} *</Label>
                                 <textarea
                                     className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                    placeholder="Nhập nội dung muốn gửi..."
+                                    placeholder={t('settings.account.broadcastMessagePlaceholder')}
                                     value={broadcastMsg}
                                     onChange={e => setBroadcastMsg(e.target.value)}
                                     required
                                 />
                             </div>
                             <Button type="submit" disabled={isSending}>
-                                {isSending ? 'Đang gửi...' : 'Phát tán Thông Báo'}
+                                {isSending ? t('settings.account.broadcastSending') : t('settings.account.broadcastSend')}
                             </Button>
                         </form>
                     </CardContent>

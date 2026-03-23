@@ -33,7 +33,7 @@ export function ImportTransactionsModal({ isOpen, onClose }) {
 
         setFile(null);
         setStatus('ERROR');
-        setMessage(t('transactions.import.invalidFile', 'Vui long chon file CSV hop le.'));
+        setMessage(t('transactions.import.invalidFile'));
     };
 
     const handleUpload = async () => {
@@ -47,7 +47,7 @@ export function ImportTransactionsModal({ isOpen, onClose }) {
         try {
             const result = await importFromCSV(file, targetWalletId);
             setStatus('SUCCESS');
-            setMessage(result.message || t('transactions.import.success', `Nhap thanh cong ${result.count} giao dich.`));
+            setMessage(result.message || t('transactions.import.success', { count: result.count }));
             await dispatch(refreshFinanceData());
 
             setTimeout(() => {
@@ -71,15 +71,11 @@ export function ImportTransactionsModal({ isOpen, onClose }) {
     };
 
     return (
-        <Modal
-            isOpen={isOpen}
-            onClose={handleClose}
-            title={t('transactions.import.title', 'Nhap giao dich hang loat')}
-        >
+        <Modal isOpen={isOpen} onClose={handleClose} title={t('transactions.import.title')}>
             <div className="space-y-6">
                 <div>
                     <label htmlFor="import-default-wallet" className="mb-1 block text-sm font-medium">
-                        {t('transactions.import.selectWallet', 'Vi nhan mac dinh neu CSV khong chi dinh')}
+                        {t('transactions.import.selectWallet')}
                     </label>
                     <select
                         id="import-default-wallet"
@@ -89,7 +85,7 @@ export function ImportTransactionsModal({ isOpen, onClose }) {
                     >
                         {contextWallets.length === 0 && (
                             <option value="" disabled>
-                                {t('transactions.import.noWallets', 'Khong co vi nao kha dung')}
+                                {t('transactions.import.noWallets')}
                             </option>
                         )}
                         {contextWallets.map((wallet) => (
@@ -121,9 +117,9 @@ export function ImportTransactionsModal({ isOpen, onClose }) {
                     ) : (
                         <div className="flex flex-col items-center">
                             <Upload className="mb-4 h-10 w-10 text-muted-foreground" />
-                            <p className="font-medium">{t('transactions.import.pickFile', 'Nhan de chon file CSV')}</p>
+                            <p className="font-medium">{t('transactions.import.pickFile')}</p>
                             <p className="mt-1 text-sm text-muted-foreground">
-                                {t('transactions.import.pickFileDesc', 'Ho tro dinh dang .csv')}
+                                {t('transactions.import.pickFileDesc')}
                             </p>
                         </div>
                     )}
@@ -145,7 +141,7 @@ export function ImportTransactionsModal({ isOpen, onClose }) {
 
                 <div className="flex justify-end gap-3 border-t pt-4">
                     <Button variant="outline" onClick={handleClose} disabled={status === 'UPLOADING'}>
-                        {t('common.cancel', 'Huy')}
+                        {t('common.cancel')}
                     </Button>
                     <Button
                         onClick={handleUpload}
@@ -154,10 +150,10 @@ export function ImportTransactionsModal({ isOpen, onClose }) {
                     >
                         {status === 'UPLOADING' ? (
                             <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t('transactions.import.uploading', 'Dang nhap...')}
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t('transactions.import.uploading')}
                             </>
                         ) : (
-                            t('transactions.import.submit', 'Nhap du lieu')
+                            t('transactions.import.submit')
                         )}
                     </Button>
                 </div>

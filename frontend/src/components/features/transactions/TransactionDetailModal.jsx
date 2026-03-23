@@ -25,7 +25,7 @@ export function TransactionDetailModal({ isOpen, onClose }) {
             return;
         }
 
-        if (!window.confirm(t('transactions.detail.confirmDelete', 'Ban co chac muon xoa giao dich nay khong?'))) {
+        if (!window.confirm(t('transactions.detail.confirmDelete'))) {
             return;
         }
 
@@ -37,7 +37,7 @@ export function TransactionDetailModal({ isOpen, onClose }) {
     const isIncome = tx?.type === 'INCOME' || tx?.type === 'TRANSFER_IN';
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title={t('transactions.detail.title', 'Chi tiet giao dich')}>
+        <Modal isOpen={isOpen} onClose={onClose} title={t('transactions.detail.title')}>
             {isDetailLoading && (
                 <div className="flex justify-center py-8">
                     <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
@@ -51,14 +51,8 @@ export function TransactionDetailModal({ isOpen, onClose }) {
                             {isIncome ? '+' : '-'}
                             {formatCurrency(tx.amount)}
                         </span>
-                        <Badge
-                            className={
-                                isIncome
-                                    ? 'border-green-200 bg-green-100 text-green-700'
-                                    : 'border-red-200 bg-red-100 text-red-700'
-                            }
-                        >
-                            {isIncome ? t('transactions.type.income', 'Thu nhap') : t('transactions.type.expense', 'Chi tieu')}
+                        <Badge className={isIncome ? 'border-green-200 bg-green-100 text-green-700' : 'border-red-200 bg-red-100 text-red-700'}>
+                            {isIncome ? t('transactions.type.income') : t('transactions.type.expense')}
                         </Badge>
                         {tx.description && <p className="mt-1 text-center text-sm text-muted-foreground">{tx.description}</p>}
                     </div>
@@ -67,7 +61,7 @@ export function TransactionDetailModal({ isOpen, onClose }) {
                         <div className="flex items-center justify-between text-sm">
                             <span className="flex items-center gap-2 text-muted-foreground">
                                 <Calendar className="h-4 w-4" />
-                                {t('transactions.detail.date', 'Ngay')}
+                                {t('transactions.detail.date')}
                             </span>
                             <span className="font-medium">{formatDateString(tx.date || tx.transaction_date)}</span>
                         </div>
@@ -76,7 +70,7 @@ export function TransactionDetailModal({ isOpen, onClose }) {
                             <div className="flex items-center justify-between text-sm">
                                 <span className="flex items-center gap-2 text-muted-foreground">
                                     <Wallet className="h-4 w-4" />
-                                    {t('transactions.detail.wallet', 'Vi')}
+                                    {t('transactions.detail.wallet')}
                                 </span>
                                 <span className="font-medium">{tx.Wallet.name}</span>
                             </div>
@@ -86,7 +80,7 @@ export function TransactionDetailModal({ isOpen, onClose }) {
                             <div className="flex items-center justify-between text-sm">
                                 <span className="flex items-center gap-2 text-muted-foreground">
                                     <Tag className="h-4 w-4" />
-                                    {t('transactions.detail.category', 'Danh muc')}
+                                    {t('transactions.detail.category')}
                                 </span>
                                 <span className="font-medium">{tx.Category.name}</span>
                             </div>
@@ -97,36 +91,28 @@ export function TransactionDetailModal({ isOpen, onClose }) {
                         <div className="space-y-2">
                             <p className="flex items-center gap-2 text-sm font-semibold">
                                 <Users className="h-4 w-4" />
-                                {t('transactions.detail.shares', 'Chia se giao dich')}
+                                {t('transactions.detail.shares')}
                             </p>
                             <div className="overflow-hidden rounded-lg border">
                                 <table className="w-full text-sm">
                                     <thead className="bg-muted/50">
                                         <tr>
-                                            <th className="px-3 py-2 text-left font-medium">{t('transactions.detail.member', 'Thanh vien')}</th>
-                                            <th className="px-3 py-2 text-right font-medium">{t('transactions.detail.shareAmount', 'So tien')}</th>
-                                            <th className="px-3 py-2 text-right font-medium">{t('transactions.detail.status', 'Trang thai')}</th>
+                                            <th className="px-3 py-2 text-left font-medium">{t('transactions.detail.member')}</th>
+                                            <th className="px-3 py-2 text-right font-medium">{t('transactions.detail.shareAmount')}</th>
+                                            <th className="px-3 py-2 text-right font-medium">{t('transactions.detail.status')}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {tx.Shares.map((share) => (
                                             <tr key={share.id} className="border-t">
                                                 <td className="px-3 py-2">
-                                                    <p className="font-medium">{share.User?.name || '—'}</p>
+                                                    <p className="font-medium">{share.User?.name || '?'}</p>
                                                     <p className="text-xs text-muted-foreground">{share.User?.email}</p>
                                                 </td>
                                                 <td className="px-3 py-2 text-right font-medium">{formatCurrency(share.amount)}</td>
                                                 <td className="px-3 py-2 text-right">
-                                                    <Badge
-                                                        className={
-                                                            share.status === 'PAID'
-                                                                ? 'border-green-200 bg-green-100 text-xs text-green-700'
-                                                                : 'border-yellow-200 bg-yellow-100 text-xs text-yellow-700'
-                                                        }
-                                                    >
-                                                        {share.status === 'PAID'
-                                                            ? t('transactions.detail.paid', 'Da tra')
-                                                            : t('transactions.detail.unpaid', 'Chua tra')}
+                                                    <Badge className={share.status === 'PAID' ? 'border-green-200 bg-green-100 text-xs text-green-700' : 'border-yellow-200 bg-yellow-100 text-xs text-yellow-700'}>
+                                                        {share.status === 'PAID' ? t('transactions.detail.paid') : t('transactions.detail.unpaid')}
                                                     </Badge>
                                                 </td>
                                             </tr>
@@ -139,11 +125,11 @@ export function TransactionDetailModal({ isOpen, onClose }) {
 
                     <div className="flex gap-3 pt-2">
                         <Button variant="outline" className="flex-1" onClick={onClose}>
-                            {t('common.close', 'Dong')}
+                            {t('common.close')}
                         </Button>
                         <Button variant="destructive" className="flex-1" onClick={handleDelete}>
                             <Trash2 className="mr-2 h-4 w-4" />
-                            {t('common.delete', 'Xoa')}
+                            {t('common.delete')}
                         </Button>
                     </div>
                 </div>

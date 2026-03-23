@@ -9,7 +9,16 @@
         "close": "Close",
         "loading": "Loading...",
         "success": "Success",
-        "error": "Error"
+        "error": "Error",
+        "prev": "Previous",
+        "next": "Next",
+        "page": "Page",
+        "restoringSession": "Restoring your session...",
+        "noDataTitle": "No data available",
+        "noDataDesc": "There is no data to display right now.",
+        "unknown": "Unknown",
+        "id": "ID",
+        "appVersion": "Junkio Expense Tracker v{{version}}"
     },
     "auth": {
         "login": "Login",
@@ -60,7 +69,9 @@
         "resetPasswordTitle": "Create new password",
         "resetPasswordDesc": "Please enter a secure and memorable new password for your account.",
         "newPassword": "New password",
-        "resetPasswordBtn": "Save password and Login"
+        "resetPasswordBtn": "Save password and Login",
+        "loginFailed": "Login failed. Please try again.",
+        "registerFailed": "Registration failed. The email may already exist."
     },
     "nav": {
         "dashboard": "Dashboard",
@@ -71,7 +82,11 @@
         "reports": "Reports",
         "settings": "Settings",
         "forecast": "Forecast",
-        "admin": "Admin"
+        "admin": "Admin",
+        "menu": "Menu",
+        "features": "Features",
+        "recurring": "Recurring",
+        "system": "System"
     },
     "sidebar": {
         "context": "Context",
@@ -135,7 +150,11 @@
                 "duplicateName": "This wallet name already exists. Please choose another name.",
                 "saveFailed": "Unable to save wallet. Please try again."
             }
-        }
+        },
+        "deleteConfirm": "Are you sure you want to delete this wallet?",
+        "deleteSuccess": "Wallet deleted successfully.",
+        "deleteFailed": "Unable to delete wallet.",
+        "editWalletTitle": "Edit wallet"
     },
     "transactions": {
         "title": "Transactions",
@@ -187,9 +206,41 @@
                     "amountRequired": "Amount is required",
                     "amountPositive": "Amount must be positive",
                     "frequencyRequired": "Frequency is required",
-                    "typeRequired": "Type is required"
-                }
+                    "typeRequired": "Type is required",
+                    "walletRequired": "Please choose a wallet",
+                    "startDateRequired": "Please choose a start date"
+                },
+                "noWallets": "No wallets are available in this context"
             }
+        },
+        "exportError": "Unable to export data.",
+        "type": {
+            "income": "Income",
+            "expense": "Expense"
+        },
+        "detail": {
+            "title": "Transaction details",
+            "confirmDelete": "Are you sure you want to delete this transaction?",
+            "date": "Date",
+            "wallet": "Wallet",
+            "category": "Category",
+            "shares": "Shared transaction",
+            "member": "Member",
+            "shareAmount": "Amount",
+            "status": "Status",
+            "paid": "Paid",
+            "unpaid": "Unpaid"
+        },
+        "import": {
+            "title": "Bulk import transactions",
+            "selectWallet": "Default wallet when the CSV does not specify one",
+            "noWallets": "No wallets are available in this context",
+            "pickFile": "Click to choose a CSV file",
+            "pickFileDesc": "CSV format is supported",
+            "invalidFile": "Please choose a valid CSV file.",
+            "success": "Imported {{count}} transactions successfully.",
+            "uploading": "Importing data...",
+            "submit": "Import data"
         }
     },
     "family": {
@@ -213,7 +264,8 @@
             "makeMember": "Make Member",
             "makeViewer": "Make Viewer",
             "remove": "Remove from Group",
-            "invite": "Invite New Member"
+            "invite": "Invite New Member",
+            "openMenu": "Open actions menu"
         },
         "expenses": {
             "title": "Shared Expenses ({{count}})",
@@ -250,7 +302,8 @@
                 "descLabel": "Description (Optional)",
                 "descPlaceholder": "Short description about this group...",
                 "cancel": "Cancel",
-                "submit": "Create Group"
+                "submit": "Create Group",
+                "success": "Family created successfully."
             },
             "settle": {
                 "title": "Confirm Payment",
@@ -345,7 +398,28 @@
             "logoutModalTitle": "Confirm Action",
             "logoutModalQ": "Are you sure you want to log out of the system account on this device?",
             "stayBtn": "Keep me logged in",
-            "logoutConfirmBtn": "Log Out"
+            "logoutConfirmBtn": "Log Out",
+            "changePasswordTitle": "Change password",
+            "changePasswordDesc": "To protect your account, do not share your password with anyone else.",
+            "currentPassword": "Current password",
+            "newPassword": "New password",
+            "confirmNewPassword": "Confirm new password",
+            "updatePasswordBtn": "Update password",
+            "fillAllFields": "Please fill in all required fields.",
+            "passwordConfirmMismatch": "Password confirmation does not match.",
+            "passwordUpdateSuccess": "Password updated successfully.",
+            "passwordUpdateFailed": "Failed to update password.",
+            "broadcastTitle": "Admin panel - broadcast notification",
+            "broadcastDesc": "Send a notification to every user in the system.",
+            "broadcastOptionalTitle": "Title (optional)",
+            "broadcastMessage": "Notification message",
+            "broadcastTitlePlaceholder": "Example: New feature, maintenance window...",
+            "broadcastMessagePlaceholder": "Enter the message to send...",
+            "broadcastSend": "Broadcast notification",
+            "broadcastSending": "Sending...",
+            "broadcastSuccess": "Notification sent successfully.",
+            "broadcastFailed": "Failed to send notification.",
+            "broadcastEmpty": "Message content cannot be empty."
         }
     },
     "goals": {
@@ -417,7 +491,9 @@
     "notifications": {
         "title": "Notifications",
         "markRead": "Mark all as read",
-        "empty": "No notifications"
+        "empty": "No notifications",
+        "budgetAlertTitle": "Spending alert",
+        "budgetAlertDesc": "This expense may push you beyond the planned spending limit."
     },
     "transactionForm": {
         "title": "Add New Transaction",
@@ -478,7 +554,12 @@
         "cancel": "Cancel",
         "save": "Save Changes",
         "reqName": "Full name is required.",
-        "successMsg": "Profile updated successfully!"
+        "successMsg": "Profile updated successfully!",
+        "avatarUpload": "Upload avatar",
+        "editBtn": "Edit profile",
+        "onlyImageAllowed": "Only image files are allowed.",
+        "uploadFailed": "Unable to upload the image or save the profile.",
+        "uploadSuccess": "Avatar uploaded successfully."
     },
     "sharedExpense": {
         "addBtn": "Add Shared Expense",
@@ -538,7 +619,28 @@
         "active": "Active",
         "showing": "Showing {{from}}-{{to}} of {{total}}",
         "accessDenied": "Access Denied",
-        "accessDeniedDesc": "You do not have permission to view this page."
+        "accessDeniedDesc": "You do not have permission to view this page.",
+        "overviewTab": "Overview",
+        "activityLogs": "Activity logs",
+        "filterByAction": "Filter by action",
+        "loadMore": "Load more",
+        "noLogs": "No activity logs yet.",
+        "revenueOverview": "Cashflow (6 months)",
+        "actionType": "Action type",
+        "timestamp": "Timestamp",
+        "action_USER_LOGIN": "User login",
+        "action_USER_REGISTER": "User registration",
+        "action_ROLE_CHANGED": "Role changed",
+        "action_USER_LOCKED_UNLOCKED": "User locked/unlocked",
+        "action_USER_DELETED": "User deleted",
+        "systemBalance": "System balance",
+        "budgetCompliance": "Budget compliance",
+        "budgetComplianceDesc": "Based on configured spending budget limits.",
+        "topSpendersTitle": "Top 5 spenders",
+        "noSpendingData": "No spending data available yet.",
+        "unknownUser": "System / Unknown user",
+        "entityLabel": "Entity",
+        "roleChangedTo": "Changed role to: {{role}}"
     },
     "forecast": {
         "title": "Cash Flow Forecast",

@@ -9,7 +9,16 @@
         "close": "Đóng",
         "loading": "Đang tải...",
         "success": "Thành công",
-        "error": "Lỗi"
+        "error": "Lỗi",
+        "prev": "Trang trước",
+        "next": "Trang sau",
+        "page": "Trang",
+        "restoringSession": "Đang khôi phục phiên...",
+        "noDataTitle": "Không có dữ liệu",
+        "noDataDesc": "Hiện tại chưa có dữ liệu nào để hiển thị.",
+        "unknown": "Không xác định",
+        "id": "ID",
+        "appVersion": "Junkio Expense Tracker v{{version}}"
     },
     "auth": {
         "login": "Đăng nhập",
@@ -60,7 +69,9 @@
         "resetPasswordTitle": "Tạo mật khẩu mới",
         "resetPasswordDesc": "Vui lòng nhập mật khẩu mới bảo mật và dễ nhớ cho tài khoản của bạn.",
         "newPassword": "Mật khẩu mới",
-        "resetPasswordBtn": "Lưu mật khẩu và Đăng nhập"
+        "resetPasswordBtn": "Lưu mật khẩu và Đăng nhập",
+        "loginFailed": "Đăng nhập không thành công, vui lòng thử lại.",
+        "registerFailed": "Đăng ký không thành công, email có thể đã tồn tại."
     },
     "nav": {
         "dashboard": "Tổng Quan",
@@ -71,7 +82,11 @@
         "reports": "Báo Cáo",
         "settings": "Cài Đặt",
         "forecast": "Dự Báo",
-        "admin": "Quản Trị"
+        "admin": "Quản Trị",
+        "menu": "Menu",
+        "features": "Tính năng",
+        "recurring": "Giao dịch định kỳ",
+        "system": "Hệ thống"
     },
     "sidebar": {
         "context": "Ngữ Cảnh",
@@ -135,7 +150,11 @@
                 "duplicateName": "Tên ví đã tồn tại. Vui lòng chọn tên khác.",
                 "saveFailed": "Không thể lưu ví. Vui lòng thử lại."
             }
-        }
+        },
+        "deleteConfirm": "Bạn có chắc chắn muốn xóa ví này?",
+        "deleteSuccess": "Đã xóa ví thành công.",
+        "deleteFailed": "Không thể xóa ví.",
+        "editWalletTitle": "Sửa thông tin ví"
     },
     "transactions": {
         "title": "Giao Dịch",
@@ -187,9 +206,41 @@
                     "amountRequired": "Vui lòng nhập số tiền",
                     "amountPositive": "Số tiền phải lớn hơn 0",
                     "frequencyRequired": "Vui lòng chọn tần suất",
-                    "typeRequired": "Vui lòng chọn loại"
-                }
+                    "typeRequired": "Vui lòng chọn loại",
+                    "walletRequired": "Vui lòng chọn ví",
+                    "startDateRequired": "Vui lòng chọn ngày bắt đầu"
+                },
+                "noWallets": "Không có ví nào trong ngữ cảnh này"
             }
+        },
+        "exportError": "Không thể xuất dữ liệu.",
+        "type": {
+            "income": "Thu nhập",
+            "expense": "Chi tiêu"
+        },
+        "detail": {
+            "title": "Chi tiết giao dịch",
+            "confirmDelete": "Bạn có chắc muốn xóa giao dịch này không?",
+            "date": "Ngày",
+            "wallet": "Ví",
+            "category": "Danh mục",
+            "shares": "Chia sẻ giao dịch",
+            "member": "Thành viên",
+            "shareAmount": "Số tiền",
+            "status": "Trạng thái",
+            "paid": "Đã trả",
+            "unpaid": "Chưa trả"
+        },
+        "import": {
+            "title": "Nhập giao dịch hàng loạt",
+            "selectWallet": "Ví mặc định nếu CSV không chỉ định",
+            "noWallets": "Không có ví khả dụng trong ngữ cảnh này",
+            "pickFile": "Nhấn để chọn file CSV",
+            "pickFileDesc": "Hỗ trợ định dạng .csv",
+            "invalidFile": "Vui lòng chọn file CSV hợp lệ.",
+            "success": "Đã nhập thành công {{count}} giao dịch.",
+            "uploading": "Đang nhập dữ liệu...",
+            "submit": "Nhập dữ liệu"
         }
     },
     "family": {
@@ -213,7 +264,8 @@
             "makeMember": "Đặt làm Thành viên",
             "makeViewer": "Đặt làm Viewer",
             "remove": "Mời ra khỏi nhóm",
-            "invite": "Mời Thành Viên Mới"
+            "invite": "Mời Thành Viên Mới",
+            "openMenu": "Mở menu thao tác"
         },
         "expenses": {
             "title": "Chi Tiêu Chung ({{count}})",
@@ -250,7 +302,8 @@
                 "descLabel": "Mô tả (Tùy chọn)",
                 "descPlaceholder": "Mô tả ngắn về nhóm này...",
                 "cancel": "Hủy",
-                "submit": "Tạo Nhóm"
+                "submit": "Tạo Nhóm",
+                "success": "Tạo gia đình thành công."
             },
             "settle": {
                 "title": "Xác Nhận Thanh Toán",
@@ -345,7 +398,28 @@
             "logoutModalTitle": "Xác Nhận Hành Động",
             "logoutModalQ": "Bạn có chắc chắn muốn thoát khỏi tài khoản hệ thống của thiết bị này chứ?",
             "stayBtn": "Giữ tôi đăng nhập",
-            "logoutConfirmBtn": "Đăng Xuất"
+            "logoutConfirmBtn": "Đăng Xuất",
+            "changePasswordTitle": "Đổi mật khẩu",
+            "changePasswordDesc": "Để bảo vệ tài khoản, không chia sẻ mật khẩu của bạn với người khác.",
+            "currentPassword": "Mật khẩu hiện tại",
+            "newPassword": "Mật khẩu mới",
+            "confirmNewPassword": "Xác nhận mật khẩu mới",
+            "updatePasswordBtn": "Cập nhật mật khẩu",
+            "fillAllFields": "Vui lòng điền đầy đủ các trường.",
+            "passwordConfirmMismatch": "Mật khẩu xác nhận không khớp.",
+            "passwordUpdateSuccess": "Thay đổi mật khẩu thành công.",
+            "passwordUpdateFailed": "Đổi mật khẩu thất bại.",
+            "broadcastTitle": "Bảng điều khiển Admin - Phát thông báo",
+            "broadcastDesc": "Gửi thông báo tới toàn bộ người dùng trong hệ thống.",
+            "broadcastOptionalTitle": "Tiêu đề (tùy chọn)",
+            "broadcastMessage": "Nội dung thông báo",
+            "broadcastTitlePlaceholder": "Ví dụ: Tính năng mới, lịch bảo trì...",
+            "broadcastMessagePlaceholder": "Nhập nội dung muốn gửi...",
+            "broadcastSend": "Phát tán thông báo",
+            "broadcastSending": "Đang gửi...",
+            "broadcastSuccess": "Đã gửi thông báo thành công.",
+            "broadcastFailed": "Gửi thông báo thất bại.",
+            "broadcastEmpty": "Nội dung không được để trống."
         }
     },
     "goals": {
@@ -417,7 +491,9 @@
     "notifications": {
         "title": "Thông báo",
         "markRead": "Đánh dấu đã đọc",
-        "empty": "Không có thông báo nào"
+        "empty": "Không có thông báo nào",
+        "budgetAlertTitle": "Cảnh báo chi tiêu",
+        "budgetAlertDesc": "Khoản chi này có thể khiến bạn vượt ngưỡng chi tiêu dự kiến."
     },
     "transactionForm": {
         "title": "Thêm Giao Dịch Mới",
@@ -478,7 +554,12 @@
         "cancel": "Hủy bỏ",
         "save": "Lưu thay đổi",
         "reqName": "Vui lòng nhập họ tên.",
-        "successMsg": "Đã cập nhật thông tin thành công!"
+        "successMsg": "Đã cập nhật thông tin thành công!",
+        "avatarUpload": "Tải ảnh lên",
+        "editBtn": "Chỉnh sửa hồ sơ",
+        "onlyImageAllowed": "Chỉ chấp nhận file hình ảnh.",
+        "uploadFailed": "Không thể tải ảnh hoặc lưu hồ sơ.",
+        "uploadSuccess": "Tải ảnh lên thành công."
     },
     "sharedExpense": {
         "addBtn": "Thêm Chi Tiêu Chung",
@@ -510,7 +591,7 @@
         "userGrowth": "Tăng trưởng người dùng",
         "topCategories": "Top danh mục chi tiêu",
         "weeklyActivity": "Giao dịch trong tuần",
-        "revenueOverview": "Tổng quan doanh thu",
+        "revenueOverview": "Lưu lượng dòng tiền (6 tháng)",
         "userManagement": "Quản lý Người dùng",
         "search": "Tìm người dùng...",
         "colName": "Tên",
@@ -540,17 +621,26 @@
         "showing": "Đang hiển thị {{from}}-{{to}} trong {{total}}",
         "accessDenied": "Truy cập bị từ chối",
         "accessDeniedDesc": "Bạn không có quyền truy cập trang này.",
-        "activityLogs": "Nhật ký Hoạt động",
+        "activityLogs": "Nhật ký hoạt động",
         "actionType": "Loại hành động",
         "timestamp": "Thời gian",
-        "noLogs": "Không tìm thấy nhật ký hoạt động nào.",
+        "noLogs": "Chưa có nhật ký hoạt động.",
         "filterByAction": "Lọc theo hành động",
         "action_USER_LOGIN": "Đăng nhập",
-        "action_USER_REGISTER": "Đăng ký mới",
-        "action_USER_LOCKED_UNLOCKED": "Khóa/Mở khóa User",
-        "action_ROLE_CHANGED": "Đổi vai trò",
-        "action_USER_DELETED": "Xóa User",
-        "loadMore": "Tải thêm"
+        "action_USER_REGISTER": "Đăng ký",
+        "action_USER_LOCKED_UNLOCKED": "Khóa/Mở khóa tài khoản",
+        "action_ROLE_CHANGED": "Đổi quyền",
+        "action_USER_DELETED": "Xóa người dùng",
+        "loadMore": "Tải thêm",
+        "overviewTab": "Tổng quan",
+        "systemBalance": "Tổng số dư hệ thống",
+        "budgetCompliance": "Tuân thủ ngân sách",
+        "budgetComplianceDesc": "Dựa trên giới hạn ngân sách chi tiêu.",
+        "topSpendersTitle": "Top 5 người dùng chi tiêu nhiều nhất",
+        "noSpendingData": "Chưa có dữ liệu chi tiêu.",
+        "unknownUser": "Hệ thống / Người dùng không xác định",
+        "entityLabel": "Đối tượng",
+        "roleChangedTo": "Đã đổi quền thành: {{role}}"
     },
     "forecast": {
         "title": "Dự báo Dòng tiền",

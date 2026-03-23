@@ -2,21 +2,30 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '@/lib/api';
 
 const initialState = {
-    activeFamilyId: null, // For switching between Personal (null) and Family context
+    activeFamilyId: null,
     families: [],
     loading: false,
     error: null,
 };
 
-// --- Async Thunks ---
+const normalizeFamily = (family) => ({
+    ...family,
+    members: Array.isArray(family?.members)
+        ? family.members
+        : Array.isArray(family?.Members)
+            ? family.Members
+            : [],
+    my_role: family?.my_role || family?.role || null,
+});
+
 export const fetchFamilies = createAsyncThunk(
     'families/fetchFamilies',
     async (_, { rejectWithValue }) => {
         try {
             const response = await api.get('/families');
-            return response.data; // array of families
+            return Array.isArray(response.data) ? response.data.map(normalizeFamily) : [];
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Lỗi tải danh sách gia đình');
+            return rejectWithValue(error.response?.data?.message || 'L?i t?i danh s?ch gia ??nh');
         }
     }
 );
@@ -26,9 +35,9 @@ export const createFamily = createAsyncThunk(
     async (familyData, { rejectWithValue }) => {
         try {
             const response = await api.post('/families', familyData);
-            return response.data; // newly created family object
+            return normalizeFamily(response.data);
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Lỗi khi tạo gia đình');
+            return rejectWithValue(error.response?.data?.message || 'L?i khi t?o gia ??nh');
         }
     }
 );
@@ -38,9 +47,9 @@ export const loadFamilyDetails = createAsyncThunk(
     async (id, { rejectWithValue }) => {
         try {
             const response = await api.get(`/families/${id}`);
-            return response.data; // Family Details with Members & Wallets
+            return normalizeFamily(response.data);
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Lỗi tải chi tiết gia đình');
+            return rejectWithValue(error.response?.data?.message || 'L?i t?i chi ti?t gia ??nh');
         }
     }
 );
@@ -52,7 +61,7 @@ export const inviteMember = createAsyncThunk(
             const response = await api.post(`/families/${familyId}/members`, { email, role });
             return { familyId, member: response.data };
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Lỗi mời thành viên');
+            return rejectWithValue(error.response?.data?.message || 'L?i m?i th?nh vi?n');
         }
     }
 );
@@ -64,7 +73,7 @@ export const removeMemberFromFamily = createAsyncThunk(
             await api.delete(`/families/${familyId}/members/${userId}`);
             return { familyId, userId };
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Lỗi xóa thành viên');
+            return rejectWithValue(error.response?.data?.message || 'L?i x?a th?nh vi?n');
         }
     }
 );
@@ -74,13 +83,11 @@ const familySlice = createSlice({
     initialState,
     reducers: {
         setActiveFamily: (state, action) => {
-            // action.payload: null (Personal) or family_id (Family)
             state.activeFamilyId = action.payload;
         },
     },
     extraReducers: (builder) => {
         builder
-            // Fetch Families
             .addCase(fetchFamilies.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -93,42 +100,37 @@ const familySlice = createSlice({
                 state.loading = false;
                 state.error = action.payload;
             })
-            // Create Family
             .addCase(createFamily.pending, (state) => {
                 state.loading = true;
+                state.error = null;
             })
-            .addCase(createFamily.fulfilled, (state, action) => {
+            .addCase(createFamily.fulfilled, (state) => {
                 state.loading = false;
-                state.families.push(action.payload);
             })
             .addCase(createFamily.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
             })
-            // Load Family Details (Optional behavior depending on UI need)
             .addCase(loadFamilyDetails.fulfilled, (state, action) => {
-                const family = action.payload;
-                const index = state.families.findIndex(f => f.id === family.id);
+                const family = normalizeFamily(action.payload);
+                const index = state.families.findIndex((item) => item.id === family.id);
                 if (index !== -1) {
-                    // Update existing family with full details
                     state.families[index] = { ...state.families[index], ...family };
                 }
             })
-            // Invite Member
             .addCase(inviteMember.fulfilled, (state, action) => {
                 const { familyId, member } = action.payload;
-                const family = state.families.find(f => f.id === familyId);
+                const family = state.families.find((item) => item.id === familyId);
                 if (family) {
-                    if (!family.Members) family.Members = [];
-                    family.Members.push(member);
+                    family.members = Array.isArray(family.members) ? family.members : [];
+                    family.members.push(member);
                 }
             })
-            // Remove Member
             .addCase(removeMemberFromFamily.fulfilled, (state, action) => {
                 const { familyId, userId } = action.payload;
-                const family = state.families.find(f => f.id === familyId);
-                if (family && family.Members) {
-                    family.Members = family.Members.filter(m => m.id !== userId);
+                const family = state.families.find((item) => item.id === familyId);
+                if (family) {
+                    family.members = (family.members || []).filter((member) => member.id !== userId);
                 }
             });
     },

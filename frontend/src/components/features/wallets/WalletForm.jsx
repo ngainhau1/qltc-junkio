@@ -1,6 +1,6 @@
 ﻿import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,6 +21,7 @@ const resolveWalletSubmitError = (rawError, t) => {
 export function WalletForm({ onSuccess, initialData = null }) {
     const { t } = useTranslation();
     const dispatch = useDispatch();
+    const activeFamilyId = useSelector((state) => state.families?.activeFamilyId ?? null);
     const isEdit = !!initialData;
     const [submitError, setSubmitError] = useState('');
 
@@ -44,6 +45,7 @@ export function WalletForm({ onSuccess, initialData = null }) {
                 balance: parseFloat(values.balance),
                 currency: initialData?.currency || 'VND',
                 type: values.type,
+                family_id: initialData?.family_id ?? activeFamilyId ?? null,
             };
 
             try {

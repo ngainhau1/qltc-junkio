@@ -106,7 +106,11 @@ export function Goals() {
                             const percentage = Math.min(100, Math.round((goal.currentAmount / goal.targetAmount) * 100));
 
                             return (
-                                <Card key={goal.id} className="overflow-hidden hover:shadow-md transition-shadow group border-border/60">
+                                <Card
+                                    key={goal.id}
+                                    data-testid="goal-card"
+                                    className="overflow-hidden hover:shadow-md transition-shadow group border-border/60"
+                                >
                                     <CardContent className="p-0">
                                         <div className="p-6">
                                             <div className="flex justify-between items-start mb-6">
@@ -146,6 +150,7 @@ export function Goals() {
                                             </div>
 
                                             <Button
+                                                data-testid="goal-deposit-open"
                                                 className="w-full text-foreground hover:text-primary-foreground transition-colors font-semibold shadow-sm"
                                                 style={{ backgroundColor: `${goal.colorCode}20`, color: goal.colorCode }}
                                                 onClick={() => handleOpenDeposit(goal)}
