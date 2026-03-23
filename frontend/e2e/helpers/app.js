@@ -23,10 +23,16 @@ export async function login(page, role = "member") {
     await page.goto("/login");
     await page.getByLabel(/email/i).fill(credentials.email);
     await page.getByLabel(/m.t kh.u|password/i).fill(credentials.password);
-    await Promise.all([
-        page.waitForURL((url) => !url.pathname.startsWith("/login"), { timeout: 20_000 }),
-        page.getByRole("button", { name: /..ng nh.p|login/i }).click(),
-    ]);
+    await page.getByRole("button", { name: /..ng nh.p|login/i }).click();
+
+    await page.waitForFunction(
+        () => Boolean(window.localStorage.getItem("auth_token")),
+        { timeout: 20_000 }
+    );
+    await page.waitForFunction(
+        () => window.location.pathname !== "/login",
+        { timeout: 20_000 }
+    );
     await expect(page).not.toHaveURL(/\/login$/);
 }
 
