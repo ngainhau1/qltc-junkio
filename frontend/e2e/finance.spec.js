@@ -34,6 +34,10 @@ test.describe.serial("member finance smoke", () => {
 
         await login(page, "member");
 
+        await page.goto("/wallets");
+        await expect(page.getByTestId("wallets-scope")).toContainText(/ph.m vi:\s*c. nh.n|scope:\s*personal/i);
+        await expect(page.getByTestId("wallets-add-cta")).toContainText(/th.m v. c. nh.n|add personal wallet/i);
+
         await createWallet(page, { name: personalWalletName, balance: 1500000, type: "cash" });
         await createWallet(page, { name: secondaryWalletName, balance: 300000, type: "bank" });
 
@@ -46,6 +50,12 @@ test.describe.serial("member finance smoke", () => {
 
         await createFamily(page, { name: familyName, description: "QA smoke family" });
         await activateFamilyContext(page, familyName);
+        await Promise.all([
+            page.waitForURL(/\/wallets$/),
+            page.locator('a[href="/wallets"]').first().click(),
+        ]);
+        await expect(page.getByTestId("wallets-scope")).toContainText(new RegExp(familyName));
+        await expect(page.getByTestId("wallets-add-cta")).toContainText(/th.m v. gia ..nh|add family wallet/i);
         await createWallet(page, { name: familyWalletName, balance: 400000, type: "cash" });
         await switchToPersonalContext(page);
 

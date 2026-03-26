@@ -82,7 +82,7 @@ function App() {
         let socket;
 
         if (isAuthenticated && user) {
-            const socketUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace('/api', '');
+            const socketUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : '';
             socket = io(socketUrl, {
                 withCredentials: true,
             });

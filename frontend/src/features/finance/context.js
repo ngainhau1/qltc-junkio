@@ -3,6 +3,41 @@ export const cleanQueryParams = (params) =>
         Object.entries(params).filter(([, value]) => value !== undefined && value !== null && value !== '')
     );
 
+export const resolveFinanceScope = ({ activeFamilyId = null, families = [], familyId } = {}) => {
+    const resolvedFamilyId = familyId === undefined ? activeFamilyId ?? null : familyId ?? null;
+
+    if (!resolvedFamilyId) {
+        return {
+            scope: 'personal',
+            familyId: null,
+            familyName: null,
+        };
+    }
+
+    const family = Array.isArray(families) ? families.find((item) => item?.id === resolvedFamilyId) : null;
+
+    return {
+        scope: 'family',
+        familyId: resolvedFamilyId,
+        familyName: family?.name ?? null,
+    };
+};
+
+export const getFinanceScopeLabels = (t, options = {}) => {
+    const scopeInfo = resolveFinanceScope(options);
+
+    return {
+        ...scopeInfo,
+        scopeLabel: scopeInfo.scope === 'family' ? t('common.family') : t('common.personal'),
+        scopeTargetLabel:
+            scopeInfo.scope === 'family'
+                ? scopeInfo.familyName
+                    ? t('common.familyNamed', { name: scopeInfo.familyName })
+                    : t('common.family')
+                : t('common.personal'),
+    };
+};
+
 export const getCurrentFinanceContextParams = (state) => {
     const activeFamilyId = state?.families?.activeFamilyId;
 

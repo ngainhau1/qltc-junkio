@@ -1,4 +1,4 @@
-﻿const express = require('express');
+const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
 const authMiddleware = require('../middleware/authMiddleware');
@@ -139,5 +139,33 @@ router.put('/me', validateUpdateProfile, userController.updateProfile);
  *         description: Mat khau hien tai sai hoac mat khau moi qua ngan
  */
 router.put('/me/password', validateChangePassword, userController.changePassword);
+
+/**
+ * @swagger
+ * /api/users/me:
+ *   delete:
+ *     summary: Xoa tai khoan vinh vien
+ *     description: Xoa toan bo du lieu cua user va tai khoan. Yeu cau xac thuc mat khau truoc khi xoa.
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [password]
+ *             properties:
+ *               password:
+ *                 type: string
+ *                 format: password
+ *     responses:
+ *       200:
+ *         description: Xoa tai khoan thanh cong
+ *       400:
+ *         description: Mat khau khong dung
+ */
+router.delete('/me', userController.deleteAccount);
 
 module.exports = router;

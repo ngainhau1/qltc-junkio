@@ -2,6 +2,7 @@ import Papa from 'papaparse';
 import api from '@/lib/api';
 import { cleanQueryParams } from '@/features/finance/context';
 import { formatDateString } from '@/lib/utils';
+import i18n from '@/lib/i18n';
 
 const downloadBlob = (blob, filename) => {
     const url = URL.createObjectURL(blob);
@@ -24,12 +25,12 @@ const normalizeRows = (rows) =>
     );
 
 const transactionToRow = (transaction) => ({
-    Date: formatDateString(transaction.date || transaction.transaction_date || transaction.createdAt),
-    Description: transaction.description || 'No description',
-    Type: transaction.type,
-    Amount: Number(transaction.amount || 0),
-    Category: transaction.Category?.name || transaction.category_id || '',
-    Wallet: transaction.Wallet?.name || transaction.wallet_id || '',
+    [i18n.t('export.date')]: formatDateString(transaction.date || transaction.transaction_date || transaction.createdAt),
+    [i18n.t('export.description')]: transaction.description || i18n.t('export.noDescription'),
+    [i18n.t('export.type')]: transaction.type,
+    [i18n.t('export.amount')]: Number(transaction.amount || 0),
+    [i18n.t('export.category')]: transaction.Category?.name || transaction.category_id || '',
+    [i18n.t('export.wallet')]: transaction.Wallet?.name || transaction.wallet_id || '',
 });
 
 const reportDataToRows = (reportData) => {
@@ -39,35 +40,35 @@ const reportDataToRows = (reportData) => {
 
     return [
         {
-            Section: 'Summary',
-            Metric: 'Total Income',
-            Value: Number(summary.totalIncome || 0),
+            [i18n.t('export.section')]: i18n.t('export.summary'),
+            [i18n.t('export.metric')]: i18n.t('export.totalIncome'),
+            [i18n.t('export.value')]: Number(summary.totalIncome || 0),
         },
         {
-            Section: 'Summary',
-            Metric: 'Total Expense',
-            Value: Number(summary.totalExpense || 0),
+            [i18n.t('export.section')]: i18n.t('export.summary'),
+            [i18n.t('export.metric')]: i18n.t('export.totalExpense'),
+            [i18n.t('export.value')]: Number(summary.totalExpense || 0),
         },
         {
-            Section: 'Summary',
-            Metric: 'Net',
-            Value: Number(summary.net || 0),
+            [i18n.t('export.section')]: i18n.t('export.summary'),
+            [i18n.t('export.metric')]: i18n.t('export.net'),
+            [i18n.t('export.value')]: Number(summary.net || 0),
         },
         {
-            Section: 'Summary',
-            Metric: 'Transaction Count',
-            Value: Number(summary.transactionCount || 0),
+            [i18n.t('export.section')]: i18n.t('export.summary'),
+            [i18n.t('export.metric')]: i18n.t('export.transactionCount'),
+            [i18n.t('export.value')]: Number(summary.transactionCount || 0),
         },
         ...expenseByCategory.map((item) => ({
-            Section: 'Expense By Category',
-            Metric: item.name,
-            Value: Number(item.value || 0),
+            [i18n.t('export.section')]: i18n.t('export.expenseByCategory'),
+            [i18n.t('export.metric')]: item.name,
+            [i18n.t('export.value')]: Number(item.value || 0),
         })),
         ...cashflowSeries.map((item) => ({
-            Section: 'Cashflow',
-            Metric: item.date,
-            Income: Number(item.income || 0),
-            Expense: Number(item.expense || 0),
+            [i18n.t('export.section')]: i18n.t('export.cashflow'),
+            [i18n.t('export.metric')]: item.date,
+            [i18n.t('export.income')]: Number(item.income || 0),
+            [i18n.t('export.expense')]: Number(item.expense || 0),
         })),
     ];
 };
@@ -111,22 +112,21 @@ export const exportRowsToPDF = async (
 
     doc.addFileToVFS('Roboto-Regular.ttf', robotoBase64);
     doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
-    doc.addFont('Roboto-Regular.ttf', 'Roboto', 'bold');
-    doc.setFont('Roboto');
+    doc.setFont('Roboto', 'normal');
     doc.setFontSize(20);
-    doc.text('JUNKIO EXPENSE TRACKER', 14, 22);
+    doc.text(i18n.t('export.titleTracker'), 14, 22);
     doc.setFontSize(14);
-    doc.text(title || 'JUNKIO REPORT', 14, 32);
+    doc.text(title || i18n.t('export.titleDefault'), 14, 32);
     doc.setFontSize(10);
-    doc.text(`Export Date: ${formatDateString(new Date())}`, 14, 40);
+    doc.text(`${i18n.t('export.exportDate')} ${formatDateString(new Date())}`, 14, 40);
 
     autoTable(doc, {
         head: [columns],
         body: normalizedRows.map((row) => columns.map((column) => row[column])),
         startY: 50,
         theme: 'grid',
-        styles: { font: 'Roboto', fontSize: 10 },
-        headStyles: { fillColor: [79, 70, 229] },
+        styles: { font: 'Roboto', fontStyle: 'normal', fontSize: 10 },
+        headStyles: { fillColor: [79, 70, 229], fontStyle: 'normal' },
     });
 
     doc.save(filename);

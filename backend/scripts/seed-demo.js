@@ -10,7 +10,21 @@
 
 const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcrypt');
-const { sequelize, User, Family, FamilyMember, Wallet, Category, Transaction, Budget, Goal } = require('../models');
+const {
+    sequelize,
+    User,
+    Family,
+    FamilyMember,
+    Wallet,
+    Category,
+    Transaction,
+    TransactionShare,
+    Budget,
+    Goal,
+    Notification,
+    RecurringPattern,
+    AuditLog,
+} = require('../models');
 
 const DEMO_EMAIL  = 'demo@junkio.com';
 const DEMO_PASS   = 'demo123';
@@ -115,13 +129,18 @@ async function deleteIfExists(email) {
     const user = await User.findOne({ where: { email } });
     if (user) {
         console.log(`  => Xoa tai khoan cu: ${email}`);
+        await Notification.destroy({ where: { user_id: user.id } });
+        await TransactionShare.destroy({ where: { user_id: user.id } });
+        await RecurringPattern.destroy({ where: { user_id: user.id } });
+        await AuditLog.destroy({ where: { user_id: user.id } });
         await Transaction.destroy({ where: { user_id: user.id } });
         await Goal.destroy({ where: { user_id: user.id } });
-        await Budget.destroy({ where: {} }); // Budgets gắn family
+        await Budget.destroy({ where: { user_id: user.id } });
         await FamilyMember.destroy({ where: { user_id: user.id } });
         const ownedFamilies = await Family.findAll({ where: { owner_id: user.id } });
         for (const f of ownedFamilies) {
             await FamilyMember.destroy({ where: { family_id: f.id } });
+            await Budget.destroy({ where: { family_id: f.id } });
             await Wallet.destroy({ where: { family_id: f.id } });
             await Family.destroy({ where: { id: f.id } });
         }

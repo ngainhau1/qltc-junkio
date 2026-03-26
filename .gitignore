@@ -64,3 +64,18 @@ _agent/
 _agents/
 .playwright-cli/
 .gemini/
+
+# Ignore backend testing logs and outputs
+backend/*-log.txt
+backend/*_error.txt
+backend/final_test.txt
+backend/parse_output.txt
+backend/test_results.txt
+backend/jest*.json
+backend/jest*.txt
+
+# Ignore agent and AI tool folders
+.ai-devkit.json
+
+# Ignore additional frontend reports
+frontend/report_*.*

@@ -8,6 +8,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { createTransaction, createTransfer } from '@/features/transactions/transactionSlice';
 import { fetchCategories } from '@/features/categories/categorySlice';
 import { addNotification } from '@/features/notifications/notificationsSlice';
+import { getFinanceScopeLabels } from '@/features/finance/context';
 import { refreshFinanceData } from '@/features/finance/refreshFinanceData';
 import { formatCurrency } from '@/lib/utils';
 import { ArrowRight } from 'lucide-react';
@@ -37,7 +38,7 @@ export function TransactionForm({ onSuccess }) {
     const { t } = useTranslation();
     const dispatch = useDispatch();
     const wallets = useSelector((state) => state.wallets?.wallets ?? []);
-    const activeFamilyId = useSelector((state) => state.families?.activeFamilyId ?? null);
+    const { activeFamilyId, families } = useSelector((state) => state.families ?? {});
     const categories = useSelector((state) => state.categories?.categories ?? EMPTY_ARRAY);
     const transactions = useSelector((state) => state.transactions?.transactions ?? EMPTY_ARRAY);
     const [submitError, setSubmitError] = useState('');
@@ -47,6 +48,10 @@ export function TransactionForm({ onSuccess }) {
     }, [dispatch]);
 
     const contextWallets = wallets.filter((wallet) => (activeFamilyId ? wallet.family_id === activeFamilyId : !wallet.family_id));
+    const financeScope = getFinanceScopeLabels(t, {
+        activeFamilyId: activeFamilyId ?? null,
+        families: families ?? [],
+    });
     const defaultWalletId = contextWallets[0]?.id || '';
     const defaultDestWalletId = contextWallets.find((wallet) => wallet.id !== defaultWalletId)?.id || '';
 
@@ -111,11 +116,10 @@ export function TransactionForm({ onSuccess }) {
                         dispatch(
                             addNotification({
                                 type: 'BUDGET_ALERT',
-                                title: t('notifications.budgetAlertTitle', 'Canh bao chi tieu'),
-                                message: t(
-                                    'notifications.budgetAlertDesc',
-                                    `Ban da chi tieu ${formatCurrency(newTotalExpense)} (vuot qua 80% dinh muc) cho vi nay trong thang.`
-                                ),
+                                title: t('notifications.budgetAlertTitle'),
+                                message: t('notifications.budgetAlertDesc', {
+                                    amount: formatCurrency(newTotalExpense),
+                                }),
                             })
                         );
                     }
@@ -124,7 +128,7 @@ export function TransactionForm({ onSuccess }) {
                 await dispatch(refreshFinanceData());
                 if (onSuccess) onSuccess();
             } catch (error) {
-                setSubmitError(String(error || 'Khong the tao giao dich'));
+                setSubmitError(String(error || t('transactionForm.submitError')));
             }
         },
     });
@@ -142,6 +146,16 @@ export function TransactionForm({ onSuccess }) {
                     <TabsTrigger value="TRANSFER">{t('transactionForm.tabs.transfer')}</TabsTrigger>
                 </TabsList>
             </Tabs>
+
+            <div className="rounded-md border bg-muted/30 px-3 py-2" data-testid="transaction-scope">
+                <p className="text-xs font-medium text-muted-foreground">{t('transactions.context.scopeLabel')}</p>
+                <p className="text-sm font-medium">{financeScope.scopeTargetLabel}</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                    {financeScope.scope === 'family'
+                        ? t('transactions.context.familyHint', { target: financeScope.scopeTargetLabel })
+                        : t('transactions.context.personalHint')}
+                </p>
+            </div>
 
             <div className="space-y-4">
                 <div>
@@ -240,6 +254,8 @@ export function TransactionForm({ onSuccess }) {
                     </div>
                 )}
 
+                <p className="text-xs text-muted-foreground">{t('transactions.context.walletHint')}</p>
+
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
                         <label htmlFor="transaction-description" className="mb-1 block text-sm font-medium">
@@ -282,7 +298,7 @@ export function TransactionForm({ onSuccess }) {
                             value={formik.values.categoryId}
                             onChange={formik.handleChange}
                         >
-                            <option value="">{t('transactionForm.categories.general', 'Chung (khong phan loai)')}</option>
+                            <option value="">{t('transactionForm.categories.general')}</option>
                             {categories
                                 .filter((category) => (formik.values.type === 'INCOME' ? category.type === 'INCOME' : category.type === 'EXPENSE'))
                                 .map((category) => (

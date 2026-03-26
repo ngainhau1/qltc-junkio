@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createWallet, editWallet } from '@/features/wallets/walletSlice';
+import { getFinanceScopeLabels } from '@/features/finance/context';
 import { useTranslation } from 'react-i18next';
 
 const resolveWalletSubmitError = (rawError, t) => {
@@ -21,9 +22,16 @@ const resolveWalletSubmitError = (rawError, t) => {
 export function WalletForm({ onSuccess, initialData = null }) {
     const { t } = useTranslation();
     const dispatch = useDispatch();
-    const activeFamilyId = useSelector((state) => state.families?.activeFamilyId ?? null);
+    const { activeFamilyId, families } = useSelector((state) => state.families ?? {});
     const isEdit = !!initialData;
     const [submitError, setSubmitError] = useState('');
+    const walletScope = getFinanceScopeLabels(t, {
+        activeFamilyId: activeFamilyId ?? null,
+        families: families ?? [],
+        familyId: initialData?.family_id,
+    });
+    const createButtonLabel =
+        walletScope.scope === 'family' ? t('wallets.form.createFamilyBtn') : t('wallets.form.createPersonalBtn');
 
     const validationSchema = Yup.object().shape({
         name: Yup.string().required(t('wallets.form.validation.nameRequired')),
@@ -63,6 +71,11 @@ export function WalletForm({ onSuccess, initialData = null }) {
 
     return (
         <form onSubmit={formik.handleSubmit} className="space-y-4">
+            <div className="rounded-md border bg-muted/30 px-3 py-2" data-testid="wallet-form-scope">
+                <p className="text-xs font-medium text-muted-foreground">{t('wallets.context.scopeLabel')}</p>
+                <p className="text-sm font-medium">{walletScope.scopeTargetLabel}</p>
+            </div>
+
             <div>
                 <label htmlFor="wallet-name" className="text-sm font-medium mb-1 block">{t('wallets.form.name')}</label>
                 <Input
@@ -108,7 +121,7 @@ export function WalletForm({ onSuccess, initialData = null }) {
             {submitError && <p className="text-sm text-red-500">{submitError}</p>}
 
             <div className="pt-4 flex justify-end gap-2">
-                <Button type="submit" className="w-full">{isEdit ? t('common.save') : t('wallets.form.createBtn')}</Button>
+                <Button type="submit" className="w-full">{isEdit ? t('common.save') : createButtonLabel}</Button>
             </div>
         </form>
     );

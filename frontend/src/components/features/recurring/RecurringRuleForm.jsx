@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createRecurring } from '@/features/recurring/recurringSlice';
+import { getFinanceScopeLabels } from '@/features/finance/context';
 import { formatCurrency } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
 
@@ -13,7 +14,7 @@ export function RecurringRuleForm({ onSuccess }) {
     const { t } = useTranslation();
     const dispatch = useDispatch();
     const wallets = useSelector((state) => state.wallets?.wallets ?? EMPTY_ARRAY);
-    const activeFamilyId = useSelector((state) => state.families?.activeFamilyId ?? null);
+    const { activeFamilyId, families } = useSelector((state) => state.families ?? {});
 
     const validationSchema = Yup.object().shape({
         name: Yup.string().required(t('transactions.recurring.form.validation.nameRequired')),
@@ -29,6 +30,10 @@ export function RecurringRuleForm({ onSuccess }) {
     });
 
     const contextWallets = wallets.filter((wallet) => (activeFamilyId ? wallet.family_id === activeFamilyId : !wallet.family_id));
+    const financeScope = getFinanceScopeLabels(t, {
+        activeFamilyId: activeFamilyId ?? null,
+        families: families ?? [],
+    });
     const defaultWalletId = contextWallets[0]?.id || '';
 
     const formik = useFormik({
@@ -65,6 +70,16 @@ export function RecurringRuleForm({ onSuccess }) {
 
     return (
         <form onSubmit={formik.handleSubmit} className="space-y-4">
+            <div className="rounded-md border bg-muted/30 px-3 py-2" data-testid="recurring-scope">
+                <p className="text-xs font-medium text-muted-foreground">{t('transactions.context.scopeLabel')}</p>
+                <p className="text-sm font-medium">{financeScope.scopeTargetLabel}</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                    {financeScope.scope === 'family'
+                        ? t('transactions.context.familyHint', { target: financeScope.scopeTargetLabel })
+                        : t('transactions.context.personalHint')}
+                </p>
+            </div>
+
             <div>
                 <label htmlFor="recurring-name" className="mb-1 block text-sm font-medium">
                     {t('transactions.recurring.form.name')}
@@ -165,6 +180,7 @@ export function RecurringRuleForm({ onSuccess }) {
                         </option>
                     ))}
                 </select>
+                <p className="mt-1 text-xs text-muted-foreground">{t('transactions.context.walletHint')}</p>
             </div>
 
             <div className="flex justify-end gap-2 pt-4">

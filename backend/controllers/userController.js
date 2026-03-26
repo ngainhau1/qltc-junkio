@@ -88,3 +88,44 @@ exports.changePassword = async (req, res) => {
         serverError(res, 'Lỗi Server: Không thể đổi mật khẩu');
     }
 };
+
+// DELETE /api/users/me
+exports.deleteAccount = async (req, res) => {
+    const { sequelize } = require('../models');
+    const t = await sequelize.transaction();
+    try {
+        const { password } = req.body;
+        if (!password) {
+            return sendError(res, 'Vui lòng nhập mật khẩu để xác thực', 400);
+        }
+
+        const user = await User.findByPk(req.user.id);
+        if (!user) return notFound(res, 'Người dùng không tồn tại');
+
+        const isMatch = await bcrypt.compare(password, user.password_hash);
+        if (!isMatch) return sendError(res, 'Mật khẩu không đúng', 400);
+
+        const userId = req.user.id;
+
+        // Cascade delete in correct order (dependencies first)
+        const { TransactionShare, Transaction, Wallet, Goal, Budget, Notification, FamilyMember, RecurringPattern, AuditLog } = require('../models');
+
+        await TransactionShare.destroy({ where: { user_id: userId }, transaction: t });
+        await Transaction.destroy({ where: { user_id: userId }, transaction: t });
+        await Wallet.destroy({ where: { user_id: userId }, transaction: t });
+        await Goal.destroy({ where: { user_id: userId }, transaction: t });
+        await Budget.destroy({ where: { user_id: userId }, transaction: t });
+        await Notification.destroy({ where: { user_id: userId }, transaction: t });
+        await FamilyMember.destroy({ where: { user_id: userId }, transaction: t });
+        await RecurringPattern.destroy({ where: { user_id: userId }, transaction: t });
+        await AuditLog.destroy({ where: { user_id: userId }, transaction: t });
+        await User.destroy({ where: { id: userId }, transaction: t });
+
+        await t.commit();
+        success(res, null, 'Tài khoản đã được xóa vĩnh viễn');
+    } catch (err) {
+        await t.rollback();
+        console.error('Error deleting account:', err);
+        serverError(res, 'Lỗi Server: Không thể xóa tài khoản');
+    }
+};

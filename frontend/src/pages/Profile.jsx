@@ -17,7 +17,7 @@ export function Profile() {
     const [isUploading, setIsUploading] = useState(false);
 
     // Lấy API base để nối url tương đối của ảnh
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    const API_URL = import.meta.env.VITE_API_URL || '/api';
     const serverUrl = API_URL.replace('/api', '');
 
     // Provide initial state directly from redux where possible to avoid effect updates

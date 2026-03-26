@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, CheckCircle2, FileType, Loader2, Upload } from 'lucide-react';
+import { getFinanceScopeLabels } from '@/features/finance/context';
 import { importFromCSV } from '@/services/importService';
 import { refreshFinanceData } from '@/features/finance/refreshFinanceData';
 
@@ -17,9 +18,13 @@ export function ImportTransactionsModal({ isOpen, onClose }) {
     const [message, setMessage] = useState('');
 
     const { wallets } = useSelector((state) => state.wallets);
-    const { activeFamilyId } = useSelector((state) => state.families);
+    const { activeFamilyId, families } = useSelector((state) => state.families);
 
     const contextWallets = wallets.filter((wallet) => (activeFamilyId ? wallet.family_id === activeFamilyId : !wallet.family_id));
+    const financeScope = getFinanceScopeLabels(t, {
+        activeFamilyId: activeFamilyId ?? null,
+        families: families ?? [],
+    });
 
     const handleFileChange = (event) => {
         const selectedFile = event.target.files[0];
@@ -73,6 +78,16 @@ export function ImportTransactionsModal({ isOpen, onClose }) {
     return (
         <Modal isOpen={isOpen} onClose={handleClose} title={t('transactions.import.title')}>
             <div className="space-y-6">
+                <div className="rounded-md border bg-muted/30 px-3 py-2" data-testid="import-scope">
+                    <p className="text-xs font-medium text-muted-foreground">{t('transactions.context.scopeLabel')}</p>
+                    <p className="text-sm font-medium">{financeScope.scopeTargetLabel}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                        {financeScope.scope === 'family'
+                            ? t('transactions.context.familyHint', { target: financeScope.scopeTargetLabel })
+                            : t('transactions.context.personalHint')}
+                    </p>
+                </div>
+
                 <div>
                     <label htmlFor="import-default-wallet" className="mb-1 block text-sm font-medium">
                         {t('transactions.import.selectWallet')}
@@ -94,6 +109,7 @@ export function ImportTransactionsModal({ isOpen, onClose }) {
                             </option>
                         ))}
                     </select>
+                    <p className="mt-1 text-xs text-muted-foreground">{t('transactions.context.walletHint')}</p>
                 </div>
 
                 <div

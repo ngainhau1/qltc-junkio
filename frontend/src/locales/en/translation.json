@@ -18,7 +18,11 @@
         "noDataDesc": "There is no data to display right now.",
         "unknown": "Unknown",
         "id": "ID",
-        "appVersion": "Junkio Expense Tracker v{{version}}"
+        "appVersion": "Junkio Expense Tracker v{{version}}",
+        "personal": "Personal",
+        "family": "Family",
+        "scope": "Scope",
+        "familyNamed": "Family {{name}}"
     },
     "auth": {
         "login": "Login",
@@ -149,12 +153,31 @@
                 "typeRequired": "Type is required",
                 "duplicateName": "This wallet name already exists. Please choose another name.",
                 "saveFailed": "Unable to save wallet. Please try again."
-            }
+            },
+            "createPersonalBtn": "Create personal wallet",
+            "createFamilyBtn": "Create family wallet"
         },
         "deleteConfirm": "Are you sure you want to delete this wallet?",
         "deleteSuccess": "Wallet deleted successfully.",
         "deleteFailed": "Unable to delete wallet.",
-        "editWalletTitle": "Edit wallet"
+        "editWalletTitle": "Edit wallet",
+        "context": {
+            "personalTitle": "Personal wallets",
+            "familyTitle": "Family wallets",
+            "personalDesc": "Manage the funds that belong to your personal account.",
+            "familyDesc": "Manage the shared funds used by {{target}}.",
+            "emptyPersonalTitle": "No personal wallets yet",
+            "emptyFamilyTitle": "No family wallets yet",
+            "emptyPersonalDesc": "Create your first personal wallet to start managing your own finances.",
+            "emptyFamilyDesc": "Create the first wallet for {{target}} to manage shared funds.",
+            "addPersonal": "+ Add personal wallet",
+            "addFamily": "+ Add family wallet",
+            "addPersonalTitle": "Add personal wallet",
+            "addFamilyTitle": "Add family wallet",
+            "editPersonalTitle": "Edit personal wallet",
+            "editFamilyTitle": "Edit family wallet",
+            "scopeLabel": "Create for"
+        }
     },
     "transactions": {
         "title": "Transactions",
@@ -241,6 +264,12 @@
             "success": "Imported {{count}} transactions successfully.",
             "uploading": "Importing data...",
             "submit": "Import data"
+        },
+        "context": {
+            "scopeLabel": "Current scope",
+            "personalHint": "You are working with personal wallets.",
+            "familyHint": "You are working with wallets that belong to {{target}}.",
+            "walletHint": "Only wallets from the current scope are shown here."
         }
     },
     "family": {
@@ -336,7 +365,8 @@
             "appearance": "Appearance & Display",
             "notifications": "Notifications",
             "data": "System Data",
-            "account": "Account & Security"
+            "account": "Account & Security",
+            "support": "Support & Info"
         },
         "appearance": {
             "title": "Display & Interface",
@@ -374,12 +404,20 @@
             "backupBtn": "Backup Now",
             "backupSuccess": "Categorized & downloaded backup data file.",
             "importTitle": "Import Data",
-            "importDesc": "Load a .json backup file if you lose data or switch devices.",
-            "importBtn": "Upload File",
+            "importDesc": "Restore data from a previously exported backup (.json) file.",
+            "importBtn": "Choose File",
+            "importInvalidType": "Only .json files are supported.",
+            "importInvalidFormat": "Invalid file or corrupted structure.",
+            "importSuccess": "Data restored successfully!",
+            "importModalTitle": "Confirm Restore",
+            "importModalDesc": "Current settings will be overwritten by the backup file.",
+            "importModalKeys": "data fields",
+            "importConfirmBtn": "Restore now",
             "importNotice": "The JSON Backup file import feature is under development.",
             "resetTitle": "Clear Mock Data (Hard Reset)",
             "resetDesc": "This action formats the database, used in case of app cache errors. Unbacked data will be completely lost.",
             "resetBtn": "Clear All Data",
+            "resetSuccess": "All data cleared successfully.",
             "resetModalTitle": "Danger Alert",
             "resetModalQ": "Permanently delete device data?",
             "resetModalDesc1": "All your ",
@@ -419,7 +457,45 @@
             "broadcastSending": "Sending...",
             "broadcastSuccess": "Notification sent successfully.",
             "broadcastFailed": "Failed to send notification.",
-            "broadcastEmpty": "Message content cannot be empty."
+            "broadcastEmpty": "Message content cannot be empty.",
+            "strengthWeak": "Weak — add uppercase, numbers, special characters",
+            "strengthMedium": "Medium — add length or special characters",
+            "strengthStrong": "Strong",
+            "strengthVeryStrong": "Very strong ✓",
+            "deleteTitle": "Delete Account Permanently",
+            "deleteDesc": "This will permanently remove all your data from the system, including transactions, wallets, goals, and budgets. THIS CANNOT BE UNDONE.",
+            "deleteBtn": "Delete Account",
+            "deleteModalTitle": "Confirm Account Deletion",
+            "deleteModalQ": "This action cannot be undone. All your data will be permanently deleted.",
+            "deletePasswordLabel": "Enter your password to verify",
+            "deleteTypeConfirm": "Type 'DELETE' to confirm",
+            "deleteTypeHint": "DELETE",
+            "deleteConfirmWord": "DELETE",
+            "deleteConfirmBtn": "Delete permanently",
+            "deleteDeleting": "Deleting...",
+            "deleteFailed": "Failed to delete account."
+        },
+        "support": {
+            "title": "Support & Information",
+            "desc": "Application information, contact the development team, and policies.",
+            "appInfoTitle": "Application Info",
+            "appName": "Junkio Expense Tracker",
+            "appVersionLabel": "Version",
+            "appVersion": "1.0.0",
+            "appAuthorLabel": "Developed by",
+            "appAuthor": "Junkio Team — Graduation Project",
+            "techStackTitle": "Technologies Used",
+            "legalTitle": "Policies & Terms",
+            "termsTitle": "Terms of Service",
+            "termsDesc": "By using this application, you agree to our terms of service.",
+            "privacyTitle": "Privacy Policy",
+            "privacyDesc": "Your financial data is encrypted and protected with the highest security standards.",
+            "feedbackTitle": "Feedback & Suggestions",
+            "feedbackDesc": "Have improvement ideas? Send feedback to the development team.",
+            "feedbackBtn": "Send Feedback Email",
+            "sourceCodeTitle": "Source Code",
+            "sourceCodeDesc": "View the project source code on GitHub.",
+            "sourceCodeBtn": "Open GitHub"
         }
     },
     "goals": {
@@ -493,7 +569,7 @@
         "markRead": "Mark all as read",
         "empty": "No notifications",
         "budgetAlertTitle": "Spending alert",
-        "budgetAlertDesc": "This expense may push you beyond the planned spending limit."
+        "budgetAlertDesc": "This expense brings total spending to {{amount}} and may push you beyond the planned spending limit."
     },
     "transactionForm": {
         "title": "Add New Transaction",
@@ -535,7 +611,8 @@
             "reqDestWallet": "Please select a destination wallet",
             "diffWallet": "Destination must be different from source"
         },
-        "noWalletsAvailable": "No wallets available in this context"
+        "noWalletsAvailable": "No wallets available in this context",
+        "submitError": "Unable to create transaction. Please try again."
     },
     "profile": {
         "title": "Personal Profile",
@@ -654,5 +731,29 @@
         "healthy": "Cash flow looks healthy for the forecast period.",
         "warning": "Spending may exceed income",
         "warningMsg": "Spending may exceed income in {{month}}"
+    },
+    "export": {
+        "date": "Date",
+        "description": "Description",
+        "noDescription": "No description",
+        "type": "Type",
+        "amount": "Amount",
+        "category": "Category",
+        "wallet": "Wallet",
+        "section": "Section",
+        "metric": "Metric",
+        "value": "Value",
+        "income": "Income",
+        "expense": "Expense",
+        "summary": "Summary",
+        "totalIncome": "Total Income",
+        "totalExpense": "Total Expense",
+        "net": "Net",
+        "transactionCount": "Transaction Count",
+        "expenseByCategory": "Expense by Category",
+        "cashflow": "Cashflow",
+        "titleTracker": "JUNKIO EXPENSE TRACKER",
+        "titleDefault": "JUNKIO REPORT",
+        "exportDate": "Export Date:"
     }
 }

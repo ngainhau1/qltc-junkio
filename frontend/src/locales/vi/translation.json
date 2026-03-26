@@ -18,7 +18,11 @@
         "noDataDesc": "Hiện tại chưa có dữ liệu nào để hiển thị.",
         "unknown": "Không xác định",
         "id": "ID",
-        "appVersion": "Junkio Expense Tracker v{{version}}"
+        "appVersion": "Junkio Expense Tracker v{{version}}",
+        "personal": "Cá nhân",
+        "family": "Gia đình",
+        "scope": "Phạm vi",
+        "familyNamed": "Gia đình {{name}}"
     },
     "auth": {
         "login": "Đăng nhập",
@@ -149,12 +153,31 @@
                 "typeRequired": "Vui lòng chọn loại ví",
                 "duplicateName": "Tên ví đã tồn tại. Vui lòng chọn tên khác.",
                 "saveFailed": "Không thể lưu ví. Vui lòng thử lại."
-            }
+            },
+            "createPersonalBtn": "Tạo ví cá nhân",
+            "createFamilyBtn": "Tạo ví gia đình"
         },
         "deleteConfirm": "Bạn có chắc chắn muốn xóa ví này?",
         "deleteSuccess": "Đã xóa ví thành công.",
         "deleteFailed": "Không thể xóa ví.",
-        "editWalletTitle": "Sửa thông tin ví"
+        "editWalletTitle": "Sửa thông tin ví",
+        "context": {
+            "personalTitle": "Ví cá nhân",
+            "familyTitle": "Ví gia đình",
+            "personalDesc": "Quản lý các nguồn tiền thuộc tài khoản cá nhân của bạn.",
+            "familyDesc": "Quản lý các nguồn tiền dùng chung cho {{target}}.",
+            "emptyPersonalTitle": "Chưa có ví cá nhân nào",
+            "emptyFamilyTitle": "Chưa có ví gia đình nào",
+            "emptyPersonalDesc": "Tạo ví cá nhân đầu tiên để bắt đầu quản lý tài chính riêng.",
+            "emptyFamilyDesc": "Tạo ví đầu tiên cho {{target}} để quản lý quỹ chung.",
+            "addPersonal": "+ Thêm ví cá nhân",
+            "addFamily": "+ Thêm ví gia đình",
+            "addPersonalTitle": "Thêm ví cá nhân",
+            "addFamilyTitle": "Thêm ví gia đình",
+            "editPersonalTitle": "Sửa ví cá nhân",
+            "editFamilyTitle": "Sửa ví gia đình",
+            "scopeLabel": "Tạo cho"
+        }
     },
     "transactions": {
         "title": "Giao Dịch",
@@ -241,6 +264,12 @@
             "success": "Đã nhập thành công {{count}} giao dịch.",
             "uploading": "Đang nhập dữ liệu...",
             "submit": "Nhập dữ liệu"
+        },
+        "context": {
+            "scopeLabel": "Ngữ cảnh hiện tại",
+            "personalHint": "Bạn đang thao tác với các ví cá nhân.",
+            "familyHint": "Bạn đang thao tác với các ví thuộc {{target}}.",
+            "walletHint": "Chỉ hiển thị các ví thuộc ngữ cảnh hiện tại."
         }
     },
     "family": {
@@ -336,7 +365,8 @@
             "appearance": "Giao Diện & Ký Hiệu",
             "notifications": "Thông Báo",
             "data": "Dữ Liệu Hệ Thống",
-            "account": "Tài Khoản & Bảo Mật"
+            "account": "Tài Khoản & Bảo Mật",
+            "support": "Hỗ Trợ & Thông Tin"
         },
         "appearance": {
             "title": "Hiển thị & Giao diện",
@@ -374,12 +404,19 @@
             "backupBtn": "Sao Lưu Ngay",
             "backupSuccess": "Đã phân loại & tải xuống tệp dữ liệu backup.",
             "importTitle": "Nhập Dữ Liệu Cũ (Import)",
-            "importDesc": "Nạp lại file backup .json nếu bạn mất dữ liệu, hoặc chuyển thiết bị.",
-            "importBtn": "Tải Lên Tệp",
-            "importNotice": "Tính năng nhận tệp Backup JSON đang được phát triển.",
+            "importDesc": "Khôi phục dữ liệu từ file backup (.json) đã xuất trước đó.",
+            "importBtn": "Chọn File",
+            "importInvalidType": "Chỉ hỗ trợ file .json",
+            "importInvalidFormat": "File không hợp lệ hoặc bị lỗi cấu trúc.",
+            "importSuccess": "Khôi phục dữ liệu thành công!",
+            "importModalTitle": "Xác Nhận Khôi Phục",
+            "importModalDesc": "Dữ liệu cài đặt hiện tại sẽ bị ghi đè bởi file backup.",
+            "importModalKeys": "trường dữ liệu",
+            "importConfirmBtn": "Khôi phục ngay",
             "resetTitle": "Xoá Dữ Liệu Giả Lập (Hard Reset)",
             "resetDesc": "Hành động này mang ý nghĩa format database, dùng trong trường hợp app bị lỗi cache. Sẽ mất sạch data chưa backup.",
             "resetBtn": "Xoá Toàn Bộ Dữ Liệu",
+            "resetSuccess": "Đã xóa toàn bộ dữ liệu cục bộ.",
             "resetModalTitle": "Cảnh Báo Nguy Hiểm",
             "resetModalQ": "Xóa vĩnh viễn dữ liệu thiết bị?",
             "resetModalDesc1": "Toàn bộ ",
@@ -419,7 +456,45 @@
             "broadcastSending": "Đang gửi...",
             "broadcastSuccess": "Đã gửi thông báo thành công.",
             "broadcastFailed": "Gửi thông báo thất bại.",
-            "broadcastEmpty": "Nội dung không được để trống."
+            "broadcastEmpty": "Nội dung không được để trống.",
+            "strengthWeak": "Yếu — nên thêm chữ hoa, số, ký tự đặc biệt",
+            "strengthMedium": "Trung bình — thêm độ dài hoặc ký tự đặc biệt",
+            "strengthStrong": "Mạnh",
+            "strengthVeryStrong": "Rất mạnh ✓",
+            "deleteTitle": "Xóa Tài Khoản Vĩnh Viễn",
+            "deleteDesc": "Thao tác này sẽ xóa toàn bộ dữ liệu tài khoản khỏi hệ thống, bao gồm giao dịch, ví, mục tiêu và ngân sách. KHÔNG THỂ HOÀN TÁC.",
+            "deleteBtn": "Xóa Tài Khoản",
+            "deleteModalTitle": "Xác Nhận Xóa Tài Khoản",
+            "deleteModalQ": "Hành động này không thể hoàn tác. Toàn bộ dữ liệu sẽ bị xóa vĩnh viễn.",
+            "deletePasswordLabel": "Nhập mật khẩu để xác thực",
+            "deleteTypeConfirm": "Gõ 'XÓA' để xác nhận",
+            "deleteTypeHint": "XÓA",
+            "deleteConfirmWord": "XÓA",
+            "deleteConfirmBtn": "Xóa vĩnh viễn",
+            "deleteDeleting": "Đang xóa...",
+            "deleteFailed": "Xóa tài khoản thất bại."
+        },
+        "support": {
+            "title": "Hỗ Trợ & Thông Tin",
+            "desc": "Thông tin về ứng dụng, liên hệ nhóm phát triển và các chính sách.",
+            "appInfoTitle": "Thông tin Ứng dụng",
+            "appName": "Junkio Expense Tracker",
+            "appVersionLabel": "Phiên bản",
+            "appVersion": "1.0.0",
+            "appAuthorLabel": "Phát triển bởi",
+            "appAuthor": "Nhóm Junkio — Đồ án Tốt nghiệp",
+            "techStackTitle": "Công nghệ Sử dụng",
+            "legalTitle": "Chính sách & Điều khoản",
+            "termsTitle": "Điều khoản Sử dụng",
+            "termsDesc": "Bằng việc sử dụng ứng dụng này, bạn đồng ý với các điều khoản dịch vụ của chúng tôi.",
+            "privacyTitle": "Chính sách Bảo mật",
+            "privacyDesc": "Dữ liệu tài chính của bạn được mã hóa và bảo vệ theo tiêu chuẩn bảo mật cao nhất.",
+            "feedbackTitle": "Góp ý & Phản hồi",
+            "feedbackDesc": "Có ý tưởng cải thiện? Hãy gửi góp ý cho nhóm phát triển.",
+            "feedbackBtn": "Gửi Email Góp Ý",
+            "sourceCodeTitle": "Mã nguồn",
+            "sourceCodeDesc": "Xem mã nguồn dự án trên GitHub.",
+            "sourceCodeBtn": "Mở GitHub"
         }
     },
     "goals": {
@@ -493,7 +568,7 @@
         "markRead": "Đánh dấu đã đọc",
         "empty": "Không có thông báo nào",
         "budgetAlertTitle": "Cảnh báo chi tiêu",
-        "budgetAlertDesc": "Khoản chi này có thể khiến bạn vượt ngưỡng chi tiêu dự kiến."
+        "budgetAlertDesc": "Khoản chi này đưa tổng chi lên {{amount}} và có thể khiến bạn vượt ngưỡng chi tiêu dự kiến."
     },
     "transactionForm": {
         "title": "Thêm Giao Dịch Mới",
@@ -535,7 +610,8 @@
             "reqDestWallet": "Vui lòng chọn ví đích",
             "diffWallet": "Ví đích phải khác ví nguồn"
         },
-        "noWalletsAvailable": "Không có ví nào trong mục này"
+        "noWalletsAvailable": "Không có ví nào trong mục này",
+        "submitError": "Không thể tạo giao dịch. Vui lòng thử lại."
     },
     "profile": {
         "title": "Hồ sơ cá nhân",
@@ -654,5 +730,29 @@
         "healthy": "Dòng tiền khỏe mạnh trong khoảng dự báo.",
         "warning": "Chi tiêu có thể vượt thu nhập",
         "warningMsg": "Chi tiêu có thể vượt thu nhập vào {{month}}"
+    },
+    "export": {
+        "date": "Ngày",
+        "description": "Mô tả",
+        "noDescription": "Không có mô tả",
+        "type": "Loại",
+        "amount": "Số tiền",
+        "category": "Danh mục",
+        "wallet": "Ví",
+        "section": "Phần",
+        "metric": "Chỉ số",
+        "value": "Giá trị",
+        "income": "Thu nhập",
+        "expense": "Chi tiêu",
+        "summary": "Tổng quan",
+        "totalIncome": "Tổng thu nhập",
+        "totalExpense": "Tổng chi tiêu",
+        "net": "Thu nhập ròng",
+        "transactionCount": "Số lượng giao dịch",
+        "expenseByCategory": "Chi tiêu theo hạng mục",
+        "cashflow": "Dòng tiền",
+        "titleTracker": "JUNKIO EXPENSE TRACKER",
+        "titleDefault": "BÁO CÁO JUNKIO",
+        "exportDate": "Ngày tạo:"
     }
 }

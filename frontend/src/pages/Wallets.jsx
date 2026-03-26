@@ -9,6 +9,7 @@ import { WalletForm } from "@/components/features/wallets/WalletForm"
 import { EmptyState } from "@/components/ui/empty-state"
 import { useTranslation } from "react-i18next"
 import { removeWallet } from "@/features/wallets/walletSlice"
+import { getFinanceScopeLabels } from "@/features/finance/context"
 import { toast } from "sonner"
 
 const walletTypeKeyMap = {
@@ -22,7 +23,7 @@ export function Wallets() {
     const { t } = useTranslation()
     const dispatch = useDispatch()
     const { wallets } = useSelector((state) => state.wallets)
-    const { activeFamilyId } = useSelector((state) => state.families)
+    const { activeFamilyId, families } = useSelector((state) => state.families)
 
     const [isAddWalletOpen, setIsAddWalletOpen] = useState(false)
     const [editingWallet, setEditingWallet] = useState(null)
@@ -43,12 +44,37 @@ export function Wallets() {
     const contextWallets = wallets.filter((wallet) =>
         activeFamilyId ? wallet.family_id === activeFamilyId : !wallet.family_id
     )
+    const currentScope = getFinanceScopeLabels(t, { activeFamilyId, families })
+    const addWalletLabel = currentScope.scope === 'family' ? t('wallets.context.addFamily') : t('wallets.context.addPersonal')
+    const addWalletTitle = currentScope.scope === 'family' ? t('wallets.context.addFamilyTitle') : t('wallets.context.addPersonalTitle')
+    const pageTitle = currentScope.scope === 'family' ? t('wallets.context.familyTitle') : t('wallets.context.personalTitle')
+    const pageDescription =
+        currentScope.scope === 'family'
+            ? t('wallets.context.familyDesc', { target: currentScope.scopeTargetLabel })
+            : t('wallets.context.personalDesc')
+    const emptyTitle = currentScope.scope === 'family' ? t('wallets.context.emptyFamilyTitle') : t('wallets.context.emptyPersonalTitle')
+    const emptyDescription =
+        currentScope.scope === 'family'
+            ? t('wallets.context.emptyFamilyDesc', { target: currentScope.scopeTargetLabel })
+            : t('wallets.context.emptyPersonalDesc')
+    const editScope = editingWallet
+        ? getFinanceScopeLabels(t, { activeFamilyId, families, familyId: editingWallet.family_id ?? null })
+        : currentScope
+    const editWalletTitle = editScope.scope === 'family' ? t('wallets.context.editFamilyTitle') : t('wallets.context.editPersonalTitle')
 
     return (
         <div className="space-y-6">
-            <header>
-                <h1 className="text-3xl font-bold tracking-tight">{t('wallets.title')}</h1>
-                <p className="text-muted-foreground">{t('wallets.desc')}</p>
+            <header className="space-y-2">
+                <div className="flex flex-wrap items-center gap-3">
+                    <h1 className="text-3xl font-bold tracking-tight">{pageTitle}</h1>
+                    <span
+                        className="inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium text-muted-foreground"
+                        data-testid="wallets-scope"
+                    >
+                        {t('common.scope')}: {currentScope.scopeTargetLabel}
+                    </span>
+                </div>
+                <p className="text-muted-foreground">{pageDescription}</p>
             </header>
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -56,8 +82,8 @@ export function Wallets() {
                     <div className="col-span-full">
                         <EmptyState
                             icon={Wallet}
-                            title={t('wallets.emptyTitle')}
-                            description={t('wallets.emptyDesc')}
+                            title={emptyTitle}
+                            description={emptyDescription}
                         />
                     </div>
                 ) : (
@@ -75,7 +101,7 @@ export function Wallets() {
                                         <div>
                                             <CardTitle className="text-lg">{wallet.name}</CardTitle>
                                             <CardDescription className="mt-1 capitalize">
-                                                {activeFamilyId ? t('wallets.familyWallet') : t('wallets.personalWallet')}
+                                                {wallet.family_id ? t('wallets.familyWallet') : t('wallets.personalWallet')}
                                                 {wallet.type ? ` - ${walletTypeLabel}` : ''}
                                             </CardDescription>
                                         </div>
@@ -112,9 +138,10 @@ export function Wallets() {
                 <Card
                     className="flex min-h-[150px] cursor-pointer items-center justify-center border-dashed transition-colors hover:bg-muted/50"
                     onClick={() => setIsAddWalletOpen(true)}
+                    data-testid="wallets-add-cta"
                 >
                     <div className="text-center text-muted-foreground">
-                        <p className="font-medium">{t('wallets.addWallet')}</p>
+                        <p className="font-medium">{addWalletLabel}</p>
                     </div>
                 </Card>
             </div>
@@ -122,7 +149,7 @@ export function Wallets() {
             <Modal
                 isOpen={isAddWalletOpen}
                 onClose={() => setIsAddWalletOpen(false)}
-                title={t('wallets.addWalletTitle')}
+                title={addWalletTitle}
             >
                 <WalletForm onSuccess={() => setIsAddWalletOpen(false)} />
             </Modal>
@@ -130,7 +157,7 @@ export function Wallets() {
             <Modal
                 isOpen={Boolean(editingWallet)}
                 onClose={() => setEditingWallet(null)}
-                title={t('wallets.editWalletTitle')}
+                title={editWalletTitle}
             >
                 {editingWallet && (
                     <WalletForm

@@ -8,7 +8,7 @@ export function Header() {
     const { user } = useSelector((state) => state.auth)
     const location = useLocation()
 
-    const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api"
+    const API_URL = import.meta.env.VITE_API_URL || '/api';
     const serverUrl = API_URL.replace("/api", "")
 
     const getPageTitle = () => {

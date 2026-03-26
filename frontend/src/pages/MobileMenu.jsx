@@ -25,7 +25,7 @@ export function MobileMenu() {
     const { user } = useSelector((state) => state.auth);
     const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
-    const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+    const API_URL = import.meta.env.VITE_API_URL || '/api';
     const serverUrl = API_URL.replace("/api", "");
 
     const avatarSrc = user?.avatarUrl?.startsWith("/uploads")
