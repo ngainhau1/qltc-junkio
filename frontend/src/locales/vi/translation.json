@@ -182,6 +182,7 @@
     "transactions": {
         "title": "Giao Dịch",
         "desc": "Quản lý chi tiêu & lập lịch định kỳ.",
+        "empty": "Không có dữ liệu",
         "exportData": "Xuất Dữ Liệu",
         "exportPDF": "Xuất PDF",
         "exportCSV": "Xuất CSV (Excel - Cơ bản)",
@@ -413,6 +414,7 @@
             "importModalDesc": "Dữ liệu cài đặt hiện tại sẽ bị ghi đè bởi file backup.",
             "importModalKeys": "trường dữ liệu",
             "importConfirmBtn": "Khôi phục ngay",
+            "importNotice": "Tính năng nhập file JSON backup hiện đang được phát triển.",
             "resetTitle": "Xoá Dữ Liệu Giả Lập (Hard Reset)",
             "resetDesc": "Hành động này mang ý nghĩa format database, dùng trong trường hợp app bị lỗi cache. Sẽ mất sạch data chưa backup.",
             "resetBtn": "Xoá Toàn Bộ Dữ Liệu",

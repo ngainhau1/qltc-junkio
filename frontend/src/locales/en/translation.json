@@ -182,6 +182,7 @@
     "transactions": {
         "title": "Transactions",
         "desc": "Manage expenses & set up recurring schedules.",
+        "empty": "No data available",
         "exportData": "Export Data",
         "exportPDF": "Export to PDF",
         "exportCSV": "Export to CSV",
