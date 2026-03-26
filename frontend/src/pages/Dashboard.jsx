@@ -3,6 +3,7 @@ import { DashboardStats } from '@/components/dashboard/DashboardStats';
 import { RecentTransactions } from '@/components/dashboard/RecentTransactions';
 import { FinancialChart } from '@/components/dashboard/FinancialChart';
 import { useTranslation } from 'react-i18next';
+import { PageHeader } from '@/components/layout/PageHeader';
 
 export function Dashboard() {
     const { t } = useTranslation();
@@ -12,16 +13,12 @@ export function Dashboard() {
 
     return (
         <div className="space-y-6">
-            <header className="mb-8 flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">{t('dashboard.title')}</h1>
-                    <p className="text-muted-foreground">{t('dashboard.desc')}</p>
-                </div>
-
-                <div className="flex items-center gap-4">
-                    <img src="/logo.png" alt="Logo" className="h-8 w-8 md:hidden" />
-                </div>
-            </header>
+            <PageHeader
+                className="mb-2"
+                title={t('dashboard.title')}
+                description={t('dashboard.desc')}
+                actions={<img src="/logo.png" alt="Logo" className="h-8 w-8 md:hidden" />}
+            />
 
             <DashboardStats stats={stats} />
 

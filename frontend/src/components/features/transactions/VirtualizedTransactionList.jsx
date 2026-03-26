@@ -31,19 +31,20 @@ const TransactionRow = memo(({ item, onRowClick }) => {
     const secondaryText = isTransfer
         ? t('transactionForm.tabs.transfer')
         : transaction.Category?.name || transaction.category_id || '-';
+    const transactionDate = transaction.date || transaction.transaction_date;
 
     return (
-        <div className="w-full px-4">
+        <div className="w-full px-3 sm:px-4">
             <div
-                className="group flex h-full cursor-pointer items-center justify-between rounded-lg border-b px-2 py-3 transition-colors hover:bg-muted/50"
+                className="group flex h-full cursor-pointer flex-col gap-3 rounded-lg border-b px-2 py-3 transition-colors hover:bg-muted/50 sm:flex-row sm:items-center sm:justify-between"
                 onClick={() => onRowClick && onRowClick(transaction)}
                 role="button"
                 tabIndex={0}
                 onKeyDown={(event) => event.key === 'Enter' && onRowClick && onRowClick(transaction)}
                 aria-label={`View details: ${transaction.description || 'Transaction'}`}
             >
-                <div className="flex items-center gap-4">
-                    <div className={`flex h-10 w-10 items-center justify-center rounded-full border ${toneClasses}`}>
+                <div className="flex min-w-0 items-start gap-3 sm:items-center">
+                    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border ${toneClasses}`}>
                         {isTransfer ? (
                             <ArrowRightLeft className="h-5 w-5 text-sky-600" />
                         ) : isIncome ? (
@@ -52,17 +53,21 @@ const TransactionRow = memo(({ item, onRowClick }) => {
                             <ArrowUpRight className="h-5 w-5 text-red-600" />
                         )}
                     </div>
-                    <div>
-                        <p className="max-w-[200px] truncate font-medium">{transaction.description || '-'}</p>
-                        <p className="text-xs capitalize text-muted-foreground">{secondaryText}</p>
+                    <div className="min-w-0 flex-1">
+                        <p className="truncate font-medium">{transaction.description || '-'}</p>
+                        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+                            <span className="capitalize">{secondaryText}</span>
+                            <span className="hidden sm:inline">•</span>
+                            <span>{transactionDate ? formatDateString(transactionDate) : '-'}</span>
+                        </div>
                     </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center justify-between gap-2 sm:justify-end">
                     <span className={`font-semibold ${amountClasses}`}>
                         {isIncome ? '+' : '-'}
                         {formatCurrency(transaction.amount)}
                     </span>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground/50 transition-colors group-hover:text-muted-foreground" />
+                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/50 transition-colors group-hover:text-muted-foreground" />
                 </div>
             </div>
         </div>
@@ -115,16 +120,13 @@ export function VirtualizedTransactionList({ transactions, onRowClick }) {
     if (flatData.length === 0) {
         return (
             <div className="py-8">
-                <EmptyState
-                    title={t('transactions.list.emptyTitle')}
-                    description={t('transactions.list.emptyDesc')}
-                />
+                <EmptyState title={t('transactions.list.emptyTitle')} description={t('transactions.list.emptyDesc')} />
             </div>
         );
     }
 
     return (
-        <div className="h-[600px] w-full overflow-y-auto rounded-md border bg-background">
+        <div className="max-h-[70dvh] w-full overflow-y-auto rounded-md border bg-background md:h-[600px]">
             {flatData.map((item) => (
                 <TransactionRow
                     key={item.type === 'HEADER' ? `header-${item.date}` : `item-${item.transaction.id}`}

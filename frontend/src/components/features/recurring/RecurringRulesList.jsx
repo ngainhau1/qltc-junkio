@@ -32,13 +32,13 @@ export function RecurringRulesList() {
             <div className="space-y-4">
                 {rules.map(rule => (
                 <Card key={rule.id} className={rule.active ? "" : "opacity-60 grayscale"}>
-                    <CardContent className="p-4 flex items-center justify-between">
-                        <div className="flex items-center gap-4">
+                    <CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex min-w-0 items-center gap-4">
                             <div className={`flex h-10 w-10 items-center justify-center rounded-full border ${rule.type === 'EXPENSE' ? 'bg-red-50 border-red-100 text-red-600' : 'bg-green-50 border-green-100 text-green-600'}`}>
                                 <Clock className="h-5 w-5" />
                             </div>
-                            <div>
-                                <h3 className="font-semibold flex items-center gap-2">
+                            <div className="min-w-0">
+                                <h3 className="flex flex-wrap items-center gap-2 font-semibold">
                                     {rule.name}
                                     {!rule.active && <span className="text-xs bg-muted px-2 py-0.5 rounded text-muted-foreground">{t('transactions.recurring.paused')}</span>}
                                 </h3>
@@ -51,10 +51,11 @@ export function RecurringRulesList() {
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-2">
+                        <div className="flex w-full items-center gap-2 sm:w-auto">
                             <Button
                                 variant="ghost"
                                 size="icon"
+                                className="h-10 w-10"
                                 onClick={() => dispatch(editRecurring({ id: rule.id, data: { is_active: !rule.active } }))}
                                 title={rule.active ? t('transactions.recurring.pauseBtn') : t('transactions.recurring.activateBtn')}
                             >
@@ -63,7 +64,7 @@ export function RecurringRulesList() {
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                                className="h-10 w-10 text-red-500 hover:bg-red-50 hover:text-red-600"
                                 onClick={() => {
                                     if (confirm(t('transactions.recurring.deleteConfirm'))) {
                                         dispatch(removeRecurring(rule.id))

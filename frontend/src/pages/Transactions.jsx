@@ -8,7 +8,16 @@ import {
 } from '@/features/transactions/transactionSlice';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { History, Plus, Repeat } from 'lucide-react';
+import {
+    Download,
+    FileSpreadsheet,
+    FileText,
+    History,
+    MoreHorizontal,
+    Plus,
+    Repeat,
+    Upload,
+} from 'lucide-react';
 import { RecurringRulesList } from '@/components/features/recurring/RecurringRulesList';
 import { RecurringRuleForm } from '@/components/features/recurring/RecurringRuleForm';
 import { Modal } from '@/components/ui/modal';
@@ -20,7 +29,6 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Download, FileSpreadsheet, FileText, Upload } from 'lucide-react';
 import {
     exportTransactionRowsToCSV,
     exportTransactionRowsToExcel,
@@ -32,6 +40,9 @@ import { closeImportModal, openImportModal } from '@/features/ui/uiSlice';
 import { ImportTransactionsModal } from '@/components/features/transactions/ImportTransactionsModal';
 import { buildTransactionQueryFromState } from '@/features/finance/context';
 import { toast } from 'sonner';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { ResponsiveActions } from '@/components/layout/ResponsiveActions';
+import { ResponsiveTabs } from '@/components/ui/responsive-tabs';
 
 export function Transactions() {
     const { t } = useTranslation();
@@ -106,69 +117,96 @@ export function Transactions() {
         }
     };
 
+    const desktopActions = (
+        <>
+            <Button
+                variant="outline"
+                className="touch-target border-blue-200 text-blue-600 hover:bg-blue-50"
+                onClick={() => dispatch(openImportModal())}
+            >
+                <Upload className="mr-2 h-4 w-4" /> {t('transactions.import.submit')}
+            </Button>
+
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="touch-target">
+                        <Download className="mr-2 h-4 w-4" /> {t('transactions.exportData')}
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => handleExport('pdf')}>
+                        <FileText className="mr-2 h-4 w-4" /> {t('transactions.exportPDF')}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleExport('csv')}>
+                        <FileSpreadsheet className="mr-2 h-4 w-4" /> {t('transactions.exportCSV')}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleExport('xlsx')}>
+                        <FileSpreadsheet className="mr-2 h-4 w-4" /> {t('transactions.exportExcel')}
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+
+            {activeTab === 'recurring' && (
+                <Button onClick={() => setIsAddRuleOpen(true)} className="touch-target">
+                    <Plus className="mr-2 h-4 w-4" /> {t('transactions.addSchedule')}
+                </Button>
+            )}
+        </>
+    );
+
+    const mobileActions = (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="touch-target w-full justify-between">
+                    <span>{t('nav.menu')}</span>
+                    <MoreHorizontal className="h-4 w-4" />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-64">
+                <DropdownMenuItem onClick={() => dispatch(openImportModal())}>
+                    <Upload className="mr-2 h-4 w-4" /> {t('transactions.import.submit')}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExport('pdf')}>
+                    <FileText className="mr-2 h-4 w-4" /> {t('transactions.exportPDF')}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExport('csv')}>
+                    <FileSpreadsheet className="mr-2 h-4 w-4" /> {t('transactions.exportCSV')}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExport('xlsx')}>
+                    <FileSpreadsheet className="mr-2 h-4 w-4" /> {t('transactions.exportExcel')}
+                </DropdownMenuItem>
+                {activeTab === 'recurring' && (
+                    <DropdownMenuItem onClick={() => setIsAddRuleOpen(true)}>
+                        <Plus className="mr-2 h-4 w-4" /> {t('transactions.addSchedule')}
+                    </DropdownMenuItem>
+                )}
+            </DropdownMenuContent>
+        </DropdownMenu>
+    );
+
     return (
         <div className="space-y-6">
-            <header className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">{t('transactions.title')}</h1>
-                    <p className="text-muted-foreground">{t('transactions.desc')}</p>
-                </div>
-                <div className="flex gap-2">
-                    <Button
-                        variant="outline"
-                        className="border-blue-200 text-blue-600 hover:bg-blue-50"
-                        onClick={() => dispatch(openImportModal())}
-                    >
-                        <Upload className="mr-2 h-4 w-4" /> {t('transactions.import.submit')}
-                    </Button>
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline">
-                                <Download className="mr-2 h-4 w-4" /> {t('transactions.exportData')}
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                            <DropdownMenuItem onClick={() => handleExport('pdf')}>
-                                <FileText className="mr-2 h-4 w-4" /> {t('transactions.exportPDF')}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleExport('csv')}>
-                                <FileSpreadsheet className="mr-2 h-4 w-4" /> {t('transactions.exportCSV')}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleExport('xlsx')}>
-                                <FileSpreadsheet className="mr-2 h-4 w-4" /> {t('transactions.exportExcel')}
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+            <PageHeader
+                title={t('transactions.title')}
+                description={t('transactions.desc')}
+                actions={<ResponsiveActions desktop={desktopActions} mobile={mobileActions} />}
+            />
 
-                    {activeTab === 'recurring' && (
-                        <Button onClick={() => setIsAddRuleOpen(true)}>
-                            <Plus className="mr-2 h-4 w-4" /> {t('transactions.addSchedule')}
-                        </Button>
-                    )}
-                </div>
-            </header>
-
-            <div className="flex w-fit rounded-lg bg-muted p-1">
-                <button
-                    onClick={() => setActiveTab('history')}
-                    className={`flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-all ${activeTab === 'history' ? 'border border-border bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-                >
-                    <History className="h-4 w-4" /> {t('transactions.tabs.history')}
-                </button>
-                <button
-                    onClick={() => setActiveTab('recurring')}
-                    className={`flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-all ${activeTab === 'recurring' ? 'border border-border bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-                >
-                    <Repeat className="h-4 w-4" /> {t('transactions.tabs.recurring')}
-                </button>
-            </div>
+            <ResponsiveTabs
+                items={[
+                    { value: 'history', label: t('transactions.tabs.history'), icon: History },
+                    { value: 'recurring', label: t('transactions.tabs.recurring'), icon: Repeat },
+                ]}
+                value={activeTab}
+                onChange={setActiveTab}
+            />
 
             {activeTab === 'history' ? (
                 <>
-                    <div className="flex gap-4">
+                    <div className="flex flex-col gap-4 sm:flex-row">
                         <Input
                             placeholder={t('transactions.search')}
-                            className="max-w-xs"
+                            className="w-full sm:max-w-sm"
                             value={filter.search}
                             onChange={(event) => dispatch(setFilter({ search: event.target.value }))}
                         />
@@ -184,21 +222,23 @@ export function Transactions() {
                         )}
 
                         {pagination.totalPages > 1 && (
-                            <div className="mt-6 flex items-center justify-center gap-4">
+                            <div className="mt-6 flex flex-col items-center gap-3 text-center sm:flex-row sm:justify-center sm:text-left">
                                 <Button
                                     variant="outline"
                                     onClick={() => dispatch(setCurrentPage(Math.max(1, pagination.currentPage - 1)))}
                                     disabled={pagination.currentPage === 1}
+                                    className="touch-target w-full sm:w-auto"
                                 >
                                     {t('common.prev')}
                                 </Button>
-                                <span className="text-sm">
-                                    {t('common.page')} {pagination.currentPage} / {pagination.totalPages} (Tổng: {pagination.totalItems})
+                                <span className="text-sm leading-relaxed">
+                                    {t('common.page')} {pagination.currentPage} / {pagination.totalPages} (Tong: {pagination.totalItems})
                                 </span>
                                 <Button
                                     variant="outline"
                                     onClick={() => dispatch(setCurrentPage(Math.min(pagination.totalPages, pagination.currentPage + 1)))}
                                     disabled={pagination.currentPage === pagination.totalPages}
+                                    className="touch-target w-full sm:w-auto"
                                 >
                                     {t('common.next')}
                                 </Button>

@@ -64,27 +64,29 @@ export function FinancialChart({ data }) {
     return (
         <Card className="col-span-4 border-muted/40 shadow-md">
             <CardHeader>
-                <div className="flex items-center justify-between">
-                    <div>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0">
                         <CardTitle className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-xl font-bold text-transparent dark:from-blue-400 dark:to-indigo-400">
                             {t('dashboard.chart.title')}
                         </CardTitle>
                         <CardDescription>{t('dashboard.chart.desc')}</CardDescription>
                     </div>
-                    <div className="flex gap-1 rounded-lg bg-muted/50 p-1">
-                        {['7D', '30D', 'ALL'].map((item) => (
-                            <button
-                                key={item}
-                                onClick={() => setRange(item)}
-                                className={`rounded-md px-3 py-1.5 text-xs font-medium transition-all ${range === item ? 'border border-border bg-background text-primary shadow-sm' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}
-                            >
-                                {item}
-                            </button>
-                        ))}
+                    <div className="scrollbar-hidden -mx-1 overflow-x-auto px-1 pb-1 sm:mx-0 sm:px-0 sm:pb-0">
+                        <div className="inline-flex min-w-full gap-1 rounded-lg bg-muted/50 p-1 sm:min-w-0">
+                            {['7D', '30D', 'ALL'].map((item) => (
+                                <button
+                                    key={item}
+                                    onClick={() => setRange(item)}
+                                    className={`touch-target min-w-[88px] shrink-0 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${range === item ? 'border border-border bg-background text-primary shadow-sm' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}
+                                >
+                                    {item}
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 </div>
             </CardHeader>
-            <CardContent className="h-[350px]">
+            <CardContent className="h-[280px] md:h-[350px]">
                 <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                         <defs>

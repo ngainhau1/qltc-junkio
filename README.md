@@ -76,7 +76,6 @@ EMAIL_PASS=your_pass
 # (Tùy chọn) Tự động sinh dữ liệu ảo (Seed Data)
 AUTO_SEED=true
 ```
-*(Tuyệt đối không lưu file .env mang mật khẩu production vào Git).*
 
 ---
 

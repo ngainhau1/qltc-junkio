@@ -11,6 +11,7 @@ import { useTranslation } from "react-i18next"
 import { removeWallet } from "@/features/wallets/walletSlice"
 import { getFinanceScopeLabels } from "@/features/finance/context"
 import { toast } from "sonner"
+import { PageHeader } from "@/components/layout/PageHeader"
 
 const walletTypeKeyMap = {
     cash: 'wallets.form.types.cash',
@@ -64,18 +65,18 @@ export function Wallets() {
 
     return (
         <div className="space-y-6">
-            <header className="space-y-2">
-                <div className="flex flex-wrap items-center gap-3">
-                    <h1 className="text-3xl font-bold tracking-tight">{pageTitle}</h1>
+            <PageHeader
+                title={pageTitle}
+                description={pageDescription}
+                actions={
                     <span
-                        className="inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium text-muted-foreground"
+                        className="inline-flex w-fit items-center rounded-full border px-3 py-1 text-xs font-medium text-muted-foreground"
                         data-testid="wallets-scope"
                     >
                         {t('common.scope')}: {currentScope.scopeTargetLabel}
                     </span>
-                </div>
-                <p className="text-muted-foreground">{pageDescription}</p>
-            </header>
+                }
+            />
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {contextWallets.length === 0 ? (
@@ -97,9 +98,9 @@ export function Wallets() {
                                     <Wallet className="h-24 w-24" />
                                 </div>
                                 <CardHeader className="pb-2">
-                                    <div className="flex items-start justify-between">
-                                        <div>
-                                            <CardTitle className="text-lg">{wallet.name}</CardTitle>
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div className="min-w-0">
+                                            <CardTitle className="truncate text-lg">{wallet.name}</CardTitle>
                                             <CardDescription className="mt-1 capitalize">
                                                 {wallet.family_id ? t('wallets.familyWallet') : t('wallets.personalWallet')}
                                                 {wallet.type ? ` - ${walletTypeLabel}` : ''}
@@ -107,7 +108,7 @@ export function Wallets() {
                                         </div>
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
-                                                <button className="relative z-10 inline-flex h-8 w-8 items-center justify-center rounded-md transition-colors hover:bg-muted">
+                                                <button className="relative z-10 inline-flex h-10 w-10 items-center justify-center rounded-md transition-colors hover:bg-muted">
                                                     <MoreVertical className="h-4 w-4 text-muted-foreground" />
                                                 </button>
                                             </DropdownMenuTrigger>

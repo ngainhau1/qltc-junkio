@@ -23,31 +23,31 @@ export function Settings() {
     return (
         <div className="space-y-6 max-w-5xl mx-auto pb-10">
             <div>
-                <h1 className="text-3xl font-bold tracking-tight">{t('settings.title')}</h1>
+                <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{t('settings.title')}</h1>
                 <p className="text-muted-foreground mt-2">{t('settings.subtitle')}</p>
             </div>
 
             {/* Sidebar Desktop Layout */}
-            <Tabs defaultValue="appearance" className="flex flex-col md:flex-row gap-6 mt-8">
+            <Tabs defaultValue="appearance" className="mt-8 flex flex-col gap-6 md:flex-row">
                 {/* Left Navigation */}
-                <TabsList className="flex flex-col h-auto bg-transparent items-stretch justify-start space-y-1 w-full md:w-[250px] shrink-0 p-0 font-medium">
-                    <TabsTrigger value="appearance" className="justify-start px-4 py-2.5 data-[state=active]:bg-muted data-[state=active]:shadow-none rounded-md transition-colors hover:bg-muted/50">
+                <TabsList className="scrollbar-hidden flex h-auto w-full items-stretch justify-start gap-1 overflow-x-auto bg-transparent p-0 font-medium md:w-[250px] md:flex-col md:overflow-visible">
+                    <TabsTrigger value="appearance" className="touch-target shrink-0 justify-start rounded-md px-4 py-2.5 data-[state=active]:bg-muted data-[state=active]:shadow-none transition-colors hover:bg-muted/50">
                         <Settings2 className="w-4 h-4 mr-2" />
                         {t('settings.tabs.appearance')}
                     </TabsTrigger>
-                    <TabsTrigger value="notifications" className="justify-start px-4 py-2.5 data-[state=active]:bg-muted data-[state=active]:shadow-none rounded-md transition-colors hover:bg-muted/50">
+                    <TabsTrigger value="notifications" className="touch-target shrink-0 justify-start rounded-md px-4 py-2.5 data-[state=active]:bg-muted data-[state=active]:shadow-none transition-colors hover:bg-muted/50">
                         <Bell className="w-4 h-4 mr-2" />
                         {t('settings.tabs.notifications')}
                     </TabsTrigger>
-                    <TabsTrigger value="data" className="justify-start px-4 py-2.5 data-[state=active]:bg-muted data-[state=active]:shadow-none rounded-md transition-colors hover:bg-muted/50">
+                    <TabsTrigger value="data" className="touch-target shrink-0 justify-start rounded-md px-4 py-2.5 data-[state=active]:bg-muted data-[state=active]:shadow-none transition-colors hover:bg-muted/50">
                         <Database className="w-4 h-4 mr-2" />
                         {t('settings.tabs.data')}
                     </TabsTrigger>
-                    <TabsTrigger value="account" className="justify-start px-4 py-2.5 text-destructive data-[state=active]:text-destructive data-[state=active]:bg-destructive/10 data-[state=active]:shadow-none rounded-md transition-colors hover:bg-destructive/5 hover:text-destructive">
+                    <TabsTrigger value="account" className="touch-target shrink-0 justify-start rounded-md px-4 py-2.5 text-destructive data-[state=active]:text-destructive data-[state=active]:bg-destructive/10 data-[state=active]:shadow-none transition-colors hover:bg-destructive/5 hover:text-destructive">
                         <Shield className="w-4 h-4 mr-2" />
                         {t('settings.tabs.account')}
                     </TabsTrigger>
-                    <TabsTrigger value="support" className="justify-start px-4 py-2.5 data-[state=active]:bg-muted data-[state=active]:shadow-none rounded-md transition-colors hover:bg-muted/50">
+                    <TabsTrigger value="support" className="touch-target shrink-0 justify-start rounded-md px-4 py-2.5 data-[state=active]:bg-muted data-[state=active]:shadow-none transition-colors hover:bg-muted/50">
                         <HelpCircle className="w-4 h-4 mr-2" />
                         {t('settings.tabs.support')}
                     </TabsTrigger>
@@ -185,7 +185,7 @@ function NotificationSettings() {
                 <CardDescription>{t('settings.notifications.desc')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-                <div className="flex items-center justify-between space-x-2 rounded-lg border p-4">
+                <div className="flex flex-col gap-4 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between sm:space-x-2">
                     <div className="space-y-0.5">
                         <Label className="text-base">{t('settings.notifications.debtTitle')}</Label>
                         <p className="text-sm text-muted-foreground">{t('settings.notifications.debtDesc')}</p>
@@ -196,7 +196,7 @@ function NotificationSettings() {
                     />
                 </div>
 
-                <div className="flex items-center justify-between space-x-2 rounded-lg border p-4">
+                <div className="flex flex-col gap-4 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between sm:space-x-2">
                     <div className="space-y-0.5">
                         <Label className="text-base">{t('settings.notifications.budgetTitle')}</Label>
                         <p className="text-sm text-muted-foreground">{t('settings.notifications.budgetDesc')}</p>
@@ -207,7 +207,7 @@ function NotificationSettings() {
                     />
                 </div>
 
-                <div className="flex items-center justify-between space-x-2 rounded-lg border p-4">
+                <div className="flex flex-col gap-4 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between sm:space-x-2">
                     <div className="space-y-0.5">
                         <Label className="text-base">{t('settings.notifications.weeklyTitle')}</Label>
                         <p className="text-sm text-muted-foreground">{t('settings.notifications.weeklyDesc')}</p>
@@ -349,11 +349,11 @@ function DataSettings() {
                         {t('settings.data.resetModalDesc3')}
                     </p>
                 </div>
-                <div className="flex items-center justify-end gap-3 mt-4">
-                    <Button variant="outline" onClick={() => setIsResetModalOpen(false)}>
+                <div className="mt-4 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                    <Button variant="outline" onClick={() => setIsResetModalOpen(false)} className="w-full sm:w-auto">
                         {t('common.cancel')}
                     </Button>
-                    <Button variant="destructive" onClick={confirmHardReset}>
+                    <Button variant="destructive" onClick={confirmHardReset} className="w-full sm:w-auto">
                         <Trash2 className="mr-2 h-4 w-4" /> {t('settings.data.resetModalConfirm')}
                     </Button>
                 </div>
@@ -374,11 +374,11 @@ function DataSettings() {
                         </div>
                     )}
                 </div>
-                <div className="flex items-center justify-end gap-3 border-t pt-4">
-                    <Button variant="outline" onClick={() => { setIsImportModalOpen(false); setImportData(null); }}>
+                <div className="flex flex-col-reverse gap-3 border-t pt-4 sm:flex-row sm:justify-end">
+                    <Button variant="outline" onClick={() => { setIsImportModalOpen(false); setImportData(null); }} className="w-full sm:w-auto">
                         {t('common.cancel')}
                     </Button>
-                    <Button onClick={confirmImport}>
+                    <Button onClick={confirmImport} className="w-full sm:w-auto">
                         <Upload className="mr-2 h-4 w-4" /> {t('settings.data.importConfirmBtn')}
                     </Button>
                 </div>
@@ -507,8 +507,8 @@ function AccountSettings() {
                 </div>
 
                 {/* Logout Area */}
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 rounded-xl border border-destructive/20 bg-destructive/5 p-5">
-                    <div className="space-y-1 max-w-[80%]">
+                <div className="flex flex-col justify-between gap-4 rounded-xl border border-destructive/20 bg-destructive/5 p-5 lg:flex-row lg:items-center">
+                    <div className="space-y-1">
                         <Label className="text-base font-semibold text-destructive">{t('settings.account.logoutTitle')}</Label>
                         <p className="text-sm text-muted-foreground">
                             {t('settings.account.logoutDesc')}
@@ -520,8 +520,8 @@ function AccountSettings() {
                 </div>
 
                 {/* Delete Account Area */}
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 rounded-xl border border-destructive/40 bg-destructive/10 p-5">
-                    <div className="space-y-1 max-w-[80%]">
+                <div className="flex flex-col justify-between gap-4 rounded-xl border border-destructive/40 bg-destructive/10 p-5 lg:flex-row lg:items-center">
+                    <div className="space-y-1">
                         <Label className="text-base font-semibold text-destructive flex items-center gap-2">
                             <AlertTriangle className="w-4 h-4" />
                             {t('settings.account.deleteTitle')}
@@ -580,11 +580,11 @@ function AccountSettings() {
                         {t('settings.account.logoutModalQ')}
                     </p>
                 </div>
-                <div className="flex items-center justify-end gap-3 border-t pt-4">
-                    <Button variant="outline" onClick={() => setIsLogoutModalOpen(false)}>
+                <div className="flex flex-col-reverse gap-3 border-t pt-4 sm:flex-row sm:justify-end">
+                    <Button variant="outline" onClick={() => setIsLogoutModalOpen(false)} className="w-full sm:w-auto">
                         {t('settings.account.stayBtn')}
                     </Button>
-                    <Button variant="destructive" onClick={confirmLogout}>
+                    <Button variant="destructive" onClick={confirmLogout} className="w-full sm:w-auto">
                         {t('settings.account.logoutConfirmBtn')}
                     </Button>
                 </div>
@@ -608,13 +608,14 @@ function AccountSettings() {
                         <Input value={deleteConfirmText} onChange={e => setDeleteConfirmText(e.target.value)} placeholder={t('settings.account.deleteTypeHint')} />
                     </div>
                 </div>
-                <div className="flex items-center justify-end gap-3 border-t pt-4">
-                    <Button variant="outline" onClick={() => { setIsDeleteModalOpen(false); setDeletePassword(''); setDeleteConfirmText(''); }}>
+                <div className="flex flex-col-reverse gap-3 border-t pt-4 sm:flex-row sm:justify-end">
+                    <Button variant="outline" onClick={() => { setIsDeleteModalOpen(false); setDeletePassword(''); setDeleteConfirmText(''); }} className="w-full sm:w-auto">
                         {t('common.cancel')}
                     </Button>
                     <Button
                         variant="destructive"
                         disabled={isDeleting || !deletePassword || deleteConfirmText !== t('settings.account.deleteConfirmWord')}
+                        className="w-full sm:w-auto"
                         onClick={async () => {
                             setIsDeleting(true);
                             try {

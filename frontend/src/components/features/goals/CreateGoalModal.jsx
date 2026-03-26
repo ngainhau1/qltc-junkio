@@ -86,7 +86,7 @@ export function CreateGoalModal({ isOpen, onClose }) {
             title={t('goals.modals.create.title')}
             contentTestId="create-goal-modal"
         >
-            <div className="p-6 space-y-6">
+            <div className="space-y-6 p-2 sm:p-4">
 
                 {/* Visual Preview */}
                 <div className="flex items-center justify-center p-6 rounded-xl border border-dashed border-border/60 bg-muted/20">
@@ -162,7 +162,7 @@ export function CreateGoalModal({ isOpen, onClose }) {
                     {/* Icon Picker */}
                     <div className="col-span-full space-y-2 pt-2">
                         <Label>{t('goals.modals.create.iconLabel')}</Label>
-                        <div className="grid grid-cols-5 gap-2 sm:gap-3">
+                        <div className="grid grid-cols-4 gap-2 sm:grid-cols-5 sm:gap-3">
                             {/* eslint-disable-next-line no-unused-vars */}
                             {ICONS.map(({ name: iconName, icon: Icon }) => (
                                 <button
@@ -178,9 +178,9 @@ export function CreateGoalModal({ isOpen, onClose }) {
                     </div>
                 </div>
 
-                <div className="pt-4 flex gap-3 justify-end border-t border-border">
-                    <Button variant="outline" onClick={onClose}>{t('goals.modals.create.btnCancel')}</Button>
-                    <Button data-testid="create-goal-submit" onClick={handleCreate}>
+                <div className="flex flex-col-reverse justify-end gap-3 border-t border-border pt-4 sm:flex-row">
+                    <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">{t('goals.modals.create.btnCancel')}</Button>
+                    <Button data-testid="create-goal-submit" onClick={handleCreate} className="w-full sm:w-auto">
                         {t('goals.modals.create.btnSubmit')}
                     </Button>
                 </div>

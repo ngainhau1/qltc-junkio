@@ -16,18 +16,27 @@ import {
 } from 'recharts';
 import { formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Download, FileText } from 'lucide-react';
+import { Download, FileSpreadsheet, FileText, MoreHorizontal } from 'lucide-react';
 import {
     exportReportRowsToCSV,
     exportReportRowsToExcel,
     exportReportRowsToPDF,
 } from '@/services/exportService';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { ResponsiveActions } from '@/components/layout/ResponsiveActions';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 
 export function Reports() {
     const { t } = useTranslation();
     const { summary, expenseByCategory, cashflowSeries, loading } = useSelector((state) => state.analytics.reports);
+    const compactNumber = new Intl.NumberFormat('vi-VN', { notation: 'compact', maximumFractionDigits: 1 });
 
     const summaryData = [
         { name: t('reports.income'), amount: Number(summary.totalIncome || 0) },
@@ -41,25 +50,49 @@ export function Reports() {
         cashflowSeries,
     };
 
+    const desktopActions = (
+        <>
+            <Button variant="outline" onClick={() => exportReportRowsToPDF(reportData, t('reports.exportTitle'))}>
+                <FileText className="mr-2 h-4 w-4" /> {t('reports.btnPdf')}
+            </Button>
+            <Button variant="outline" onClick={() => exportReportRowsToCSV(reportData)}>
+                <Download className="mr-2 h-4 w-4" /> {t('reports.btnCsv')}
+            </Button>
+            <Button variant="outline" onClick={() => exportReportRowsToExcel(reportData)}>
+                <FileSpreadsheet className="mr-2 h-4 w-4" /> {t('transactions.exportExcel')}
+            </Button>
+        </>
+    );
+
+    const mobileActions = (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="touch-target w-full justify-between">
+                    <span>{t('nav.menu')}</span>
+                    <MoreHorizontal className="h-4 w-4" />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem onClick={() => exportReportRowsToPDF(reportData, t('reports.exportTitle'))}>
+                    <FileText className="mr-2 h-4 w-4" /> {t('reports.btnPdf')}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => exportReportRowsToCSV(reportData)}>
+                    <Download className="mr-2 h-4 w-4" /> {t('reports.btnCsv')}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => exportReportRowsToExcel(reportData)}>
+                    <FileSpreadsheet className="mr-2 h-4 w-4" /> {t('transactions.exportExcel')}
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
+    );
+
     return (
         <div className="space-y-6">
-            <header className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">{t('reports.title')}</h1>
-                    <p className="text-muted-foreground">{t('reports.desc')}</p>
-                </div>
-                <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => exportReportRowsToPDF(reportData, t('reports.exportTitle'))}>
-                        <FileText className="mr-2 h-4 w-4" /> {t('reports.btnPdf')}
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => exportReportRowsToCSV(reportData)}>
-                        <Download className="mr-2 h-4 w-4" /> {t('reports.btnCsv')}
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => exportReportRowsToExcel(reportData)}>
-                        <Download className="mr-2 h-4 w-4" /> {t('transactions.exportExcel')}
-                    </Button>
-                </div>
-            </header>
+            <PageHeader
+                title={t('reports.title')}
+                description={t('reports.desc')}
+                actions={<ResponsiveActions desktop={desktopActions} mobile={mobileActions} />}
+            />
 
             {loading ? (
                 <div className="flex min-h-[320px] items-center justify-center rounded-xl border bg-card">
@@ -72,14 +105,14 @@ export function Reports() {
                             <CardTitle>{t('reports.summaryTitle')}</CardTitle>
                             <CardDescription>{t('reports.summaryDesc')}</CardDescription>
                         </CardHeader>
-                        <CardContent className="h-[300px]">
+                        <CardContent className="h-[240px] sm:h-[280px] md:h-[300px]">
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={summaryData}>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} />
                                     <XAxis dataKey="name" axisLine={false} tickLine={false} />
-                                    <YAxis axisLine={false} tickLine={false} tickFormatter={(value) => `${value / 1000000}M`} />
+                                    <YAxis axisLine={false} tickLine={false} tickFormatter={(value) => compactNumber.format(value)} />
                                     <Tooltip formatter={(value) => formatCurrency(value)} cursor={{ fill: 'transparent' }} />
-                                    <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                                    <Legend wrapperStyle={{ paddingTop: '12px', fontSize: '11px' }} />
                                     <Bar dataKey="amount" fill="#3b82f6" name={t('reports.amount')} radius={[4, 4, 0, 0]} barSize={50} />
                                 </BarChart>
                             </ResponsiveContainer>
@@ -91,7 +124,7 @@ export function Reports() {
                             <CardTitle>{t('reports.categoryTitle')}</CardTitle>
                             <CardDescription>{t('reports.categoryDesc')}</CardDescription>
                         </CardHeader>
-                        <CardContent className="h-[300px]">
+                        <CardContent className="h-[240px] sm:h-[280px] md:h-[300px]">
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
                                     <Pie
@@ -108,7 +141,7 @@ export function Reports() {
                                         ))}
                                     </Pie>
                                     <Tooltip formatter={(value) => formatCurrency(value)} />
-                                    <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
+                                    <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '12px' }} />
                                 </PieChart>
                             </ResponsiveContainer>
                         </CardContent>

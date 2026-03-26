@@ -113,7 +113,7 @@ export function ImportTransactionsModal({ isOpen, onClose }) {
                 </div>
 
                 <div
-                    className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 text-center transition-colors hover:bg-muted/50"
+                    className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 text-center transition-colors hover:bg-muted/50 sm:p-8"
                     onClick={() => fileInputRef.current?.click()}
                 >
                     <input
@@ -155,14 +155,14 @@ export function ImportTransactionsModal({ isOpen, onClose }) {
                     </div>
                 )}
 
-                <div className="flex justify-end gap-3 border-t pt-4">
-                    <Button variant="outline" onClick={handleClose} disabled={status === 'UPLOADING'}>
+                <div className="flex flex-col-reverse gap-3 border-t pt-4 sm:flex-row sm:justify-end">
+                    <Button variant="outline" onClick={handleClose} disabled={status === 'UPLOADING'} className="w-full sm:w-auto">
                         {t('common.cancel')}
                     </Button>
                     <Button
                         onClick={handleUpload}
                         disabled={!file || status === 'UPLOADING' || contextWallets.length === 0}
-                        className="min-w-[120px] bg-blue-600 hover:bg-blue-700"
+                        className="w-full bg-blue-600 hover:bg-blue-700 sm:min-w-[120px] sm:w-auto"
                     >
                         {status === 'UPLOADING' ? (
                             <>

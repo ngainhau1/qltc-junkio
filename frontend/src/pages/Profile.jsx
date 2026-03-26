@@ -93,7 +93,7 @@ export function Profile() {
     return (
         <div className="space-y-6 max-w-4xl mx-auto pb-10">
             <div>
-                <h1 className="text-3xl font-bold tracking-tight">{t('profile.title')}</h1>
+                <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{t('profile.title')}</h1>
                 <p className="text-muted-foreground">
                     {t('profile.desc')}
                 </p>
@@ -218,11 +218,11 @@ export function Profile() {
                                     </div>
                                 </div>
 
-                                <div className="pt-6 flex justify-end gap-4">
-                                    <Button type="button" variant="outline" onClick={() => window.history.back()}>
+                                <div className="flex flex-col-reverse gap-3 pt-6 sm:flex-row sm:justify-end sm:gap-4">
+                                    <Button type="button" variant="outline" onClick={() => window.history.back()} className="w-full sm:w-auto">
                                         {t('profile.cancel')}
                                     </Button>
-                                    <Button type="submit" className="gap-2">
+                                    <Button type="submit" className="w-full gap-2 sm:w-auto">
                                         <Save className="h-4 w-4" />
                                         {t('profile.save')}
                                     </Button>

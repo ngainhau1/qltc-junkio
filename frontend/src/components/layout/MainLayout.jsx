@@ -19,7 +19,7 @@ export function MainLayout() {
 
             <main className="min-h-screen pb-28 transition-all duration-300 md:pb-8 md:pl-64">
                 <Header />
-                <div className="container mx-auto max-w-7xl p-4 md:p-8">
+                <div className="container mx-auto max-w-7xl px-4 py-4 md:p-8">
                     <Outlet />
                     <GlobalAddTransactionModal />
                 </div>

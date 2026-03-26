@@ -5,6 +5,9 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { PageHeader } from "@/components/layout/PageHeader"
+import { ResponsiveTabs } from "@/components/ui/responsive-tabs"
+import { TableSwitch } from "@/components/ui/table-switch"
 import { Users, ArrowRightLeft, Home as HomeIcon, Search, Lock, Unlock, Shield, ChevronLeft, ChevronRight, Wallet as WalletIcon, Target, PiggyBank, Eye, Trash2, X, Activity } from "lucide-react"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, LineChart, Line } from "recharts"
 import api from "@/lib/api"
@@ -24,7 +27,7 @@ export function AdminDashboard() {
     const [userDetail, setUserDetail] = useState(null)
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
     const [userToDelete, setUserToDelete] = useState(null)
-    const [loading, setLoading] = useState(true) // eslint-disable-line no-unused-vars
+    const [loading, setLoading] = useState(true)
     
     // Logs State
     const [activeTab, setActiveTab] = useState('overview')
@@ -35,6 +38,12 @@ export function AdminDashboard() {
     const derivedTotalUsers = analytics?.stats?.totalUsers || analytics?.userGrowth?.reduce((acc, curr) => acc + curr.count, 0) || 0
     const derivedTotalTransactions =
         analytics?.stats?.totalTransactions || (analytics?.weeklyActivity?.reduce((acc, curr) => acc + curr.count, 0) || 0) * 10
+    const userRangeFrom = total === 0 ? 0 : (page - 1) * 10 + 1
+    const userRangeTo = total === 0 ? 0 : Math.min(page * 10, total)
+    const adminTabs = [
+        { value: 'overview', label: t("admin.overviewTab") },
+        { value: 'logs', label: t("admin.activityLogs") },
+    ]
 
     const roleLabel = (role) => {
         if (role === 'admin') return t('admin.roleAdmin')
@@ -169,27 +178,20 @@ export function AdminDashboard() {
     }
 
     return (
-        <div className="p-4 md:p-6 space-y-6">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold tracking-tight">{t("admin.title")}</h1>
-                    <p className="text-muted-foreground">{t("admin.desc")}</p>
-                </div>
-                <div className="flex bg-muted p-1 rounded-lg">
-                    <button 
-                        className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === 'overview' ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-                        onClick={() => setActiveTab('overview')}
-                    >
-                        {t("admin.overviewTab")}
-                    </button>
-                    <button 
-                        className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === 'logs' ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-                        onClick={() => setActiveTab('logs')}
-                    >
-                        {t("admin.activityLogs")}
-                    </button>
-                </div>
-            </div>
+        <div className="space-y-6 px-0 md:px-2">
+            <PageHeader
+                title={t("admin.title")}
+                description={t("admin.desc")}
+                actions={
+                    <ResponsiveTabs
+                        items={adminTabs}
+                        value={activeTab}
+                        onChange={setActiveTab}
+                        className="w-full md:w-auto"
+                        triggerClassName="min-w-[140px]"
+                    />
+                }
+            />
 
             {activeTab === 'overview' ? (
                 <div className="space-y-6">
@@ -399,116 +401,205 @@ export function AdminDashboard() {
             )}
 
             {/* User Management */}
-            <Card className="p-6">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
-                    <h2 className="text-lg font-semibold">{t("admin.userManagement")}</h2>
-                    <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                        <div className="relative w-full sm:w-64">
+            <Card className="p-4 sm:p-6">
+                <div className="mb-4 flex flex-col gap-4">
+                    <div className="flex flex-col gap-1">
+                        <h2 className="text-lg font-semibold">{t("admin.userManagement")}</h2>
+                        <p className="text-sm text-muted-foreground">{t("admin.desc")}</p>
+                    </div>
+                    <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
+                        <div className="relative w-full lg:flex-1">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                             <Input
                                 placeholder={t("admin.search")}
-                                className="pl-9"
+                                className="h-10 pl-9"
                                 value={search}
                                 onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                             />
                         </div>
-                        <select 
-                            className="flex h-10 w-full sm:w-32 items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            value={roleFilter}
-                            onChange={(e) => { setRoleFilter(e.target.value); setPage(1); }}
-                        >
-                            <option value="all">{t("admin.all")}</option>
-                            <option value="admin">{t("admin.roleAdmin")}</option>
-                            <option value="staff">{t("admin.roleStaff")}</option>
-                            <option value="member">{t("admin.roleMember")}</option>
-                        </select>
-                        <select 
-                            className="flex h-10 w-full sm:w-32 items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            value={statusFilter}
-                            onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-                        >
-                            <option value="all">{t("admin.all")}</option>
-                            <option value="active">{t("admin.statusActive")}</option>
-                            <option value="locked">{t("admin.statusLocked")}</option>
-                        </select>
+                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:w-auto">
+                            <select 
+                                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 lg:min-w-[144px]"
+                                value={roleFilter}
+                                onChange={(e) => { setRoleFilter(e.target.value); setPage(1); }}
+                            >
+                                <option value="all">{t("admin.all")}</option>
+                                <option value="admin">{t("admin.roleAdmin")}</option>
+                                <option value="staff">{t("admin.roleStaff")}</option>
+                                <option value="member">{t("admin.roleMember")}</option>
+                            </select>
+                            <select 
+                                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 lg:min-w-[144px]"
+                                value={statusFilter}
+                                onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+                            >
+                                <option value="all">{t("admin.all")}</option>
+                                <option value="active">{t("admin.statusActive")}</option>
+                                <option value="locked">{t("admin.statusLocked")}</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
-                <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                        <thead>
-                            <tr className="border-b">
-                                <th className="text-left py-3 px-2 font-medium">{t("admin.colName")}</th>
-                                <th className="text-left py-3 px-2 font-medium">Email</th>
-                                <th className="text-left py-3 px-2 font-medium">{t("admin.colRole")}</th>
-                                <th className="text-left py-3 px-2 font-medium">{t("admin.colStatus")}</th>
-                                <th className="text-right py-3 px-2 font-medium">{t("admin.colActions")}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {users.map(u => (
-                                <tr key={u.id} className="border-b hover:bg-muted/50 transition-colors">
-                                    <td className="py-3 px-2 font-medium">{u.name}</td>
-                                    <td className="py-3 px-2 text-muted-foreground">{u.email}</td>
-                                    <td className="py-3 px-2">
-                                        {u.id !== user?.id ? (
-                                            <select 
-                                                className="text-xs rounded border p-1 bg-transparent"
-                                                value={u.role}
-                                                onChange={(e) => changeRole(u.id, e.target.value)}
-                                            >
-                                                <option value="admin">{t("admin.roleAdmin")}</option>
-                                                <option value="staff">{t("admin.roleStaff", "Staff")}</option>
-                                                <option value="member">{t("admin.roleMember")}</option>
-                                            </select>
-                                        ) : (
-                                            <Badge variant="default">{roleLabel(u.role)}</Badge>
-                                        )}
-                                    </td>
-                                    <td className="py-3 px-2">
-                                        <Badge variant={u.is_locked ? "destructive" : "outline"}>
-                                            {u.is_locked ? t("admin.locked") : t("admin.active")}
-                                        </Badge>
-                                    </td>
-                                    <td className="py-3 px-2 text-right">
-                                        <div className="flex justify-end gap-2">
-                                            <Button size="icon" variant="outline" className="h-8 w-8" onClick={() => fetchUserDetail(u.id)} title={t("admin.viewProfile")}>
-                                                <Eye className="h-4 w-4" />
-                                            </Button>
-                                            {u.id !== user?.id && (
-                                                <>
-                                                    <Button
-                                                        size="icon"
-                                                        variant={u.is_locked ? "outline" : "secondary"}
-                                                        className="h-8 w-8"
-                                                        onClick={() => toggleLock(u.id)}
-                                                        title={u.is_locked ? t("admin.unlockAccount") : t("admin.lockAccount")}
-                                                    >
-                                                        {u.is_locked ? <Unlock className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
+                {loading ? (
+                    <div className="py-10 text-center text-sm text-muted-foreground">{t("common.loading", "Loading...")}</div>
+                ) : (
+                    <TableSwitch
+                        mobile={
+                            users.length === 0 ? (
+                                <div className="rounded-lg border border-dashed px-4 py-10 text-center text-sm text-muted-foreground">
+                                    {t("transactions.empty", "No data available")}
+                                </div>
+                            ) : (
+                                <div className="space-y-3">
+                                    {users.map(u => (
+                                        <Card key={u.id} className="p-4">
+                                            <div className="flex items-start justify-between gap-3">
+                                                <div className="min-w-0 flex-1 space-y-1">
+                                                    <p className="truncate font-medium">{u.name}</p>
+                                                    <p className="truncate text-sm text-muted-foreground">{u.email}</p>
+                                                </div>
+                                                <Badge variant={u.is_locked ? "destructive" : "outline"} className="shrink-0">
+                                                    {u.is_locked ? t("admin.locked") : t("admin.active")}
+                                                </Badge>
+                                            </div>
+
+                                            <div className="mt-4 space-y-3">
+                                                <div className="space-y-1">
+                                                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t("admin.colRole")}</p>
+                                                    {u.id !== user?.id ? (
+                                                        <select
+                                                            className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                                            value={u.role}
+                                                            onChange={(e) => changeRole(u.id, e.target.value)}
+                                                        >
+                                                            <option value="admin">{t("admin.roleAdmin")}</option>
+                                                            <option value="staff">{t("admin.roleStaff", "Staff")}</option>
+                                                            <option value="member">{t("admin.roleMember")}</option>
+                                                        </select>
+                                                    ) : (
+                                                        <Badge variant="default">{roleLabel(u.role)}</Badge>
+                                                    )}
+                                                </div>
+
+                                                <div className="flex flex-wrap gap-2">
+                                                    <Button size="icon" variant="outline" className="h-10 w-10" onClick={() => fetchUserDetail(u.id)} title={t("admin.viewProfile")}>
+                                                        <Eye className="h-4 w-4" />
                                                     </Button>
-                                                    <Button
-                                                        size="icon"
-                                                        variant="destructive"
-                                                        className="h-8 w-8"
-                                                        onClick={() => { setUserToDelete(u.id); setIsDeleteDialogOpen(true); }}
-                                                        title={t("admin.deleteUser")}
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
-                                                </>
-                                            )}
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                                                    {u.id !== user?.id && (
+                                                        <>
+                                                            <Button
+                                                                size="icon"
+                                                                variant={u.is_locked ? "outline" : "secondary"}
+                                                                className="h-10 w-10"
+                                                                onClick={() => toggleLock(u.id)}
+                                                                title={u.is_locked ? t("admin.unlockAccount") : t("admin.lockAccount")}
+                                                            >
+                                                                {u.is_locked ? <Unlock className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
+                                                            </Button>
+                                                            <Button
+                                                                size="icon"
+                                                                variant="destructive"
+                                                                className="h-10 w-10"
+                                                                onClick={() => { setUserToDelete(u.id); setIsDeleteDialogOpen(true); }}
+                                                                title={t("admin.deleteUser")}
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </Card>
+                                    ))}
+                                </div>
+                            )
+                        }
+                        desktop={
+                            users.length === 0 ? (
+                                <div className="rounded-lg border border-dashed px-4 py-10 text-center text-sm text-muted-foreground">
+                                    {t("transactions.empty", "No data available")}
+                                </div>
+                            ) : (
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-sm">
+                                        <thead>
+                                            <tr className="border-b">
+                                                <th className="text-left py-3 px-2 font-medium">{t("admin.colName")}</th>
+                                                <th className="text-left py-3 px-2 font-medium">Email</th>
+                                                <th className="text-left py-3 px-2 font-medium">{t("admin.colRole")}</th>
+                                                <th className="text-left py-3 px-2 font-medium">{t("admin.colStatus")}</th>
+                                                <th className="text-right py-3 px-2 font-medium">{t("admin.colActions")}</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {users.map(u => (
+                                                <tr key={u.id} className="border-b hover:bg-muted/50 transition-colors">
+                                                    <td className="py-3 px-2 font-medium">{u.name}</td>
+                                                    <td className="py-3 px-2 text-muted-foreground">{u.email}</td>
+                                                    <td className="py-3 px-2">
+                                                        {u.id !== user?.id ? (
+                                                            <select 
+                                                                className="text-xs rounded border p-1 bg-transparent"
+                                                                value={u.role}
+                                                                onChange={(e) => changeRole(u.id, e.target.value)}
+                                                            >
+                                                                <option value="admin">{t("admin.roleAdmin")}</option>
+                                                                <option value="staff">{t("admin.roleStaff", "Staff")}</option>
+                                                                <option value="member">{t("admin.roleMember")}</option>
+                                                            </select>
+                                                        ) : (
+                                                            <Badge variant="default">{roleLabel(u.role)}</Badge>
+                                                        )}
+                                                    </td>
+                                                    <td className="py-3 px-2">
+                                                        <Badge variant={u.is_locked ? "destructive" : "outline"}>
+                                                            {u.is_locked ? t("admin.locked") : t("admin.active")}
+                                                        </Badge>
+                                                    </td>
+                                                    <td className="py-3 px-2 text-right">
+                                                        <div className="flex justify-end gap-2">
+                                                            <Button size="icon" variant="outline" className="h-8 w-8" onClick={() => fetchUserDetail(u.id)} title={t("admin.viewProfile")}>
+                                                                <Eye className="h-4 w-4" />
+                                                            </Button>
+                                                            {u.id !== user?.id && (
+                                                                <>
+                                                                    <Button
+                                                                        size="icon"
+                                                                        variant={u.is_locked ? "outline" : "secondary"}
+                                                                        className="h-8 w-8"
+                                                                        onClick={() => toggleLock(u.id)}
+                                                                        title={u.is_locked ? t("admin.unlockAccount") : t("admin.lockAccount")}
+                                                                    >
+                                                                        {u.is_locked ? <Unlock className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
+                                                                    </Button>
+                                                                    <Button
+                                                                        size="icon"
+                                                                        variant="destructive"
+                                                                        className="h-8 w-8"
+                                                                        onClick={() => { setUserToDelete(u.id); setIsDeleteDialogOpen(true); }}
+                                                                        title={t("admin.deleteUser")}
+                                                                    >
+                                                                        <Trash2 className="h-4 w-4" />
+                                                                    </Button>
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )
+                        }
+                    />
+                )}
 
                 {/* Pagination */}
-                <div className="flex items-center justify-between mt-4 text-sm text-muted-foreground">
-                    <span>{t("admin.showing", { from: (page - 1) * 10 + 1, to: Math.min(page * 10, total), total })}</span>
-                    <div className="flex gap-2">
+                <div className="mt-4 flex flex-col gap-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+                    <span>{t("admin.showing", { from: userRangeFrom, to: userRangeTo, total })}</span>
+                    <div className="flex items-center gap-2 self-start sm:self-auto">
                         <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>
                             <ChevronLeft className="h-4 w-4" />
                         </Button>
@@ -520,7 +611,7 @@ export function AdminDashboard() {
             </Card>
             </div>
             ) : (
-                <Card className="p-6 min-h-[500px]">
+                <Card className="min-h-[420px] p-4 sm:p-6">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
                         <h2 className="text-lg font-semibold flex items-center gap-2">
                             <Activity className="h-5 w-5" />
@@ -545,7 +636,7 @@ export function AdminDashboard() {
                             {t("admin.noLogs")}
                         </div>
                     ) : (
-                        <div className="relative border-l-2 pl-6 ml-4 space-y-8">
+                        <div className="relative ml-3 space-y-6 border-l-2 pl-4 sm:ml-4 sm:space-y-8 sm:pl-6">
                             {logs.map(log => {
                                 let badgeColor = "default";
                                 if (log.action.includes('DELETE') || log.action.includes('LOCKED')) badgeColor = "destructive";
@@ -554,7 +645,7 @@ export function AdminDashboard() {
 
                                 return (
                                     <div key={log.id} className="relative">
-                                        <span className="absolute -left-[35px] top-1 h-4 w-4 rounded-full bg-background border-2 border-primary" />
+                                        <span className="absolute -left-[23px] top-1 h-4 w-4 rounded-full bg-background border-2 border-primary sm:-left-[35px]" />
                                         <div className="flex flex-col gap-1">
                                             <div className="flex items-center gap-2 flex-wrap">
                                                 <Badge variant={badgeColor} className="text-xs">{getLogActionLabel(log.action)}</Badge>
@@ -575,8 +666,8 @@ export function AdminDashboard() {
                     )}
                     
                     {logs.length < logTotal && (
-                        <div className="mt-8 text-center">
-                            <Button variant="outline" onClick={() => setLogPage(p => p + 1)}>
+                        <div className="mt-8">
+                            <Button variant="outline" className="w-full sm:w-auto" onClick={() => setLogPage(p => p + 1)}>
                                 {t("admin.loadMore")}
                             </Button>
                         </div>
@@ -587,26 +678,26 @@ export function AdminDashboard() {
             {/* User Detail Modal */}
             {selectedUser && userDetail && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
-                    <Card className="w-full max-w-md p-6 shadow-lg relative">
+                    <Card className="relative max-h-[90dvh] w-full max-w-lg overflow-y-auto p-4 shadow-lg sm:p-6">
                         <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="absolute right-4 top-4" 
+                            className="absolute right-3 top-3 h-10 w-10 sm:right-4 sm:top-4" 
                             onClick={() => { setSelectedUser(null); setUserDetail(null); }}
                         >
                             <X className="h-4 w-4" />
                         </Button>
-                        <h2 className="text-xl font-bold mb-4">{t("admin.userDetails")}</h2>
+                        <h2 className="mb-4 pr-10 text-xl font-bold">{t("admin.userDetails")}</h2>
                         <div className="space-y-4">
                             <div>
                                 <p className="text-sm font-medium text-muted-foreground">{t("admin.colName")}</p>
-                                <p className="text-base">{userDetail.name}</p>
+                                <p className="break-words text-base">{userDetail.name}</p>
                             </div>
                             <div>
                                 <p className="text-sm font-medium text-muted-foreground">Email</p>
-                                <p className="text-base">{userDetail.email}</p>
+                                <p className="break-words text-base">{userDetail.email}</p>
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 <div>
                                     <p className="text-sm font-medium text-muted-foreground">{t("admin.colRole")}</p>
                                     <Badge variant={userDetail.role === "admin" ? "default" : "secondary"}>{roleLabel(userDetail.role)}</Badge>
@@ -616,16 +707,16 @@ export function AdminDashboard() {
                                     <Badge variant={userDetail.is_locked ? "destructive" : "outline"}>{userDetail.is_locked ? t("admin.locked") : t("admin.active")}</Badge>
                                 </div>
                             </div>
-                            <div className="grid grid-cols-3 gap-4 border-t pt-4">
-                                <div className="text-center">
+                            <div className="grid grid-cols-1 gap-4 border-t pt-4 sm:grid-cols-2 md:grid-cols-3">
+                                <div className="rounded-lg bg-muted/50 p-4 text-center">
                                     <p className="text-2xl font-bold">{userDetail.wallets?.length || userDetail.Wallets?.length || 0}</p>
                                     <p className="text-xs text-muted-foreground">{t("admin.userWallets")}</p>
                                 </div>
-                                <div className="text-center">
+                                <div className="rounded-lg bg-muted/50 p-4 text-center">
                                     <p className="text-2xl font-bold">{userDetail.families?.length || userDetail.Families?.length || 0}</p>
                                     <p className="text-xs text-muted-foreground">{t("admin.userFamilies")}</p>
                                 </div>
-                                <div className="text-center">
+                                <div className="rounded-lg bg-muted/50 p-4 text-center">
                                     <p className="text-2xl font-bold">{userDetail.transactionCount || 0}</p>
                                     <p className="text-xs text-muted-foreground">{t("admin.userTransactions")}</p>
                                 </div>
@@ -641,14 +732,14 @@ export function AdminDashboard() {
             {/* Delete Confirmation Modal */}
             {isDeleteDialogOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
-                    <Card className="w-full max-w-sm p-6 shadow-lg">
+                    <Card className="w-full max-w-sm p-4 shadow-lg sm:p-6">
                         <h2 className="text-lg font-bold mb-2">{t("admin.deleteUser")}</h2>
                         <p className="text-muted-foreground mb-6">{t("admin.confirmDelete")}</p>
-                        <div className="flex justify-end gap-3">
-                            <Button variant="outline" onClick={() => { setIsDeleteDialogOpen(false); setUserToDelete(null); }}>
+                        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                            <Button className="w-full sm:w-auto" variant="outline" onClick={() => { setIsDeleteDialogOpen(false); setUserToDelete(null); }}>
                                 {t("profile.cancel")}
                             </Button>
-                            <Button variant="destructive" onClick={deleteUser}>
+                            <Button className="w-full sm:w-auto" variant="destructive" onClick={deleteUser}>
                                 {t("admin.deleteUser")}
                             </Button>
                         </div>

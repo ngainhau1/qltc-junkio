@@ -50,7 +50,7 @@ export function Goals() {
                         <Target className="h-8 w-8" />
                     </div>
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight text-foreground">{t('goals.title')}</h1>
+                        <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">{t('goals.title')}</h1>
                         <p className="text-muted-foreground mt-1">{t('goals.desc')}</p>
                     </div>
                 </div>
@@ -113,20 +113,20 @@ export function Goals() {
                                 >
                                     <CardContent className="p-0">
                                         <div className="p-6">
-                                            <div className="flex justify-between items-start mb-6">
-                                                <div className="flex items-center gap-4">
+                                            <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                                                <div className="flex min-w-0 items-center gap-4">
                                                     <div
                                                         className="h-14 w-14 rounded-2xl flex items-center justify-center text-white shadow-sm"
                                                         style={{ backgroundColor: goal.colorCode }}
                                                     >
                                                         <IconComponent className="h-7 w-7" />
                                                     </div>
-                                                    <div>
-                                                        <h3 className="font-bold text-lg group-hover:text-primary transition-colors">{goal.name}</h3>
+                                                    <div className="min-w-0">
+                                                        <h3 className="truncate font-bold text-lg group-hover:text-primary transition-colors">{goal.name}</h3>
                                                         <p className="text-sm text-muted-foreground">{t('goals.deadline')} <span className="font-medium text-foreground">{formatShortDate(goal.deadline)}</span></p>
                                                     </div>
                                                 </div>
-                                                <div className="text-right">
+                                                <div className="text-left sm:text-right">
                                                     <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-1">{t('goals.remainingNeeded')}</p>
                                                     <p className="text-lg font-bold text-destructive">
                                                         {formatCurrency(goal.targetAmount - goal.currentAmount)}

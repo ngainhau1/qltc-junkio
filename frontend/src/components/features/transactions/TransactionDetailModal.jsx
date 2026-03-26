@@ -8,6 +8,7 @@ import { clearSelectedTransaction, deleteTransaction } from '@/features/transact
 import { refreshFinanceData } from '@/features/finance/refreshFinanceData';
 import { Calendar, Tag, Trash2, Users, Wallet } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { TableSwitch } from '@/components/ui/table-switch';
 
 export function TransactionDetailModal({ isOpen, onClose }) {
     const { t } = useTranslation();
@@ -69,7 +70,7 @@ export function TransactionDetailModal({ isOpen, onClose }) {
                     </div>
 
                     <div className="space-y-3 rounded-lg border bg-muted/30 p-4">
-                        <div className="flex items-center justify-between text-sm">
+                        <div className="flex flex-col gap-1 text-sm sm:flex-row sm:items-center sm:justify-between">
                             <span className="flex items-center gap-2 text-muted-foreground">
                                 <Calendar className="h-4 w-4" />
                                 {t('transactions.detail.date')}
@@ -78,7 +79,7 @@ export function TransactionDetailModal({ isOpen, onClose }) {
                         </div>
 
                         {tx.Wallet && (
-                            <div className="flex items-center justify-between text-sm">
+                            <div className="flex flex-col gap-1 text-sm sm:flex-row sm:items-center sm:justify-between">
                                 <span className="flex items-center gap-2 text-muted-foreground">
                                     <Wallet className="h-4 w-4" />
                                     {t('transactions.detail.wallet')}
@@ -88,7 +89,7 @@ export function TransactionDetailModal({ isOpen, onClose }) {
                         )}
 
                         {tx.Category && (
-                            <div className="flex items-center justify-between text-sm">
+                            <div className="flex flex-col gap-1 text-sm sm:flex-row sm:items-center sm:justify-between">
                                 <span className="flex items-center gap-2 text-muted-foreground">
                                     <Tag className="h-4 w-4" />
                                     {t('transactions.detail.category')}
@@ -104,37 +105,57 @@ export function TransactionDetailModal({ isOpen, onClose }) {
                                 <Users className="h-4 w-4" />
                                 {t('transactions.detail.shares')}
                             </p>
-                            <div className="overflow-hidden rounded-lg border">
-                                <table className="w-full text-sm">
-                                    <thead className="bg-muted/50">
-                                        <tr>
-                                            <th className="px-3 py-2 text-left font-medium">{t('transactions.detail.member')}</th>
-                                            <th className="px-3 py-2 text-right font-medium">{t('transactions.detail.shareAmount')}</th>
-                                            <th className="px-3 py-2 text-right font-medium">{t('transactions.detail.status')}</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
+                            <TableSwitch
+                                mobile={
+                                    <div className="space-y-3">
                                         {tx.Shares.map((share) => (
-                                            <tr key={share.id} className="border-t">
-                                                <td className="px-3 py-2">
-                                                    <p className="font-medium">{share.User?.name || '?'}</p>
-                                                    <p className="text-xs text-muted-foreground">{share.User?.email}</p>
-                                                </td>
-                                                <td className="px-3 py-2 text-right font-medium">{formatCurrency(share.amount)}</td>
-                                                <td className="px-3 py-2 text-right">
+                                            <div key={share.id} className="rounded-lg border p-3">
+                                                <p className="font-medium">{share.User?.name || '?'}</p>
+                                                <p className="text-xs text-muted-foreground">{share.User?.email}</p>
+                                                <div className="mt-3 flex items-center justify-between gap-2">
+                                                    <span className="text-sm font-medium">{formatCurrency(share.amount)}</span>
                                                     <Badge className={share.status === 'PAID' ? 'border-green-200 bg-green-100 text-xs text-green-700' : 'border-yellow-200 bg-yellow-100 text-xs text-yellow-700'}>
                                                         {share.status === 'PAID' ? t('transactions.detail.paid') : t('transactions.detail.unpaid')}
                                                     </Badge>
-                                                </td>
-                                            </tr>
+                                                </div>
+                                            </div>
                                         ))}
-                                    </tbody>
-                                </table>
-                            </div>
+                                    </div>
+                                }
+                                desktop={
+                                    <div className="overflow-hidden rounded-lg border">
+                                        <table className="w-full text-sm">
+                                            <thead className="bg-muted/50">
+                                                <tr>
+                                                    <th className="px-3 py-2 text-left font-medium">{t('transactions.detail.member')}</th>
+                                                    <th className="px-3 py-2 text-right font-medium">{t('transactions.detail.shareAmount')}</th>
+                                                    <th className="px-3 py-2 text-right font-medium">{t('transactions.detail.status')}</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {tx.Shares.map((share) => (
+                                                    <tr key={share.id} className="border-t">
+                                                        <td className="px-3 py-2">
+                                                            <p className="font-medium">{share.User?.name || '?'}</p>
+                                                            <p className="text-xs text-muted-foreground">{share.User?.email}</p>
+                                                        </td>
+                                                        <td className="px-3 py-2 text-right font-medium">{formatCurrency(share.amount)}</td>
+                                                        <td className="px-3 py-2 text-right">
+                                                            <Badge className={share.status === 'PAID' ? 'border-green-200 bg-green-100 text-xs text-green-700' : 'border-yellow-200 bg-yellow-100 text-xs text-yellow-700'}>
+                                                                {share.status === 'PAID' ? t('transactions.detail.paid') : t('transactions.detail.unpaid')}
+                                                            </Badge>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                }
+                            />
                         </div>
                     )}
 
-                    <div className="flex gap-3 pt-2">
+                    <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row">
                         <Button variant="outline" className="flex-1" onClick={onClose}>
                             {t('common.close')}
                         </Button>

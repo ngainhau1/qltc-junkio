@@ -107,10 +107,10 @@ export function TransactionForm({ onSuccess }) {
     return (
         <form onSubmit={formik.handleSubmit} className="space-y-4" data-testid={`form-${formik.values.type}`}>
             <Tabs defaultValue="EXPENSE" onValueChange={handleTabChange} className="w-full">
-                <TabsList className="mb-4 grid w-full grid-cols-3">
-                    <TabsTrigger value="EXPENSE">{t('transactionForm.tabs.expense')}</TabsTrigger>
-                    <TabsTrigger value="INCOME">{t('transactionForm.tabs.income')}</TabsTrigger>
-                    <TabsTrigger value="TRANSFER">{t('transactionForm.tabs.transfer')}</TabsTrigger>
+                <TabsList className="mb-4 grid h-auto w-full grid-cols-3 gap-1">
+                    <TabsTrigger value="EXPENSE" className="touch-target px-2 text-xs sm:text-sm">{t('transactionForm.tabs.expense')}</TabsTrigger>
+                    <TabsTrigger value="INCOME" className="touch-target px-2 text-xs sm:text-sm">{t('transactionForm.tabs.income')}</TabsTrigger>
+                    <TabsTrigger value="TRANSFER" className="touch-target px-2 text-xs sm:text-sm">{t('transactionForm.tabs.transfer')}</TabsTrigger>
                 </TabsList>
             </Tabs>
 
@@ -143,7 +143,7 @@ export function TransactionForm({ onSuccess }) {
                 </div>
 
                 {formik.values.type === 'TRANSFER' ? (
-                    <div className="grid grid-cols-[1fr,auto,1fr] items-center gap-2">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr,auto,1fr] sm:items-center">
                         <div>
                             <label htmlFor="transaction-wallet" className="mb-1 block text-sm font-medium">
                                 {t('transactionForm.fromWallet')}
@@ -163,7 +163,10 @@ export function TransactionForm({ onSuccess }) {
                                 ))}
                             </select>
                         </div>
-                        <div className="pt-6 text-muted-foreground">
+                        <div className="hidden pt-6 text-muted-foreground sm:block">
+                            <ArrowRight className="h-4 w-4" />
+                        </div>
+                        <div className="flex items-center justify-center text-muted-foreground sm:hidden">
                             <ArrowRight className="h-4 w-4" />
                         </div>
                         <div>

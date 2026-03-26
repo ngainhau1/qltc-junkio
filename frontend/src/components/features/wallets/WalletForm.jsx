@@ -89,7 +89,7 @@ export function WalletForm({ onSuccess, initialData = null }) {
                 {formik.errors.name && <p className="text-xs text-red-500 mt-1">{formik.errors.name}</p>}
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                     <label htmlFor="wallet-balance" className="text-sm font-medium mb-1 block">{t('wallets.form.balance')}</label>
                     <Input

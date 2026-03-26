@@ -144,9 +144,9 @@ export function SharedExpenseModal({ isOpen, onClose, family, familyWalletId }) 
                     </div>
                 )}
 
-                <div className="pt-2 flex justify-end gap-2 border-t mt-6">
-                    <Button type="button" variant="ghost" onClick={onClose}>{t('sharedExpense.cancelBtn')}</Button>
-                    <Button type="submit">{t('sharedExpense.submitBtn')}</Button>
+                <div className="mt-6 flex flex-col-reverse gap-2 border-t pt-2 sm:flex-row sm:justify-end">
+                    <Button type="button" variant="ghost" onClick={onClose} className="w-full sm:w-auto">{t('sharedExpense.cancelBtn')}</Button>
+                    <Button type="submit" className="w-full sm:w-auto">{t('sharedExpense.submitBtn')}</Button>
                 </div>
             </form>
         </Modal>

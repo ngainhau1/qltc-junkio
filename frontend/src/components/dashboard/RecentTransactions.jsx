@@ -32,7 +32,7 @@ export function RecentTransactions({ transactions }) {
                         return (
                             <div
                                 key={transaction.id}
-                                className="group -mx-2 flex cursor-pointer items-center rounded-lg p-2 transition-colors hover:bg-muted/30"
+                                className="group -mx-2 flex cursor-pointer items-start gap-3 rounded-lg p-2 transition-colors hover:bg-muted/30 sm:items-center"
                             >
                                 <div className={`flex h-10 w-10 items-center justify-center rounded-full border ${toneClasses}`}>
                                     {isTransfer ? (
@@ -43,13 +43,13 @@ export function RecentTransactions({ transactions }) {
                                         <ArrowUpRight className="h-5 w-5 text-rose-600" />
                                     )}
                                 </div>
-                                <div className="ml-4 flex-1 space-y-1">
-                                    <p className="text-sm font-medium leading-none">{transaction.description}</p>
+                                <div className="min-w-0 flex-1 space-y-1">
+                                    <p className="truncate text-sm font-medium leading-none">{transaction.description}</p>
                                     <p className="mt-1 text-xs text-muted-foreground">
-                                        {transactionDate ? formatDateString(transactionDate) : '—'}
+                                        {transactionDate ? formatDateString(transactionDate) : '-'}
                                     </p>
                                 </div>
-                                <div className={`text-sm font-semibold ${amountClasses}`}>
+                                <div className={`shrink-0 text-sm font-semibold ${amountClasses}`}>
                                     {isIncome ? '+' : '-'}
                                     {formatCurrency(transaction.amount)}
                                 </div>

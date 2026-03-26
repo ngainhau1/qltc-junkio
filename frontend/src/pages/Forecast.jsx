@@ -46,9 +46,9 @@ export function Forecast() {
     ] : []
 
     return (
-        <div className="p-4 md:p-6 space-y-6">
+        <div className="space-y-6 p-4 md:p-6">
             <div>
-                <h1 className="text-2xl font-bold tracking-tight">{t("forecast.title")}</h1>
+                <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{t("forecast.title")}</h1>
                 <p className="text-muted-foreground">{t("forecast.desc")}</p>
             </div>
 
@@ -70,12 +70,12 @@ export function Forecast() {
             )}
 
             {/* Period selector */}
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
                 {[3, 6, 12].map(m => (
                     <button
                         key={m}
                         onClick={() => setMonths(m)}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${months === m
+                        className={`touch-target flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-colors sm:flex-none ${months === m
                             ? "bg-primary text-primary-foreground"
                             : "bg-muted text-muted-foreground hover:bg-muted/80"
                             }`}
@@ -86,18 +86,18 @@ export function Forecast() {
             </div>
 
             {/* Chart */}
-            <Card className="p-6">
+            <Card className="p-4 sm:p-6">
                 <h2 className="text-lg font-semibold mb-4">{t("forecast.chartTitle")}</h2>
                 {loading ? (
-                    <div className="h-80 flex items-center justify-center text-muted-foreground">
+                    <div className="flex h-72 items-center justify-center text-muted-foreground md:h-80">
                         {t("common.loading")}
                     </div>
                 ) : (
-                    <ResponsiveContainer width="100%" height={350}>
+                    <ResponsiveContainer width="100%" height={280}>
                         <LineChart data={chartData}>
                             <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                            <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                            <YAxis tick={{ fontSize: 12 }} tickFormatter={v => `${(v / 1000000).toFixed(1)}M`} />
+                            <XAxis dataKey="month" tick={{ fontSize: 11 }} minTickGap={20} />
+                            <YAxis tick={{ fontSize: 11 }} tickFormatter={v => `${(v / 1000000).toFixed(1)}M`} width={56} />
                             <Tooltip formatter={(v) => formatCurrency(v)} />
                             <Legend />
                             <ReferenceLine x={chartData.findIndex(d => d.type === "forecast") > 0 ? chartData[chartData.findIndex(d => d.type === "forecast")].month : null} stroke="#888" strokeDasharray="5 5" label={t("forecast.predicted")} />
@@ -110,7 +110,7 @@ export function Forecast() {
 
             {/* Forecast Cards */}
             {data?.forecast && (
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                     {data.forecast.map((f, i) => (
                         <Card key={i} className="p-5">
                             <p className="text-sm text-muted-foreground mb-3">{f.month}</p>
