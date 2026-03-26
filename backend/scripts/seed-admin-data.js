@@ -50,7 +50,7 @@ async function seedAdminData() {
             ];
             const categories = {};
             for (let cData of categoriesData) {
-                const [cat, created] = await Category.findOrCreate({
+                const [cat] = await Category.findOrCreate({
                     where: { name: cData.name, type: cData.type },
                     defaults: cData,
                     transaction: t

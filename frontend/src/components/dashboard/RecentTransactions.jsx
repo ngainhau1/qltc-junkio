@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatCurrency, formatDateString } from '@/lib/utils';
-import { ArrowDownLeft, ArrowUpRight } from 'lucide-react';
+import { ArrowDownLeft, ArrowRightLeft, ArrowUpRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 export function RecentTransactions({ transactions }) {
@@ -15,16 +15,29 @@ export function RecentTransactions({ transactions }) {
             <CardContent>
                 <div className="space-y-6">
                     {recentTransactions.map((transaction) => {
+                        const isTransfer = transaction.type === 'TRANSFER_IN' || transaction.type === 'TRANSFER_OUT';
                         const isIncome = transaction.type === 'INCOME' || transaction.type === 'TRANSFER_IN';
                         const transactionDate = transaction.date || transaction.transaction_date || transaction.createdAt;
+                        const toneClasses = isTransfer
+                            ? 'border-sky-200 bg-sky-100'
+                            : isIncome
+                                ? 'border-emerald-200 bg-emerald-100'
+                                : 'border-rose-200 bg-rose-100';
+                        const amountClasses = isTransfer
+                            ? 'text-sky-600'
+                            : isIncome
+                                ? 'text-emerald-600'
+                                : 'text-rose-600';
 
                         return (
                             <div
                                 key={transaction.id}
                                 className="group -mx-2 flex cursor-pointer items-center rounded-lg p-2 transition-colors hover:bg-muted/30"
                             >
-                                <div className={`flex h-10 w-10 items-center justify-center rounded-full border ${isIncome ? 'border-emerald-200 bg-emerald-100' : 'border-rose-200 bg-rose-100'}`}>
-                                    {isIncome ? (
+                                <div className={`flex h-10 w-10 items-center justify-center rounded-full border ${toneClasses}`}>
+                                    {isTransfer ? (
+                                        <ArrowRightLeft className="h-5 w-5 text-sky-600" />
+                                    ) : isIncome ? (
                                         <ArrowDownLeft className="h-5 w-5 text-emerald-600" />
                                     ) : (
                                         <ArrowUpRight className="h-5 w-5 text-rose-600" />
@@ -36,7 +49,7 @@ export function RecentTransactions({ transactions }) {
                                         {transactionDate ? formatDateString(transactionDate) : '—'}
                                     </p>
                                 </div>
-                                <div className={`text-sm font-semibold ${isIncome ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                <div className={`text-sm font-semibold ${amountClasses}`}>
                                     {isIncome ? '+' : '-'}
                                     {formatCurrency(transaction.amount)}
                                 </div>

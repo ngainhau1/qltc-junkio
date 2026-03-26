@@ -19,6 +19,11 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.STRING, // e.g., 'BUDGET_ALERT', 'DEBT_REMINDER', 'GOAL_ACHIEVED'
             allowNull: false
         },
+        title: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            defaultValue: 'Notification'
+        },
         message: {
             type: DataTypes.TEXT,
             allowNull: false
@@ -30,6 +35,10 @@ module.exports = (sequelize, DataTypes) => {
         user_id: {
             type: DataTypes.UUID,
             allowNull: false
+        },
+        reference_id: {
+            type: DataTypes.UUID,
+            allowNull: true
         }
     }, {
         sequelize,

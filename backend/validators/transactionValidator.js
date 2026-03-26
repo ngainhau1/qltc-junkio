@@ -9,7 +9,7 @@ const handleValidation = (locations = ['body']) => (req, res, next) => {
             errors: details
         });
     }
-    // Loại bỏ field thừa, chỉ giữ field đã validate
+
     if (locations.includes('body')) {
         req.body = matchedData(req, { locations: ['body'], includeOptionals: true });
     }
@@ -19,42 +19,52 @@ const handleValidation = (locations = ['body']) => (req, res, next) => {
     if (locations.includes('params')) {
         req.params = matchedData(req, { locations: ['params'], includeOptionals: true });
     }
+
     next();
 };
 
 exports.validateTransactionCreate = [
-    body('wallet_id').isUUID().withMessage('wallet_id phải là UUID'),
-    body('amount').isFloat({ gt: 0 }).withMessage('amount phải > 0').toFloat(),
-    body('type').isIn(['INCOME', 'EXPENSE']).withMessage('type không hợp lệ'),
-    body('category_id').optional({ nullable: true }).isUUID().withMessage('category_id phải là UUID'),
-    body('family_id').optional({ nullable: true }).isUUID().withMessage('family_id phải là UUID'),
-    body('date').optional().isISO8601().toDate().withMessage('date phải là ISO-8601'),
-    body('description').optional().trim().escape().isLength({ max: 255 }).withMessage('description quá dài'),
+    body('wallet_id').isUUID().withMessage('wallet_id phai la UUID'),
+    body('amount').isFloat({ gt: 0 }).withMessage('amount phai > 0').toFloat(),
+    body('type').isIn(['INCOME', 'EXPENSE']).withMessage('type khong hop le'),
+    body('category_id').optional({ nullable: true }).isUUID().withMessage('category_id phai la UUID'),
+    body('family_id').optional({ nullable: true }).isUUID().withMessage('family_id phai la UUID'),
+    body('date').optional().isISO8601().toDate().withMessage('date phai la ISO-8601'),
+    body('description').optional().trim().escape().isLength({ max: 255 }).withMessage('description qua dai'),
     handleValidation(['body'])
 ];
 
 exports.validateTransactionTransfer = [
-    body('from_wallet_id').isUUID().withMessage('from_wallet_id phải là UUID'),
-    body('to_wallet_id').isUUID().withMessage('to_wallet_id phải là UUID'),
-    body('amount').isFloat({ gt: 0 }).withMessage('amount phải > 0').toFloat(),
+    body('from_wallet_id').isUUID().withMessage('from_wallet_id phai la UUID'),
+    body('to_wallet_id')
+        .isUUID()
+        .withMessage('to_wallet_id phai la UUID')
+        .bail()
+        .custom((toWalletId, { req }) => {
+            if (toWalletId === req.body.from_wallet_id) {
+                throw new Error('to_wallet_id phai khac from_wallet_id');
+            }
+            return true;
+        }),
+    body('amount').isFloat({ gt: 0 }).withMessage('amount phai > 0').toFloat(),
     body('description').optional().trim().escape().isLength({ max: 255 }),
     body('date').optional().isISO8601().toDate(),
     handleValidation(['body'])
 ];
 
 exports.validateTransactionImport = [
-    body('transactions').isArray({ min: 1 }).withMessage('transactions phải là mảng và không rỗng'),
-    body('transactions.*.wallet_id').isUUID().withMessage('wallet_id phải là UUID'),
-    body('transactions.*.type').isIn(['INCOME', 'EXPENSE']).withMessage('type phải là INCOME hoặc EXPENSE'),
-    body('transactions.*.amount').isFloat({ gt: 0 }).withMessage('amount phải > 0').toFloat(),
-    body('transactions.*.category_id').optional({ nullable: true }).isUUID().withMessage('category_id phải là UUID'),
+    body('transactions').isArray({ min: 1 }).withMessage('transactions phai la mang va khong rong'),
+    body('transactions.*.wallet_id').isUUID().withMessage('wallet_id phai la UUID'),
+    body('transactions.*.type').isIn(['INCOME', 'EXPENSE']).withMessage('type phai la INCOME hoac EXPENSE'),
+    body('transactions.*.amount').isFloat({ gt: 0 }).withMessage('amount phai > 0').toFloat(),
+    body('transactions.*.category_id').optional({ nullable: true }).isUUID().withMessage('category_id phai la UUID'),
     body('transactions.*.description').optional().trim().escape().isLength({ max: 255 }),
     body('transactions.*.date').optional().isISO8601().toDate(),
     handleValidation(['body'])
 ];
 
 exports.validateTransactionParams = [
-    param('id').isUUID().withMessage('id phải là UUID'),
+    param('id').isUUID().withMessage('id phai la UUID'),
     handleValidation(['params'])
 ];
 

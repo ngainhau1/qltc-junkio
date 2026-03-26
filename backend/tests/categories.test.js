@@ -110,7 +110,7 @@ describe('Category API Endpoints', () => {
         });
 
         it('should return 422 for an invalid UUID format', async () => {
-            const res = await request(app).put(`/api/categories/not-a-uuid`).send({
+            const res = await request(app).put('/api/categories/not-a-uuid').send({
                 name: 'Invalid ID'
             });
             expect(res.statusCode).toEqual(422);

@@ -13,6 +13,19 @@ export function TransactionDetailModal({ isOpen, onClose }) {
     const { t } = useTranslation();
     const dispatch = useDispatch();
     const { selectedTransaction: tx, isDetailLoading } = useSelector((state) => state.transactions);
+    const isTransfer = tx?.type === 'TRANSFER_IN' || tx?.type === 'TRANSFER_OUT';
+    const isIncome = tx?.type === 'INCOME' || tx?.type === 'TRANSFER_IN';
+    const amountTone = isTransfer ? 'text-sky-600' : isIncome ? 'text-green-600' : 'text-red-600';
+    const badgeTone = isTransfer
+        ? 'border-sky-200 bg-sky-100 text-sky-700'
+        : isIncome
+            ? 'border-green-200 bg-green-100 text-green-700'
+            : 'border-red-200 bg-red-100 text-red-700';
+    const badgeLabel = isTransfer
+        ? t('transactionForm.tabs.transfer')
+        : isIncome
+            ? t('transactions.type.income')
+            : t('transactions.type.expense');
 
     useEffect(() => {
         if (!isOpen) {
@@ -34,8 +47,6 @@ export function TransactionDetailModal({ isOpen, onClose }) {
         onClose();
     };
 
-    const isIncome = tx?.type === 'INCOME' || tx?.type === 'TRANSFER_IN';
-
     return (
         <Modal isOpen={isOpen} onClose={onClose} title={t('transactions.detail.title')}>
             {isDetailLoading && (
@@ -47,12 +58,12 @@ export function TransactionDetailModal({ isOpen, onClose }) {
             {!isDetailLoading && tx && (
                 <div className="space-y-6">
                     <div className="flex flex-col items-center gap-2 py-4">
-                        <span className={`text-4xl font-bold ${isIncome ? 'text-green-600' : 'text-red-600'}`}>
+                        <span className={`text-4xl font-bold ${amountTone}`}>
                             {isIncome ? '+' : '-'}
                             {formatCurrency(tx.amount)}
                         </span>
-                        <Badge className={isIncome ? 'border-green-200 bg-green-100 text-green-700' : 'border-red-200 bg-red-100 text-red-700'}>
-                            {isIncome ? t('transactions.type.income') : t('transactions.type.expense')}
+                        <Badge className={badgeTone}>
+                            {badgeLabel}
                         </Badge>
                         {tx.description && <p className="mt-1 text-center text-sm text-muted-foreground">{tx.description}</p>}
                     </div>

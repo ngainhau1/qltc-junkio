@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { createTransaction, createTransfer } from '@/features/transactions/transactionSlice';
 import { fetchCategories } from '@/features/categories/categorySlice';
-import { addNotification } from '@/features/notifications/notificationsSlice';
 import { getFinanceScopeLabels } from '@/features/finance/context';
 import { refreshFinanceData } from '@/features/finance/refreshFinanceData';
 import { formatCurrency } from '@/lib/utils';
@@ -40,7 +39,6 @@ export function TransactionForm({ onSuccess }) {
     const wallets = useSelector((state) => state.wallets?.wallets ?? []);
     const { activeFamilyId, families } = useSelector((state) => state.families ?? {});
     const categories = useSelector((state) => state.categories?.categories ?? EMPTY_ARRAY);
-    const transactions = useSelector((state) => state.transactions?.transactions ?? EMPTY_ARRAY);
     const [submitError, setSubmitError] = useState('');
 
     useEffect(() => {
@@ -92,37 +90,6 @@ export function TransactionForm({ onSuccess }) {
                             category_id: values.categoryId || null,
                         })
                     ).unwrap();
-                }
-
-                if (values.type === 'EXPENSE') {
-                    const currentMonth = new Date(values.date).getMonth();
-                    const currentYear = new Date(values.date).getFullYear();
-
-                    const monthlyExpenses = transactions
-                        .filter(
-                            (transaction) =>
-                                transaction.type === 'EXPENSE' &&
-                                transaction.wallet_id === values.walletId &&
-                                new Date(transaction.date).getMonth() === currentMonth &&
-                                new Date(transaction.date).getFullYear() === currentYear
-                        )
-                        .reduce((total, transaction) => total + Number(transaction.amount || 0), 0);
-
-                    const newTotalExpense = monthlyExpenses + parseFloat(values.amount);
-                    const wallet = wallets.find((item) => item.id === values.walletId);
-                    const budgetLimit = wallet ? Number(wallet.balance || 0) + newTotalExpense : 5000000;
-
-                    if (newTotalExpense > budgetLimit * 0.8) {
-                        dispatch(
-                            addNotification({
-                                type: 'BUDGET_ALERT',
-                                title: t('notifications.budgetAlertTitle'),
-                                message: t('notifications.budgetAlertDesc', {
-                                    amount: formatCurrency(newTotalExpense),
-                                }),
-                            })
-                        );
-                    }
                 }
 
                 await dispatch(refreshFinanceData());

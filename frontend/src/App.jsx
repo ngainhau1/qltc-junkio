@@ -1,10 +1,8 @@
 import { Suspense, lazy, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { BrowserRouter as Router, Navigate, Route, Routes } from 'react-router-dom';
-import { Toaster, toast } from 'sonner';
-import { io } from 'socket.io-client';
+import { Toaster } from 'sonner';
 import { fetchCurrentUser } from '@/features/auth/authSlice';
-import { addNotification } from '@/features/notifications/notificationsSlice';
 import { fetchDashboardAnalytics, fetchReportAnalytics } from '@/features/analytics/analyticsSlice';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { AuthLayout } from '@/components/layout/AuthLayout';
@@ -26,6 +24,7 @@ import { fetchFamilies } from '@/features/families/familySlice';
 import { fetchGoals } from '@/features/goals/goalsSlice';
 import { fetchRecurring } from '@/features/recurring/recurringSlice';
 import { fetchTransactions } from '@/features/transactions/transactionSlice';
+import { useSocket } from '@/hooks/useSocket';
 
 const Transactions = lazy(() =>
     import('@/pages/Transactions').then((module) => ({ default: module.Transactions }))
@@ -50,6 +49,8 @@ function App() {
     const dispatch = useDispatch();
     const { isAuthenticated, token, user } = useSelector((state) => state.auth);
     const { activeFamilyId } = useSelector((state) => state.families);
+
+    useSocket();
 
     useEffect(() => {
         if (token && !user) {
@@ -77,39 +78,6 @@ function App() {
         dispatch(fetchDashboardAnalytics());
         dispatch(fetchReportAnalytics());
     }, [dispatch, isAuthenticated, activeFamilyId]);
-
-    useEffect(() => {
-        let socket;
-
-        if (isAuthenticated && user) {
-            const socketUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : '';
-            socket = io(socketUrl, {
-                withCredentials: true,
-            });
-
-            socket.on('connect', () => {
-                socket.emit('join_user_room', user.id);
-            });
-
-            socket.on('NEW_NOTIFICATION', (data) => {
-                dispatch(addNotification(data));
-
-                if (data.type === 'alert') {
-                    toast.error(data.message, { duration: 8000 });
-                } else if (data.type === 'success') {
-                    toast.success(data.message);
-                } else {
-                    toast.info(data.message);
-                }
-            });
-        }
-
-        return () => {
-            if (socket) {
-                socket.disconnect();
-            }
-        };
-    }, [dispatch, isAuthenticated, user]);
 
     return (
         <Router>

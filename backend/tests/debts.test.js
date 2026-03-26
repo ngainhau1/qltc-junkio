@@ -91,7 +91,7 @@ app.use(express.json());
 app.use('/api/debts', debtRoutes);
 
 describe('Debt API Endpoints', () => {
-    let creditorId, debtorId, familyId, walletCreditorId, walletDebtorId, pendingShareId, approvedShareId, txId;
+    let creditorId, debtorId, familyId, walletCreditorId, walletDebtorId, pendingShareId, txId;
 
     beforeAll(async () => {
         await mockSequelize.sync({ force: true });
@@ -131,14 +131,13 @@ describe('Debt API Endpoints', () => {
         pendingShareId = share1.id;
 
         // Debtor owes 500, approved
-        const share2 = await mockTransactionShare.create({
+        await mockTransactionShare.create({
             transaction_id: tx.id,
             user_id: debtorId,
             amount: 500,
             status: 'UNPAID',
             approval_status: 'APPROVED'
         });
-        approvedShareId = share2.id;
     });
 
     afterAll(async () => {

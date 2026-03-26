@@ -1,4 +1,5 @@
 const { Transaction, Wallet, User, Category, sequelize } = require('../models');
+const { randomUUID } = require('crypto');
 const { Op } = require('sequelize');
 const { Parser } = require('json2csv');
 const PDFDocument = require('pdfkit');
@@ -24,6 +25,17 @@ const buildTransactionWhere = ({ walletIds, filters }) => {
     if (filters.search) whereClause.description = { [Op.like]: `%${filters.search}%` };
 
     return whereClause;
+};
+
+const rollbackWalletForDeletedTransaction = (wallet, transaction) => {
+    const amount = parseFloat(transaction.amount);
+
+    if (transaction.type === 'INCOME' || transaction.type === 'TRANSFER_IN') {
+        wallet.balance = parseFloat(wallet.balance) - amount;
+        return;
+    }
+
+    wallet.balance = parseFloat(wallet.balance) + amount;
 };
 
 // GET /api/transactions/:id
@@ -193,8 +205,16 @@ exports.deleteTransaction = async (req, res) => {
     const t = await sequelize.transaction();
 
     try {
+        const { walletIds } = await getAccessibleWalletIds({
+            userId: req.user.id,
+            transaction: t
+        });
+
         const transaction = await Transaction.findOne({
-            where: { id, user_id: req.user.id },
+            where: {
+                id,
+                wallet_id: { [Op.in]: walletIds }
+            },
             transaction: t
         });
 
@@ -203,17 +223,42 @@ exports.deleteTransaction = async (req, res) => {
             return sendError(res, 'Giao dich khong ton tai hoac ban khong co quyen', 404);
         }
 
-        const wallet = await Wallet.findByPk(transaction.wallet_id, { transaction: t });
-        if (wallet) {
-            if (transaction.type === 'INCOME') {
-                wallet.balance = parseFloat(wallet.balance) - parseFloat(transaction.amount);
-            } else {
-                wallet.balance = parseFloat(wallet.balance) + parseFloat(transaction.amount);
+        const transactionsToDelete = transaction.transfer_group_id
+            ? await Transaction.findAll({
+                where: {
+                    transfer_group_id: transaction.transfer_group_id,
+                    wallet_id: { [Op.in]: walletIds }
+                },
+                transaction: t
+            })
+            : [transaction];
+
+        if (transaction.transfer_group_id && transactionsToDelete.length !== 2) {
+            await t.rollback();
+            return sendError(res, 'Khong the xoa transfer do cap giao dich khong day du', 409);
+        }
+
+        const walletIdsToUpdate = [...new Set(transactionsToDelete.map((item) => item.wallet_id))];
+        const wallets = await Wallet.findAll({
+            where: { id: { [Op.in]: walletIdsToUpdate } },
+            transaction: t
+        });
+        const walletMap = new Map(wallets.map((wallet) => [wallet.id, wallet]));
+
+        for (const item of transactionsToDelete) {
+            const wallet = walletMap.get(item.wallet_id);
+            if (!wallet) {
+                continue;
             }
+
+            rollbackWalletForDeletedTransaction(wallet, item);
+            await item.destroy({ transaction: t });
+        }
+
+        for (const wallet of walletMap.values()) {
             await wallet.save({ transaction: t });
         }
 
-        await transaction.destroy({ transaction: t });
         await t.commit();
 
         success(res, null, 'Xoa giao dich thanh cong');
@@ -231,6 +276,7 @@ exports.createTransfer = async (req, res) => {
     const t = await sequelize.transaction();
     try {
         const parsedAmount = parseFloat(amount);
+        const transferGroupId = randomUUID();
         const { wallets } = await getAccessibleWallets({
             userId: req.user.id,
             transaction: t
@@ -253,6 +299,11 @@ exports.createTransfer = async (req, res) => {
             return sendError(res, 'Vi dich khong ton tai hoac ban khong co quyen truy cap', 404);
         }
 
+        if (from_wallet_id === to_wallet_id) {
+            await t.rollback();
+            return sendError(res, 'Vi dich phai khac vi nguon', 400);
+        }
+
         if (parsedAmount <= 0) {
             await t.rollback();
             return sendError(res, 'So tien chuyen phai lon hon 0', 400);
@@ -267,31 +318,36 @@ exports.createTransfer = async (req, res) => {
         await fromWallet.save({ transaction: t });
         await toWallet.save({ transaction: t });
 
-        await Transaction.create({
+        const transferOut = await Transaction.create({
             user_id: req.user.id,
             amount: parsedAmount,
             date: date || new Date(),
             description: description || `Chuyen tien toi vi ${toWallet.name}`,
             type: 'TRANSFER_OUT',
             wallet_id: from_wallet_id,
-            family_id: fromWallet.family_id || null
+            family_id: fromWallet.family_id || null,
+            transfer_group_id: transferGroupId
         }, { transaction: t });
 
-        await Transaction.create({
+        const transferIn = await Transaction.create({
             user_id: req.user.id,
             amount: parsedAmount,
             date: date || new Date(),
             description: description || `Nhan tien tu vi ${fromWallet.name}`,
             type: 'TRANSFER_IN',
             wallet_id: to_wallet_id,
-            family_id: toWallet.family_id || null
+            family_id: toWallet.family_id || null,
+            transfer_group_id: transferGroupId
         }, { transaction: t });
 
         await t.commit();
         success(res, {
+            transfer_group_id: transferGroupId,
+            transfer_out_id: transferOut.id,
+            transfer_in_id: transferIn.id,
             from_wallet_balance: fromWallet.balance,
             to_wallet_balance: toWallet.balance
-        }, 'Chuyen tien thanh cong');
+        }, 'Chuyen tien thanh cong', 201);
     } catch (err) {
         await t.rollback();
         console.error('createTransfer error:', err);

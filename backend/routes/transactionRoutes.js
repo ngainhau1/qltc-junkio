@@ -189,6 +189,31 @@ router.post('/', authMiddleware, validateTransactionCreate, transactionControlle
  *     responses:
  *       201:
  *         description: Chuyen tien thanh cong
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     transfer_group_id:
+ *                       type: string
+ *                       format: uuid
+ *                     transfer_out_id:
+ *                       type: string
+ *                       format: uuid
+ *                     transfer_in_id:
+ *                       type: string
+ *                       format: uuid
+ *                     from_wallet_balance:
+ *                       type: number
+ *                     to_wallet_balance:
+ *                       type: number
  *       400:
  *         description: Chua co vi hop le hoac so du khong du
  */
@@ -348,6 +373,17 @@ router.get('/:id', authMiddleware, validateTransactionParams, transactionControl
  *     responses:
  *       200:
  *         description: Xoa giao dich thanh cong
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   nullable: true
  *       404:
  *         description: Khong tim thay giao dich trong scope truy cap
  */

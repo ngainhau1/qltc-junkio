@@ -212,7 +212,7 @@ async function main() {
         id: uuidv4(), name: 'Tran Thi Staff', email: STAFF_EMAIL,
         password_hash: staffPwHash, role: 'staff', is_locked: false
     });
-    const staffWallet = await Wallet.create({
+    await Wallet.create({
         id: uuidv4(), name: 'Ví Staff', balance: 3500000,
         currency: 'VND', user_id: staffUser.id, family_id: null
     });

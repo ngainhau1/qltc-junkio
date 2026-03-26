@@ -48,7 +48,7 @@ app.use(express.json());
 app.use('/api/notifications', notificationRoutes);
 
 describe('Notification API Endpoints', () => {
-    let regularUserId, adminUserId, notificationId1, notificationId2;
+    let regularUserId, adminUserId;
 
     beforeAll(async () => {
         await mockSequelize.sync({ force: true });
@@ -60,21 +60,19 @@ describe('Notification API Endpoints', () => {
         await mockUser.create({ id: regularUserId, name: 'Regular User' });
         await mockUser.create({ id: adminUserId, name: 'Admin User' });
 
-        const n1 = await mockNotification.create({
+        await mockNotification.create({
             user_id: regularUserId,
             title: 'Test Notif 1',
             message: 'Message 1',
             isRead: false
         });
-        notificationId1 = n1.id;
 
-        const n2 = await mockNotification.create({
+        await mockNotification.create({
             user_id: regularUserId,
             title: 'Test Notif 2',
             message: 'Message 2',
             isRead: true
         });
-        notificationId2 = n2.id;
     });
 
     afterAll(async () => {

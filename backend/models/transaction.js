@@ -27,7 +27,8 @@ module.exports = (sequelize, DataTypes) => {
         wallet_id: DataTypes.UUID,
         category_id: DataTypes.UUID,
         user_id: DataTypes.UUID,
-        family_id: DataTypes.UUID
+        family_id: DataTypes.UUID,
+        transfer_group_id: DataTypes.UUID
     }, {
         sequelize,
         modelName: 'Transaction',

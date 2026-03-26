@@ -16,6 +16,8 @@ const serializeNotification = (notification) => {
         title,
         message: raw.message,
         type: raw.type || 'SYSTEM_NOTIFICATION',
+        reference_id: raw.reference_id || null,
+        user_id: raw.user_id || null,
         created_at: createdAt,
         createdAt,
         is_read: isRead,

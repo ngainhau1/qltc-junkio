@@ -1,5 +1,5 @@
 const { Category } = require('../models');
-const { success, error, notFound, serverError, created } = require('../utils/responseHelper');
+const { success, notFound, serverError, created } = require('../utils/responseHelper');
 
 // GET /api/categories
 exports.getCategories = async (req, res) => {
