@@ -26,6 +26,14 @@ vi.mock('../../ui/tabs', () => ({
     TabsContent: () => null,
 }))
 
+vi.mock('@/features/categories/categorySlice', async (importOriginal) => {
+    const actual = await importOriginal()
+    return {
+        ...actual,
+        fetchCategories: vi.fn(() => ({ type: 'categories/fetchAll/mock' })),
+    }
+})
+
 // Mock ResizeObserver for Radix UI (still good to have)
 beforeAll(() => {
     global.ResizeObserver = class ResizeObserver {
