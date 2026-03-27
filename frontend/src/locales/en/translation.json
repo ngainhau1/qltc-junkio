@@ -75,7 +75,15 @@
         "newPassword": "New password",
         "resetPasswordBtn": "Save password and Login",
         "loginFailed": "Login failed. Please try again.",
-        "registerFailed": "Registration failed. The email may already exist."
+        "registerFailed": "Registration failed. The email may already exist.",
+        "errors": {
+            "invalidCredentials": "Email or password is incorrect.",
+            "accountLocked": "Your account has been locked. Please contact the administrator.",
+            "fillAllFields": "Please fill in all required fields.",
+            "emailInUse": "This email is already in use.",
+            "sessionExpired": "Your session has expired. Please log in again.",
+            "userNotFound": "User not found."
+        }
     },
     "nav": {
         "dashboard": "Dashboard",
@@ -637,7 +645,8 @@
         "editBtn": "Edit profile",
         "onlyImageAllowed": "Only image files are allowed.",
         "uploadFailed": "Unable to upload the image or save the profile.",
-        "uploadSuccess": "Avatar uploaded successfully."
+        "uploadSuccess": "Avatar uploaded successfully.",
+        "saveFailed": "Failed to save profile."
     },
     "sharedExpense": {
         "addBtn": "Add Shared Expense",
@@ -756,5 +765,92 @@
         "titleTracker": "JUNKIO EXPENSE TRACKER",
         "titleDefault": "JUNKIO REPORT",
         "exportDate": "Export Date:"
+    },
+    "errors": {
+        "uploadFailed": "Failed to upload image.",
+        "profileUpdateFailed": "Failed to update profile.",
+        "wallets": {
+            "loadFailed": "Failed to load wallets.",
+            "createFailed": "Failed to create wallet.",
+            "updateFailed": "Failed to update wallet.",
+            "deleteFailed": "Failed to delete wallet.",
+            "notFound": "Wallet not found or you don't have access.",
+            "nameExists": "Wallet name already exists.",
+            "hasTransactions": "Cannot delete wallet with existing transactions.",
+            "familyForbidden": "You don't have access to this family wallet.",
+            "required": "Please create at least one wallet first.",
+            "personalOnly": "Can only operate on personal wallets.",
+            "idRequired": "Wallet ID is required."
+        },
+        "transactions": {
+            "notFound": "Transaction not found.",
+            "loadFailed": "Failed to load transactions.",
+            "createFailed": "Failed to create transaction.",
+            "deleteFailed": "Failed to delete transaction.",
+            "incompletePair": "Cannot delete transfer due to incomplete transaction pair.",
+            "sameWallet": "Destination wallet must be different from source wallet.",
+            "transferFailed": "Transfer transaction failed.",
+            "invalidAmount": "Amount must be greater than 0.",
+            "insufficientBalance": "Insufficient wallet balance.",
+            "invalidList": "Invalid transaction list.",
+            "importFailed": "Failed to import data.",
+            "exportUnsupported": "Export format not supported.",
+            "exportFailed": "Failed to export data."
+        },
+        "goals": {
+            "loadFailed": "Failed to load goals.",
+            "createFailed": "Failed to create goal.",
+            "updateFailed": "Failed to update goal.",
+            "deleteFailed": "Failed to delete goal.",
+            "notFound": "Goal not found.",
+            "depositFailed": "Failed to deposit."
+        },
+        "budgets": {
+            "loadFailed": "Failed to load budgets.",
+            "createFailed": "Failed to create budget.",
+            "updateFailed": "Failed to update budget.",
+            "deleteFailed": "Failed to delete budget.",
+            "notFound": "Budget not found."
+        },
+        "families": {
+            "forbidden": "You don't have access.",
+            "loadFailed": "Failed to load families.",
+            "createFailed": "Failed to create family.",
+            "detailFailed": "Failed to load family details.",
+            "inviteFailed": "Failed to invite member.",
+            "removeFailed": "Failed to remove member."
+        },
+        "recurring": {
+            "loadFailed": "Failed to load recurring transactions.",
+            "createFailed": "Failed to create recurring transaction.",
+            "updateFailed": "Failed to update recurring transaction.",
+            "deleteFailed": "Failed to delete recurring transaction."
+        },
+        "notifications": {
+            "loadFailed": "Failed to load notifications.",
+            "updateFailed": "Failed to update notification."
+        },
+        "categories": {
+            "loadFailed": "Failed to load categories."
+        },
+        "analytics": {
+            "overviewFailed": "Failed to load overview.",
+            "reportFailed": "Failed to load report."
+        },
+        "admin": {
+            "dashboardFailed": "Failed to load admin dashboard.",
+            "analyticsFailed": "Failed to load admin analytics.",
+            "usersFailed": "Failed to load user list.",
+            "userDetailFailed": "Failed to load user details.",
+            "deleteFailed": "Failed to delete user.",
+            "toggleLockFailed": "Failed to toggle lock status.",
+            "roleChangeFailed": "Failed to change role.",
+            "logsFailed": "Failed to load logs.",
+            "financialFailed": "Failed to load financial overview.",
+            "invalidRole": "Invalid role.",
+            "cannotDeleteSelf": "Cannot delete yourself.",
+            "cannotLockSelf": "Cannot lock yourself.",
+            "cannotChangeOwnRole": "Cannot change your own role."
+        }
     }
 }

@@ -1,4 +1,4 @@
-﻿const { User, Transaction, Wallet, Family, Goal, Budget, Category, sequelize } = require('../models');
+const { User, Transaction, Wallet, Family, Goal, Budget, Category, sequelize } = require('../models');
 const { Op, fn, col } = require('sequelize');
 const { success, error: sendError } = require('../utils/responseHelper');
 
@@ -53,10 +53,10 @@ exports.getDashboard = async (req, res) => {
             recentUsers,
             analytics: analyticsResponse.payload?.data || {},
             financialOverview: financialResponse.payload?.data || {}
-        }, 'Thanh cong');
+        }, 'ADMIN_DASHBOARD_LOADED');
     } catch (err) {
         console.error('Admin dashboard error:', err);
-        sendError(res, 'Khong the tai dashboard admin', 500);
+        sendError(res, 'ADMIN_DASHBOARD_FAILED', 500);
     }
 };
 
@@ -131,7 +131,7 @@ exports.getAnalytics = async (req, res) => {
             })),
             topCategories: topCategories.map((item) => ({
                 ...item,
-                name: item.name || 'Chua phan loai',
+                name: item.name || 'Uncategorized',
                 icon: item.icon || 'HelpCircle',
                 total: parseFloat(item.total)
             })),
@@ -139,10 +139,10 @@ exports.getAnalytics = async (req, res) => {
                 date: new Date(item.date).toLocaleDateString('vi-VN', { weekday: 'short' }),
                 count: parseInt(item.count, 10)
             }))
-        }, 'Thanh cong');
+        }, 'ADMIN_ANALYTICS_LOADED');
     } catch (err) {
         console.error('Admin analytics error:', err);
-        sendError(res, 'Khong the tai analytics admin', 500);
+        sendError(res, 'ADMIN_ANALYTICS_FAILED', 500);
     }
 };
 
@@ -172,10 +172,10 @@ exports.listUsers = async (req, res) => {
             total: count,
             page: pageNumber,
             totalPages: Math.ceil(count / perPage)
-        }, 'Thanh cong');
+        }, 'ADMIN_USERS_LOADED');
     } catch (err) {
         console.error('Admin listUsers error:', err);
-        sendError(res, 'Khong the tai danh sach user', 500);
+        sendError(res, 'ADMIN_USERS_FAILED', 500);
     }
 };
 
@@ -190,28 +190,28 @@ exports.getUserDetail = async (req, res) => {
         });
 
         if (!user) {
-            return sendError(res, 'User khong ton tai', 404);
+            return sendError(res, 'USER_NOT_FOUND', 404);
         }
 
         const transactionCount = await Transaction.count({ where: { user_id: user.id } });
-        success(res, { ...user.toJSON(), transactionCount }, 'Thanh cong');
+        success(res, { ...user.toJSON(), transactionCount }, 'ADMIN_USER_DETAIL_LOADED');
     } catch (err) {
         console.error('Admin getUserDetail error:', err);
-        sendError(res, 'Khong the tai chi tiet user', 500);
+        sendError(res, 'ADMIN_USER_DETAIL_FAILED', 500);
     }
 };
 
 exports.deleteUser = async (req, res) => {
     try {
         const user = await User.findByPk(req.params.id);
-        if (!user) return sendError(res, 'User khong ton tai', 404);
-        if (user.id === req.user.id) return sendError(res, 'Khong duoc xoa chinh minh', 400);
+        if (!user) return sendError(res, 'USER_NOT_FOUND', 404);
+        if (user.id === req.user.id) return sendError(res, 'CANNOT_DELETE_SELF', 400);
 
         await user.destroy();
-        success(res, null, 'Xoa nguoi dung thanh cong');
+        success(res, null, 'USER_DELETED');
     } catch (err) {
         console.error('Admin deleteUser error:', err);
-        sendError(res, 'Khong the xoa user', 500);
+        sendError(res, 'USER_DELETE_FAILED', 500);
     }
 };
 
@@ -220,15 +220,15 @@ exports.toggleLock = async (req, res) => {
         const user = await User.findByPk(req.params.id, {
             attributes: { exclude: ['password_hash'] }
         });
-        if (!user) return sendError(res, 'User khong ton tai', 404);
-        if (user.id === req.user.id) return sendError(res, 'Khong duoc khoa chinh minh', 400);
+        if (!user) return sendError(res, 'USER_NOT_FOUND', 404);
+        if (user.id === req.user.id) return sendError(res, 'CANNOT_LOCK_SELF', 400);
 
         user.is_locked = !user.is_locked;
         await user.save();
-        success(res, { user }, user.is_locked ? 'Khoa tai khoan thanh cong' : 'Mo khoa tai khoan thanh cong');
+        success(res, { user }, user.is_locked ? 'USER_LOCKED' : 'USER_UNLOCKED');
     } catch (err) {
         console.error('Admin toggleLock error:', err);
-        sendError(res, 'Khong the thay doi trang thai khoa', 500);
+        sendError(res, 'TOGGLE_LOCK_FAILED', 500);
     }
 };
 
@@ -236,21 +236,21 @@ exports.changeRole = async (req, res) => {
     try {
         const { role } = req.body;
         if (!['member', 'staff', 'admin'].includes(role)) {
-            return sendError(res, 'Role khong hop le', 400);
+            return sendError(res, 'INVALID_ROLE', 400);
         }
 
         const user = await User.findByPk(req.params.id, {
             attributes: { exclude: ['password_hash'] }
         });
-        if (!user) return sendError(res, 'User khong ton tai', 404);
-        if (user.id === req.user.id) return sendError(res, 'Khong duoc doi role cua chinh minh', 400);
+        if (!user) return sendError(res, 'USER_NOT_FOUND', 404);
+        if (user.id === req.user.id) return sendError(res, 'CANNOT_CHANGE_OWN_ROLE', 400);
 
         user.role = role;
         await user.save();
-        success(res, { user }, `Da doi role thanh ${role}`);
+        success(res, { user }, 'ROLE_CHANGED');
     } catch (err) {
         console.error('Admin changeRole error:', err);
-        sendError(res, 'Khong the doi role user', 500);
+        sendError(res, 'ROLE_CHANGE_FAILED', 500);
     }
 };
 
@@ -276,10 +276,10 @@ exports.getLogs = async (req, res) => {
             total: count,
             page: pageNumber,
             totalPages: Math.ceil(count / perPage)
-        }, 'Thanh cong');
+        }, 'ADMIN_LOGS_LOADED');
     } catch (err) {
         console.error('Admin getLogs error:', err);
-        sendError(res, 'Khong the tai audit logs', 500);
+        sendError(res, 'ADMIN_LOGS_FAILED', 500);
     }
 };
 
@@ -369,9 +369,9 @@ exports.getFinancialOverview = async (req, res) => {
             revenueTrends,
             topSpenders,
             budgetCompliance
-        }, 'Thanh cong');
+        }, 'ADMIN_FINANCIAL_LOADED');
     } catch (err) {
         console.error('Admin getFinancialOverview error:', err);
-        sendError(res, 'Khong the tai tong quan tai chinh', 500);
+        sendError(res, 'ADMIN_FINANCIAL_FAILED', 500);
     }
 };

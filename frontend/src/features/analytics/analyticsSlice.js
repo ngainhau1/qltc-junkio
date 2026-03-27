@@ -58,7 +58,7 @@ export const fetchDashboardAnalytics = createAsyncThunk(
             });
             return response.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Loi tai tong quan');
+            return rejectWithValue(error.response?.data?.message || 'ANALYTICS_OVERVIEW_FAILED');
         }
     }
 );
@@ -82,7 +82,7 @@ export const fetchReportAnalytics = createAsyncThunk(
                 filters,
             };
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Loi tai bao cao');
+            return rejectWithValue(error.response?.data?.message || 'ANALYTICS_REPORT_FAILED');
         }
     }
 );

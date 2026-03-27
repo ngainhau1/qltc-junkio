@@ -1,4 +1,4 @@
-﻿const { Op } = require('sequelize');
+const { Op } = require('sequelize');
 const { Budget, Category, FamilyMember } = require('../models');
 const { success, error: sendError, notFound, serverError, created } = require('../utils/responseHelper');
 
@@ -48,7 +48,7 @@ const resolveBudgetScope = async (req, currentBudget = null) => {
         });
 
         if (!membership) {
-            throw Object.assign(new Error('Ban khong thuoc family nay'), { statusCode: 403 });
+            throw Object.assign(new Error('FAMILY_FORBIDDEN'), { statusCode: 403 });
         }
 
         return {
@@ -79,10 +79,10 @@ exports.getBudgets = async (req, res) => {
             order: [['start_date', 'DESC'], ['createdAt', 'DESC']]
         });
 
-        success(res, budgets, 'Lay danh sach ngan sach thanh cong');
+        success(res, budgets, 'BUDGETS_LOADED');
     } catch (err) {
         console.error('Error fetching budgets:', err);
-        serverError(res, 'Khong the tai ngan sach');
+        serverError(res, 'BUDGET_LOAD_FAILED');
     }
 };
 
@@ -100,13 +100,13 @@ exports.createBudget = async (req, res) => {
         });
 
         const createdBudget = await Budget.findByPk(newBudget.id, { include: budgetInclude });
-        created(res, createdBudget, 'Tao ngan sach moi thanh cong');
+        created(res, createdBudget, 'BUDGET_CREATED');
     } catch (err) {
         if (err.statusCode) {
             return sendError(res, err.message, err.statusCode);
         }
         console.error('Error creating budget:', err);
-        serverError(res, 'Khong the tao ngan sach');
+        serverError(res, 'BUDGET_CREATE_FAILED');
     }
 };
 
@@ -116,7 +116,7 @@ exports.updateBudget = async (req, res) => {
         const budget = await findAccessibleBudget(id, req.user.id);
 
         if (!budget) {
-            return notFound(res, 'Ngan sach khong ton tai');
+            return notFound(res, 'BUDGET_NOT_FOUND');
         }
 
         const scope = await resolveBudgetScope(req, budget);
@@ -129,13 +129,13 @@ exports.updateBudget = async (req, res) => {
         });
 
         const updatedBudget = await Budget.findByPk(id, { include: budgetInclude });
-        success(res, updatedBudget, 'Cap nhat ngan sach thanh cong');
+        success(res, updatedBudget, 'BUDGET_UPDATED');
     } catch (err) {
         if (err.statusCode) {
             return sendError(res, err.message, err.statusCode);
         }
         console.error('Error updating budget:', err);
-        serverError(res, 'Khong the cap nhat ngan sach');
+        serverError(res, 'BUDGET_UPDATE_FAILED');
     }
 };
 
@@ -145,13 +145,13 @@ exports.deleteBudget = async (req, res) => {
         const budget = await findAccessibleBudget(id, req.user.id);
 
         if (!budget) {
-            return notFound(res, 'Ngan sach khong ton tai');
+            return notFound(res, 'BUDGET_NOT_FOUND');
         }
 
         await budget.destroy();
-        success(res, null, 'Da xoa ngan sach thanh cong');
+        success(res, null, 'BUDGET_DELETED');
     } catch (err) {
         console.error('Error deleting budget:', err);
-        serverError(res, 'Khong the xoa ngan sach');
+        serverError(res, 'BUDGET_DELETE_FAILED');
     }
 };

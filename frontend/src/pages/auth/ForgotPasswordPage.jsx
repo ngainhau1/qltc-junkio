@@ -7,6 +7,7 @@ import { toast } from "sonner"
 import { Loader2, Mail, ArrowLeft } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import api from "@/lib/api"
+import { resolveAuthError } from "@/utils/authErrors"
 
 export function ForgotPasswordPage() {
     const { t } = useTranslation()
@@ -22,9 +23,10 @@ export function ForgotPasswordPage() {
         setIsLoading(true)
         try {
             await api.post('/auth/forgot-password', { email })
-            toast.success(t('auth.forgotPasswordSuccess', 'Thư khôi phục mật khẩu đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư.'))
+            toast.success(t('auth.forgotPasswordSuccess'))
         } catch (error) {
-            toast.error(error.response?.data?.msg || t('auth.forgotPasswordFailed', 'Gửi thư thất bại, vui lòng thử lại sau.'))
+            const errorCode = error.response?.data?.message
+            toast.error(resolveAuthError(errorCode, t, 'auth.forgotPasswordFailed'))
         } finally {
             setIsLoading(false)
         }

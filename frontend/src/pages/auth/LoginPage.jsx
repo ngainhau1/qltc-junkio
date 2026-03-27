@@ -12,6 +12,7 @@ import { FcGoogle } from "react-icons/fc"
 import { FaFacebook } from "react-icons/fa"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
+import { resolveAuthError } from "@/utils/authErrors"
 
 export function LoginPage() {
     const { t } = useTranslation();
@@ -36,13 +37,11 @@ export function LoginPage() {
         onSubmit: async (values) => {
             setIsLoading(true);
             try {
-                // Submit credentials to the real backend
                 await dispatch(loginUser({ email: values.email, password: values.password })).unwrap();
                 toast.success(t('auth.loginSuccess'));
                 navigate("/");
             } catch (error) {
-                // Error structure comes from rejectWithValue in thunk
-                toast.error(error || t('auth.loginFailed', 'Đăng nhập không thành công, vui lòng thử lại'));
+                toast.error(resolveAuthError(error, t, 'auth.loginFailed'));
             } finally {
                 setIsLoading(false);
             }

@@ -123,7 +123,7 @@ export function Family() {
             setCreateModalOpen(false);
             toast.success(t('family.modals.create.success'));
         } catch (error) {
-            console.error("Lỗi tạo gia đình:", error);
+            console.error('Create family error:', error);
             toast.error(error);
         }
     }
@@ -151,7 +151,7 @@ export function Family() {
             // Recalculate settlements automatically so UI feels alive
             setTimeout(() => runSimplification(), 300);
         } catch (error) {
-            console.error("Lỗi duyệt công nợ:", error);
+            console.error('Debt approval error:', error);
             toast.error(error);
         }
     }
@@ -196,7 +196,7 @@ export function Family() {
             dispatch(fetchTransactions());
             setSettleModalOpen(false);
         } catch (error) {
-            console.error("Lỗi khi thanh toán bù trừ:", error);
+            console.error('Settlement error:', error);
             toast.error(error);
         }
     }

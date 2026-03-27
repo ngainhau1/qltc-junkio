@@ -75,7 +75,15 @@
         "newPassword": "Mật khẩu mới",
         "resetPasswordBtn": "Lưu mật khẩu và Đăng nhập",
         "loginFailed": "Đăng nhập không thành công, vui lòng thử lại.",
-        "registerFailed": "Đăng ký không thành công, email có thể đã tồn tại."
+        "registerFailed": "Đăng ký không thành công, email có thể đã tồn tại.",
+        "errors": {
+            "invalidCredentials": "Email hoặc mật khẩu không đúng.",
+            "accountLocked": "Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên.",
+            "fillAllFields": "Vui lòng điền đầy đủ thông tin.",
+            "emailInUse": "Email này đã được sử dụng.",
+            "sessionExpired": "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
+            "userNotFound": "Người dùng không tồn tại."
+        }
     },
     "nav": {
         "dashboard": "Tổng Quan",
@@ -637,7 +645,8 @@
         "editBtn": "Chỉnh sửa hồ sơ",
         "onlyImageAllowed": "Chỉ chấp nhận file hình ảnh.",
         "uploadFailed": "Không thể tải ảnh hoặc lưu hồ sơ.",
-        "uploadSuccess": "Tải ảnh lên thành công."
+        "uploadSuccess": "Tải ảnh lên thành công.",
+        "saveFailed": "Lỗi khi lưu hồ sơ."
     },
     "sharedExpense": {
         "addBtn": "Thêm Chi Tiêu Chung",
@@ -756,5 +765,92 @@
         "titleTracker": "JUNKIO EXPENSE TRACKER",
         "titleDefault": "BÁO CÁO JUNKIO",
         "exportDate": "Ngày tạo:"
+    },
+    "errors": {
+        "uploadFailed": "Lỗi khi tải ảnh lên.",
+        "profileUpdateFailed": "Lỗi khi cập nhật hồ sơ.",
+        "wallets": {
+            "loadFailed": "Lỗi khi tải danh sách ví.",
+            "createFailed": "Lỗi khi tạo ví.",
+            "updateFailed": "Lỗi khi cập nhật ví.",
+            "deleteFailed": "Lỗi khi xóa ví.",
+            "notFound": "Ví không tồn tại hoặc bạn không có quyền truy cập.",
+            "nameExists": "Tên ví đã tồn tại.",
+            "hasTransactions": "Không thể xóa ví đang có giao dịch.",
+            "familyForbidden": "Bạn không có quyền truy cập ví gia đình này.",
+            "required": "Vui lòng tạo ít nhất 1 ví trước.",
+            "personalOnly": "Chỉ có thể thao tác với ví cá nhân.",
+            "idRequired": "Thiếu ID ví."
+        },
+        "transactions": {
+            "notFound": "Giao dịch không tồn tại.",
+            "loadFailed": "Lỗi khi tải danh sách giao dịch.",
+            "createFailed": "Lỗi khi tạo giao dịch.",
+            "deleteFailed": "Lỗi khi xóa giao dịch.",
+            "incompletePair": "Không thể xóa chuyển khoản do cặp giao dịch không đầy đủ.",
+            "sameWallet": "Ví đích phải khác ví nguồn.",
+            "transferFailed": "Lỗi giao dịch chuyển tiền.",
+            "invalidAmount": "Số tiền phải lớn hơn 0.",
+            "insufficientBalance": "Số dư ví không đủ.",
+            "invalidList": "Danh sách giao dịch không hợp lệ.",
+            "importFailed": "Lỗi khi nhập dữ liệu.",
+            "exportUnsupported": "Định dạng xuất không được hỗ trợ.",
+            "exportFailed": "Lỗi xuất dữ liệu."
+        },
+        "goals": {
+            "loadFailed": "Lỗi khi tải mục tiêu.",
+            "createFailed": "Lỗi khi tạo mục tiêu.",
+            "updateFailed": "Lỗi khi cập nhật mục tiêu.",
+            "deleteFailed": "Lỗi khi xóa mục tiêu.",
+            "notFound": "Mục tiêu không tồn tại.",
+            "depositFailed": "Lỗi khi nạp tiền."
+        },
+        "budgets": {
+            "loadFailed": "Lỗi khi tải ngân sách.",
+            "createFailed": "Lỗi khi tạo ngân sách.",
+            "updateFailed": "Lỗi khi cập nhật ngân sách.",
+            "deleteFailed": "Lỗi khi xóa ngân sách.",
+            "notFound": "Ngân sách không tồn tại."
+        },
+        "families": {
+            "forbidden": "Bạn không có quyền truy cập.",
+            "loadFailed": "Lỗi khi tải danh sách gia đình.",
+            "createFailed": "Lỗi khi tạo gia đình.",
+            "detailFailed": "Lỗi khi tải chi tiết gia đình.",
+            "inviteFailed": "Lỗi khi mời thành viên.",
+            "removeFailed": "Lỗi khi xóa thành viên."
+        },
+        "recurring": {
+            "loadFailed": "Lỗi khi tải giao dịch định kỳ.",
+            "createFailed": "Lỗi khi tạo giao dịch định kỳ.",
+            "updateFailed": "Lỗi khi cập nhật giao dịch định kỳ.",
+            "deleteFailed": "Lỗi khi xóa giao dịch định kỳ."
+        },
+        "notifications": {
+            "loadFailed": "Lỗi khi tải thông báo.",
+            "updateFailed": "Lỗi khi cập nhật thông báo."
+        },
+        "categories": {
+            "loadFailed": "Lỗi khi tải danh mục."
+        },
+        "analytics": {
+            "overviewFailed": "Lỗi khi tải tổng quan.",
+            "reportFailed": "Lỗi khi tải báo cáo."
+        },
+        "admin": {
+            "dashboardFailed": "Lỗi khi tải dashboard admin.",
+            "analyticsFailed": "Lỗi khi tải analytics admin.",
+            "usersFailed": "Lỗi khi tải danh sách người dùng.",
+            "userDetailFailed": "Lỗi khi tải chi tiết người dùng.",
+            "deleteFailed": "Lỗi khi xóa người dùng.",
+            "toggleLockFailed": "Lỗi khi thay đổi trạng thái khóa.",
+            "roleChangeFailed": "Lỗi khi đổi vai trò.",
+            "logsFailed": "Lỗi khi tải nhật ký.",
+            "financialFailed": "Lỗi khi tải tổng quan tài chính.",
+            "invalidRole": "Vai trò không hợp lệ.",
+            "cannotDeleteSelf": "Không được xóa chính mình.",
+            "cannotLockSelf": "Không được khóa chính mình.",
+            "cannotChangeOwnRole": "Không được đổi vai trò của chính mình."
+        }
     }
 }

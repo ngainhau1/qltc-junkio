@@ -57,7 +57,7 @@ export function Profile() {
 
             toast.success(t('profile.successMsg'));
         } catch (error) {
-            toast.error(error || t('profile.uploadFailed', 'Lỗi khi lưu hồ sơ.'));
+            toast.error(error || t('profile.saveFailed'));
         }
     };
 
@@ -67,7 +67,7 @@ export function Profile() {
 
         // Chỉ cho phép ảnh
         if (!file.type.startsWith('image/')) {
-            toast.error(t('profile.onlyImageAllowed', 'Chỉ chấp nhận file hình ảnh!'));
+            toast.error(t('profile.onlyImageAllowed'));
             return;
         }
 
@@ -81,9 +81,9 @@ export function Profile() {
                 ...prev,
                 avatarUrl: result.avatarUrl
             }));
-            toast.success(result.msg || t('profile.uploadSuccess', 'Tải ảnh lên thành công.'));
+            toast.success(result.msg || t('profile.uploadSuccess'));
         } catch (error) {
-            toast.error(error || t('profile.uploadFailed', 'Lỗi khi tải ảnh lên.'));
+            toast.error(error || t('profile.uploadFailed'));
         } finally {
             setIsUploading(false);
             if (fileInputRef.current) fileInputRef.current.value = '';
@@ -143,7 +143,7 @@ export function Profile() {
                                     onClick={() => fileInputRef.current?.click()}
                                     disabled={isUploading}
                                 >
-                                    {isUploading ? t('common.loading', 'Đang xử lý...') : t('profile.avatarUpload', 'Tải ảnh lên')}
+                                    {isUploading ? t('common.loading') : t('profile.avatarUpload')}
                                 </Button>
                             </div>
                         </CardContent>

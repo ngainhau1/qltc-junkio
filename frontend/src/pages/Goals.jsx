@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { DepositModal } from '@/components/features/goals/DepositModal';
 import { CreateGoalModal } from '@/components/features/goals/CreateGoalModal';
 import { EmptyState } from '@/components/ui/empty-state';
+import { PageHeader } from '@/components/layout/PageHeader';
 
 // Icon Map for dynamic rendering
 const iconMap = {
@@ -42,48 +43,43 @@ export function Goals() {
     };
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500">
+        <div className="space-y-4 animate-in fade-in duration-500 sm:space-y-6">
             {/* Header Area */}
-            <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 p-6 rounded-3xl border border-primary/20">
-                <div className="flex items-center gap-4">
-                    <div className="h-16 w-16 bg-primary/20 text-primary rounded-2xl flex items-center justify-center shadow-inner">
-                        <Target className="h-8 w-8" />
-                    </div>
-                    <div>
-                        <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">{t('goals.title')}</h1>
-                        <p className="text-muted-foreground mt-1">{t('goals.desc')}</p>
-                    </div>
-                </div>
-                <Button
-                    className="w-full sm:w-auto gap-2 shadow-lg hover:shadow-xl transition-all h-11"
-                    size="lg"
-                    onClick={() => setIsCreateModalOpen(true)}
-                >
-                    <Plus className="h-5 w-5" /> {t('goals.btnCreate')}
-                </Button>
-            </header>
+            <PageHeader
+                title={t('goals.title')}
+                description={t('goals.desc')}
+                actions={
+                    <Button
+                        className="w-full gap-2 shadow-lg hover:shadow-xl transition-all h-11 md:w-auto"
+                        size="lg"
+                        onClick={() => setIsCreateModalOpen(true)}
+                    >
+                        <Plus className="h-5 w-5" /> {t('goals.btnCreate')}
+                    </Button>
+                }
+            />
 
             {/* Overview Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <Card className="bg-card/50 backdrop-blur border-border/50">
-                    <CardContent className="p-6 flex items-center justify-between">
-                        <div>
-                            <p className="text-sm font-medium text-muted-foreground">{t('goals.overviewTotal')}</p>
-                            <p className="text-3xl font-bold text-primary mt-1">{formatCurrency(totalSaved)}</p>
+                    <CardContent className="p-3 flex items-center justify-between sm:p-6">
+                        <div className="min-w-0">
+                            <p className="text-xs font-medium text-muted-foreground sm:text-sm">{t('goals.overviewTotal')}</p>
+                            <p className="text-lg font-bold text-primary mt-1 truncate sm:text-3xl">{formatCurrency(totalSaved)}</p>
                         </div>
-                        <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center text-primary">
-                            <TrendingUp className="h-6 w-6" />
+                        <div className="h-10 w-10 shrink-0 bg-primary/10 rounded-full flex items-center justify-center text-primary sm:h-12 sm:w-12">
+                            <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6" />
                         </div>
                     </CardContent>
                 </Card>
                 <Card className="bg-card/50 backdrop-blur border-border/50">
-                    <CardContent className="p-6 flex items-center justify-between">
-                        <div>
-                            <p className="text-sm font-medium text-muted-foreground">{t('goals.overviewAchieved')}</p>
-                            <p className="text-3xl font-bold text-emerald-500 mt-1">{achievedGoals.length}</p>
+                    <CardContent className="p-3 flex items-center justify-between sm:p-6">
+                        <div className="min-w-0">
+                            <p className="text-xs font-medium text-muted-foreground sm:text-sm">{t('goals.overviewAchieved')}</p>
+                            <p className="text-lg font-bold text-emerald-500 mt-1 sm:text-3xl">{achievedGoals.length}</p>
                         </div>
-                        <div className="h-12 w-12 bg-emerald-500/10 rounded-full flex items-center justify-center text-emerald-500">
-                            <CheckCircle2 className="h-6 w-6" />
+                        <div className="h-10 w-10 shrink-0 bg-emerald-500/10 rounded-full flex items-center justify-center text-emerald-500 sm:h-12 sm:w-12">
+                            <CheckCircle2 className="h-5 w-5 sm:h-6 sm:w-6" />
                         </div>
                     </CardContent>
                 </Card>
@@ -91,7 +87,7 @@ export function Goals() {
 
             {/* Active Goals Grid */}
             <div>
-                <h2 className="text-xl font-bold mb-6 flex items-center gap-2">{t('goals.activeGoals')} <span className="bg-secondary text-secondary-foreground text-xs px-2 py-1 rounded-full">{activeGoals.length}</span></h2>
+                <h2 className="text-lg font-bold mb-3 flex items-center gap-2 sm:text-xl sm:mb-6">{t('goals.activeGoals')} <span className="bg-secondary text-secondary-foreground text-xs px-2 py-1 rounded-full">{activeGoals.length}</span></h2>
 
                 {activeGoals.length === 0 ? (
                     <EmptyState
@@ -100,7 +96,7 @@ export function Goals() {
                         description={t('goals.emptyDesc')}
                     />
                 ) : (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 sm:gap-6">
                         {activeGoals.map(goal => {
                             const IconComponent = iconMap[goal.imageUrl] || Target;
                             const percentage = Math.min(100, Math.round((goal.currentAmount / goal.targetAmount) * 100));
@@ -112,18 +108,18 @@ export function Goals() {
                                     className="overflow-hidden hover:shadow-md transition-shadow group border-border/60"
                                 >
                                     <CardContent className="p-0">
-                                        <div className="p-6">
-                                            <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                                                <div className="flex min-w-0 items-center gap-4">
+                                        <div className="p-4 sm:p-6">
+                                            <div className="mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+                                                <div className="flex min-w-0 items-center gap-3 sm:gap-4">
                                                     <div
-                                                        className="h-14 w-14 rounded-2xl flex items-center justify-center text-white shadow-sm"
+                                                        className="h-11 w-11 shrink-0 rounded-2xl flex items-center justify-center text-white shadow-sm sm:h-14 sm:w-14"
                                                         style={{ backgroundColor: goal.colorCode }}
                                                     >
-                                                        <IconComponent className="h-7 w-7" />
+                                                        <IconComponent className="h-5 w-5 sm:h-7 sm:w-7" />
                                                     </div>
                                                     <div className="min-w-0">
-                                                        <h3 className="truncate font-bold text-lg group-hover:text-primary transition-colors">{goal.name}</h3>
-                                                        <p className="text-sm text-muted-foreground">{t('goals.deadline')} <span className="font-medium text-foreground">{formatShortDate(goal.deadline)}</span></p>
+                                                        <h3 className="truncate font-bold text-base group-hover:text-primary transition-colors sm:text-lg">{goal.name}</h3>
+                                                        <p className="text-xs text-muted-foreground sm:text-sm">{t('goals.deadline')} <span className="font-medium text-foreground">{formatShortDate(goal.deadline)}</span></p>
                                                     </div>
                                                 </div>
                                                 <div className="text-left sm:text-right">
@@ -135,7 +131,7 @@ export function Goals() {
                                             </div>
 
                                             {/* Progress Bar Area */}
-                                            <div className="space-y-2 mb-6">
+                                            <div className="space-y-2 mb-4 sm:mb-6">
                                                 <div className="flex justify-between text-sm font-medium">
                                                     <span className="text-primary">{formatCurrency(goal.currentAmount)}</span>
                                                     <span className="text-muted-foreground">{formatCurrency(goal.targetAmount)}</span>
@@ -168,16 +164,16 @@ export function Goals() {
 
             {/* Achieved Goals List */}
             {achievedGoals.length > 0 && (
-                <div className="pt-8 opacity-80">
-                    <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-emerald-500">
+                <div className="pt-4 opacity-80 sm:pt-8">
+                    <h2 className="text-base font-bold mb-3 flex items-center gap-2 text-emerald-500 sm:text-lg sm:mb-4">
                         <CheckCircle2 className="h-5 w-5" /> {t('goals.achievedTitle')}
                     </h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
                         {achievedGoals.map(goal => {
                             const IconComponent = iconMap[goal.imageUrl] || Target;
                             return (
                                 <Card key={goal.id} className="bg-emerald-500/5 border-emerald-500/20">
-                                    <div className="p-4 flex items-center gap-3">
+                                    <div className="p-3 flex items-center gap-3 sm:p-4">
                                         <div className="h-10 w-10 bg-emerald-500 text-white rounded-lg flex items-center justify-center">
                                             <IconComponent className="h-5 w-5" />
                                         </div>

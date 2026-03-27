@@ -12,6 +12,7 @@ import { FcGoogle } from "react-icons/fc"
 import { FaFacebook } from "react-icons/fa"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
+import { resolveAuthError } from "@/utils/authErrors"
 
 export function RegisterPage() {
     const { t } = useTranslation()
@@ -43,7 +44,6 @@ export function RegisterPage() {
         onSubmit: async (values) => {
             setIsLoading(true);
             try {
-                // Call real backend registration
                 await dispatch(registerUser({
                     name: values.name,
                     email: values.email,
@@ -53,7 +53,7 @@ export function RegisterPage() {
                 toast.success(t('auth.registerSuccess'));
                 navigate("/");
             } catch (error) {
-                toast.error(error || t('auth.registerFailed', 'Đăng ký không thành công, email có thể đã tồn tại'));
+                toast.error(resolveAuthError(error, t, 'auth.registerFailed'));
             } finally {
                 setIsLoading(false);
             }

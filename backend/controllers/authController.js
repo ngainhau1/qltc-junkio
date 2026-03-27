@@ -1,4 +1,4 @@
-﻿const bcrypt = require('bcrypt');
+const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { Op } = require('sequelize');
@@ -43,20 +43,20 @@ exports.register = async (req, res) => {
     const { name, email, password } = req.body;
 
     if (!name || !email || !password) {
-        return sendError(res, 'Vui long dien day du thong tin', 400);
+        return sendError(res, 'FILL_ALL_FIELDS', 400);
     }
     if (password.length < 6) {
-        return sendError(res, 'Mat khau phai co it nhat 6 ky tu', 400);
+        return sendError(res, 'PASSWORD_TOO_SHORT', 400);
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-        return sendError(res, 'Email khong hop le', 400);
+        return sendError(res, 'INVALID_EMAIL', 400);
     }
 
     try {
         let user = await User.findOne({ where: { email } });
         if (user) {
-            return sendError(res, 'Email da duoc su dung', 409);
+            return sendError(res, 'EMAIL_IN_USE', 409);
         }
 
         const salt = await bcrypt.genSalt(10);
@@ -84,10 +84,10 @@ exports.register = async (req, res) => {
         const refreshToken = generateRefreshToken(user);
         setRefreshTokenCookie(res, refreshToken);
 
-        success(res, { token: accessToken, user: buildAuthUser(user) }, 'Dang ky thanh cong', 201);
+        success(res, { token: accessToken, user: buildAuthUser(user) }, 'REGISTER_SUCCESS', 201);
     } catch (err) {
         console.error(err.message);
-        sendError(res, 'Khong the dang ky tai khoan luc nay', 500);
+        sendError(res, 'REGISTER_FAILED', 500);
     }
 };
 
@@ -96,26 +96,26 @@ exports.login = async (req, res) => {
     try {
         const user = await User.findOne({ where: { email } });
         if (!user) {
-            return sendError(res, 'Email hoac mat khau khong dung', 400);
+            return sendError(res, 'INVALID_CREDENTIALS', 400);
         }
 
         if (user.is_locked) {
-            return sendError(res, 'Tai khoan da bi khoa', 403);
+            return sendError(res, 'ACCOUNT_LOCKED', 403);
         }
 
         const isMatch = await bcrypt.compare(password, user.password_hash);
         if (!isMatch) {
-            return sendError(res, 'Email hoac mat khau khong dung', 400);
+            return sendError(res, 'INVALID_CREDENTIALS', 400);
         }
 
         const accessToken = generateAccessToken(user);
         const refreshToken = generateRefreshToken(user);
         setRefreshTokenCookie(res, refreshToken);
 
-        success(res, { token: accessToken, user: buildAuthUser(user) }, 'Dang nhap thanh cong');
+        success(res, { token: accessToken, user: buildAuthUser(user) }, 'LOGIN_SUCCESS');
     } catch (err) {
         console.error(err.message);
-        sendError(res, 'Khong the dang nhap luc nay', 500);
+        sendError(res, 'LOGIN_FAILED', 500);
     }
 };
 
@@ -123,7 +123,7 @@ exports.refreshToken = async (req, res) => {
     const refreshToken = req.cookies?.refresh_token;
 
     if (!refreshToken) {
-        return sendError(res, 'Khong tim thay refresh token, vui long dang nhap lai', 401);
+        return sendError(res, 'REFRESH_TOKEN_MISSING', 401);
     }
 
     try {
@@ -133,18 +133,18 @@ exports.refreshToken = async (req, res) => {
         });
 
         if (!user) {
-            return sendError(res, 'Nguoi dung khong ton tai', 401);
+            return sendError(res, 'USER_NOT_FOUND', 401);
         }
 
         if (user.is_locked) {
-            return sendError(res, 'Tai khoan da bi khoa', 403);
+            return sendError(res, 'ACCOUNT_LOCKED', 403);
         }
 
         const newAccessToken = generateAccessToken(user);
-        success(res, { token: newAccessToken, user: buildAuthUser(user) }, 'Lam moi phien dang nhap thanh cong');
+        success(res, { token: newAccessToken, user: buildAuthUser(user) }, 'REFRESH_SUCCESS');
     } catch (err) {
         console.error('Refresh token error:', err.message);
-        sendError(res, 'Refresh token khong hop le hoac da het han', 403);
+        sendError(res, 'REFRESH_TOKEN_INVALID', 403);
     }
 };
 
@@ -155,7 +155,7 @@ exports.logout = async (req, res) => {
         sameSite: 'strict'
     });
 
-    success(res, null, 'Dang xuat thanh cong');
+    success(res, null, 'LOGOUT_SUCCESS');
 };
 
 exports.forgotPassword = async (req, res) => {
@@ -163,7 +163,7 @@ exports.forgotPassword = async (req, res) => {
     try {
         const user = await User.findOne({ where: { email } });
         if (!user) {
-            return sendError(res, 'Nguoi dung khong ton tai', 404);
+            return sendError(res, 'USER_NOT_FOUND', 404);
         }
 
         const resetToken = crypto.randomBytes(20).toString('hex');
@@ -175,15 +175,15 @@ exports.forgotPassword = async (req, res) => {
         const frontendUrl = process.env.VITE_FRONTEND_URL || 'http://localhost:5173';
         const finalResetUrl = `${frontendUrl}/reset-password/${resetToken}`;
 
-        const message = `Ban nhan duoc email nay vi ban (hoac ai do) da yeu cau dat lai mat khau.\n\nVui long truy cap duong dan sau de dat lai mat khau:\n\n${finalResetUrl}\n\nNeu ban khong yeu cau, vui long bo qua email nay. Token co hieu luc trong 10 phut.`;
+        const message = `You received this email because you (or someone else) requested a password reset.\n\nPlease visit the following link to reset your password:\n\n${finalResetUrl}\n\nIf you did not request this, please ignore this email. The token is valid for 10 minutes.`;
 
         await sendEmail({
             email: user.email,
-            subject: 'Yeu cau dat lai mat khau - Junkio Expense Tracker',
+            subject: 'Password Reset Request - Junkio Expense Tracker',
             message
         });
 
-        success(res, null, 'Email khoi phuc mat khau da duoc gui');
+        success(res, null, 'FORGOT_PASSWORD_SENT');
     } catch (err) {
         console.error(err.message);
         const user = await User.findOne({ where: { email } });
@@ -192,7 +192,7 @@ exports.forgotPassword = async (req, res) => {
             user.reset_password_expires = null;
             await user.save();
         }
-        sendError(res, 'Loi gui email', 500);
+        sendError(res, 'EMAIL_SEND_FAILED', 500);
     }
 };
 
@@ -211,7 +211,7 @@ exports.resetPassword = async (req, res) => {
         });
 
         if (!user) {
-            return sendError(res, 'Token khong hop le hoac da het han', 400);
+            return sendError(res, 'TOKEN_INVALID_OR_EXPIRED', 400);
         }
 
         const salt = await bcrypt.genSalt(10);
@@ -221,9 +221,9 @@ exports.resetPassword = async (req, res) => {
 
         await user.save();
 
-        success(res, null, 'Mat khau da duoc dat lai thanh cong');
+        success(res, null, 'RESET_PASSWORD_SUCCESS');
     } catch (err) {
         console.error(err.message);
-        sendError(res, 'Khong the dat lai mat khau luc nay', 500);
+        sendError(res, 'RESET_PASSWORD_FAILED', 500);
     }
 };

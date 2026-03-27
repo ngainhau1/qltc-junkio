@@ -25,7 +25,7 @@ export const fetchFamilies = createAsyncThunk(
             const response = await api.get('/families');
             return Array.isArray(response.data) ? response.data.map(normalizeFamily) : [];
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'L?i t?i danh s?ch gia ??nh');
+            return rejectWithValue(error.response?.data?.message || 'FAMILY_LOAD_FAILED');
         }
     }
 );
@@ -37,7 +37,7 @@ export const createFamily = createAsyncThunk(
             const response = await api.post('/families', familyData);
             return normalizeFamily(response.data);
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'L?i khi t?o gia ??nh');
+            return rejectWithValue(error.response?.data?.message || 'FAMILY_CREATE_FAILED');
         }
     }
 );
@@ -49,7 +49,7 @@ export const loadFamilyDetails = createAsyncThunk(
             const response = await api.get(`/families/${id}`);
             return normalizeFamily(response.data);
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'L?i t?i chi ti?t gia ??nh');
+            return rejectWithValue(error.response?.data?.message || 'FAMILY_DETAIL_FAILED');
         }
     }
 );
@@ -61,7 +61,7 @@ export const inviteMember = createAsyncThunk(
             const response = await api.post(`/families/${familyId}/members`, { email, role });
             return { familyId, member: response.data };
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'L?i m?i th?nh vi?n');
+            return rejectWithValue(error.response?.data?.message || 'FAMILY_INVITE_FAILED');
         }
     }
 );
@@ -73,7 +73,7 @@ export const removeMemberFromFamily = createAsyncThunk(
             await api.delete(`/families/${familyId}/members/${userId}`);
             return { familyId, userId };
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'L?i x?a th?nh vi?n');
+            return rejectWithValue(error.response?.data?.message || 'FAMILY_REMOVE_FAILED');
         }
     }
 );

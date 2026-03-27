@@ -1,4 +1,4 @@
-﻿import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '@/lib/api';
 import { fetchWallets } from '@/features/wallets/walletSlice';
 
@@ -15,7 +15,7 @@ export const fetchGoals = createAsyncThunk(
             const response = await api.get('/goals');
             return response.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Loi tai muc tieu');
+            return rejectWithValue(error.response?.data?.message || 'GOAL_LOAD_FAILED');
         }
     }
 );
@@ -27,7 +27,7 @@ export const createGoal = createAsyncThunk(
             const response = await api.post('/goals', goalData);
             return response.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Loi tao muc tieu');
+            return rejectWithValue(error.response?.data?.message || 'GOAL_CREATE_FAILED');
         }
     }
 );
@@ -39,7 +39,7 @@ export const editGoal = createAsyncThunk(
             const response = await api.put(`/goals/${id}`, data);
             return response.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Loi cap nhat muc tieu');
+            return rejectWithValue(error.response?.data?.message || 'GOAL_UPDATE_FAILED');
         }
     }
 );
@@ -51,7 +51,7 @@ export const removeGoal = createAsyncThunk(
             await api.delete(`/goals/${id}`);
             return id;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Loi xoa muc tieu');
+            return rejectWithValue(error.response?.data?.message || 'GOAL_DELETE_FAILED');
         }
     }
 );
@@ -64,7 +64,7 @@ export const depositAmount = createAsyncThunk(
             dispatch(fetchWallets());
             return response.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Loi nap tien');
+            return rejectWithValue(error.response?.data?.message || 'GOAL_DEPOSIT_FAILED');
         }
     }
 );

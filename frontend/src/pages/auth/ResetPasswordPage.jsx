@@ -7,6 +7,7 @@ import { toast } from "sonner"
 import { Loader2, Lock, Eye, EyeOff, ArrowLeft } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import api from "@/lib/api"
+import { resolveAuthError } from "@/utils/authErrors"
 
 export function ResetPasswordPage() {
     const { t } = useTranslation()
@@ -21,21 +22,22 @@ export function ResetPasswordPage() {
     const handleSubmit = async (e) => {
         e.preventDefault()
         if (password.length < 6) {
-            toast.error(t('auth.passwordLength', 'Mật khẩu phải có ít nhất 6 ký tự.'))
+            toast.error(t('auth.passwordLength'))
             return
         }
         if (password !== confirmPassword) {
-            toast.error(t('auth.passwordMismatch', 'Mật khẩu xác nhận không khớp.'))
+            toast.error(t('auth.passwordMismatch'))
             return
         }
 
         setIsLoading(true)
         try {
             await api.post(`/auth/reset-password/${token}`, { password })
-            toast.success(t('auth.resetPasswordSuccess', 'Đổi mật khẩu thành công! Bạn có thể đăng nhập bằng mật khẩu mới.'))
+            toast.success(t('auth.resetPasswordSuccess'))
             navigate("/login")
         } catch (error) {
-            toast.error(error.response?.data?.msg || t('auth.resetPasswordFailed', 'Đổi mật khẩu thất bại. Mã Token không hợp lệ hoặc đã hết hạn.'))
+            const errorCode = error.response?.data?.message
+            toast.error(resolveAuthError(errorCode, t, 'auth.resetPasswordFailed'))
         } finally {
             setIsLoading(false)
         }

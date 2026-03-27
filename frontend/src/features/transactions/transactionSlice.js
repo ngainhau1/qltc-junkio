@@ -33,7 +33,7 @@ export const fetchTransactions = createAsyncThunk(
             });
             return response.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Loi tai giao dich');
+            return rejectWithValue(error.response?.data?.message || 'TRANSACTIONS_LOAD_FAILED');
         }
     }
 );
@@ -45,7 +45,7 @@ export const fetchTransactionById = createAsyncThunk(
             const response = await api.get(`/transactions/${id}`);
             return response.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Loi tai chi tiet giao dich');
+            return rejectWithValue(error.response?.data?.message || 'TRANSACTION_LOAD_FAILED');
         }
     }
 );
@@ -57,7 +57,7 @@ export const createTransaction = createAsyncThunk(
             const response = await api.post('/transactions', txData);
             return response.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Loi them giao dich');
+            return rejectWithValue(error.response?.data?.message || 'TRANSACTION_CREATE_FAILED');
         }
     }
 );
@@ -69,7 +69,7 @@ export const createTransfer = createAsyncThunk(
             const response = await api.post('/transactions/transfer', transferData);
             return response.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Loi chuyen khoan');
+            return rejectWithValue(error.response?.data?.message || 'TRANSFER_FAILED');
         }
     }
 );
@@ -81,7 +81,7 @@ export const deleteTransaction = createAsyncThunk(
             await api.delete(`/transactions/${id}`);
             return id;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Loi xoa giao dich');
+            return rejectWithValue(error.response?.data?.message || 'TRANSACTION_DELETE_FAILED');
         }
     }
 );
@@ -93,7 +93,7 @@ export const approveDebt = createAsyncThunk(
             const response = await api.put(`/debts/${shareId}/approve`);
             return { shareId, data: response.data };
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Loi duyet no');
+            return rejectWithValue(error.response?.data?.message || 'APPROVE_DEBT_FAILED');
         }
     }
 );
@@ -105,7 +105,7 @@ export const rejectDebt = createAsyncThunk(
             const response = await api.put(`/debts/${shareId}/reject`);
             return { shareId, data: response.data };
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Loi tu choi no');
+            return rejectWithValue(error.response?.data?.message || 'REJECT_DEBT_FAILED');
         }
     }
 );
@@ -117,7 +117,7 @@ export const settleDebts = createAsyncThunk(
             const response = await api.post('/debts/settle', settleData);
             return response.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Loi thanh toan no');
+            return rejectWithValue(error.response?.data?.message || 'SETTLE_DEBT_FAILED');
         }
     }
 );

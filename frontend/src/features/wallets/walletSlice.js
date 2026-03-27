@@ -15,7 +15,7 @@ export const fetchWallets = createAsyncThunk(
             const response = await api.get('/wallets');
             return response.data; // array of wallets
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Lỗi khi tải danh sách ví');
+            return rejectWithValue(error.response?.data?.message || 'WALLET_LOAD_FAILED');
         }
     }
 );
@@ -27,7 +27,7 @@ export const createWallet = createAsyncThunk(
             const response = await api.post('/wallets', walletData);
             return response.data; // new wallet object
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Lỗi khi tạo ví');
+            return rejectWithValue(error.response?.data?.message || 'WALLET_CREATE_FAILED');
         }
     }
 );
@@ -39,7 +39,7 @@ export const editWallet = createAsyncThunk(
             const response = await api.put(`/wallets/${id}`, data);
             return response.data; // updated wallet object
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Lỗi khi cập nhật ví');
+            return rejectWithValue(error.response?.data?.message || 'WALLET_UPDATE_FAILED');
         }
     }
 );
@@ -51,7 +51,7 @@ export const removeWallet = createAsyncThunk(
             await api.delete(`/wallets/${id}`);
             return id;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Lỗi khi xóa ví');
+            return rejectWithValue(error.response?.data?.message || 'WALLET_DELETE_FAILED');
         }
     }
 );

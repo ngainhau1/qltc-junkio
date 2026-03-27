@@ -1,4 +1,4 @@
-﻿const { Wallet, Transaction, FamilyMember } = require('../models');
+const { Wallet, Transaction, FamilyMember } = require('../models');
 const { Op, fn, col, where } = require('sequelize');
 const { success, error, notFound, serverError, created } = require('../utils/responseHelper');
 
@@ -48,10 +48,10 @@ exports.getUserWallets = async (req, res) => {
             order: [['createdAt', 'DESC']]
         });
 
-        success(res, wallets, 'Lay danh sach vi thanh cong');
+        success(res, wallets, 'WALLETS_LOADED');
     } catch (err) {
         console.error('Error fetching wallets:', err);
-        serverError(res, 'Loi Server: Khong the tai vi');
+        serverError(res, 'WALLET_LOAD_FAILED');
     }
 };
 
@@ -64,7 +64,7 @@ exports.createWallet = async (req, res) => {
         const familyIds = await getUserFamilyIds(userId);
 
         if (family_id && !familyIds.includes(family_id)) {
-            return error(res, 'Ban khong co quyen tao vi trong gia dinh nay', 403);
+            return error(res, 'WALLET_FAMILY_FORBIDDEN', 403);
         }
 
         const duplicated = await hasDuplicateWalletName({
@@ -73,7 +73,7 @@ exports.createWallet = async (req, res) => {
             familyId: family_id || null
         });
         if (duplicated) {
-            return error(res, 'Tên ví đã tồn tại', 409);
+            return error(res, 'WALLET_NAME_EXISTS', 409);
         }
 
         const newWallet = await Wallet.create({
@@ -84,13 +84,13 @@ exports.createWallet = async (req, res) => {
             family_id: family_id || null
         });
 
-        created(res, newWallet, 'Tao vi moi thanh cong');
+        created(res, newWallet, 'WALLET_CREATED');
     } catch (err) {
         console.error('Error creating wallet:', err);
         if (err.name === 'SequelizeUniqueConstraintError') {
-            return error(res, 'Tên ví đã tồn tại', 409);
+            return error(res, 'WALLET_NAME_EXISTS', 409);
         }
-        serverError(res, 'Loi Server: Khong the tao vi moi');
+        serverError(res, 'WALLET_CREATE_FAILED');
     }
 };
 
@@ -108,7 +108,7 @@ exports.updateWallet = async (req, res) => {
         });
 
         if (!wallet) {
-            return notFound(res, 'Vi khong ton tai hoac ban khong co quyen truy cap');
+            return notFound(res, 'WALLET_NOT_FOUND');
         }
 
         const nextName = name !== undefined ? String(name).trim() : wallet.name;
@@ -119,7 +119,7 @@ exports.updateWallet = async (req, res) => {
             excludeId: wallet.id
         });
         if (duplicated) {
-            return error(res, 'Tên ví đã tồn tại', 409);
+            return error(res, 'WALLET_NAME_EXISTS', 409);
         }
 
         await wallet.update({
@@ -128,13 +128,13 @@ exports.updateWallet = async (req, res) => {
             currency: currency !== undefined ? currency : wallet.currency
         });
 
-        success(res, wallet, 'Cap nhat vi thanh cong');
+        success(res, wallet, 'WALLET_UPDATED');
     } catch (err) {
         console.error('Error updating wallet:', err);
         if (err.name === 'SequelizeUniqueConstraintError') {
-            return error(res, 'Tên ví đã tồn tại', 409);
+            return error(res, 'WALLET_NAME_EXISTS', 409);
         }
-        serverError(res, 'Loi Server: Khong the cap nhat vi');
+        serverError(res, 'WALLET_UPDATE_FAILED');
     }
 };
 
@@ -151,19 +151,19 @@ exports.deleteWallet = async (req, res) => {
         });
 
         if (!wallet) {
-            return notFound(res, 'Vi khong ton tai hoac ban khong co quyen truy cap');
+            return notFound(res, 'WALLET_NOT_FOUND');
         }
 
         const transactionCount = await Transaction.count({ where: { wallet_id: id } });
         if (transactionCount > 0) {
-            return error(res, 'Khong the xoa vi dang co giao dich', 400);
+            return error(res, 'WALLET_HAS_TRANSACTIONS', 400);
         }
 
         await wallet.destroy();
 
-        success(res, null, 'Da xoa vi thanh cong');
+        success(res, null, 'WALLET_DELETED');
     } catch (err) {
         console.error('Error deleting wallet:', err);
-        serverError(res, 'Loi Server: Khong the xoa vi');
+        serverError(res, 'WALLET_DELETE_FAILED');
     }
 };

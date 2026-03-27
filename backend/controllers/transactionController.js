@@ -61,13 +61,13 @@ exports.getTransactionById = async (req, res) => {
         });
 
         if (!transaction) {
-            return sendError(res, 'Giao dich khong ton tai', 404);
+            return sendError(res, 'TRANSACTION_NOT_FOUND', 404);
         }
 
-        success(res, transaction, 'Lay thong tin giao dich thanh cong');
+        success(res, transaction, 'TRANSACTION_LOADED');
     } catch (err) {
         console.error('getTransactionById error:', err);
-        sendError(res, 'Loi lay chi tiet giao dich', 500);
+        sendError(res, 'TRANSACTION_LOAD_FAILED', 500);
     }
 };
 
@@ -99,7 +99,7 @@ exports.getTransactions = async (req, res) => {
                 totalItems: 0,
                 totalPages: 0,
                 currentPage: Number(page)
-            }, 'Lay danh sach thanh cong');
+            }, 'TRANSACTIONS_LOADED');
         }
 
         const whereClause = buildTransactionWhere({
@@ -131,7 +131,7 @@ exports.getTransactions = async (req, res) => {
         }, 'Lay danh sach thanh cong');
     } catch (err) {
         console.error('getTransactions error:', err);
-        sendError(res, 'Loi lay danh sach giao dich', 500);
+        sendError(res, 'TRANSACTIONS_LOAD_FAILED', 500);
     }
 };
 
@@ -148,19 +148,19 @@ exports.createTransaction = async (req, res) => {
 
         if (wallets.length === 0) {
             await t.rollback();
-            return sendError(res, 'Vui long tao it nhat 1 vi truoc khi tao giao dich', 400);
+            return sendError(res, 'WALLET_REQUIRED', 400);
         }
 
         const wallet = wallets.find((accessibleWallet) => accessibleWallet.id === wallet_id) || null;
         if (!wallet) {
             await t.rollback();
-            return sendError(res, 'Vi khong ton tai hoac ban khong co quyen truy cap', 404);
+            return sendError(res, 'WALLET_NOT_FOUND', 404);
         }
 
         const parsedAmount = parseFloat(amount);
         if (type === 'EXPENSE' && parseFloat(wallet.balance) < parsedAmount) {
             await t.rollback();
-            return sendError(res, 'So du vi khong du', 400);
+            return sendError(res, 'INSUFFICIENT_BALANCE', 400);
         }
 
         const transaction = await Transaction.create({
@@ -191,11 +191,11 @@ exports.createTransaction = async (req, res) => {
         await wallet.save({ transaction: t });
 
         await t.commit();
-        success(res, transaction, 'Tao giao dich thanh cong', 201);
+        success(res, transaction, 'TRANSACTION_CREATED', 201);
     } catch (err) {
         await t.rollback();
         console.error('createTransaction error:', err);
-        sendError(res, `Loi tao giao dich: ${err.message}`, 500);
+        sendError(res, 'TRANSACTION_CREATE_FAILED', 500);
     }
 };
 
@@ -220,7 +220,7 @@ exports.deleteTransaction = async (req, res) => {
 
         if (!transaction) {
             await t.rollback();
-            return sendError(res, 'Giao dich khong ton tai hoac ban khong co quyen', 404);
+            return sendError(res, 'TRANSACTION_NOT_FOUND', 404);
         }
 
         const transactionsToDelete = transaction.transfer_group_id
@@ -235,7 +235,7 @@ exports.deleteTransaction = async (req, res) => {
 
         if (transaction.transfer_group_id && transactionsToDelete.length !== 2) {
             await t.rollback();
-            return sendError(res, 'Khong the xoa transfer do cap giao dich khong day du', 409);
+            return sendError(res, 'TRANSFER_INCOMPLETE_PAIR', 409);
         }
 
         const walletIdsToUpdate = [...new Set(transactionsToDelete.map((item) => item.wallet_id))];
@@ -261,11 +261,11 @@ exports.deleteTransaction = async (req, res) => {
 
         await t.commit();
 
-        success(res, null, 'Xoa giao dich thanh cong');
+        success(res, null, 'TRANSACTION_DELETED');
     } catch (err) {
         await t.rollback();
         console.error('deleteTransaction error:', err);
-        sendError(res, `Loi xoa giao dich: ${err.message}`, 500);
+        sendError(res, 'TRANSACTION_DELETE_FAILED', 500);
     }
 };
 
@@ -284,33 +284,33 @@ exports.createTransfer = async (req, res) => {
 
         if (wallets.length === 0) {
             await t.rollback();
-            return sendError(res, 'Vui long tao it nhat 1 vi truoc khi chuyen tien', 400);
+            return sendError(res, 'WALLET_REQUIRED', 400);
         }
 
         const fromWallet = wallets.find((wallet) => wallet.id === from_wallet_id) || null;
         if (!fromWallet) {
             await t.rollback();
-            return sendError(res, 'Vi nguon khong ton tai hoac ban khong co quyen truy cap', 404);
+            return sendError(res, 'WALLET_NOT_FOUND', 404);
         }
 
         const toWallet = wallets.find((wallet) => wallet.id === to_wallet_id) || null;
         if (!toWallet) {
             await t.rollback();
-            return sendError(res, 'Vi dich khong ton tai hoac ban khong co quyen truy cap', 404);
+            return sendError(res, 'WALLET_NOT_FOUND', 404);
         }
 
         if (from_wallet_id === to_wallet_id) {
             await t.rollback();
-            return sendError(res, 'Vi dich phai khac vi nguon', 400);
+            return sendError(res, 'TRANSFER_SAME_WALLET', 400);
         }
 
         if (parsedAmount <= 0) {
             await t.rollback();
-            return sendError(res, 'So tien chuyen phai lon hon 0', 400);
+            return sendError(res, 'INVALID_AMOUNT', 400);
         }
         if (parseFloat(fromWallet.balance) < parsedAmount) {
             await t.rollback();
-            return sendError(res, 'So du vi nguon khong du', 400);
+            return sendError(res, 'INSUFFICIENT_BALANCE', 400);
         }
 
         fromWallet.balance = parseFloat(fromWallet.balance) - parsedAmount;
@@ -347,11 +347,11 @@ exports.createTransfer = async (req, res) => {
             transfer_in_id: transferIn.id,
             from_wallet_balance: fromWallet.balance,
             to_wallet_balance: toWallet.balance
-        }, 'Chuyen tien thanh cong', 201);
+        }, 'TRANSFER_CREATED', 201);
     } catch (err) {
         await t.rollback();
         console.error('createTransfer error:', err);
-        sendError(res, `Loi giao dich chuyen tien: ${err.message}`, 500);
+        sendError(res, 'TRANSFER_FAILED', 500);
     }
 };
 
@@ -359,7 +359,7 @@ exports.createTransfer = async (req, res) => {
 exports.importTransactions = async (req, res) => {
     const { transactions } = req.body;
     if (!transactions || !Array.isArray(transactions) || transactions.length === 0) {
-        return sendError(res, 'Danh sach giao dich khong hop le', 400);
+        return sendError(res, 'INVALID_TRANSACTION_LIST', 400);
     }
 
     const t = await sequelize.transaction();
@@ -373,7 +373,7 @@ exports.importTransactions = async (req, res) => {
 
         if (wallets.length === 0) {
             await t.rollback();
-            return sendError(res, 'Vui long tao it nhat 1 vi truoc khi nhap giao dich', 400);
+            return sendError(res, 'WALLET_REQUIRED', 400);
         }
 
         const walletMap = {};
@@ -415,11 +415,11 @@ exports.importTransactions = async (req, res) => {
         await Transaction.bulkCreate(transactionsToCreate, { transaction: t });
         await t.commit();
 
-        success(res, { importedCount: transactionsToCreate.length }, 'Nhap du lieu thanh cong');
+        success(res, { importedCount: transactionsToCreate.length }, 'IMPORT_SUCCESS');
     } catch (err) {
         await t.rollback();
         console.error('importTransactions error:', err);
-        sendError(res, `Loi khi nhap du lieu: ${err.message}`, 500);
+        sendError(res, 'IMPORT_FAILED', 500);
     }
 };
 
@@ -489,9 +489,9 @@ exports.exportTransactions = async (req, res) => {
             return;
         }
 
-        return sendError(res, 'Dinh dang export khong duoc ho tro', 400);
+        return sendError(res, 'EXPORT_FORMAT_UNSUPPORTED', 400);
     } catch (err) {
         console.error('exportTransactions error:', err);
-        sendError(res, 'Loi export du lieu backend', 500);
+        sendError(res, 'EXPORT_FAILED', 500);
     }
 };

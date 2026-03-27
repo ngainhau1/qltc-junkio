@@ -43,7 +43,7 @@ export const fetchRecurring = createAsyncThunk(
             const response = await api.get('/recurring');
             return response.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Loi tai lich dinh ky');
+            return rejectWithValue(error.response?.data?.message || 'RECURRING_LOAD_FAILED');
         }
     }
 );
@@ -55,7 +55,7 @@ export const createRecurring = createAsyncThunk(
             const response = await api.post('/recurring', toRecurringPayload(ruleData));
             return response.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Loi tao dinh ky');
+            return rejectWithValue(error.response?.data?.message || 'RECURRING_CREATE_FAILED');
         }
     }
 );
@@ -67,7 +67,7 @@ export const editRecurring = createAsyncThunk(
             const response = await api.put(`/recurring/${id}`, toRecurringPayload(data));
             return response.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Loi cap nhat dinh ky');
+            return rejectWithValue(error.response?.data?.message || 'RECURRING_UPDATE_FAILED');
         }
     }
 );
@@ -79,7 +79,7 @@ export const removeRecurring = createAsyncThunk(
             await api.delete(`/recurring/${id}`);
             return id;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Loi xoa dinh ky');
+            return rejectWithValue(error.response?.data?.message || 'RECURRING_DELETE_FAILED');
         }
     }
 );

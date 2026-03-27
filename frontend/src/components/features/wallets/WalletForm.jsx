@@ -1,4 +1,4 @@
-﻿import { useFormik } from 'formik';
+import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { useDispatch, useSelector } from 'react-redux';
 import { useState } from 'react';
@@ -8,15 +8,17 @@ import { createWallet, editWallet } from '@/features/wallets/walletSlice';
 import { getFinanceScopeLabels } from '@/features/finance/context';
 import { useTranslation } from 'react-i18next';
 
+import { resolveError } from '@/utils/authErrors';
+
 const resolveWalletSubmitError = (rawError, t) => {
     const message = String(rawError || '').trim();
-    const normalized = message.toLowerCase();
 
-    if (normalized.includes('ten vi da ton tai') || normalized.includes('tên ví đã tồn tại')) {
+    if (message === 'WALLET_NAME_EXISTS') {
         return t('wallets.form.validation.duplicateName');
     }
 
-    return t('wallets.form.validation.saveFailed');
+    // Fall back to centralized error mapper
+    return resolveError(message, t, 'wallets.form.validation.saveFailed');
 };
 
 export function WalletForm({ onSuccess, initialData = null }) {

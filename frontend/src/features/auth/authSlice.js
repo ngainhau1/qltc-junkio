@@ -1,4 +1,4 @@
-﻿import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '@/lib/api';
 
 const initialState = {
@@ -16,7 +16,7 @@ export const loginUser = createAsyncThunk(
             const response = await api.post('/auth/login', credentials);
             return response.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Dang nhap that bai');
+            return rejectWithValue(error.response?.data?.message || 'LOGIN_FAILED');
         }
     }
 );
@@ -28,7 +28,7 @@ export const registerUser = createAsyncThunk(
             const response = await api.post('/auth/register', userData);
             return response.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Dang ky that bai');
+            return rejectWithValue(error.response?.data?.message || 'REGISTER_FAILED');
         }
     }
 );
@@ -40,7 +40,7 @@ export const fetchCurrentUser = createAsyncThunk(
             const response = await api.get('/users/me');
             return response.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Phien dang nhap het han');
+            return rejectWithValue(error.response?.data?.message || 'SESSION_EXPIRED');
         }
     }
 );
@@ -56,7 +56,7 @@ export const uploadUserAvatar = createAsyncThunk(
             });
             return response.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Loi khi tai anh len');
+            return rejectWithValue(error.response?.data?.message || 'UPLOAD_FAILED');
         }
     }
 );
@@ -68,7 +68,7 @@ export const updateProfileAsync = createAsyncThunk(
             const response = await api.put('/users/me', profileData);
             return response.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Cap nhat ho so that bai');
+            return rejectWithValue(error.response?.data?.message || 'PROFILE_UPDATE_FAILED');
         }
     }
 );
