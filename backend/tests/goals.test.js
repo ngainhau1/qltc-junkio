@@ -1,4 +1,4 @@
-﻿const request = require('supertest');
+const request = require('supertest');
 const express = require('express');
 const { Sequelize, DataTypes } = require('sequelize');
 
@@ -153,7 +153,7 @@ describe('Goal API Endpoints', () => {
                 name: 'Alien Goal'
             });
             expect(res.statusCode).toEqual(404);
-            expect(res.body.message).toMatch(/Muc tieu khong ton tai/);
+            expect(res.body.message).toEqual('GOAL_NOT_FOUND');
         });
     });
 
@@ -166,7 +166,7 @@ describe('Goal API Endpoints', () => {
             });
 
             expect(res.statusCode).toEqual(200);
-            expect(res.body.message).toMatch(/Nap tien vao muc tieu thanh cong/);
+            expect(res.body.message).toEqual('GOAL_DEPOSIT_SUCCESS');
             expect(Number(res.body.data.currentAmount)).toEqual(15000000);
             expect(res.body.data.sourceWallet.id).toEqual(personalWalletId);
             expect(Number(res.body.data.sourceWallet.balance)).toEqual(45000000);
@@ -187,7 +187,7 @@ describe('Goal API Endpoints', () => {
             });
 
             expect(res.statusCode).toEqual(403);
-            expect(res.body.message).toMatch(/Chi duoc nap muc tieu tu vi ca nhan cua chinh ban/);
+            expect(res.body.message).toEqual('WALLET_PERSONAL_ONLY');
         });
 
         it('returns 400 if wallet balance is insufficient', async () => {
@@ -197,7 +197,7 @@ describe('Goal API Endpoints', () => {
             });
 
             expect(res.statusCode).toEqual(400);
-            expect(res.body.message).toMatch(/So du vi khong du/);
+            expect(res.body.message).toEqual('INSUFFICIENT_BALANCE');
         });
     });
 
@@ -215,7 +215,7 @@ describe('Goal API Endpoints', () => {
         it('deletes goal successfully', async () => {
             const res = await request(app).delete(`/api/goals/${deleteId}`);
             expect(res.statusCode).toEqual(200);
-            expect(res.body.message).toMatch(/Da xoa muc tieu thanh cong/);
+            expect(res.body.message).toEqual('GOAL_DELETED');
 
             const deletedGoal = await mockGoal.findByPk(deleteId);
             expect(deletedGoal).toBeNull();

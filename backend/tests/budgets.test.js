@@ -1,4 +1,4 @@
-﻿const request = require('supertest');
+const request = require('supertest');
 const express = require('express');
 const { Sequelize, DataTypes } = require('sequelize');
 
@@ -155,7 +155,7 @@ describe('Budget API Endpoints', () => {
             });
 
             expect(res.statusCode).toEqual(403);
-            expect(res.body.message).toMatch(/Ban khong thuoc family nay/);
+            expect(res.body.message).toEqual('FAMILY_FORBIDDEN');
         });
 
         it('returns 422 if amount_limit <= 0', async () => {
@@ -198,7 +198,7 @@ describe('Budget API Endpoints', () => {
             });
 
             expect(res.statusCode).toEqual(404);
-            expect(res.body.message).toMatch(/Ngan sach khong ton tai/);
+            expect(res.body.message).toEqual('BUDGET_NOT_FOUND');
         });
     });
 
@@ -206,7 +206,7 @@ describe('Budget API Endpoints', () => {
         it('deletes an accessible family budget', async () => {
             const res = await request(app).delete(`/api/budgets/${familyBudgetId}`);
             expect(res.statusCode).toEqual(200);
-            expect(res.body.message).toMatch(/Da xoa ngan sach thanh cong/);
+            expect(res.body.message).toEqual('BUDGET_DELETED');
 
             const deletedBudget = await mockBudget.findByPk(familyBudgetId);
             expect(deletedBudget).toBeNull();

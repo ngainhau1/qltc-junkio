@@ -1,4 +1,4 @@
-﻿process.env.JWT_SECRET = 'test-secret';
+process.env.JWT_SECRET = 'test-secret';
 process.env.JWT_REFRESH_SECRET = 'test-refresh';
 const request = require('supertest');
 const express = require('express');
@@ -86,7 +86,7 @@ describe('Auth API Endpoints', () => {
             });
 
         expect(res.statusCode).toEqual(409);
-        expect(res.body.message).toMatch(/Email da duoc su dung/);
+        expect(res.body.message).toEqual('EMAIL_IN_USE');
     });
 
     it('logs in an existing user', async () => {
@@ -113,7 +113,7 @@ describe('Auth API Endpoints', () => {
             });
 
         expect(res.statusCode).toEqual(400);
-        expect(res.body.message).toMatch(/Email hoac mat khau khong dung/);
+        expect(res.body.message).toEqual('INVALID_CREDENTIALS');
     });
 
     it('supports /auth/me as compatibility alias', async () => {
@@ -157,7 +157,7 @@ describe('Auth API Endpoints', () => {
     it('logs out and clears refresh cookie', async () => {
         const res = await request(app).post('/api/auth/logout');
         expect(res.statusCode).toEqual(200);
-        expect(res.body.message).toMatch(/Dang xuat thanh cong/);
+        expect(res.body.message).toEqual('LOGOUT_SUCCESS');
     });
 });
 

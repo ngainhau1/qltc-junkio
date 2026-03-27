@@ -142,7 +142,7 @@ describe('Wallet API Endpoints', () => {
 
             const res = await request(app).delete(`/api/wallets/${testWalletId}`);
             expect(res.statusCode).toEqual(400);
-            expect(res.body.message).toMatch(/Khong the xoa vi dang co giao dich/i);
+            expect(res.body.message).toEqual('WALLET_HAS_TRANSACTIONS');
         });
 
         it('should delete wallet successfully after removing transactions', async () => {
@@ -152,7 +152,7 @@ describe('Wallet API Endpoints', () => {
 
             const res = await request(app).delete(`/api/wallets/${deleteId}`);
             expect(res.statusCode).toEqual(200);
-            expect(res.body.message).toMatch(/Da xoa vi thanh cong/i);
+            expect(res.body.message).toEqual('WALLET_DELETED');
         });
     });
 });
