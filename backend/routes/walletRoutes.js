@@ -1,4 +1,4 @@
-﻿const express = require('express');
+const express = require('express');
 const router = express.Router();
 const walletController = require('../controllers/walletController');
 const authMiddleware = require('../middleware/authMiddleware');
@@ -14,20 +14,20 @@ router.use(authMiddleware);
  * @swagger
  * tags:
  *   name: Wallets
- *   description: Quan ly vi ca nhan va vi gia dinh
+ *   description: Quản lý ví cá nhân và ví gia đình
  */
 
 /**
  * @swagger
  * /api/wallets:
  *   get:
- *     summary: Lay danh sach vi ma user co quyen truy cap
+ *     summary: Lấy danh sách ví mà người dùng có quyền truy cập
  *     tags: [Wallets]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Danh sach vi thanh cong
+ *         description: Trả về danh sách ví thành công
  *         content:
  *           application/json:
  *             schema:
@@ -67,8 +67,8 @@ router.get('/', walletController.getUserWallets);
  * @swagger
  * /api/wallets:
  *   post:
- *     summary: Tao vi moi
- *     description: Bo qua family_id de tao vi ca nhan. Gui family_id de tao vi gia dinh trong family ma ban duoc phep truy cap.
+ *     summary: Tạo ví mới
+ *     description: Bỏ qua \`family_id\` để tạo ví cá nhân. Gửi \`family_id\` để tạo ví gia đình trong gia đình mà bạn được phép quản lý.
  *     tags: [Wallets]
  *     security:
  *       - bearerAuth: []
@@ -82,7 +82,7 @@ router.get('/', walletController.getUserWallets);
  *             properties:
  *               name:
  *                 type: string
- *                 example: Vi MB Bank
+ *                 example: Ví MB Bank
  *               balance:
  *                 type: number
  *                 example: 10000000
@@ -96,25 +96,25 @@ router.get('/', walletController.getUserWallets);
  *                 nullable: true
  *           examples:
  *             personal:
- *               summary: Tao vi ca nhan
+ *               summary: Tạo ví cá nhân (Personal Wallet)
  *               value:
- *                 name: Vi MB Bank
- *                 balance: 10000000
+ *                 name: Ví Cá Nhân ACB
+ *                 balance: 15000000
  *                 currency: VND
  *             family:
- *               summary: Tao vi gia dinh
+ *               summary: Tạo ví gia đình (Family Wallet)
  *               value:
- *                 name: Quy sinh hoat
+ *                 name: Quỹ Sinh Hoạt Chung
  *                 balance: 5000000
  *                 currency: VND
  *                 family_id: 11111111-1111-1111-1111-111111111111
  *     responses:
  *       201:
- *         description: Tao vi thanh cong
+ *         description: Tạo ví mới thành công
  *       409:
- *         description: Ten vi da ton tai trong cung scope
+ *         description: Tên ví đã tồn tại trong cùng danh mục
  *       422:
- *         description: Du lieu khong hop le
+ *         description: Dữ liệu gửi lên không đúng định dạng
  */
 router.post('/', validateCreateWallet, walletController.createWallet);
 
@@ -122,7 +122,7 @@ router.post('/', validateCreateWallet, walletController.createWallet);
  * @swagger
  * /api/wallets/{id}:
  *   put:
- *     summary: Cap nhat thong tin vi
+ *     summary: Cập nhật thông tin ví
  *     tags: [Wallets]
  *     security:
  *       - bearerAuth: []
@@ -141,18 +141,18 @@ router.post('/', validateCreateWallet, walletController.createWallet);
  *             properties:
  *               name:
  *                 type: string
- *                 example: Vi Luong
+ *                 example: Ví Lương Tháng
  *               balance:
  *                 type: number
- *                 example: 2500000
+ *                 example: 25000000
  *               currency:
  *                 type: string
  *                 enum: [VND, USD, EUR]
  *     responses:
  *       200:
- *         description: Cap nhat vi thanh cong
+ *         description: Cập nhật ví thành công
  *       404:
- *         description: Khong tim thay vi
+ *         description: Không tìm thấy ví tương ứng (WALLET_NOT_FOUND)
  */
 router.put('/:id', validateUpdateWallet, walletController.updateWallet);
 
@@ -160,7 +160,7 @@ router.put('/:id', validateUpdateWallet, walletController.updateWallet);
  * @swagger
  * /api/wallets/{id}:
  *   delete:
- *     summary: Xoa vi
+ *     summary: Xóa ví vĩnh viễn
  *     tags: [Wallets]
  *     security:
  *       - bearerAuth: []
@@ -173,9 +173,9 @@ router.put('/:id', validateUpdateWallet, walletController.updateWallet);
  *           format: uuid
  *     responses:
  *       200:
- *         description: Xoa vi thanh cong
+ *         description: Xóa ví thành công
  *       404:
- *         description: Khong tim thay vi
+ *         description: Không tìm thấy ví
  */
 router.delete('/:id', validateDeleteWallet, walletController.deleteWallet);
 

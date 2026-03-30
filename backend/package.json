@@ -13,7 +13,8 @@
     "test:smoke": "npm test -- --runTestsByPath tests/auth.test.js tests/transaction.test.js",
     "test:newman": "node scripts/run-newman.js",
     "test:all-api": "npm run test:smoke && npm run test:newman",
-    "check:admin": "node scripts/admin-check.js"
+    "check:admin": "node scripts/admin-check.js",
+    "docs:build": "node scripts/generate-docs.js"
   },
   "keywords": [],
   "author": "",
@@ -56,11 +57,14 @@
     "globals": "^16.0.0",
     "husky": "^9.1.7",
     "jest": "^30.3.0",
+    "js-yaml": "^4.1.1",
     "lint-staged": "^15.4.3",
     "newman": "^6.2.2",
     "nodemon": "^3.0.3",
+    "openapi-to-postmanv2": "^6.0.0",
     "sqlite3": "^5.1.7",
-    "supertest": "^7.2.2"
+    "supertest": "^7.2.2",
+    "swagger-markdown": "^3.1.1"
   },
   "lint-staged": {
     "*.js": [

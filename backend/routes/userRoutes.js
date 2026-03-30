@@ -11,21 +11,29 @@ router.use(authMiddleware);
  * @swagger
  * tags:
  *   name: Users
- *   description: Ho so nguoi dung va profile endpoints canonical
+ *   description: |
+ *     Quản lý hồ sơ cá nhân của người dùng đang đăng nhập.
+ *     Tất cả endpoint trong nhóm này yêu cầu Bearer Token.
+ *     Đây là nhóm endpoint chính (canonical) cho profile, avatar, đổi mật khẩu.
  */
 
 /**
  * @swagger
  * /api/users/me:
  *   get:
- *     summary: Lay thong tin ca nhan
- *     description: Canonical endpoint cho profile user. Alias tuong thich tam thoi la /api/auth/me.
+ *     summary: Lấy thông tin hồ sơ cá nhân
+ *     description: |
+ *       Trả về đầy đủ thông tin profile của người dùng đang đăng nhập,
+ *       bao gồm tên, email, role, và đường dẫn avatar.
+ *
+ *       Đây là **canonical endpoint** (endpoint chính).
+ *       Alias tương thích: `/api/auth/me`
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Ho so user thanh cong
+ *         description: Lấy hồ sơ thành công
  *         content:
  *           application/json:
  *             schema:
@@ -50,8 +58,19 @@ router.use(authMiddleware);
  *                     role:
  *                       type: string
  *                       enum: [member, staff, admin]
+ *             example:
+ *               status: success
+ *               message: Lấy profile thành công
+ *               data:
+ *                 id: "b2df0d5d-1234-4abc-9def-bbbd02910001"
+ *                 name: "Nguyễn Văn A"
+ *                 email: "nguyenvana@junkio.com"
+ *                 avatar: "/uploads/avatars/b2df0d5d-avatar.jpg"
+ *                 role: member
+ *       401:
+ *         description: Chưa đăng nhập hoặc token hết hạn
  *       404:
- *         description: User not found
+ *         description: Không tìm thấy user (USER_NOT_FOUND)
  */
 router.get('/me', userController.getProfile);
 
@@ -59,8 +78,18 @@ router.get('/me', userController.getProfile);
  * @swagger
  * /api/users/me/avatar:
  *   post:
- *     summary: Cap nhat anh dai dien
- *     description: Canonical endpoint cho avatar upload. Alias tuong thich tam thoi la /api/auth/avatar.
+ *     summary: Cập nhật ảnh đại diện (avatar)
+ *     description: |
+ *       Upload hoặc thay thế ảnh đại diện của người dùng hiện tại.
+ *       Đây là **canonical endpoint** (endpoint chính).
+ *       Alias tương thích: `/api/auth/avatar`
+ *
+ *       **Yêu cầu file:**
+ *       - Định dạng hỗ trợ: JPEG, JPG, PNG, GIF
+ *       - Dung lượng tối đa: **5MB**
+ *       - Tên field trong form-data: `avatar`
+ *
+ *       Ảnh cũ sẽ tự động bị xóa khi upload ảnh mới.
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
@@ -75,12 +104,19 @@ router.get('/me', userController.getProfile);
  *               avatar:
  *                 type: string
  *                 format: binary
- *                 description: File anh jpg/png/gif, toi da 5MB
+ *                 description: File ảnh (JPEG/PNG/GIF, tối đa 5MB)
  *     responses:
  *       200:
- *         description: Cap nhat avatar thanh cong
+ *         description: Cập nhật avatar thành công
+ *         content:
+ *           application/json:
+ *             example:
+ *               status: success
+ *               message: Cập nhật avatar thành công
+ *               data:
+ *                 avatar_url: "/uploads/avatars/b2df0d5d-avatar-1711792000.jpg"
  *       400:
- *         description: File khong hop le
+ *         description: File không hợp lệ (sai định dạng hoặc vượt quá 5MB)
  */
 router.post('/me/avatar', uploadAvatar.single('avatar'), userController.updateAvatar);
 
@@ -88,7 +124,12 @@ router.post('/me/avatar', uploadAvatar.single('avatar'), userController.updateAv
  * @swagger
  * /api/users/me:
  *   put:
- *     summary: Cap nhat ho so ca nhan
+ *     summary: Cập nhật hồ sơ cá nhân
+ *     description: |
+ *       Cho phép người dùng thay đổi tên hiển thị và các thông tin cá nhân khác.
+ *       Chỉ cần gửi các field muốn thay đổi, không bắt buộc gửi tất cả.
+ *
+ *       **Lưu ý:** Không thể thay đổi email hoặc role qua API này.
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
@@ -100,10 +141,24 @@ router.post('/me/avatar', uploadAvatar.single('avatar'), userController.updateAv
  *             properties:
  *               name:
  *                 type: string
- *                 example: Nguyen Van B
+ *                 example: Nguyễn Văn B
+ *                 description: Tên hiển thị mới
+ *           example:
+ *             name: Nguyễn Văn B
  *     responses:
  *       200:
- *         description: Cap nhat ho so thanh cong
+ *         description: Cập nhật hồ sơ thành công
+ *         content:
+ *           application/json:
+ *             example:
+ *               status: success
+ *               message: Cập nhật profile thành công
+ *               data:
+ *                 id: "b2df0d5d-1234-4abc-9def-bbbd02910001"
+ *                 name: "Nguyễn Văn B"
+ *                 email: "nguyenvana@junkio.com"
+ *       401:
+ *         description: Chưa đăng nhập
  */
 router.put('/me', validateUpdateProfile, userController.updateProfile);
 
@@ -111,7 +166,16 @@ router.put('/me', validateUpdateProfile, userController.updateProfile);
  * @swagger
  * /api/users/me/password:
  *   put:
- *     summary: Doi mat khau
+ *     summary: Đổi mật khẩu tài khoản
+ *     description: |
+ *       Cho phép người dùng thay đổi mật khẩu hiện tại.
+ *       Yêu cầu nhập đúng mật khẩu hiện tại (`currentPassword`) để xác minh danh tính.
+ *
+ *       **Yêu cầu mật khẩu mới:**
+ *       - Tối thiểu 6 ký tự
+ *       - Phải khác mật khẩu hiện tại
+ *
+ *       Sau khi đổi thành công, token hiện tại vẫn hoạt động bình thường.
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
@@ -127,16 +191,26 @@ router.put('/me', validateUpdateProfile, userController.updateProfile);
  *                 type: string
  *                 format: password
  *                 example: oldPassword123
+ *                 description: Mật khẩu hiện tại (để xác minh)
  *               newPassword:
  *                 type: string
  *                 format: password
  *                 example: newPassword456
  *                 minLength: 6
+ *                 description: Mật khẩu mới (tối thiểu 6 ký tự)
+ *           example:
+ *             currentPassword: oldPassword123
+ *             newPassword: newPassword456
  *     responses:
  *       200:
- *         description: Doi mat khau thanh cong
+ *         description: Đổi mật khẩu thành công
+ *         content:
+ *           application/json:
+ *             example:
+ *               status: success
+ *               message: Đổi mật khẩu thành công
  *       400:
- *         description: Mat khau hien tai sai hoac mat khau moi qua ngan
+ *         description: Mật khẩu hiện tại sai hoặc mật khẩu mới quá ngắn (WRONG_PASSWORD)
  */
 router.put('/me/password', validateChangePassword, userController.changePassword);
 
@@ -144,8 +218,13 @@ router.put('/me/password', validateChangePassword, userController.changePassword
  * @swagger
  * /api/users/me:
  *   delete:
- *     summary: Xoa tai khoan vinh vien
- *     description: Xoa toan bo du lieu cua user va tai khoan. Yeu cau xac thuc mat khau truoc khi xoa.
+ *     summary: Xóa tài khoản vĩnh viễn
+ *     description: |
+ *       Xóa hoàn toàn tài khoản và tất cả dữ liệu liên quan (ví, giao dịch, mục tiêu...).
+ *       Hành động này **không thể hoàn tác**.
+ *
+ *       **Bảo mật:** Yêu cầu nhập đúng mật khẩu hiện tại để xác nhận.
+ *       Đây là biện pháp chống xóa nhầm khi token bị đánh cắp.
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
@@ -160,11 +239,19 @@ router.put('/me/password', validateChangePassword, userController.changePassword
  *               password:
  *                 type: string
  *                 format: password
+ *                 description: Mật khẩu hiện tại (để xác nhận xóa)
+ *           example:
+ *             password: myCurrentPassword123
  *     responses:
  *       200:
- *         description: Xoa tai khoan thanh cong
+ *         description: Xóa tài khoản thành công
+ *         content:
+ *           application/json:
+ *             example:
+ *               status: success
+ *               message: Tài khoản đã được xóa vĩnh viễn
  *       400:
- *         description: Mat khau khong dung
+ *         description: Mật khẩu không đúng (WRONG_PASSWORD)
  */
 router.delete('/me', userController.deleteAccount);
 
