@@ -5,7 +5,7 @@ import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, CheckCircle2, FileType, Loader2, Upload } from 'lucide-react';
 import { getFinanceScopeLabels } from '@/features/finance/context';
-import { importFromCSV } from '@/services/importService';
+import { importFromFile } from '@/services/importService';
 import { refreshFinanceData } from '@/features/finance/refreshFinanceData';
 
 export function ImportTransactionsModal({ isOpen, onClose }) {
@@ -28,8 +28,11 @@ export function ImportTransactionsModal({ isOpen, onClose }) {
 
     const handleFileChange = (event) => {
         const selectedFile = event.target.files[0];
+        const name = selectedFile?.name?.toLowerCase() || '';
+        const isCSV = selectedFile?.type === 'text/csv' || name.endsWith('.csv');
+        const isExcel = name.endsWith('.xlsx') || name.endsWith('.xls');
 
-        if ((selectedFile && selectedFile.type === 'text/csv') || selectedFile?.name.endsWith('.csv')) {
+        if (selectedFile && (isCSV || isExcel)) {
             setFile(selectedFile);
             setStatus('IDLE');
             setMessage('');
@@ -50,7 +53,7 @@ export function ImportTransactionsModal({ isOpen, onClose }) {
         setStatus('UPLOADING');
 
         try {
-            const result = await importFromCSV(file, targetWalletId);
+            const result = await importFromFile(file, targetWalletId);
             setStatus('SUCCESS');
             setMessage(result.message || t('transactions.import.success', { count: result.count }));
             await dispatch(refreshFinanceData());
@@ -118,7 +121,7 @@ export function ImportTransactionsModal({ isOpen, onClose }) {
                 >
                     <input
                         type="file"
-                        accept=".csv"
+                        accept=".csv,.xlsx,.xls"
                         className="hidden"
                         ref={fileInputRef}
                         onChange={handleFileChange}

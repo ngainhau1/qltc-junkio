@@ -70,7 +70,7 @@ exports.validateTransactionParams = [
 
 exports.validateTransactionQuery = [
     query('page').optional().isInt({ min: 1 }).toInt(),
-    query('limit').optional().isInt({ min: 1, max: 200 }).toInt(),
+    query('limit').optional().isInt({ min: 1, max: 1000 }).toInt(),
     query('type').optional().isIn(['INCOME', 'EXPENSE', 'TRANSFER_OUT', 'TRANSFER_IN']),
     query('startDate').optional().isISO8601().toDate(),
     query('endDate').optional().isISO8601().toDate(),
@@ -80,5 +80,7 @@ exports.validateTransactionQuery = [
     query('category_id').optional().isUUID(),
     query('format').optional().isIn(['csv', 'pdf']),
     query('search').optional().trim().escape(),
+    query('sortBy').optional().isIn(['date', 'amount', 'type', 'created_at']),
+    query('sortOrder').optional().isIn(['ASC', 'DESC']),
     handleValidation(['query'])
 ];

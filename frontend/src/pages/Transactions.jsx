@@ -9,14 +9,17 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
+    ArrowUpDown,
     Download,
     FileSpreadsheet,
     FileText,
+    Filter,
     History,
     MoreHorizontal,
     Plus,
     Repeat,
     Upload,
+    X,
 } from 'lucide-react';
 import { RecurringRulesList } from '@/components/features/recurring/RecurringRulesList';
 import { RecurringRuleForm } from '@/components/features/recurring/RecurringRuleForm';
@@ -49,10 +52,18 @@ export function Transactions() {
     const dispatch = useDispatch();
     const { transactions, pagination, filter, loading } = useSelector((state) => state.transactions);
     const { activeFamilyId } = useSelector((state) => state.families);
+    const { wallets } = useSelector((state) => state.wallets);
+    const { categories } = useSelector((state) => state.categories);
     const { isImportModalOpen } = useSelector((state) => state.ui);
     const [activeTab, setActiveTab] = useState('history');
     const [isAddRuleOpen, setIsAddRuleOpen] = useState(false);
     const [isDetailOpen, setIsDetailOpen] = useState(false);
+    const [showFilters, setShowFilters] = useState(false);
+
+    // Filter context wallets based on active family
+    const contextWallets = wallets.filter((w) =>
+        activeFamilyId ? w.family_id === activeFamilyId : !w.family_id
+    );
 
     const handleRowClick = useCallback(
         (transaction) => {
@@ -86,6 +97,8 @@ export function Transactions() {
         filter.startDate,
         filter.type,
         filter.walletId,
+        filter.sortBy,
+        filter.sortOrder,
         pagination.currentPage,
         pagination.itemsPerPage,
     ]);
@@ -115,6 +128,21 @@ export function Transactions() {
         } catch (error) {
             toast.error(error?.message || t('transactions.exportError'));
         }
+    };
+
+    const hasActiveFilters = filter.type || filter.walletId || filter.categoryId || filter.startDate || filter.endDate || (filter.sortBy !== 'date') || (filter.sortOrder !== 'DESC');
+
+    const clearAllFilters = () => {
+        dispatch(setFilter({
+            type: '',
+            walletId: '',
+            categoryId: '',
+            startDate: '',
+            endDate: '',
+            search: '',
+            sortBy: 'date',
+            sortOrder: 'DESC',
+        }));
     };
 
     const desktopActions = (
@@ -184,6 +212,93 @@ export function Transactions() {
         </DropdownMenu>
     );
 
+    const filterBar = (
+        <div className="space-y-3 rounded-xl border bg-card p-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                {/* Type filter */}
+                <select
+                    className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+                    value={filter.type}
+                    onChange={(e) => dispatch(setFilter({ type: e.target.value }))}
+                >
+                    <option value="">{t('transactions.filters.allTypes', 'Tất cả loại')}</option>
+                    <option value="INCOME">{t('transactions.filters.income', 'Thu nhập')}</option>
+                    <option value="EXPENSE">{t('transactions.filters.expense', 'Chi tiêu')}</option>
+                    <option value="TRANSFER_OUT">{t('transactions.filters.transferOut', 'Chuyển đi')}</option>
+                    <option value="TRANSFER_IN">{t('transactions.filters.transferIn', 'Nhận về')}</option>
+                </select>
+
+                {/* Wallet filter */}
+                <select
+                    className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+                    value={filter.walletId}
+                    onChange={(e) => dispatch(setFilter({ walletId: e.target.value }))}
+                >
+                    <option value="">{t('transactions.filters.allWallets', 'Tất cả ví')}</option>
+                    {contextWallets.map((w) => (
+                        <option key={w.id} value={w.id}>{w.name}</option>
+                    ))}
+                </select>
+
+                {/* Category filter */}
+                <select
+                    className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+                    value={filter.categoryId}
+                    onChange={(e) => dispatch(setFilter({ categoryId: e.target.value }))}
+                >
+                    <option value="">{t('transactions.filters.allCategories', 'Tất cả danh mục')}</option>
+                    {categories.map((c) => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                </select>
+
+                {/* Sort */}
+                <select
+                    className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+                    value={`${filter.sortBy}_${filter.sortOrder}`}
+                    onChange={(e) => {
+                        const [sortBy, sortOrder] = e.target.value.split('_');
+                        dispatch(setFilter({ sortBy, sortOrder }));
+                    }}
+                >
+                    <option value="date_DESC">{t('transactions.filters.sortDateDesc', 'Mới nhất trước')}</option>
+                    <option value="date_ASC">{t('transactions.filters.sortDateAsc', 'Cũ nhất trước')}</option>
+                    <option value="amount_DESC">{t('transactions.filters.sortAmountDesc', 'Số tiền cao → thấp')}</option>
+                    <option value="amount_ASC">{t('transactions.filters.sortAmountAsc', 'Số tiền thấp → cao')}</option>
+                </select>
+            </div>
+
+            {/* Date range */}
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="flex items-center gap-2">
+                    <label className="shrink-0 text-sm text-muted-foreground">{t('transactions.filters.from', 'Từ')}</label>
+                    <Input
+                        type="date"
+                        className="h-10"
+                        value={filter.startDate}
+                        onChange={(e) => dispatch(setFilter({ startDate: e.target.value }))}
+                    />
+                </div>
+                <div className="flex items-center gap-2">
+                    <label className="shrink-0 text-sm text-muted-foreground">{t('transactions.filters.to', 'Đến')}</label>
+                    <Input
+                        type="date"
+                        className="h-10"
+                        value={filter.endDate}
+                        onChange={(e) => dispatch(setFilter({ endDate: e.target.value }))}
+                    />
+                </div>
+                <div className="lg:col-span-2 flex justify-end">
+                    {hasActiveFilters && (
+                        <Button variant="ghost" size="sm" onClick={clearAllFilters} className="text-muted-foreground hover:text-foreground">
+                            <X className="mr-1 h-4 w-4" /> {t('transactions.filters.clearAll', 'Xóa bộ lọc')}
+                        </Button>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+
     return (
         <div className="space-y-6">
             <PageHeader
@@ -203,14 +318,44 @@ export function Transactions() {
 
             {activeTab === 'history' ? (
                 <>
-                    <div className="flex flex-col gap-4 sm:flex-row">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                         <Input
                             placeholder={t('transactions.search')}
                             className="w-full sm:max-w-sm"
                             value={filter.search}
                             onChange={(event) => dispatch(setFilter({ search: event.target.value }))}
                         />
+                        <Button
+                            variant={showFilters ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => setShowFilters(!showFilters)}
+                            className="shrink-0"
+                        >
+                            <Filter className="mr-2 h-4 w-4" />
+                            {t('transactions.filters.toggle', 'Bộ lọc')}
+                            {hasActiveFilters && (
+                                <span className="ml-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary-foreground text-xs font-bold text-primary">!</span>
+                            )}
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                                const next = filter.sortOrder === 'DESC' ? 'ASC' : 'DESC';
+                                dispatch(setFilter({ sortOrder: next }));
+                            }}
+                            className="shrink-0"
+                            title={filter.sortOrder === 'DESC' ? t('transactions.filters.sortAsc', 'Đảo ngược') : t('transactions.filters.sortDesc', 'Đảo ngược')}
+                        >
+                            <ArrowUpDown className="mr-2 h-4 w-4" />
+                            {filter.sortBy === 'date'
+                                ? (filter.sortOrder === 'DESC' ? t('transactions.filters.sortDateDesc', 'Mới nhất') : t('transactions.filters.sortDateAsc', 'Cũ nhất'))
+                                : (filter.sortOrder === 'DESC' ? t('transactions.filters.sortAmountDesc', 'Cao → Thấp') : t('transactions.filters.sortAmountAsc', 'Thấp → Cao'))
+                            }
+                        </Button>
                     </div>
+
+                    {showFilters && filterBar}
 
                     <div className="space-y-6">
                         {loading ? (
@@ -218,7 +363,11 @@ export function Transactions() {
                                 <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
                             </div>
                         ) : (
-                            <VirtualizedTransactionList transactions={transactions} onRowClick={handleRowClick} />
+                            <VirtualizedTransactionList 
+                                transactions={transactions} 
+                                onRowClick={handleRowClick}
+                                groupByDate={filter.sortBy === 'date'} 
+                            />
                         )}
 
                         {pagination.totalPages > 1 && (
@@ -232,7 +381,7 @@ export function Transactions() {
                                     {t('common.prev')}
                                 </Button>
                                 <span className="text-sm leading-relaxed">
-                                    {t('common.page')} {pagination.currentPage} / {pagination.totalPages} (Tong: {pagination.totalItems})
+                                    {t('common.page')} {pagination.currentPage} / {pagination.totalPages} ({t('common.total', 'Tổng')}: {pagination.totalItems})
                                 </span>
                                 <Button
                                     variant="outline"

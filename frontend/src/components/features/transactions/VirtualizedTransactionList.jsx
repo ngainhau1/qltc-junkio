@@ -76,46 +76,30 @@ const TransactionRow = memo(({ item, onRowClick }) => {
 
 TransactionRow.displayName = 'TransactionRow';
 
-export function VirtualizedTransactionList({ transactions, onRowClick }) {
+export function VirtualizedTransactionList({ transactions, onRowClick, groupByDate = true }) {
     const { t } = useTranslation();
 
     const flatData = useMemo(() => {
-        const groups = transactions.reduce((accumulator, transaction) => {
-            const rawDate = transaction.date || transaction.transaction_date;
-            if (!rawDate) {
-                return accumulator;
-            }
-
-            const dateObject = new Date(rawDate);
-            if (Number.isNaN(dateObject.getTime())) {
-                return accumulator;
-            }
-
-            const formattedDate = formatDateString(rawDate);
-            if (!accumulator[formattedDate]) {
-                accumulator[formattedDate] = [];
-            }
-
-            accumulator[formattedDate].push(transaction);
-            return accumulator;
-        }, {});
-
         const flattened = [];
-        const sortedDates = Object.keys(groups).sort((left, right) => {
-            const [leftDay, leftMonth, leftYear] = left.split('/');
-            const [rightDay, rightMonth, rightYear] = right.split('/');
-            return new Date(`${rightYear}-${rightMonth}-${rightDay}`) - new Date(`${leftYear}-${leftMonth}-${leftDay}`);
-        });
+        let lastDate = null;
 
-        sortedDates.forEach((date) => {
-            flattened.push({ type: 'HEADER', date });
-            groups[date].forEach((transaction) => {
-                flattened.push({ type: 'ITEM', transaction });
-            });
+        transactions.forEach((transaction) => {
+            const rawDate = transaction.date || transaction.transaction_date;
+            if (!rawDate) return;
+
+            if (groupByDate) {
+                const dateStr = formatDateString(rawDate);
+                if (dateStr !== lastDate) {
+                    flattened.push({ type: 'HEADER', date: dateStr });
+                    lastDate = dateStr;
+                }
+            }
+            
+            flattened.push({ type: 'ITEM', transaction });
         });
 
         return flattened;
-    }, [transactions]);
+    }, [transactions, groupByDate]);
 
     if (flatData.length === 0) {
         return (

@@ -12,11 +12,15 @@ const buildTransactionWhere = ({ walletIds, filters }) => {
     };
 
     if (filters.startDate && filters.endDate) {
-        whereClause.date = { [Op.between]: [new Date(filters.startDate), new Date(filters.endDate)] };
+        const end = new Date(filters.endDate);
+        end.setHours(23, 59, 59, 999);
+        whereClause.date = { [Op.between]: [new Date(filters.startDate), end] };
     } else if (filters.startDate) {
         whereClause.date = { [Op.gte]: new Date(filters.startDate) };
     } else if (filters.endDate) {
-        whereClause.date = { [Op.lte]: new Date(filters.endDate) };
+        const end = new Date(filters.endDate);
+        end.setHours(23, 59, 59, 999);
+        whereClause.date = { [Op.lte]: end };
     }
 
     if (filters.type) whereClause.type = filters.type;
@@ -84,7 +88,9 @@ exports.getTransactions = async (req, res) => {
             wallet_id,
             category_id,
             context,
-            family_id
+            family_id,
+            sortBy = 'date',
+            sortOrder = 'DESC'
         } = req.query;
 
         const { walletIds } = await getAccessibleWalletIds({
@@ -111,6 +117,11 @@ exports.getTransactions = async (req, res) => {
         const perPage = Number(limit);
         const offset = (pageNum - 1) * perPage;
 
+        // Build dynamic order clause
+        const allowedSortFields = ['date', 'amount', 'type', 'created_at'];
+        const sortField = allowedSortFields.includes(sortBy) ? sortBy : 'date';
+        const sortDir = sortOrder.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+
         const { count, rows } = await Transaction.findAndCountAll({
             where: whereClause,
             include: [
@@ -118,7 +129,7 @@ exports.getTransactions = async (req, res) => {
                 { model: Category, attributes: ['id', 'name'] },
                 { model: sequelize.models.TransactionShare, as: 'Shares' }
             ],
-            order: [['date', 'DESC']],
+            order: [[sortField, sortDir]],
             limit: perPage,
             offset
         });
@@ -128,7 +139,7 @@ exports.getTransactions = async (req, res) => {
             totalItems: count,
             totalPages: Math.ceil(count / perPage),
             currentPage: pageNum
-        }, 'Lay danh sach thanh cong');
+        }, 'TRANSACTIONS_LOADED');
     } catch (err) {
         console.error('getTransactions error:', err);
         sendError(res, 'TRANSACTIONS_LOAD_FAILED', 500);

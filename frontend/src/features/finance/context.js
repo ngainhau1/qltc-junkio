@@ -67,6 +67,8 @@ export const buildTransactionQueryFromState = (state, overrides = {}) => {
         endDate: overrides.endDate ?? filter.endDate ?? '',
         wallet_id: overrides.wallet_id ?? overrides.walletId ?? filter.walletId ?? '',
         category_id: overrides.category_id ?? overrides.categoryId ?? filter.categoryId ?? '',
+        sortBy: overrides.sortBy ?? filter.sortBy ?? 'date',
+        sortOrder: overrides.sortOrder ?? filter.sortOrder ?? 'DESC',
     });
 };
 

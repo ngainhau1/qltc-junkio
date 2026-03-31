@@ -15,6 +15,8 @@ const initialState = {
         walletId: '',
         search: '',
         type: '',
+        sortBy: 'date',
+        sortOrder: 'DESC',
     },
     pagination: {
         currentPage: 1,
