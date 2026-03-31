@@ -18,6 +18,7 @@ export function ImportTransactionsModal({ isOpen, onClose }) {
     const [message, setMessage] = useState('');
 
     const { wallets } = useSelector((state) => state.wallets);
+    const { categories } = useSelector((state) => state.categories);
     const { activeFamilyId, families } = useSelector((state) => state.families);
 
     const contextWallets = wallets.filter((wallet) => (activeFamilyId ? wallet.family_id === activeFamilyId : !wallet.family_id));
@@ -53,7 +54,7 @@ export function ImportTransactionsModal({ isOpen, onClose }) {
         setStatus('UPLOADING');
 
         try {
-            const result = await importFromFile(file, targetWalletId);
+            const result = await importFromFile(file, targetWalletId, wallets, categories);
             setStatus('SUCCESS');
             setMessage(result.message || t('transactions.import.success', { count: result.count }));
             await dispatch(refreshFinanceData());
