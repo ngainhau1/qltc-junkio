@@ -9,7 +9,7 @@ const TransactionRow = memo(({ item, onRowClick }) => {
 
     if (item.type === 'HEADER') {
         return (
-            <div className="sticky top-0 z-10 flex w-full items-center bg-muted/20 px-4 py-2 text-sm font-medium text-muted-foreground">
+            <div className="sticky top-0 z-10 flex w-full items-center border-b bg-background/95 px-4 py-2 text-sm font-medium text-muted-foreground backdrop-blur-md">
                 {item.date}
             </div>
         );
