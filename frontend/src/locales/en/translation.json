@@ -246,6 +246,29 @@
             }
         },
         "exportError": "Unable to export data.",
+        "filters": {
+            "allTypes": "All Types",
+            "income": "Income",
+            "expense": "Expense",
+            "transferOut": "Transfer Out",
+            "transferIn": "Transfer In",
+            "allWallets": "All Wallets",
+            "allCategories": "All Categories",
+            "sortDateDesc": "Newest First",
+            "sortDateAsc": "Oldest First",
+            "sortAmountDesc": "Highest Amount First",
+            "sortAmountAsc": "Lowest Amount First",
+            "from": "From",
+            "to": "To",
+            "clearAll": "Clear Filters",
+            "toggle": "Filter",
+            "sortAsc": "Reverse to Ascending",
+            "sortDesc": "Reverse to Descending",
+            "sortDateDescShort": "Newest",
+            "sortDateAscShort": "Oldest",
+            "sortAmountDescShort": "High → Low",
+            "sortAmountAscShort": "Low → High"
+        },
         "type": {
             "income": "Income",
             "expense": "Expense"

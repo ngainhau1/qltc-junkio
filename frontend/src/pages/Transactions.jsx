@@ -349,8 +349,8 @@ export function Transactions() {
                         >
                             <ArrowUpDown className="mr-2 h-4 w-4" />
                             {filter.sortBy === 'date'
-                                ? (filter.sortOrder === 'DESC' ? t('transactions.filters.sortDateDesc', 'Mới nhất') : t('transactions.filters.sortDateAsc', 'Cũ nhất'))
-                                : (filter.sortOrder === 'DESC' ? t('transactions.filters.sortAmountDesc', 'Cao → Thấp') : t('transactions.filters.sortAmountAsc', 'Thấp → Cao'))
+                                ? (filter.sortOrder === 'DESC' ? t('transactions.filters.sortDateDescShort', 'Mới nhất') : t('transactions.filters.sortDateAscShort', 'Cũ nhất'))
+                                : (filter.sortOrder === 'DESC' ? t('transactions.filters.sortAmountDescShort', 'Cao → Thấp') : t('transactions.filters.sortAmountAscShort', 'Thấp → Cao'))
                             }
                         </Button>
                     </div>

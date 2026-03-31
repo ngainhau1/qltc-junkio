@@ -44,6 +44,42 @@ const resolveWalletId = (walletStr, walletIdRaw, defaultWalletId, wallets) => {
     throw new Error(`Tên ví "${walletStr}" không tồn tại trong hệ thống. Vui lòng kiểm tra lại file.`);
 };
 
+// Add a system array of fallback keys per column just in case the file doesn't come from Junkio but user types manually
+const FALLBACK_KEYS = {
+    date: ['ngày', 'ngay', 'date'],
+    amount: ['số tiền', 'sotien', 'amount', 'so tien'],
+    type: ['loại', 'loai', 'type'],
+    desc: ['mô tả', 'mota', 'description', 'mo ta'],
+    category: ['danh mục', 'danhmuc', 'category', 'danh muc', 'category_id'],
+    wallet: ['ví', 'vi', 'wallet', 'wallet_id', 'wallet id']
+};
+
+const extractI18nKeys = (i18n, i18nKey) => {
+    const keys = [];
+    const langs = ['vi', 'en']; // Currently supported locales
+    
+    langs.forEach(lng => {
+        const val = i18n.getResource(lng, 'translation', i18nKey);
+        if (val) keys.push(val.toLowerCase());
+    });
+    
+    // Auto-fallback: Last part of the translation key itself
+    const fallback = i18nKey.split('.').pop().toLowerCase();
+    if (!keys.includes(fallback)) keys.push(fallback);
+    
+    return keys;
+};
+
+const getRowValueByI18nKey = (normalizedRow, i18n, i18nKey, specificKeys = []) => {
+    const possibleKeys = [...extractI18nKeys(i18n, i18nKey), ...specificKeys];
+    for (const key of possibleKeys) {
+        if (normalizedRow[key] !== undefined && normalizedRow[key] !== null) {
+            return String(normalizedRow[key]).trim();
+        }
+    }
+    return ''; // Not found
+};
+
 // Mapping logic shared between CSV and Excel
 const mapRowToTransaction = (row, defaultWalletId, wallets, categories) => {
     // Normalize keys to lowercase for robust matching
@@ -53,27 +89,37 @@ const mapRowToTransaction = (row, defaultWalletId, wallets, categories) => {
         return acc;
     }, {});
 
-    const rawDate = normalizedRow.date || normalizedRow.ngay || normalizedRow['ngày'] || '';
+    // Lazy load i18n
+    const i18n = require('@/lib/i18n').default;
+
+    const rawDate = getRowValueByI18nKey(normalizedRow, i18n, 'export.date', FALLBACK_KEYS.date);
     const date = parseDateString(rawDate);
     
-    let amountRaw = String(normalizedRow.amount || normalizedRow['so tien'] || normalizedRow['số tiền'] || '0');
+    let amountRaw = getRowValueByI18nKey(normalizedRow, i18n, 'export.amount', FALLBACK_KEYS.amount);
     amountRaw = amountRaw.replace(/,/g, '').replace(/[^-0-9.]/g, '');
 
-    let type = String(normalizedRow.type || normalizedRow.loai || normalizedRow['loại'] || 'EXPENSE').toUpperCase();
-    if (type.includes('INC') || type.includes('THU')) {
-        type = 'INCOME';
-    } else if (type.includes('EXP') || type.includes('CHI')) {
-        type = 'EXPENSE';
+    let typeStr = getRowValueByI18nKey(normalizedRow, i18n, 'export.type', FALLBACK_KEYS.type).toUpperCase();
+    
+    // Check against i18n values for Income/Expense
+    const incomeKeys = extractI18nKeys(i18n, 'export.income').map(k => k.toUpperCase());
+    const expenseKeys = extractI18nKeys(i18n, 'export.expense').map(k => k.toUpperCase());
+    
+    let finalType = 'EXPENSE'; // Default
+    if (incomeKeys.some(k => typeStr.includes(k)) || typeStr.includes('INC') || typeStr.includes('THU')) {
+        finalType = 'INCOME';
+    } else if (expenseKeys.some(k => typeStr.includes(k)) || typeStr.includes('EXP') || typeStr.includes('CHI')) {
+        finalType = 'EXPENSE';
     }
 
-    const categoryStr = String(normalizedRow.category || normalizedRow['danh muc'] || normalizedRow['danh mục'] || '');
-    const walletStr = String(normalizedRow.vi || normalizedRow['ví'] || normalizedRow.wallet || '');
+    const categoryStr = getRowValueByI18nKey(normalizedRow, i18n, 'export.category', FALLBACK_KEYS.category);
+    const walletStr = getRowValueByI18nKey(normalizedRow, i18n, 'export.wallet', FALLBACK_KEYS.wallet);
+    const descStr = getRowValueByI18nKey(normalizedRow, i18n, 'export.description', FALLBACK_KEYS.desc) || 'Imported Transaction';
 
     return {
         date,
-        description: normalizedRow.description || normalizedRow['mo ta'] || normalizedRow['mô tả'] || 'Imported Transaction',
-        type,
-        amount: Math.abs(parseFloat(amountRaw)),
+        description: descStr,
+        type: finalType,
+        amount: Math.abs(parseFloat(amountRaw || 0)),
         category_id: resolveCategoryId(categoryStr, normalizedRow.category_id, categories),
         wallet_id: resolveWalletId(walletStr, normalizedRow.wallet_id || normalizedRow['wallet id'], defaultWalletId, wallets),
     };

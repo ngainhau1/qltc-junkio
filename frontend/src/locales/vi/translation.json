@@ -246,6 +246,29 @@
             }
         },
         "exportError": "Không thể xuất dữ liệu.",
+        "filters": {
+            "allTypes": "Tất cả loại",
+            "income": "Thu nhập",
+            "expense": "Chi tiêu",
+            "transferOut": "Chuyển đi",
+            "transferIn": "Nhận về",
+            "allWallets": "Tất cả ví",
+            "allCategories": "Tất cả danh mục",
+            "sortDateDesc": "Mới nhất trước",
+            "sortDateAsc": "Cũ nhất trước",
+            "sortAmountDesc": "Số tiền cao → thấp",
+            "sortAmountAsc": "Số tiền thấp → cao",
+            "from": "Từ",
+            "to": "Đến",
+            "clearAll": "Xóa bộ lọc",
+            "toggle": "Bộ lọc",
+            "sortAsc": "Đảo chiều tăng dần",
+            "sortDesc": "Đảo chiều giảm dần",
+            "sortDateDescShort": "Mới nhất",
+            "sortDateAscShort": "Cũ nhất",
+            "sortAmountDescShort": "Cao → Thấp",
+            "sortAmountAscShort": "Thấp → Cao"
+        },
         "type": {
             "income": "Thu nhập",
             "expense": "Chi tiêu"
