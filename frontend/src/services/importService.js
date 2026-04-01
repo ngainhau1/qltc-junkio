@@ -8,7 +8,7 @@ const parseDateString = (dateStr) => {
         return dateStr.substring(0, 10);
     }
     // If it's DD/MM/YYYY or DD-MM-YYYY
-    const parts = dateStr.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+    const parts = dateStr.match(new RegExp('^(\\d{1,2})[/-](\\d{1,2})[/-](\\d{4})'));
     if (parts) {
         const [, day, month, year] = parts;
         return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
