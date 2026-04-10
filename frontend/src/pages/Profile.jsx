@@ -17,7 +17,7 @@ export function Profile() {
     const [isUploading, setIsUploading] = useState(false);
 
     // Lấy API base để nối url tương đối của ảnh
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    const API_URL = import.meta.env.VITE_API_URL || '/api';
     const serverUrl = API_URL.replace('/api', '');
 
     // Provide initial state directly from redux where possible to avoid effect updates
@@ -57,7 +57,7 @@ export function Profile() {
 
             toast.success(t('profile.successMsg'));
         } catch (error) {
-            toast.error(error || t('profile.uploadFailed', 'Lỗi khi lưu hồ sơ.'));
+            toast.error(error || t('profile.saveFailed'));
         }
     };
 
@@ -67,7 +67,7 @@ export function Profile() {
 
         // Chỉ cho phép ảnh
         if (!file.type.startsWith('image/')) {
-            toast.error(t('profile.onlyImageAllowed', 'Chỉ chấp nhận file hình ảnh!'));
+            toast.error(t('profile.onlyImageAllowed'));
             return;
         }
 
@@ -81,9 +81,9 @@ export function Profile() {
                 ...prev,
                 avatarUrl: result.avatarUrl
             }));
-            toast.success(result.msg || t('profile.uploadSuccess', 'Tải ảnh lên thành công.'));
+            toast.success(result.msg || t('profile.uploadSuccess'));
         } catch (error) {
-            toast.error(error || t('profile.uploadFailed', 'Lỗi khi tải ảnh lên.'));
+            toast.error(error || t('profile.uploadFailed'));
         } finally {
             setIsUploading(false);
             if (fileInputRef.current) fileInputRef.current.value = '';
@@ -93,7 +93,7 @@ export function Profile() {
     return (
         <div className="space-y-6 max-w-4xl mx-auto pb-10">
             <div>
-                <h1 className="text-3xl font-bold tracking-tight">{t('profile.title')}</h1>
+                <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{t('profile.title')}</h1>
                 <p className="text-muted-foreground">
                     {t('profile.desc')}
                 </p>
@@ -143,7 +143,7 @@ export function Profile() {
                                     onClick={() => fileInputRef.current?.click()}
                                     disabled={isUploading}
                                 >
-                                    {isUploading ? t('common.loading', 'Đang xử lý...') : t('profile.avatarUpload', 'Tải ảnh lên')}
+                                    {isUploading ? t('common.loading') : t('profile.avatarUpload')}
                                 </Button>
                             </div>
                         </CardContent>
@@ -218,11 +218,11 @@ export function Profile() {
                                     </div>
                                 </div>
 
-                                <div className="pt-6 flex justify-end gap-4">
-                                    <Button type="button" variant="outline" onClick={() => window.history.back()}>
+                                <div className="flex flex-col-reverse gap-3 pt-6 sm:flex-row sm:justify-end sm:gap-4">
+                                    <Button type="button" variant="outline" onClick={() => window.history.back()} className="w-full sm:w-auto">
                                         {t('profile.cancel')}
                                     </Button>
-                                    <Button type="submit" className="gap-2">
+                                    <Button type="submit" className="w-full gap-2 sm:w-auto">
                                         <Save className="h-4 w-4" />
                                         {t('profile.save')}
                                     </Button>

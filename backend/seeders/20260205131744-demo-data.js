@@ -1,125 +1,183 @@
 'use strict';
-const { faker } = require('@faker-js/faker');
+
 const { v4: uuidv4 } = require('uuid');
+const bcrypt = require('bcrypt');
 
 module.exports = {
-    async up(queryInterface, Sequelize) {
-    // 1. Create Users
-        const users = [];
-        // Fixed Demo User
-        const demoUserId = uuidv4();
-        users.push({
-            id: demoUserId,
-            name: 'Demo User',
-            email: 'demo@junkio.com',
-            password_hash: '$2b$10$YourHashedPasswordHere', // Use bcrypt hash in real app
-            role: 'admin',
-            createdAt: new Date(),
-            updatedAt: new Date()
-        });
+    async up(queryInterface) {
+        const now = new Date();
+        const passwordHash = bcrypt.hashSync('demo123', 10);
 
-        // Random Users
-        for (let i = 0; i < 5; i++) {
-            users.push({
-                id: uuidv4(),
-                name: faker.person.fullName(),
-                email: faker.internet.email(),
-                password_hash: 'hashedpassword',
+        // Users
+        const adminId = uuidv4();
+        const userId = uuidv4();
+        const staffId = uuidv4();
+        await queryInterface.bulkInsert('Users', [
+            {
+                id: adminId,
+                name: 'Demo Admin',
+                email: 'demo_admin@junkio.com',
+                password_hash: passwordHash,
+                role: 'admin',
+                createdAt: now,
+                updatedAt: now
+            },
+            {
+                id: userId,
+                name: 'Demo User',
+                email: 'demo_user@junkio.com',
+                password_hash: passwordHash,
                 role: 'member',
-                createdAt: new Date(),
-                updatedAt: new Date()
-            });
-        }
-        await queryInterface.bulkInsert('Users', users, {});
+                createdAt: now,
+                updatedAt: now
+            },
+            {
+                id: staffId,
+                name: 'Demo Staff',
+                email: 'demo_staff@junkio.com',
+                password_hash: passwordHash,
+                role: 'staff',
+                createdAt: now,
+                updatedAt: now
+            }
+        ], {});
 
-        // 2. Create Family
+        // Family + members
         const familyId = uuidv4();
         await queryInterface.bulkInsert('Families', [{
             id: familyId,
-            name: 'Gia Đình Demo',
-            owner_id: demoUserId,
-            createdAt: new Date(),
-            updatedAt: new Date()
+            name: 'Demo Family',
+            owner_id: adminId,
+            createdAt: now,
+            updatedAt: now
         }], {});
 
-        // 3. Family Members
-        await queryInterface.bulkInsert('FamilyMembers', [{
-            id: uuidv4(),
-            family_id: familyId,
-            user_id: demoUserId,
-            role: 'owner',
-            createdAt: new Date(),
-            updatedAt: new Date()
-        }], {});
+        await queryInterface.bulkInsert('FamilyMembers', [
+            {
+                id: uuidv4(),
+                family_id: familyId,
+                user_id: adminId,
+                role: 'owner',
+                createdAt: now,
+                updatedAt: now
+            },
+            {
+                id: uuidv4(),
+                family_id: familyId,
+                user_id: userId,
+                role: 'member',
+                createdAt: now,
+                updatedAt: now
+            },
+            {
+                id: uuidv4(),
+                family_id: familyId,
+                user_id: staffId,
+                role: 'member',
+                createdAt: now,
+                updatedAt: now
+            }
+        ], {});
 
-        // 4. Categories
+        // Categories
+        const expenseNames = ['Ăn uống', 'Di chuyển', 'Nhà cửa', 'Giải trí', 'Mua sắm', 'Học phí'];
+        const incomeNames = ['Lương', 'Thưởng', 'Đầu tư'];
         const categories = [];
-        const expCats = ['Ăn uống', 'Di chuyển', 'Nhà cửa', 'Giải trí', 'Mua sắm'];
-        const incCats = ['Lương', 'Thưởng', 'Đầu tư'];
-        const catIds = [];
+        const categoryIds = {};
 
-        for (const c of expCats) {
+        expenseNames.forEach(name => {
             const id = uuidv4();
-            catIds.push(id);
-            categories.push({
-                id: id,
-                name: c,
-                type: 'EXPENSE',
-                createdAt: new Date(),
-                updatedAt: new Date()
-            });
-        }
-        for (const c of incCats) {
+            categoryIds[name] = id;
+            categories.push({ id, name, type: 'EXPENSE', createdAt: now, updatedAt: now });
+        });
+        incomeNames.forEach(name => {
             const id = uuidv4();
-            catIds.push(id);
-            categories.push({
-                id: id,
-                name: c,
-                type: 'INCOME',
-                createdAt: new Date(),
-                updatedAt: new Date()
-            });
-        }
+            categoryIds[name] = id;
+            categories.push({ id, name, type: 'INCOME', createdAt: now, updatedAt: now });
+        });
         await queryInterface.bulkInsert('Categories', categories, {});
 
-        // 5. Wallets
-        const walletId = uuidv4();
-        await queryInterface.bulkInsert('Wallets', [{
-            id: walletId,
-            name: 'Ví Tiền Mặt',
-            balance: 10000000,
-            currency: 'VND',
-            user_id: demoUserId,
-            family_id: familyId,
-            createdAt: new Date(),
-            updatedAt: new Date()
-        }], {});
+        // Wallets (2 cá nhân + 1 gia đình)
+        const adminWalletId = uuidv4();
+        const userWalletId = uuidv4();
+        const familyWalletId = uuidv4();
+        const staffWalletId = uuidv4();
+        await queryInterface.bulkInsert('Wallets', [
+            { id: adminWalletId, name: 'Ví Tiền Mặt', balance: 12000000, currency: 'VND', user_id: adminId, family_id: null, createdAt: now, updatedAt: now },
+            { id: userWalletId, name: 'Ví Tiết Kiệm', balance: 8000000, currency: 'VND', user_id: userId, family_id: null, createdAt: now, updatedAt: now },
+            { id: staffWalletId, name: 'Ví Nhân Viên', balance: 3500000, currency: 'VND', user_id: staffId, family_id: null, createdAt: now, updatedAt: now },
+            { id: familyWalletId, name: 'Quỹ Gia Đình', balance: 5000000, currency: 'VND', user_id: null, family_id: familyId, createdAt: now, updatedAt: now }
+        ], {});
 
-        // 6. Transactions (50 items)
-        const transactions = [];
-        for (let i = 0; i < 50; i++) {
-            transactions.push({
-                id: uuidv4(),
-                amount: parseFloat(faker.finance.amount(10000, 500000, 0)),
-                date: faker.date.recent({ days: 60 }),
-                description: faker.commerce.productName(),
-                type: Math.random() > 0.3 ? 'EXPENSE' : 'INCOME',
-                wallet_id: walletId,
-                category_id: catIds[Math.floor(Math.random() * catIds.length)],
-                user_id: demoUserId,
-                createdAt: new Date(),
-                updatedAt: new Date()
-            });
-        }
+        // Transactions (12 mục đa dạng)
+        const transactions = [
+            { description: 'Lương tháng 3', amount: 15000000, type: 'INCOME', wallet_id: adminWalletId, category_id: categoryIds['Lương'], user_id: adminId, date: new Date(), createdAt: now, updatedAt: now },
+            { description: 'Bonus Q1', amount: 3000000, type: 'INCOME', wallet_id: adminWalletId, category_id: categoryIds['Thưởng'], user_id: adminId, date: new Date(), createdAt: now, updatedAt: now },
+            { description: 'Đầu tư cổ tức', amount: 1200000, type: 'INCOME', wallet_id: userWalletId, category_id: categoryIds['Đầu tư'], user_id: userId, date: new Date(), createdAt: now, updatedAt: now },
+            { description: 'Siêu thị cuối tuần', amount: 650000, type: 'EXPENSE', wallet_id: familyWalletId, category_id: categoryIds['Ăn uống'], user_id: adminId, date: new Date(), createdAt: now, updatedAt: now },
+            { description: 'Tiền xăng xe', amount: 300000, type: 'EXPENSE', wallet_id: userWalletId, category_id: categoryIds['Di chuyển'], user_id: userId, date: new Date(), createdAt: now, updatedAt: now },
+            { description: 'Thuê nhà tháng', amount: 4500000, type: 'EXPENSE', wallet_id: adminWalletId, category_id: categoryIds['Nhà cửa'], user_id: adminId, date: new Date(), createdAt: now, updatedAt: now },
+            { description: 'Netflix', amount: 260000, type: 'EXPENSE', wallet_id: userWalletId, category_id: categoryIds['Giải trí'], user_id: userId, date: new Date(), createdAt: now, updatedAt: now },
+            { description: 'Mua sắm quần áo', amount: 900000, type: 'EXPENSE', wallet_id: adminWalletId, category_id: categoryIds['Mua sắm'], user_id: adminId, date: new Date(), createdAt: now, updatedAt: now },
+            { description: 'Đóng học phí', amount: 2500000, type: 'EXPENSE', wallet_id: familyWalletId, category_id: categoryIds['Học phí'], user_id: adminId, date: new Date(), createdAt: now, updatedAt: now },
+            { description: 'Ăn tối gia đình', amount: 520000, type: 'EXPENSE', wallet_id: familyWalletId, category_id: categoryIds['Ăn uống'], user_id: userId, date: new Date(), createdAt: now, updatedAt: now },
+            { description: 'Cà phê sáng', amount: 55000, type: 'EXPENSE', wallet_id: adminWalletId, category_id: categoryIds['Ăn uống'], user_id: adminId, date: new Date(), createdAt: now, updatedAt: now },
+            { description: 'Tiền điện', amount: 780000, type: 'EXPENSE', wallet_id: adminWalletId, category_id: categoryIds['Nhà cửa'], user_id: adminId, date: new Date(), createdAt: now, updatedAt: now }
+        ].map(t => ({ ...t, id: uuidv4() }));
+
         await queryInterface.bulkInsert('Transactions', transactions, {});
+
+        // Transaction shares (để demo modal chi tiết)
+        const shares = [];
+        const shareTargets = transactions.filter(t => [ 'Siêu thị cuối tuần', 'Đóng học phí', 'Ăn tối gia đình' ].includes(t.description));
+        shareTargets.forEach(t => {
+            const half = parseFloat(t.amount) / 2;
+            shares.push({
+                id: uuidv4(),
+                transaction_id: t.id,
+                user_id: adminId,
+                amount: half,
+                status: 'PAID',
+                created_at: now,
+                updated_at: now
+            });
+            shares.push({
+                id: uuidv4(),
+                transaction_id: t.id,
+                user_id: userId,
+                amount: half,
+                status: 'UNPAID',
+                created_at: now,
+                updated_at: now
+            });
+        });
+        await queryInterface.bulkInsert('transaction_shares', shares, {});
+
+        // Goals (3 mục tiêu)
+        await queryInterface.bulkInsert('goals', [
+            { id: uuidv4(), name: 'Mua xe máy', targetAmount: 15000000, currentAmount: 4000000, deadline: new Date(new Date().setMonth(now.getMonth() + 6)), colorCode: '#3b82f6', imageUrl: 'Bike', status: 'IN_PROGRESS', user_id: userId, created_at: now, updated_at: now },
+            { id: uuidv4(), name: 'Quỹ du lịch Đà Lạt', targetAmount: 8000000, currentAmount: 2500000, deadline: new Date(new Date().setMonth(now.getMonth() + 4)), colorCode: '#22c55e', imageUrl: 'Plane', status: 'IN_PROGRESS', user_id: adminId, created_at: now, updated_at: now },
+            { id: uuidv4(), name: 'Dự phòng khẩn cấp', targetAmount: 10000000, currentAmount: 6000000, deadline: null, colorCode: '#f59e0b', imageUrl: 'Shield', status: 'IN_PROGRESS', user_id: adminId, created_at: now, updated_at: now }
+        ], {});
+
+        // Budgets (2)
+        const start = new Date(now.getFullYear(), now.getMonth(), 1);
+        const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        await queryInterface.bulkInsert('Budgets', [
+            { id: uuidv4(), amount_limit: 3000000, start_date: start, end_date: end, category_id: categoryIds['Ăn uống'], family_id: familyId, createdAt: now, updatedAt: now },
+            { id: uuidv4(), amount_limit: 2000000, start_date: start, end_date: end, category_id: categoryIds['Giải trí'], family_id: familyId, createdAt: now, updatedAt: now }
+        ], {});
     },
 
-    async down(queryInterface, Sequelize) {
+    async down(queryInterface) {
+        await queryInterface.bulkDelete('Budgets', null, {});
+        await queryInterface.bulkDelete('transaction_shares', null, {});
         await queryInterface.bulkDelete('Transactions', null, {});
         await queryInterface.bulkDelete('Wallets', null, {});
         await queryInterface.bulkDelete('Categories', null, {});
         await queryInterface.bulkDelete('FamilyMembers', null, {});
         await queryInterface.bulkDelete('Families', null, {});
+        await queryInterface.bulkDelete('goals', null, {});
         await queryInterface.bulkDelete('Users', null, {});
     }
 };

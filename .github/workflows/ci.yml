@@ -2,9 +2,9 @@ name: Junkio CI/CD Pipeline
 
 on:
   push:
-    branches: [ "main", "master", "BE", "FE" ]
+    branches: [ "main", "dev" ]
   pull_request:
-    branches: [ "main", "master" ]
+    branches: [ "main", "dev" ]
 
 jobs:
   build-and-test:
@@ -39,7 +39,7 @@ jobs:
     - name: Run Backend Tests
       run: |
         cd backend
-        npm run test || echo "Warning: Tests failed but continuing..."
+        npm run test
 
     - name: Install Frontend Dependencies
       run: |
@@ -50,6 +50,11 @@ jobs:
       run: |
         cd frontend
         npm run lint
+
+    - name: Run Frontend Tests
+      run: |
+        cd frontend
+        npm run test
 
     - name: Build Frontend
       run: |

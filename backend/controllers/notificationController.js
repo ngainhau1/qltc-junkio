@@ -1,4 +1,6 @@
 const { Notification, User } = require('../models');
+const { success, error: sendError, notFound, serverError } = require('../utils/responseHelper');
+const { serializeNotification } = require('../utils/notificationPresenter');
 
 // User fetches their notifications
 exports.getNotifications = async (req, res) => {
@@ -8,10 +10,15 @@ exports.getNotifications = async (req, res) => {
             order: [['created_at', 'DESC']],
             limit: 50
         });
-        res.json(notifications);
+
+        success(
+            res,
+            notifications.map(serializeNotification),
+            'Lay danh sach thong bao thanh cong'
+        );
     } catch (err) {
         console.error('Fetch notifications error:', err);
-        res.status(500).send('Server Error');
+        serverError(res, 'Loi Server');
     }
 };
 
@@ -22,10 +29,10 @@ exports.markAllAsRead = async (req, res) => {
             { isRead: true },
             { where: { user_id: req.user.id, isRead: false } }
         );
-        res.json({ msg: 'All notifications marked as read' });
+        success(res, null, 'Da danh dau tat ca la da doc');
     } catch (err) {
         console.error('Mark read error:', err);
-        res.status(500).send('Server Error');
+        serverError(res, 'Loi Server');
     }
 };
 
@@ -37,16 +44,16 @@ exports.markAsRead = async (req, res) => {
         });
 
         if (!notification) {
-            return res.status(404).json({ msg: 'Notification not found' });
+            return notFound(res, 'Khong tim thay thong bao');
         }
 
         notification.isRead = true;
         await notification.save();
 
-        res.json({ msg: 'Notification marked as read' });
+        success(res, serializeNotification(notification), 'Da danh dau thong bao la da doc');
     } catch (err) {
         console.error('Mark read error:', err);
-        res.status(500).send('Server Error');
+        serverError(res, 'Loi Server');
     }
 };
 
@@ -55,32 +62,28 @@ exports.adminBroadcast = async (req, res) => {
     const { title, message, type } = req.body;
     try {
         if (req.user.role !== 'admin') {
-            return res.status(403).json({ msg: 'Access denied: Admins only' });
+            return sendError(res, 'Truy cap bi tu choi: Chi danh cho Admin', 403);
         }
 
         const users = await User.findAll({ attributes: ['id'] });
-        const notifications = users.map(u => ({
-            user_id: u.id,
+        const notifications = users.map((user) => ({
+            user_id: user.id,
+            title: title || 'Broadcast',
             type: type || 'SYSTEM_BROADCAST',
             message: title ? `[${title}] ${message}` : message,
             isRead: false
         }));
 
-        await Notification.bulkCreate(notifications);
+        const createdNotifications = await Notification.bulkCreate(notifications, { returning: true });
 
-        // Realtime emit
         const io = require('../config/socket').getIO();
-        users.forEach(u => {
-            io.to(u.id).emit('NEW_NOTIFICATION', {
-                type: type || 'SYSTEM_BROADCAST',
-                message: title ? `[${title}] ${message}` : message,
-                created_at: new Date()
-            });
+        createdNotifications.forEach((notification) => {
+            io.to(notification.user_id).emit('NEW_NOTIFICATION', serializeNotification(notification));
         });
 
-        res.json({ msg: `Broadcasted to ${users.length} users successfully` });
+        success(res, null, `Da gui thong bao toi ${users.length} nguoi dung thanh cong`);
     } catch (err) {
         console.error('Broadcast error:', err);
-        res.status(500).send('Server Error');
+        serverError(res, 'Loi Server');
     }
 };

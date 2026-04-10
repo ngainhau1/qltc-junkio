@@ -1,24 +1,27 @@
 import { Inbox } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 export function EmptyState({
     // eslint-disable-next-line no-unused-vars
     icon: Icon = Inbox,
-    title = 'Không có dữ liệu',
-    description = 'Hiện tại chưa có dữ liệu nào để hiển thị.',
-    action
+    title,
+    description,
+    action,
 }) {
+    const { t } = useTranslation()
+    const resolvedTitle = title || t('common.noDataTitle')
+    const resolvedDescription = description || t('common.noDataDesc')
+
     return (
-        <div className="flex flex-col items-center justify-center py-16 px-4 text-center border-2 border-dashed border-border/60 rounded-2xl bg-muted/10 w-full animate-in fade-in duration-500">
-            <div className="h-24 w-24 bg-primary/5 rounded-full flex items-center justify-center mb-6 ring-8 ring-primary/5">
+        <div className="flex w-full animate-in fade-in flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border/60 bg-muted/10 px-4 py-16 text-center duration-500">
+            <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-primary/5 ring-8 ring-primary/5">
                 <Icon className="h-12 w-12 text-primary/40" />
             </div>
-            <h3 className="text-xl font-bold text-foreground mb-2">{title}</h3>
-            <p className="text-sm text-muted-foreground max-w-md mb-6 leading-relaxed">
-                {description}
+            <h3 className="mb-2 text-xl font-bold text-foreground">{resolvedTitle}</h3>
+            <p className="mb-6 max-w-md text-sm leading-relaxed text-muted-foreground">
+                {resolvedDescription}
             </p>
-            {action && (
-                <div className="mt-2 text-center w-full flex justify-center">{action}</div>
-            )}
+            {action && <div className="mt-2 flex w-full justify-center text-center">{action}</div>}
         </div>
     )
 }

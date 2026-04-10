@@ -1,249 +1,293 @@
-import { useFormik } from "formik"
-import * as Yup from "yup"
-import { useDispatch, useSelector } from "react-redux"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { createTransaction } from "@/features/transactions/transactionSlice"
-import { addNotification } from "@/features/notifications/notificationsSlice"
-import { formatCurrency } from "@/lib/utils"
-import { ArrowRight } from "lucide-react"
-import { useTranslation } from "react-i18next"
+import { useEffect, useState } from 'react';
+import { useFormik } from 'formik';
+import * as Yup from 'yup';
+import { useDispatch, useSelector } from 'react-redux';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { createTransaction, createTransfer } from '@/features/transactions/transactionSlice';
+import { fetchCategories } from '@/features/categories/categorySlice';
+import { getFinanceScopeLabels } from '@/features/finance/context';
+import { refreshFinanceData } from '@/features/finance/refreshFinanceData';
+import { formatCurrency } from '@/lib/utils';
+import { ArrowRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
-const createYupSchema = (t) => Yup.object({
-    description: Yup.string().required(t('transactionForm.validations.reqDesc')),
-    amount: Yup.number().positive(t('transactionForm.validations.posAmount')).required(t('transactionForm.validations.reqAmount')),
-    date: Yup.date().required(t('transactionForm.validations.reqDate')),
-    type: Yup.string().oneOf(['EXPENSE', 'INCOME', 'TRANSFER']).required(t('transactionForm.validations.reqType')),
-    walletId: Yup.string().required(t('transactionForm.validations.reqWallet')),
-    categoryId: Yup.string().when('type', {
-        is: (type) => type !== 'TRANSFER',
-        then: (schema) => schema.required(t('transactionForm.validations.reqCategory')),
-        otherwise: (schema) => schema.notRequired()
-    }),
-    destinationWalletId: Yup.string().when('type', {
-        is: 'TRANSFER',
-        then: (schema) => schema.required(t('transactionForm.validations.reqDestWallet')).notOneOf([Yup.ref('walletId')], t('transactionForm.validations.diffWallet')),
-        otherwise: (schema) => schema.notRequired()
-    })
-})
+const EMPTY_ARRAY = [];
+
+const createYupSchema = (t) =>
+    Yup.object({
+        description: Yup.string().required(t('transactionForm.validations.reqDesc')),
+        amount: Yup.number().positive(t('transactionForm.validations.posAmount')).required(t('transactionForm.validations.reqAmount')),
+        date: Yup.date().required(t('transactionForm.validations.reqDate')),
+        type: Yup.string().oneOf(['EXPENSE', 'INCOME', 'TRANSFER']).required(t('transactionForm.validations.reqType')),
+        walletId: Yup.string().required(t('transactionForm.validations.reqWallet')),
+        categoryId: Yup.string().notRequired(),
+        destinationWalletId: Yup.string().when('type', {
+            is: 'TRANSFER',
+            then: (schema) =>
+                schema
+                    .required(t('transactionForm.validations.reqDestWallet'))
+                    .notOneOf([Yup.ref('walletId')], t('transactionForm.validations.diffWallet')),
+            otherwise: (schema) => schema.notRequired(),
+        }),
+    });
 
 export function TransactionForm({ onSuccess }) {
-    const { t } = useTranslation()
-    const dispatch = useDispatch()
-    const { wallets } = useSelector(state => state.wallets)
-    const { activeFamilyId } = useSelector(state => state.families)
+    const { t } = useTranslation();
+    const dispatch = useDispatch();
+    const wallets = useSelector((state) => state.wallets?.wallets ?? []);
+    const { activeFamilyId, families } = useSelector((state) => state.families ?? {});
+    const categories = useSelector((state) => state.categories?.categories ?? EMPTY_ARRAY);
+    const [submitError, setSubmitError] = useState('');
 
-    // Filter wallets based on context
-    const contextWallets = wallets.filter(w =>
-        activeFamilyId ? w.family_id === activeFamilyId : !w.family_id
-    )
+    useEffect(() => {
+        dispatch(fetchCategories());
+    }, [dispatch]);
 
-    const { transactions } = useSelector(state => state.transactions)
-
-    // Select first wallet as default if available
-    const defaultWalletId = contextWallets.length > 0 ? contextWallets[0].id : ''
-    // Select second wallet as default destination if available
-    const defaultDestWalletId = contextWallets.length > 1 ? contextWallets[1].id : ''
+    const contextWallets = wallets.filter((wallet) => (activeFamilyId ? wallet.family_id === activeFamilyId : !wallet.family_id));
+    const financeScope = getFinanceScopeLabels(t, {
+        activeFamilyId: activeFamilyId ?? null,
+        families: families ?? [],
+    });
+    const defaultWalletId = contextWallets[0]?.id || '';
+    const defaultDestWalletId = contextWallets.find((wallet) => wallet.id !== defaultWalletId)?.id || '';
 
     const formik = useFormik({
+        enableReinitialize: true,
         initialValues: {
             description: '',
             amount: '',
-            date: new Date().toISOString().split('T')[0], // Today YYYY-MM-DD
+            date: new Date().toISOString().split('T')[0],
             type: 'EXPENSE',
             walletId: defaultWalletId,
             destinationWalletId: defaultDestWalletId,
-            categoryId: 'general',
+            categoryId: '',
         },
         validationSchema: createYupSchema(t),
         onSubmit: async (values) => {
-            const newTransaction = {
-                description: values.description,
-                amount: parseFloat(values.amount),
-                transaction_date: new Date(values.date).toISOString(),
-                type: values.type,
-                wallet_id: values.walletId,
-                category_id: values.type === 'TRANSFER' ? null : values.categoryId,
-                destination_wallet_id: values.type === 'TRANSFER' ? values.destinationWalletId : null,
-            }
+            setSubmitError('');
 
             try {
-                // 1. Create Transaction (Backend handles wallet balance adjustments safely)
-                await dispatch(createTransaction(newTransaction)).unwrap();
-
-            // 3. Spending Alert Logic for Expenses (Competitor Enhancement)
-            if (values.type === 'EXPENSE') {
-                const currentMonth = new Date(values.date).getMonth();
-                const currentYear = new Date(values.date).getFullYear();
-
-                const monthlyExpenses = transactions.filter(t =>
-                    t.type === 'EXPENSE' &&
-                    t.wallet_id === values.walletId &&
-                    new Date(t.date).getMonth() === currentMonth &&
-                    new Date(t.date).getFullYear() === currentYear
-                ).reduce((acc, t) => acc + t.amount, 0);
-
-                const newTotalExpense = monthlyExpenses + parseFloat(values.amount);
-                const wallet = wallets.find(w => w.id === values.walletId);
-                const budgetLimit = wallet ? wallet.balance + newTotalExpense : 5000000; // Simplified Budget estimation (Balance + Total Expenses)
-
-                if (newTotalExpense > budgetLimit * 0.8) {
-                    dispatch(addNotification({
-                        type: 'BUDGET_ALERT',
-                        title: t('notifications.budgetAlertTitle', 'Cảnh báo Chi tiêu'),
-                        message: t('notifications.budgetAlertDesc', `Bạn đã chi tiêu ${formatCurrency(newTotalExpense)} (vượt quá 80% định mức) cho ví này trong tháng.`),
-                        isRead: false,
-                        is_read: false
-                    }));
+                if (values.type === 'TRANSFER') {
+                    await dispatch(
+                        createTransfer({
+                            from_wallet_id: values.walletId,
+                            to_wallet_id: values.destinationWalletId,
+                            amount: parseFloat(values.amount),
+                            description: values.description,
+                            date: values.date,
+                        })
+                    ).unwrap();
+                } else {
+                    await dispatch(
+                        createTransaction({
+                            description: values.description,
+                            amount: parseFloat(values.amount),
+                            date: values.date,
+                            type: values.type,
+                            wallet_id: values.walletId,
+                            category_id: values.categoryId || null,
+                        })
+                    ).unwrap();
                 }
-            }
 
+                await dispatch(refreshFinanceData());
                 if (onSuccess) onSuccess();
-            } catch (err) {
-                console.error("Lỗi tạo giao dịch:", err);
+            } catch (error) {
+                setSubmitError(String(error || t('transactionForm.submitError')));
             }
         },
-    })
+    });
 
     const handleTabChange = (value) => {
-        formik.setFieldValue('type', value)
-    }
+        formik.setFieldValue('type', value);
+    };
 
     return (
         <form onSubmit={formik.handleSubmit} className="space-y-4" data-testid={`form-${formik.values.type}`}>
             <Tabs defaultValue="EXPENSE" onValueChange={handleTabChange} className="w-full">
-                <TabsList className="grid w-full grid-cols-3 mb-4">
-                    <TabsTrigger value="EXPENSE">{t('transactionForm.tabs.expense')}</TabsTrigger>
-                    <TabsTrigger value="INCOME">{t('transactionForm.tabs.income')}</TabsTrigger>
-                    <TabsTrigger value="TRANSFER">{t('transactionForm.tabs.transfer')}</TabsTrigger>
+                <TabsList className="mb-4 grid h-auto w-full grid-cols-3 gap-1">
+                    <TabsTrigger value="EXPENSE" className="touch-target px-2 text-xs sm:text-sm">{t('transactionForm.tabs.expense')}</TabsTrigger>
+                    <TabsTrigger value="INCOME" className="touch-target px-2 text-xs sm:text-sm">{t('transactionForm.tabs.income')}</TabsTrigger>
+                    <TabsTrigger value="TRANSFER" className="touch-target px-2 text-xs sm:text-sm">{t('transactionForm.tabs.transfer')}</TabsTrigger>
                 </TabsList>
             </Tabs>
 
+            <div className="rounded-md border bg-muted/30 px-3 py-2" data-testid="transaction-scope">
+                <p className="text-xs font-medium text-muted-foreground">{t('transactions.context.scopeLabel')}</p>
+                <p className="text-sm font-medium">{financeScope.scopeTargetLabel}</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                    {financeScope.scope === 'family'
+                        ? t('transactions.context.familyHint', { target: financeScope.scopeTargetLabel })
+                        : t('transactions.context.personalHint')}
+                </p>
+            </div>
+
             <div className="space-y-4">
-                {/* Amount */}
                 <div>
-                    <label className="text-sm font-medium mb-1 block">{t('transactionForm.amount')}</label>
+                    <label htmlFor="transaction-amount" className="mb-1 block text-sm font-medium">
+                        {t('transactionForm.amount')}
+                    </label>
                     <Input
+                        id="transaction-amount"
                         name="amount"
                         type="number"
                         inputMode="decimal"
                         placeholder="0"
                         value={formik.values.amount}
                         onChange={formik.handleChange}
-                        className={formik.errors.amount && formik.touched.amount ? "border-red-500" : ""}
+                        className={formik.errors.amount && formik.touched.amount ? 'border-red-500' : ''}
                     />
-                    {formik.errors.amount && formik.touched.amount && <p className="text-xs text-red-500 mt-1">{formik.errors.amount}</p>}
+                    {formik.errors.amount && formik.touched.amount && <p className="mt-1 text-xs text-red-500">{formik.errors.amount}</p>}
                 </div>
 
-                {/* Wallets & Transfer Logic */}
                 {formik.values.type === 'TRANSFER' ? (
-                    <div className="grid grid-cols-[1fr,auto,1fr] gap-2 items-center">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr,auto,1fr] sm:items-center">
                         <div>
-                            <label className="text-sm font-medium mb-1 block">{t('transactionForm.fromWallet')}</label>
+                            <label htmlFor="transaction-wallet" className="mb-1 block text-sm font-medium">
+                                {t('transactionForm.fromWallet')}
+                            </label>
                             <select
+                                id="transaction-wallet"
                                 name="walletId"
-                                className="w-full border rounded-md h-10 px-3 text-sm bg-background"
+                                className="h-10 w-full rounded-md border bg-background px-3 text-sm"
                                 value={formik.values.walletId}
                                 onChange={formik.handleChange}
+                                data-testid="source-wallet-select"
                             >
-                                {contextWallets.map(w => (
-                                    <option key={w.id} value={w.id}>{w.name}</option>
+                                {contextWallets.map((wallet) => (
+                                    <option key={wallet.id} value={wallet.id}>
+                                        {wallet.name}
+                                    </option>
                                 ))}
                             </select>
                         </div>
-                        <div className="pt-6 text-muted-foreground">
+                        <div className="hidden pt-6 text-muted-foreground sm:block">
+                            <ArrowRight className="h-4 w-4" />
+                        </div>
+                        <div className="flex items-center justify-center text-muted-foreground sm:hidden">
                             <ArrowRight className="h-4 w-4" />
                         </div>
                         <div>
-                            <label className="text-sm font-medium mb-1 block">{t('transactionForm.toWallet')}</label>
+                            <label htmlFor="transaction-destination-wallet" className="mb-1 block text-sm font-medium">
+                                {t('transactionForm.toWallet')}
+                            </label>
                             <select
+                                id="transaction-destination-wallet"
                                 name="destinationWalletId"
-                                className="w-full border rounded-md h-10 px-3 text-sm bg-background"
+                                className="h-10 w-full rounded-md border bg-background px-3 text-sm"
                                 value={formik.values.destinationWalletId}
                                 onChange={formik.handleChange}
                                 data-testid="dest-wallet-select"
                             >
-                                <option value="" disabled>{t('transactionForm.selectWallet')}</option>
-                                {contextWallets.filter(w => w.id !== formik.values.walletId).map(w => (
-                                    <option key={w.id} value={w.id}>{w.name}</option>
-                                ))}
+                                <option value="" disabled>
+                                    {t('transactionForm.selectWallet')}
+                                </option>
+                                {contextWallets
+                                    .filter((wallet) => wallet.id !== formik.values.walletId)
+                                    .map((wallet) => (
+                                        <option key={wallet.id} value={wallet.id}>
+                                            {wallet.name}
+                                        </option>
+                                    ))}
                             </select>
-                            {formik.errors.destinationWalletId && formik.touched.destinationWalletId && <p className="text-xs text-red-500 mt-1">{formik.errors.destinationWalletId}</p>}
+                            {formik.errors.destinationWalletId && formik.touched.destinationWalletId && (
+                                <p className="mt-1 text-xs text-red-500">{formik.errors.destinationWalletId}</p>
+                            )}
                         </div>
                     </div>
                 ) : (
                     <div>
-                        <label className="text-sm font-medium mb-1 block">{t('transactionForm.wallet')}</label>
+                        <label htmlFor="transaction-wallet" className="mb-1 block text-sm font-medium">
+                            {t('transactionForm.wallet')}
+                        </label>
                         <select
+                            id="transaction-wallet"
                             name="walletId"
-                            className="w-full border rounded-md h-10 px-3 text-sm bg-background"
+                            className="block h-10 w-full rounded-md border bg-background px-3 text-sm"
                             value={formik.values.walletId}
                             onChange={formik.handleChange}
                             data-testid="source-wallet-select"
                         >
                             {contextWallets.length === 0 && (
-                                <option value="" disabled>{t('transactionForm.noWalletsAvailable')}</option>
+                                <option value="" disabled>
+                                    {t('transactionForm.noWalletsAvailable')}
+                                </option>
                             )}
-                            {contextWallets.map(w => (
-                                <option key={w.id} value={w.id}>{w.name} ({formatCurrency(w.balance)})</option>
+                            {contextWallets.map((wallet) => (
+                                <option key={wallet.id} value={wallet.id}>
+                                    {wallet.name} ({formatCurrency(wallet.balance)})
+                                </option>
                             ))}
                         </select>
                     </div>
                 )}
 
-                {/* Description & Category */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <p className="text-xs text-muted-foreground">{t('transactions.context.walletHint')}</p>
+
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
-                        <label className="text-sm font-medium mb-1 block">{t('transactionForm.description')}</label>
+                        <label htmlFor="transaction-description" className="mb-1 block text-sm font-medium">
+                            {t('transactionForm.description')}
+                        </label>
                         <Input
+                            id="transaction-description"
                             name="description"
-                            placeholder={formik.values.type === 'TRANSFER' ? t('transactionForm.descPlaceholderTransfer') : t('transactionForm.descPlaceholderDefault')}
+                            placeholder={
+                                formik.values.type === 'TRANSFER'
+                                    ? t('transactionForm.descPlaceholderTransfer')
+                                    : t('transactionForm.descPlaceholderDefault')
+                            }
                             value={formik.values.description}
                             onChange={formik.handleChange}
-                            className={formik.errors.description && formik.touched.description ? "border-red-500" : ""}
+                            className={formik.errors.description && formik.touched.description ? 'border-red-500' : ''}
                         />
-                        {formik.errors.description && formik.touched.description && <p className="text-xs text-red-500 mt-1">{formik.errors.description}</p>}
+                        {formik.errors.description && formik.touched.description && (
+                            <p className="mt-1 text-xs text-red-500">{formik.errors.description}</p>
+                        )}
                     </div>
 
                     <div>
-                        <label className="text-sm font-medium mb-1 block">{t('transactionForm.date')}</label>
-                        <Input
-                            name="date"
-                            type="date"
-                            value={formik.values.date}
-                            onChange={formik.handleChange}
-                        />
+                        <label htmlFor="transaction-date" className="mb-1 block text-sm font-medium">
+                            {t('transactionForm.date')}
+                        </label>
+                        <Input id="transaction-date" name="date" type="date" value={formik.values.date} onChange={formik.handleChange} />
                     </div>
                 </div>
 
                 {formik.values.type !== 'TRANSFER' && (
                     <div>
-                        <label className="text-sm font-medium mb-1 block">{t('transactionForm.category')}</label>
+                        <label htmlFor="transaction-category" className="mb-1 block text-sm font-medium">
+                            {t('transactionForm.category')}
+                        </label>
                         <select
+                            id="transaction-category"
                             name="categoryId"
-                            className="w-full border rounded-md h-10 px-3 text-sm bg-background block"
+                            className="block h-10 w-full rounded-md border bg-background px-3 text-sm"
                             value={formik.values.categoryId}
                             onChange={formik.handleChange}
                         >
-                            <option value="general">{t('transactionForm.categories.general')}</option>
-                            <option value="food">{t('transactionForm.categories.food')}</option>
-                            <option value="transport">{t('transactionForm.categories.transport')}</option>
-                            <option value="shopping">{t('transactionForm.categories.shopping')}</option>
-                            <option value="utilities">{t('transactionForm.categories.utilities')}</option>
-                            <option value="entertainment">{t('transactionForm.categories.entertainment')}</option>
-                            <option value="health">{t('transactionForm.categories.health')}</option>
-                            <option value="income">{t('transactionForm.categories.income')}</option>
+                            <option value="">{t('transactionForm.categories.general')}</option>
+                            {categories
+                                .filter((category) => (formik.values.type === 'INCOME' ? category.type === 'INCOME' : category.type === 'EXPENSE'))
+                                .map((category) => (
+                                    <option key={category.id} value={category.id}>
+                                        {category.name}
+                                    </option>
+                                ))}
                         </select>
                     </div>
                 )}
             </div>
 
-            <div className="pt-4 flex justify-end gap-2">
+            {submitError && <p className="text-sm text-red-500">{submitError}</p>}
+
+            <div className="flex justify-end gap-2 pt-4">
                 <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
                     {formik.values.type === 'TRANSFER' ? t('transactionForm.submitTransfer') : t('transactionForm.submitAdd')}
                 </Button>
             </div>
         </form>
-    )
+    );
 }

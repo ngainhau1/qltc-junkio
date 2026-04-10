@@ -7,6 +7,8 @@ const { Sequelize } = require('sequelize');
 const path = require('path');
 const http = require('http'); // Add HTTP module
 const socketConfig = require('./config/socket'); // Add Socket config
+const responseMiddleware = require('./middleware/responseMiddleware');
+const { connectRedis } = require('./utils/redisClient');
 require('dotenv').config();
 
 const app = express();
@@ -34,6 +36,7 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(cookieParser());
+app.use(responseMiddleware);
 app.use('/api', limiter); // Áp dụng cho mọi API
 
 // Phục vụ các file tĩnh trong thư mục uploads (Ví dụ: ảnh đại diện)
@@ -58,7 +61,14 @@ app.use('/api/forecast', require('./routes/forecastRoutes'));
 // Swagger API Documentation (truy cập: /api-docs)
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./config/swagger');
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use('/swagger-assets', express.static(path.join(__dirname, 'public', 'swagger')));
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+    explorer: true,
+    customJs: '/swagger-assets/swagger-custom.js',
+    swaggerOptions: {
+        persistAuthorization: true
+    }
+}));
 
 // Cấu hình kết nối Database (Lấy từ biến môi trường Docker)
 // Lưu ý: 'host' là tên service trong docker-compose ('db')
@@ -69,13 +79,34 @@ const sequelize = new Sequelize(
     {
         host: process.env.DB_HOST || 'db', // Quan trọng: host phải là 'db'
         dialect: 'postgres',
-        logging: false, // Tắt log SQL cho gọn
+        logging: process.env.SEQUELIZE_LOG === 'true' ? console.log : false,
+        benchmark: process.env.SEQUELIZE_LOG === 'true'
     }
 );
 
 // Route kiểm tra server sống hay chết
 app.get('/', (req, res) => {
     res.send('<h1> Junkio Expense Tracker Backend is Running!</h1>');
+});
+
+// Healthcheck: DB + Redis
+app.get('/health', async (req, res) => {
+    const result = { status: 'ok', db: 'unknown', redis: 'unknown' };
+    try {
+        await sequelize.authenticate();
+        result.db = 'up';
+    } catch (err) {
+        result.db = `down: ${err.message}`;
+    }
+    try {
+        await connectRedis();
+        await require('./utils/redisClient').client.ping();
+        result.redis = 'up';
+    } catch (err) {
+        result.redis = `down: ${err.message}`;
+    }
+    const httpStatus = (result.db === 'up' && result.redis === 'up') ? 200 : 503;
+    res.status(httpStatus).json(result);
 });
 
 // Route kiểm tra kết nối Database (Bảo vệ bởi auth)
@@ -96,6 +127,7 @@ httpServer.listen(PORT, async () => {
     try {
         await sequelize.authenticate();
         console.log(' Database connected successfully!');
+        await connectRedis();
 
         // Khởi chạy hệ thống báo thức giao dịch định kỳ
         const { startCronJobs } = require('./services/cronJobs');

@@ -12,7 +12,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
-import { createFamily, setActiveFamily, removeMemberFromFamily } from "@/features/families/familySlice"
+import { createFamily, fetchFamilies, setActiveFamily, removeMemberFromFamily } from "@/features/families/familySlice"
 import { approveDebt, rejectDebt, settleDebts, fetchTransactions } from "@/features/transactions/transactionSlice"
 import { Users, Plus, ArrowRight, MoreHorizontal, Shield, ShieldAlert, LogOut, Check, Copy, Receipt, Target, CheckCircle2, XCircle } from "lucide-react"
 import { simplifyDebts } from "@/utils/debtSimplification"
@@ -21,6 +21,7 @@ import { EmptyState } from "@/components/ui/empty-state"
 import { useTranslation } from "react-i18next"
 import { SharedExpenseModal } from "@/components/features/families/SharedExpenseModal"
 import { formatCurrency } from "@/lib/utils"
+import { PageHeader } from "@/components/layout/PageHeader"
 
 export function Family() {
     const { t } = useTranslation();
@@ -34,6 +35,7 @@ export function Family() {
 
     // --- Redux Connected Logic ---
     const activeFamily = families.find(f => f.id === activeFamilyId)
+    const activeFamilyMembers = Array.isArray(activeFamily?.members) ? activeFamily.members : []
 
     // 1. Get Family Wallets
     const familyWalletIds = wallets
@@ -53,7 +55,7 @@ export function Family() {
         if (t.shares && t.shares.length > 0) {
             splitAmongIds = t.shares.map(s => s.user_id);
         } else {
-            splitAmongIds = activeFamily?.members.map(m => m.id) || [];
+            splitAmongIds = activeFamilyMembers.map((member) => member.id);
         }
 
         return {
@@ -86,8 +88,8 @@ export function Family() {
     });
 
     const getMemberName = (id) => {
-        const m = activeFamily?.members.find(m => m.id === id)
-        return m ? m.name : 'Unknown'
+        const member = activeFamilyMembers.find((item) => item.id === id)
+        return member ? member.name : t('common.unknown')
     }
 
     const [settlements, setSettlements] = useState([])
@@ -115,12 +117,13 @@ export function Family() {
 
         try {
             await dispatch(createFamily({ name: newFamilyName, description: newFamilyDesc })).unwrap();
+            await dispatch(fetchFamilies()).unwrap();
             setNewFamilyName("");
             setNewFamilyDesc("");
             setCreateModalOpen(false);
-            toast.success(t('family.modals.create.success', { defaultValue: 'Tạo gia đình thành công' }));
+            toast.success(t('family.modals.create.success'));
         } catch (error) {
-            console.error("Lỗi tạo gia đình:", error);
+            console.error('Create family error:', error);
             toast.error(error);
         }
     }
@@ -148,7 +151,7 @@ export function Family() {
             // Recalculate settlements automatically so UI feels alive
             setTimeout(() => runSimplification(), 300);
         } catch (error) {
-            console.error("Lỗi duyệt công nợ:", error);
+            console.error('Debt approval error:', error);
             toast.error(error);
         }
     }
@@ -193,22 +196,22 @@ export function Family() {
             dispatch(fetchTransactions());
             setSettleModalOpen(false);
         } catch (error) {
-            console.error("Lỗi khi thanh toán bù trừ:", error);
+            console.error('Settlement error:', error);
             toast.error(error);
         }
     }
 
     return (
         <div className="space-y-6">
-            <header className="flex justify-between items-center">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">{t('family.title')}</h1>
-                    <p className="text-muted-foreground">{t('family.desc')}</p>
-                </div>
-                <Button onClick={() => setCreateModalOpen(true)}>
-                    <Plus className="mr-2 h-4 w-4" /> {t('family.createBtn')}
-                </Button>
-            </header>
+            <PageHeader
+                title={t('family.title')}
+                description={t('family.desc')}
+                actions={
+                    <Button onClick={() => setCreateModalOpen(true)} className="w-full sm:w-auto">
+                        <Plus className="mr-2 h-4 w-4" /> {t('family.createBtn')}
+                    </Button>
+                }
+            />
 
             <div className="grid gap-6 md:grid-cols-1">
                 {/* Family List */}
@@ -225,18 +228,25 @@ export function Family() {
                             <div className="space-y-4">
                                 {families.map(family => {
                                     // Find current user's role in this family
-                                    const myRole = family.members.find(m => m.id === user?.id)?.role || 'MEMBER'
+                                    const members = Array.isArray(family.members) ? family.members : []
+                                    const myRole = family.owner_id === user?.id
+                                        ? 'OWNER'
+                                        : family.my_role || members.find((member) => member.id === user?.id)?.role || 'MEMBER'
 
                                     return (
-                                        <div key={family.id} className="border p-4 rounded-lg space-y-4">
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center gap-3">
+                                        <div
+                                            key={family.id}
+                                            data-testid="family-card"
+                                            className="border p-4 rounded-lg space-y-4"
+                                        >
+                                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                                <div className="flex min-w-0 items-center gap-3">
                                                     <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center">
                                                         <Users className="h-5 w-5 text-primary" />
                                                     </div>
-                                                    <div>
+                                                    <div className="min-w-0">
                                                         <div className="flex items-center gap-2">
-                                                            <p className="font-medium text-lg">{family.name}</p>
+                                                            <p className="truncate font-medium text-lg">{family.name}</p>
                                                             {myRole === 'OWNER' && (
                                                                 <span className="text-[10px] bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded border border-yellow-200">
                                                                     {t('family.list.ownerBadge')}
@@ -244,14 +254,16 @@ export function Family() {
                                                             )}
                                                         </div>
                                                         <p className="text-xs text-muted-foreground">
-                                                            {t('family.list.members', { count: family.members.length })} • {t('family.list.role', { role: myRole })}
+                                                            {t('family.list.members', { count: members.length })} • {t('family.list.role', { role: myRole })}
                                                         </p>
                                                     </div>
                                                 </div>
-                                                <div className="flex gap-2">
+                                                <div className="flex w-full gap-2 sm:w-auto">
                                                     <Button
+                                                        data-testid="family-switch-button"
                                                         variant={activeFamilyId === family.id ? "default" : "outline"}
                                                         size="sm"
+                                                        className="w-full sm:w-auto"
                                                         onClick={() => dispatch(setActiveFamily(activeFamilyId === family.id ? null : family.id))}
                                                     >
                                                         {activeFamilyId === family.id ? t('family.list.active') : t('family.list.switch')}
@@ -264,14 +276,14 @@ export function Family() {
                                                 <div className="mt-4 border-t pt-4">
                                                     <h4 className="text-sm font-semibold mb-3">{t('family.list.memberListTitle')}</h4>
                                                     <div className="space-y-3">
-                                                        {family.members.map(member => (
-                                                            <div key={member.id} className="flex items-center justify-between bg-muted/30 p-2 rounded-md">
-                                                                <div className="flex items-center gap-3">
+                                                        {members.map(member => (
+                                                            <div key={member.id} className="flex flex-col gap-3 rounded-md bg-muted/30 p-2 sm:flex-row sm:items-center sm:justify-between">
+                                                                <div className="flex min-w-0 items-center gap-3">
                                                                     <div className="h-8 w-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold">
                                                                         {member.name.charAt(0)}
                                                                     </div>
-                                                                    <div>
-                                                                        <p className="text-sm font-medium">{member.name} {member.id === user?.id && t('family.list.you')}</p>
+                                                                    <div className="min-w-0">
+                                                                        <p className="truncate text-sm font-medium">{member.name} {member.id === user?.id && t('family.list.you')}</p>
                                                                         <p className="text-[10px] text-muted-foreground uppercase">{member.role || 'MEMBER'}</p>
                                                                     </div>
                                                                 </div>
@@ -280,8 +292,8 @@ export function Family() {
                                                                 {(myRole === 'OWNER' || myRole === 'ADMIN') && member.id !== user?.id && (
                                                                     <DropdownMenu>
                                                                         <DropdownMenuTrigger asChild>
-                                                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
-                                                                                <span className="sr-only">Open menu</span>
+                                                                            <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground">
+                                                                                <span className="sr-only">{t('family.actions.openMenu')}</span>
                                                                                 <MoreHorizontal className="h-4 w-4" />
                                                                             </Button>
                                                                         </DropdownMenuTrigger>
@@ -364,14 +376,14 @@ export function Family() {
 
             {/* Debt Demo Section */}
             {activeFamilyId ? (
-                <div className="grid gap-6 md:grid-cols-2">
-                    <Card className="max-h-[500px] overflow-auto flex flex-col">
-                        <CardHeader className="flex flex-row items-start justify-between pb-2 border-b mb-2">
+                <div className="grid gap-6 xl:grid-cols-2">
+                    <Card className="flex max-h-[500px] flex-col overflow-auto">
+                        <CardHeader className="mb-2 flex flex-col gap-3 border-b pb-2 sm:flex-row sm:items-start sm:justify-between">
                             <div className="space-y-1">
                                 <CardTitle>{t('family.expenses.title', { count: displayExpenses.length })}</CardTitle>
                                 <CardDescription>{t('family.expenses.desc')}</CardDescription>
                             </div>
-                            <Button size="sm" onClick={() => setSharedExpenseModalOpen(true)} className="ml-4 shrink-0">
+                            <Button size="sm" onClick={() => setSharedExpenseModalOpen(true)} className="w-full shrink-0 sm:ml-4 sm:w-auto">
                                 <Plus className="mr-2 h-4 w-4" /> {t('sharedExpense.addBtn')}
                             </Button>
                         </CardHeader>
@@ -426,8 +438,8 @@ export function Family() {
                             ) : (
                                 <div className="space-y-3">
                                     {settlements.map((s, idx) => (
-                                        <div key={idx} className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-400 rounded-lg border border-green-200 dark:border-green-800/50">
-                                            <div className="flex items-center gap-2 md:gap-4 font-medium">
+                                        <div key={idx} className="flex flex-col gap-3 rounded-lg border border-green-200 bg-green-50 p-3 text-green-800 dark:border-green-800/50 dark:bg-green-900/20 dark:text-green-400 sm:flex-row sm:items-center sm:justify-between">
+                                            <div className="flex items-center gap-2 font-medium md:gap-4">
                                                 <div className="flex flex-col">
                                                     <span className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">{t('family.settlement.debtor')}</span>
                                                     <span className="text-sm font-semibold text-foreground truncate max-w-[80px] md:max-w-full">{getMemberName(s.from)}</span>
@@ -438,7 +450,7 @@ export function Family() {
                                                     <span className="text-sm font-semibold text-foreground truncate max-w-[80px] md:max-w-full">{getMemberName(s.to)}</span>
                                                 </div>
                                             </div>
-                                            <div className="flex flex-col items-end gap-1 shrink-0">
+                                            <div className="flex flex-col gap-1 sm:items-end">
                                                 <div className="font-bold">{formatCurrency(s.amount)}</div>
                                                 <Button size="sm" onClick={() => handleSettleClick(s)} className="h-6 text-[10px] px-2 bg-green-600 hover:bg-green-700 text-white shadow-sm">
                                                     {t('family.settlement.payBtn')}
@@ -466,9 +478,9 @@ export function Family() {
             <Modal isOpen={inviteModalOpen} onClose={() => setInviteModalOpen(false)} title={t('family.modals.invite.title', { name: associatedFamilyName })}>
                 <div className="space-y-4">
                     <p className="text-sm text-muted-foreground">{t('family.modals.invite.desc')}</p>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                         <Input value={inviteCode} readOnly className="font-mono text-center text-lg tracking-widest uppercase bg-muted" />
-                        <Button size="icon" onClick={copyToClipboard}>
+                        <Button size="icon" onClick={copyToClipboard} className="w-full sm:w-10">
                             {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
                         </Button>
                     </div>
@@ -495,9 +507,9 @@ export function Family() {
                             onChange={(e) => setNewFamilyDesc(e.target.value)}
                         />
                     </div>
-                    <div className="pt-2 flex justify-end gap-2 border-t">
-                        <Button type="button" variant="ghost" onClick={() => setCreateModalOpen(false)}>{t('family.modals.create.cancel')}</Button>
-                        <Button type="submit">{t('family.modals.create.submit')}</Button>
+                    <div className="flex flex-col-reverse gap-2 border-t pt-2 sm:flex-row sm:justify-end">
+                        <Button type="button" variant="ghost" onClick={() => setCreateModalOpen(false)} className="w-full sm:w-auto">{t('family.modals.create.cancel')}</Button>
+                        <Button type="submit" className="w-full sm:w-auto">{t('family.modals.create.submit')}</Button>
                     </div>
                 </form>
             </Modal>
@@ -506,7 +518,7 @@ export function Family() {
             <Modal isOpen={settleModalOpen} onClose={() => setSettleModalOpen(false)} title={t('family.modals.settle.title')}>
                 {selectedSettlement && (
                     <div className="space-y-6">
-                        <div className="flex items-center justify-between p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-800/50">
+                        <div className="flex flex-col gap-4 rounded-xl border border-green-200 bg-green-50 p-4 dark:border-green-800/50 dark:bg-green-900/20 sm:flex-row sm:items-center sm:justify-between">
                             <div className="flex flex-col items-center">
                                 <div className="h-12 w-12 rounded-full bg-background border flex items-center justify-center font-bold mb-2 shadow-sm text-foreground">
                                     {getMemberName(selectedSettlement.from).charAt(0)}
@@ -530,9 +542,9 @@ export function Family() {
                                 {t('family.modals.settle.note')}
                             </p>
                         </div>
-                        <div className="pt-2 flex justify-end gap-3 border-t">
-                            <Button type="button" variant="ghost" onClick={() => setSettleModalOpen(false)}>{t('family.modals.settle.cancel')}</Button>
-                            <Button onClick={confirmSettle} className="bg-green-600 hover:bg-green-700 text-white">{t('family.modals.settle.submit')}</Button>
+                        <div className="flex flex-col-reverse gap-3 border-t pt-2 sm:flex-row sm:justify-end">
+                            <Button type="button" variant="ghost" onClick={() => setSettleModalOpen(false)} className="w-full sm:w-auto">{t('family.modals.settle.cancel')}</Button>
+                            <Button onClick={confirmSettle} className="w-full bg-green-600 text-white hover:bg-green-700 sm:w-auto">{t('family.modals.settle.submit')}</Button>
                         </div>
                     </div>
                 )}

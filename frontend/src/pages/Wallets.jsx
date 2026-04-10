@@ -9,100 +9,140 @@ import { WalletForm } from "@/components/features/wallets/WalletForm"
 import { EmptyState } from "@/components/ui/empty-state"
 import { useTranslation } from "react-i18next"
 import { removeWallet } from "@/features/wallets/walletSlice"
+import { getFinanceScopeLabels } from "@/features/finance/context"
 import { toast } from "sonner"
+import { PageHeader } from "@/components/layout/PageHeader"
+
+const walletTypeKeyMap = {
+    cash: 'wallets.form.types.cash',
+    bank: 'wallets.form.types.bank',
+    'credit-card': 'wallets.form.types.credit-card',
+    'e-wallet': 'wallets.form.types.e-wallet',
+}
 
 export function Wallets() {
     const { t } = useTranslation()
     const dispatch = useDispatch()
-    const { wallets } = useSelector(state => state.wallets)
-    const { activeFamilyId } = useSelector(state => state.families)
-    
+    const { wallets } = useSelector((state) => state.wallets)
+    const { activeFamilyId, families } = useSelector((state) => state.families)
+
     const [isAddWalletOpen, setIsAddWalletOpen] = useState(false)
     const [editingWallet, setEditingWallet] = useState(null)
 
     const handleDelete = async (id) => {
-        if (window.confirm("Bạn có chắc chắn muốn xóa ví này?")) {
-            try {
-                await dispatch(removeWallet(id)).unwrap()
-                toast.success("Đã xóa ví thành công")
-            } catch (error) {
-                toast.error(error || "Không thể xóa ví")
-            }
+        if (!window.confirm(t('wallets.deleteConfirm'))) {
+            return
+        }
+
+        try {
+            await dispatch(removeWallet(id)).unwrap()
+            toast.success(t('wallets.deleteSuccess'))
+        } catch (error) {
+            toast.error(error || t('wallets.deleteFailed'))
         }
     }
 
-    // Filter wallets based on context
-    const contextWallets = wallets.filter(w =>
-        activeFamilyId ? w.family_id === activeFamilyId : !w.family_id
+    const contextWallets = wallets.filter((wallet) =>
+        activeFamilyId ? wallet.family_id === activeFamilyId : !wallet.family_id
     )
+    const currentScope = getFinanceScopeLabels(t, { activeFamilyId, families })
+    const addWalletLabel = currentScope.scope === 'family' ? t('wallets.context.addFamily') : t('wallets.context.addPersonal')
+    const addWalletTitle = currentScope.scope === 'family' ? t('wallets.context.addFamilyTitle') : t('wallets.context.addPersonalTitle')
+    const pageTitle = currentScope.scope === 'family' ? t('wallets.context.familyTitle') : t('wallets.context.personalTitle')
+    const pageDescription =
+        currentScope.scope === 'family'
+            ? t('wallets.context.familyDesc', { target: currentScope.scopeTargetLabel })
+            : t('wallets.context.personalDesc')
+    const emptyTitle = currentScope.scope === 'family' ? t('wallets.context.emptyFamilyTitle') : t('wallets.context.emptyPersonalTitle')
+    const emptyDescription =
+        currentScope.scope === 'family'
+            ? t('wallets.context.emptyFamilyDesc', { target: currentScope.scopeTargetLabel })
+            : t('wallets.context.emptyPersonalDesc')
+    const editScope = editingWallet
+        ? getFinanceScopeLabels(t, { activeFamilyId, families, familyId: editingWallet.family_id ?? null })
+        : currentScope
+    const editWalletTitle = editScope.scope === 'family' ? t('wallets.context.editFamilyTitle') : t('wallets.context.editPersonalTitle')
 
     return (
-
         <div className="space-y-6">
-            <header>
-                <h1 className="text-3xl font-bold tracking-tight">{t('wallets.title')}</h1>
-                <p className="text-muted-foreground">{t('wallets.desc')}</p>
-            </header>
+            <PageHeader
+                title={pageTitle}
+                description={pageDescription}
+                actions={
+                    <span
+                        className="inline-flex w-fit items-center rounded-full border px-3 py-1 text-xs font-medium text-muted-foreground"
+                        data-testid="wallets-scope"
+                    >
+                        {t('common.scope')}: {currentScope.scopeTargetLabel}
+                    </span>
+                }
+            />
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {contextWallets.length === 0 ? (
                     <div className="col-span-full">
                         <EmptyState
                             icon={Wallet}
-                            title={t('wallets.emptyTitle')}
-                            description={t('wallets.emptyDesc')}
+                            title={emptyTitle}
+                            description={emptyDescription}
                         />
                     </div>
                 ) : (
-                    contextWallets.map(wallet => (
-                        <Card key={wallet.id} className="relative overflow-hidden">
-                            <div className="absolute top-0 right-0 p-4 opacity-10">
-                                <Wallet className="w-24 h-24" />
-                            </div>
-                            <CardHeader className="pb-2">
-                                <div className="flex justify-between items-start">
-                                    <div>
-                                        <CardTitle className="text-lg">{wallet.name}</CardTitle>
-                                        <CardDescription className="capitalize mt-1">
-                                            {activeFamilyId ? t('wallets.familyWallet') : t('wallets.personalWallet')} - {t(`wallets.form.types.${wallet.type}`, { defaultValue: wallet.type })}
-                                        </CardDescription>
-                                    </div>
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <button className="h-8 w-8 inline-flex items-center justify-center rounded-md hover:bg-muted relative z-10 transition-colors">
-                                                <MoreVertical className="h-4 w-4 text-muted-foreground" />
-                                            </button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
-                                            <DropdownMenuItem onClick={() => setEditingWallet(wallet)}>
-                                                <Edit2 className="mr-2 h-4 w-4" />
-                                                <span>{t('common.edit')}</span>
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => handleDelete(wallet.id)}>
-                                                <Trash2 className="mr-2 h-4 w-4" />
-                                                <span>{t('common.delete')}</span>
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
+                    contextWallets.map((wallet) => {
+                        const walletTypeKey = walletTypeKeyMap[wallet.type]
+                        const walletTypeLabel = walletTypeKey ? t(walletTypeKey) : wallet.type
+
+                        return (
+                            <Card key={wallet.id} className="relative overflow-hidden">
+                                <div className="absolute right-0 top-0 p-4 opacity-10">
+                                    <Wallet className="h-24 w-24" />
                                 </div>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold">{formatCurrency(wallet.balance)}</div>
-                                <p className="text-xs text-muted-foreground mt-2">
-                                    ID: {wallet.id.substring(0, 8)}...
-                                </p>
-                            </CardContent>
-                        </Card>
-                    ))
+                                <CardHeader className="pb-2">
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div className="min-w-0">
+                                            <CardTitle className="truncate text-lg">{wallet.name}</CardTitle>
+                                            <CardDescription className="mt-1 capitalize">
+                                                {wallet.family_id ? t('wallets.familyWallet') : t('wallets.personalWallet')}
+                                                {wallet.type ? ` - ${walletTypeLabel}` : ''}
+                                            </CardDescription>
+                                        </div>
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <button className="relative z-10 inline-flex h-10 w-10 items-center justify-center rounded-md transition-colors hover:bg-muted">
+                                                    <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                                                </button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuItem onClick={() => setEditingWallet(wallet)}>
+                                                    <Edit2 className="mr-2 h-4 w-4" />
+                                                    <span>{t('common.edit')}</span>
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => handleDelete(wallet.id)}>
+                                                    <Trash2 className="mr-2 h-4 w-4" />
+                                                    <span>{t('common.delete')}</span>
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </div>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-2xl font-bold">{formatCurrency(wallet.balance)}</div>
+                                    <p className="mt-2 text-xs text-muted-foreground">
+                                        {t('common.id')}: {wallet.id.substring(0, 8)}...
+                                    </p>
+                                </CardContent>
+                            </Card>
+                        )
+                    })
                 )}
 
-                {/* Add Wallet Card */}
                 <Card
-                    className="flex items-center justify-center border-dashed cursor-pointer hover:bg-muted/50 transition-colors min-h-[150px]"
+                    className="flex min-h-[150px] cursor-pointer items-center justify-center border-dashed transition-colors hover:bg-muted/50"
                     onClick={() => setIsAddWalletOpen(true)}
+                    data-testid="wallets-add-cta"
                 >
                     <div className="text-center text-muted-foreground">
-                        <p className="font-medium">{t('wallets.addWallet')}</p>
+                        <p className="font-medium">{addWalletLabel}</p>
                     </div>
                 </Card>
             </div>
@@ -110,16 +150,15 @@ export function Wallets() {
             <Modal
                 isOpen={isAddWalletOpen}
                 onClose={() => setIsAddWalletOpen(false)}
-                title={t('wallets.addWalletTitle')}
+                title={addWalletTitle}
             >
                 <WalletForm onSuccess={() => setIsAddWalletOpen(false)} />
             </Modal>
 
-            {/* Edit Wallet Modal */}
             <Modal
-                isOpen={!!editingWallet}
+                isOpen={Boolean(editingWallet)}
                 onClose={() => setEditingWallet(null)}
-                title={"Sửa thông tin ví"}
+                title={editWalletTitle}
             >
                 {editingWallet && (
                     <WalletForm

@@ -74,14 +74,19 @@ export function CreateGoalModal({ isOpen, onClose }) {
             setImageUrl(ICONS[0].name);
             onClose();
         } catch (error) {
-            console.error("Lỗi tạo mục tiêu:", error);
+            console.error("Goal creation failed:", error);
             toast.error(error);
         }
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title={t('goals.modals.create.title')}>
-            <div className="p-6 space-y-6">
+        <Modal
+            isOpen={isOpen}
+            onClose={onClose}
+            title={t('goals.modals.create.title')}
+            contentTestId="create-goal-modal"
+        >
+            <div className="space-y-6 p-2 sm:p-4">
 
                 {/* Visual Preview */}
                 <div className="flex items-center justify-center p-6 rounded-xl border border-dashed border-border/60 bg-muted/20">
@@ -98,7 +103,7 @@ export function CreateGoalModal({ isOpen, onClose }) {
                         <div className="text-center">
                             <h4 className="font-bold text-lg">{name || t('goals.modals.create.previewDefault')}</h4>
                             <p className="text-sm font-medium text-primary">
-                                {t('goals.modals.create.targetPreview')} {targetAmount ? formatCurrency(Number(targetAmount)) : '0 ₫'}
+                                {t('goals.modals.create.targetPreview')} {targetAmount ? formatCurrency(Number(targetAmount)) : formatCurrency(0)}
                             </p>
                         </div>
                     </div>
@@ -157,7 +162,7 @@ export function CreateGoalModal({ isOpen, onClose }) {
                     {/* Icon Picker */}
                     <div className="col-span-full space-y-2 pt-2">
                         <Label>{t('goals.modals.create.iconLabel')}</Label>
-                        <div className="grid grid-cols-5 gap-2 sm:gap-3">
+                        <div className="grid grid-cols-4 gap-2 sm:grid-cols-5 sm:gap-3">
                             {/* eslint-disable-next-line no-unused-vars */}
                             {ICONS.map(({ name: iconName, icon: Icon }) => (
                                 <button
@@ -173,9 +178,9 @@ export function CreateGoalModal({ isOpen, onClose }) {
                     </div>
                 </div>
 
-                <div className="pt-4 flex gap-3 justify-end border-t border-border">
-                    <Button variant="outline" onClick={onClose}>{t('goals.modals.create.btnCancel')}</Button>
-                    <Button onClick={handleCreate}>
+                <div className="flex flex-col-reverse justify-end gap-3 border-t border-border pt-4 sm:flex-row">
+                    <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">{t('goals.modals.create.btnCancel')}</Button>
+                    <Button data-testid="create-goal-submit" onClick={handleCreate} className="w-full sm:w-auto">
                         {t('goals.modals.create.btnSubmit')}
                     </Button>
                 </div>

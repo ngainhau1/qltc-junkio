@@ -1,32 +1,31 @@
-const { RecurringPattern, Wallet, Category, Transaction } = require('../models');
+const { RecurringPattern } = require('../models');
+const { success, error: sendError, notFound, serverError } = require('../utils/responseHelper');
+const { executeDueRecurringPatterns } = require('../services/recurringExecutionService');
 
-// GET /api/recurring
 exports.getPatterns = async (req, res) => {
     try {
-        const userId = req.user.id;
         const patterns = await RecurringPattern.findAll({
-            where: { user_id: userId },
+            where: { user_id: req.user.id },
             order: [['created_at', 'DESC']]
         });
-        res.json(patterns);
+
+        success(res, patterns, 'Lay danh sach giao dich dinh ky thanh cong');
     } catch (error) {
         console.error('Error fetching recurring patterns:', error);
-        res.status(500).json({ message: error.message || 'Server error' });
+        serverError(res, error.message || 'Server error');
     }
 };
 
-// POST /api/recurring
 exports.createPattern = async (req, res) => {
     try {
-        const userId = req.user.id;
         const { wallet_id, category_id, amount, type, description, frequency, next_run_date } = req.body;
 
         if (!wallet_id || !amount || !frequency || !next_run_date) {
-            return res.status(400).json({ message: 'Missing required fields' });
+            return sendError(res, 'Thieu thong tin bat buoc', 400);
         }
 
         const pattern = await RecurringPattern.create({
-            user_id: userId,
+            user_id: req.user.id,
             wallet_id,
             category_id,
             amount,
@@ -37,22 +36,24 @@ exports.createPattern = async (req, res) => {
             is_active: true
         });
 
-        res.status(201).json(pattern);
+        success(res, pattern, 'Tao giao dich dinh ky thanh cong', 201);
     } catch (error) {
         console.error('Error creating recurring pattern:', error);
-        res.status(500).json({ message: 'Server error' });
+        serverError(res, 'Server error');
     }
 };
 
-// PUT /api/recurring/:id
 exports.updatePattern = async (req, res) => {
     try {
-        const { id } = req.params;
-        const userId = req.user.id;
-        const { amount, frequency, is_active, next_run_date, description } = req.body;
+        const pattern = await RecurringPattern.findOne({
+            where: { id: req.params.id, user_id: req.user.id }
+        });
 
-        const pattern = await RecurringPattern.findOne({ where: { id, user_id: userId } });
-        if (!pattern) return res.status(404).json({ message: 'Pattern not found' });
+        if (!pattern) {
+            return notFound(res, 'Khong tim thay giao dich dinh ky');
+        }
+
+        const { amount, frequency, is_active, next_run_date, description } = req.body;
 
         await pattern.update({
             amount: amount !== undefined ? amount : pattern.amount,
@@ -62,90 +63,41 @@ exports.updatePattern = async (req, res) => {
             description: description !== undefined ? description : pattern.description
         });
 
-        res.json(pattern);
+        success(res, pattern, 'Cap nhat giao dich dinh ky thanh cong');
     } catch (error) {
         console.error('Error updating recurring pattern:', error);
-        res.status(500).json({ message: 'Server error' });
+        serverError(res, 'Server error');
     }
 };
 
-// DELETE /api/recurring/:id
 exports.deletePattern = async (req, res) => {
     try {
-        const { id } = req.params;
-        const userId = req.user.id;
+        const pattern = await RecurringPattern.findOne({
+            where: { id: req.params.id, user_id: req.user.id }
+        });
 
-        const pattern = await RecurringPattern.findOne({ where: { id, user_id: userId } });
-        if (!pattern) return res.status(404).json({ message: 'Pattern not found' });
+        if (!pattern) {
+            return notFound(res, 'Khong tim thay giao dich dinh ky');
+        }
 
         await pattern.destroy();
-        res.json({ message: 'Recurring pattern deleted successfully' });
+        success(res, null, 'Xoa giao dich dinh ky thanh cong');
     } catch (error) {
         console.error('Error deleting recurring pattern:', error);
-        res.status(500).json({ message: 'Server error' });
+        serverError(res, 'Server error');
     }
 };
 
-// POST /api/recurring/trigger-cron (DEBUG OR MANUAL)
 exports.triggerCron = async (req, res) => {
-    const { Op } = require('sequelize');
-    const { sequelize } = require('../models');
     try {
-        const today = new Date().toISOString().split('T')[0];
-        const patterns = await RecurringPattern.findAll({
-            where: { is_active: true, next_run_date: { [Op.lte]: today } }
-        });
+        const result = await executeDueRecurringPatterns();
 
-        if (patterns.length === 0) {
-            return res.json({ message: 'Không có giao dịch định kỳ nào cần thực thi hôm nay.' });
+        if (result.patternsCount === 0) {
+            return success(res, null, 'Khong co giao dich dinh ky nao can thuc thi hom nay.');
         }
 
-        let count = 0;
-        for (const pattern of patterns) {
-            const t = await sequelize.transaction();
-            try {
-                await Transaction.create({
-                    amount: pattern.amount,
-                    date: today,
-                    description: `[Tự Động] ${pattern.description || 'Giao dịch định kỳ'}`,
-                    type: pattern.type,
-                    wallet_id: pattern.wallet_id,
-                    category_id: pattern.category_id,
-                    user_id: pattern.user_id
-                }, { transaction: t });
-
-                const wallet = await Wallet.findByPk(pattern.wallet_id, { transaction: t });
-                if (wallet) {
-                    const amountFloat = parseFloat(pattern.amount);
-                    if (pattern.type === 'INCOME') {
-                        wallet.balance = parseFloat(wallet.balance) + amountFloat;
-                    } else if (pattern.type === 'EXPENSE') {
-                        wallet.balance = parseFloat(wallet.balance) - amountFloat;
-                    }
-                    await wallet.save({ transaction: t });
-                }
-
-                const nextDate = new Date(pattern.next_run_date);
-                if (pattern.frequency === 'DAILY') {
-                    nextDate.setDate(nextDate.getDate() + 1);
-                } else if (pattern.frequency === 'WEEKLY') {
-                    nextDate.setDate(nextDate.getDate() + 7);
-                } else if (pattern.frequency === 'MONTHLY') {
-                    nextDate.setMonth(nextDate.getMonth() + 1);
-                } else if (pattern.frequency === 'YEARLY') {
-                    nextDate.setFullYear(nextDate.getFullYear() + 1);
-                }
-                pattern.next_run_date = nextDate.toISOString().split('T')[0];
-                await pattern.save({ transaction: t });
-                await t.commit();
-                count++;
-            } catch (err) {
-                await t.rollback();
-                console.error(`Lỗi chạy cron pattern=${pattern.id}:`, err);
-            }
-        }
-        res.json({ message: `Đã chạy thành công ${count} giao dịch định kỳ.` });
+        success(res, null, `Da chay thanh cong ${result.processedCount} giao dich dinh ky.`);
     } catch (error) {
-        res.status(500).json({ message: 'Lỗi', error: error.message });
+        serverError(res, 'Loi ' + error.message);
     }
 };

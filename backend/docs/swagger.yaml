@@ -1,0 +1,3931 @@
+openapi: 3.0.0
+info:
+  title: Junkio Expense Tracker API
+  version: 1.0.0
+  description: >-
+    **Chào mừng đến với thư viện API của Junkio Expense Tracker!**  
+
+
+    Dưới đây là các tài liệu hướng dẫn sử dụng API chi tiết dành cho Lập trình
+    viên, Tester và Admin hệ thống. Thiết kế tuân theo chuẩn RESTful.
+
+
+    ---
+
+    ###  Hướng dẫn dành cho Người Dùng Mới (Getting Started)
+
+
+    Nếu bạn là người mới sử dụng API này, hãy làm theo các bước sau để xác thực:
+
+
+    1. **Đăng nhập (Login):** Go to the `/api/auth/login` route và nhập Email &
+    Password.
+
+    2. **Lấy Token:** Copy chuỗi `token` trả về từ kết quả JSON (trong object
+    `data`).
+
+    3. **Cấp quyền (Authorize):** Kéo lên trên cùng của trang web này, bấm vào
+    nút **Authorize** màu xanh lá cây hoặc click vào biểu tượng 🔒 ở bất kỳ API
+    nào, dán chuỗi token vừa copy vào ô **Value** và nhấn **Authorize**.
+
+    4. **Bắt đầu gọi API:** Nhấn `Try it out` ở các endpoint có yêu cầu xác thực
+    để thực hiện các yêu cầu (Requests). Server sẽ nhận diện được phiên làm việc
+    của bạn.
+
+
+    > ** Mẹo:** Swagger UI đã được cấu hình lưu lại Token kể cả khi bạn tải lại
+    trang (Persist Authorization).
+
+
+    ---
+
+
+    ###  Mã Lỗi (Error Codes)
+
+    Junkio API sử dụng hệ thống `Error Codes` chuẩn và thông báo lỗi đa ngôn ngữ
+    (i18n). Thay vì đọc chuỗi ký tự thô, Frontend sẽ nhận được các mã như
+    `WALLET_NOT_FOUND`, `INSUFFICIENT_BALANCE` và tự thông dịch thành văn bản.
+    Bạn có thể xem chi tiết mô hình phản hồi (Response) ở từng route bên dưới.
+servers:
+  - url: /
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+security:
+  - bearerAuth: []
+paths:
+  /api/admin/dashboard:
+    get:
+      summary: Lấy tổng quan hệ thống (Platform Dashboard)
+      description: |
+        Trả về các chỉ số tổng quan nhanh của toàn hệ thống bao gồm:
+        - Tổng số người dùng đăng ký
+        - Tổng số giao dịch đã ghi nhận
+        - Tổng số nhóm gia đình đang hoạt động
+        - Danh sách 5 người dùng đăng ký gần nhất
+
+        API này được gọi khi Admin mở trang Dashboard.
+      tags:
+        - Admin
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Dữ liệu dashboard admin thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      totalUsers:
+                        type: integer
+                      totalTransactions:
+                        type: integer
+                      totalFamilies:
+                        type: integer
+                      recentUsers:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                            name:
+                              type: string
+                            email:
+                              type: string
+                            role:
+                              type: string
+                              enum:
+                                - member
+                                - staff
+                                - admin
+                            createdAt:
+                              type: string
+                              format: date-time
+              example:
+                status: success
+                message: Lấy dữ liệu Dashboard thành công
+                data:
+                  totalUsers: 1450
+                  totalTransactions: 250000
+                  totalFamilies: 35
+                  recentUsers:
+                    - id: b2df0d5d-1234-4abc-9def-bbbd02910001
+                      name: Nguyễn Văn A
+                      email: nguyenvana@junkio.com
+                      role: member
+                      createdAt: '2026-03-30T10:00:00.000Z'
+                    - id: c3ef1e6e-5678-4bcd-aef0-ccce13a20002
+                      name: Trần Thị B
+                      email: tranthib@junkio.com
+                      role: member
+                      createdAt: '2026-03-29T08:30:00.000Z'
+        '401':
+          description: Chưa đăng nhập hoặc token hết hạn
+        '403':
+          description: Không có quyền admin
+  /api/admin/analytics:
+    get:
+      summary: Lấy phân tích dữ liệu toàn hệ thống (System Analytics)
+      description: >
+        Trả về dữ liệu phân tích chuyên sâu bao gồm:
+
+        - **Thống kê tổng hợp**: Tổng số ví, mục tiêu, ngân sách trên toàn hệ
+        thống
+
+        - **Biểu đồ tăng trưởng người dùng** theo từng tháng
+
+        - **Top danh mục chi tiêu** phổ biến nhất
+
+        - **Hoạt động hàng tuần** (số giao dịch mỗi ngày trong tuần gần nhất)
+
+
+        Dùng để hiển thị biểu đồ trên trang Analytics của Admin Panel.
+      tags:
+        - Admin
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Dữ liệu analytics thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      stats:
+                        type: object
+                        properties:
+                          totalWallets:
+                            type: integer
+                          totalGoals:
+                            type: integer
+                          totalBudgets:
+                            type: integer
+                      userGrowth:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            month:
+                              type: string
+                            count:
+                              type: integer
+                      topCategories:
+                        type: array
+                        items:
+                          type: object
+                      weeklyActivity:
+                        type: array
+                        items:
+                          type: object
+              example:
+                status: success
+                message: Lấy analytics thành công
+                data:
+                  stats:
+                    totalWallets: 3200
+                    totalGoals: 580
+                    totalBudgets: 420
+                  userGrowth:
+                    - month: 2026-01
+                      count: 120
+                    - month: 2026-02
+                      count: 185
+                    - month: 2026-03
+                      count: 210
+                  topCategories:
+                    - name: Ăn uống
+                      count: 45000
+                    - name: Di chuyển
+                      count: 28000
+                  weeklyActivity:
+                    - day: Mon
+                      transactions: 1200
+                    - day: Tue
+                      transactions: 1350
+        '401':
+          description: Chưa đăng nhập hoặc token hết hạn
+        '403':
+          description: Không có quyền admin
+  /api/admin/financial-overview:
+    get:
+      summary: Lấy tổng quan tài chính toàn hệ thống (Financial Overview)
+      description: >
+        Cung cấp cái nhìn toàn cảnh về tình hình tài chính trên nền tảng:
+
+        - **Tổng số dư hệ thống** (tổng balance của tất cả ví)
+
+        - **Xu hướng thu/chi** theo từng tháng (dùng để vẽ biểu đồ line chart)
+
+        - **Top người chi tiêu nhiều nhất**
+
+        - **Tỷ lệ tuân thủ ngân sách** (% user giữ chi tiêu trong giới hạn
+        budget)
+
+
+        Endpoint này hữu ích để Admin đánh giá sức khỏe tài chính tổng thể.
+      tags:
+        - Admin
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Tổng quan tài chính thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      systemBalance:
+                        type: number
+                      revenueTrends:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            month:
+                              type: string
+                            income:
+                              type: number
+                            expense:
+                              type: number
+                      topSpenders:
+                        type: array
+                        items:
+                          type: object
+                      budgetCompliance:
+                        type: number
+              example:
+                status: success
+                message: Lấy tổng quan tài chính thành công
+                data:
+                  systemBalance: 15750000000
+                  revenueTrends:
+                    - month: 2026-01
+                      income: 850000000
+                      expense: 620000000
+                    - month: 2026-02
+                      income: 920000000
+                      expense: 710000000
+                  topSpenders:
+                    - name: Nguyễn Văn C
+                      totalExpense: 25000000
+                    - name: Lê Thị D
+                      totalExpense: 18500000
+                  budgetCompliance: 72.5
+        '401':
+          description: Chưa đăng nhập hoặc token hết hạn
+        '403':
+          description: Không có quyền admin
+  /api/admin/users:
+    get:
+      summary: Lấy danh sách người dùng toàn hệ thống
+      description: >
+        Trả về danh sách tất cả người dùng có phân trang và bộ lọc.
+
+        - Hỗ trợ tìm kiếm theo tên hoặc email (`search`)
+
+        - Lọc theo role: member, staff, admin hoặc tất cả
+
+        - Lọc theo trạng thái: active (đang hoạt động), locked (bị khóa), hoặc
+        tất cả
+
+
+        Kết quả trả về bao gồm thông tin phân trang (tổng số user, số trang).
+      tags:
+        - Admin
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+          description: Số trang hiện tại (bắt đầu từ 1)
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 20
+          description: Số lượng user mỗi trang (mặc định 20)
+        - in: query
+          name: search
+          schema:
+            type: string
+          description: Từ khóa tìm kiếm theo tên hoặc email
+        - in: query
+          name: role
+          schema:
+            type: string
+            enum:
+              - all
+              - member
+              - staff
+              - admin
+            default: all
+          description: Lọc theo vai trò người dùng
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum:
+              - all
+              - active
+              - locked
+            default: all
+          description: Lọc theo trạng thái tài khoản
+      responses:
+        '200':
+          description: Danh sách người dùng thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      users:
+                        type: array
+                        items:
+                          type: object
+                      total:
+                        type: integer
+                      page:
+                        type: integer
+                      totalPages:
+                        type: integer
+              example:
+                status: success
+                message: Lấy danh sách user thành công
+                data:
+                  users:
+                    - id: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+                      name: Admin Junkio
+                      email: admin@junkio.com
+                      role: admin
+                      is_locked: false
+                      createdAt: '2026-01-01T00:00:00.000Z'
+                    - id: b2c3d4e5-f6a7-8901-bcde-f12345678901
+                      name: Nguyễn Văn Member
+                      email: member@junkio.com
+                      role: member
+                      is_locked: false
+                      createdAt: '2026-02-15T08:30:00.000Z'
+                  total: 1450
+                  page: 1
+                  totalPages: 73
+        '401':
+          description: Chưa đăng nhập hoặc token hết hạn
+        '403':
+          description: Không có quyền admin
+  /api/admin/users/{id}:
+    get:
+      summary: Lấy chi tiết một người dùng
+      description: >
+        Trả về thông tin chi tiết của một user cụ thể, bao gồm:
+
+        - Thông tin cá nhân (tên, email, role, trạng thái khóa)
+
+        - Danh sách ví (wallets) mà user sở hữu
+
+        - Danh sách gia đình (families) mà user tham gia
+
+        - Tổng số giao dịch đã thực hiện
+
+
+        Admin dùng API này để xem xét hoạt động của một user trước khi quyết
+        định khóa/xóa.
+      tags:
+        - Admin
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: UUID của user cần xem
+      responses:
+        '200':
+          description: Chi tiết user thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      name:
+                        type: string
+                      email:
+                        type: string
+                      role:
+                        type: string
+                      is_locked:
+                        type: boolean
+                      wallets:
+                        type: array
+                        items:
+                          type: object
+                      Families:
+                        type: array
+                        items:
+                          type: object
+                      transactionCount:
+                        type: integer
+              example:
+                status: success
+                message: Lấy chi tiết user thành công
+                data:
+                  id: b2c3d4e5-f6a7-8901-bcde-f12345678901
+                  name: Nguyễn Văn Member
+                  email: member@junkio.com
+                  role: member
+                  is_locked: false
+                  wallets:
+                    - id: w1a2b3c4-...
+                      name: Ví MB Bank
+                      balance: 15000000
+                  Families:
+                    - id: f1a2b3c4-...
+                      name: Gia đình Nguyễn
+                  transactionCount: 342
+        '404':
+          description: Không tìm thấy user (USER_NOT_FOUND)
+    delete:
+      summary: Xóa vĩnh viễn một tài khoản người dùng
+      description: |
+        Xóa hoàn toàn user khỏi hệ thống. Hành động này **không thể hoàn tác**.
+        Dữ liệu liên quan (ví, giao dịch, mục tiêu...) sẽ bị xóa theo.
+
+        **Lưu ý quan trọng:** Admin không thể tự xóa chính mình.
+      tags:
+        - Admin
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: UUID của user cần xóa
+      responses:
+        '200':
+          description: Xóa user thành công
+          content:
+            application/json:
+              example:
+                status: success
+                message: Xóa user thành công
+        '400':
+          description: Không được xóa chính mình (CANNOT_DELETE_SELF)
+        '404':
+          description: Không tìm thấy user (USER_NOT_FOUND)
+  /api/admin/users/{id}/toggle-lock:
+    put:
+      summary: Khóa hoặc mở khóa tài khoản người dùng
+      description: >
+        Chuyển đổi trạng thái khóa của một tài khoản:
+
+        - Nếu user đang **active** -> chuyển sang **locked** (không thể đăng
+        nhập)
+
+        - Nếu user đang **locked** -> chuyển sang **active** (cho phép đăng nhập
+        lại)
+
+
+        **Lưu ý:** Admin không thể khóa chính mình.
+
+        Khi user bị khóa, token hiện tại vẫn hoạt động cho đến khi hết hạn.
+      tags:
+        - Admin
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: UUID của user cần khóa/mở khóa
+      responses:
+        '200':
+          description: Thay đổi trạng thái khóa thành công
+          content:
+            application/json:
+              example:
+                status: success
+                message: Đã khóa tài khoản user
+                data:
+                  id: b2c3d4e5-f6a7-8901-bcde-f12345678901
+                  is_locked: true
+        '400':
+          description: Không được khóa chính mình (CANNOT_LOCK_SELF)
+  /api/admin/users/{id}/role:
+    put:
+      summary: Thay đổi vai trò (role) của người dùng
+      description: |
+        Nâng cấp hoặc hạ cấp quyền hạn của một user trong hệ thống.
+        Các vai trò hợp lệ:
+        - `member`: Người dùng thường (mặc định khi đăng ký)
+        - `staff`: Nhân viên hỗ trợ (có quyền xem báo cáo)
+        - `admin`: Quản trị viên toàn quyền
+
+        **Lưu ý:** Admin không thể thay đổi role của chính mình.
+      tags:
+        - Admin
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: UUID của user cần đổi role
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - role
+              properties:
+                role:
+                  type: string
+                  enum:
+                    - member
+                    - staff
+                    - admin
+                  example: staff
+            example:
+              role: staff
+      responses:
+        '200':
+          description: Đổi role thành công
+          content:
+            application/json:
+              example:
+                status: success
+                message: Đổi role thành công
+                data:
+                  id: b2c3d4e5-f6a7-8901-bcde-f12345678901
+                  role: staff
+        '400':
+          description: >-
+            Role không hợp lệ hoặc đang tự đổi role (INVALID_ROLE /
+            CANNOT_CHANGE_OWN_ROLE)
+  /api/admin/logs:
+    get:
+      summary: Lấy nhật ký hệ thống (Audit Logs)
+      description: >
+        Trả về danh sách các hành động quan trọng đã xảy ra trên hệ thống, bao
+        gồm:
+
+        - Đăng nhập / Đăng ký người dùng
+
+        - Tạo / Xóa ví, giao dịch
+
+        - Thay đổi role, khóa tài khoản
+
+        - Các thao tác nhạy cảm khác
+
+
+        Hỗ trợ phân trang và lọc theo loại hành động (`action`).
+
+        Đây là công cụ quan trọng để Admin theo dõi hoạt động và phát hiện bất
+        thường.
+      tags:
+        - Admin
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+          description: Số trang hiện tại
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 50
+          description: Số bản ghi mỗi trang (mặc định 50)
+        - in: query
+          name: action
+          schema:
+            type: string
+            default: ALL
+          description: >-
+            Lọc theo loại hành động (VD USER_LOGIN, USER_REGISTER,
+            ROLE_CHANGED). Để ALL để xem tất cả.
+      responses:
+        '200':
+          description: Danh sách audit logs thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      logs:
+                        type: array
+                        items:
+                          type: object
+                      total:
+                        type: integer
+                      page:
+                        type: integer
+                      totalPages:
+                        type: integer
+              example:
+                status: success
+                message: Lấy audit logs thành công
+                data:
+                  logs:
+                    - id: log-001
+                      action: USER_LOGIN
+                      userId: b2c3d4e5-...
+                      details: User đăng nhập thành công
+                      createdAt: '2026-03-30T09:15:00.000Z'
+                    - id: log-002
+                      action: ROLE_CHANGED
+                      userId: a1b2c3d4-...
+                      details: Đổi role từ member sang staff
+                      createdAt: '2026-03-30T08:45:00.000Z'
+                  total: 5280
+                  page: 1
+                  totalPages: 106
+        '401':
+          description: Chưa đăng nhập hoặc token hết hạn
+        '403':
+          description: Không có quyền admin
+  /api/analytics/dashboard:
+    get:
+      summary: Lấy số liệu tổng quan tài chính cá nhân
+      description: |
+        Trả về dữ liệu tổng hợp cho trang Dashboard của người dùng:
+        - **Tổng tài sản**: Tổng số dư tất cả ví cá nhân
+        - **Thu nhập tháng này**: Tổng INCOME trong tháng hiện tại
+        - **Chi tiêu tháng này**: Tổng EXPENSE trong tháng hiện tại
+        - **Giao dịch gần đây**: 5-10 giao dịch mới nhất
+
+        API này được gọi mỗi khi người dùng mở trang chủ ứng dụng.
+      tags:
+        - Analytics
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Thống kê dashboard thành công
+          content:
+            application/json:
+              example:
+                status: success
+                data:
+                  totalBalance: 45000000
+                  monthlyIncome: 28000000
+                  monthlyExpense: 15500000
+                  recentTransactions:
+                    - id: t1-...
+                      amount: 150000
+                      type: EXPENSE
+                      description: Cà phê buổi sáng
+                      date: '2026-03-30'
+                    - id: t2-...
+                      amount: 25000000
+                      type: INCOME
+                      description: Lương tháng 3
+                      date: '2026-03-28'
+  /api/analytics/reports:
+    get:
+      summary: Lấy dữ liệu báo cáo tài chính theo tháng/năm
+      description: |
+        Trả về dữ liệu báo cáo chi tiết cho một tháng/năm cụ thể.
+        Bao gồm: thống kê thu/chi theo danh mục, biểu đồ xu hướng,
+        so sánh với tháng trước.
+
+        Nếu không truyền tham số, mặc định trả về dữ liệu tháng hiện tại.
+      tags:
+        - Analytics
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: year
+          schema:
+            type: integer
+          description: Năm cần xem báo cáo (VD 2026)
+        - in: query
+          name: month
+          schema:
+            type: integer
+          description: Tháng cần xem báo cáo (1-12)
+      responses:
+        '200':
+          description: Dữ liệu báo cáo thành công
+          content:
+            application/json:
+              example:
+                status: success
+                data:
+                  year: 2026
+                  month: 3
+                  totalIncome: 28000000
+                  totalExpense: 15500000
+                  categoryBreakdown:
+                    - category: Ăn uống
+                      amount: 4500000
+                      percentage: 29
+                    - category: Di chuyển
+                      amount: 3200000
+                      percentage: 21
+  /api/auth/register:
+    post:
+      summary: Đăng ký tài khoản mới
+      description: >
+        Tạo một tài khoản người dùng mới trên hệ thống Junkio.
+
+        Sau khi đăng ký thành công, người dùng cần **đăng nhập** để nhận JWT
+        token.
+
+
+        **Yêu cầu:**
+
+        - Email phải là duy nhất trên hệ thống
+
+        - Mật khẩu tối thiểu 6 ký tự
+
+        - Tên hiển thị không được để trống
+      tags:
+        - Auth
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - email
+                - password
+              properties:
+                name:
+                  type: string
+                  example: Nguyễn Văn A
+                  description: Tên hiển thị của người dùng
+                email:
+                  type: string
+                  format: email
+                  example: user@junkio.com
+                  description: Email đăng nhập (phải là duy nhất)
+                password:
+                  type: string
+                  format: password
+                  example: '123456'
+                  description: Mật khẩu (tối thiểu 6 ký tự)
+            example:
+              name: Nguyễn Văn A
+              email: user@junkio.com
+              password: '123456'
+      responses:
+        '201':
+          description: Đăng ký thành công
+          content:
+            application/json:
+              example:
+                status: success
+                message: Đăng ký thành công
+        '409':
+          description: Email đã tồn tại trên hệ thống (EMAIL_EXISTS)
+        '422':
+          description: Dữ liệu gửi lên không hợp lệ (thiếu field, sai format)
+  /api/auth/login:
+    post:
+      summary: Đăng nhập và nhận JWT access token
+      description: >
+        Xác thực thông tin đăng nhập và trả về JWT access token.
+
+
+        **Quy trình sử dụng token:**
+
+        1. Gọi API này với email + password
+
+        2. Copy giá trị `token` từ response
+
+        3. Click nút **Authorize** ở đầu trang Swagger UI
+
+        4. Dán token vào ô Value và nhấn Authorize
+
+        5. Tất cả các API có biểu tượng khóa sẽ tự động gửi kèm token
+
+
+        **Thông tin token:**
+
+        - Access token hết hạn sau **15 phút**
+
+        - Refresh token được lưu trong cookie HttpOnly, hết hạn sau **7 ngày**
+
+        - Khi access token hết hạn, gọi `/api/auth/refresh-token` để lấy token
+        mới
+      tags:
+        - Auth
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: demo@junkio.com
+                  description: Email đã đăng ký
+                password:
+                  type: string
+                  format: password
+                  example: demo123
+                  description: Mật khẩu tài khoản
+            example:
+              email: demo@junkio.com
+              password: demo123
+      responses:
+        '200':
+          description: Đăng nhập thành công, trả về token và thông tin user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Đăng nhập thành công
+                  data:
+                    type: object
+                    properties:
+                      token:
+                        type: string
+                        description: JWT access token (hết hạn sau 15 phút)
+                      user:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                          name:
+                            type: string
+                          email:
+                            type: string
+                          role:
+                            type: string
+                            enum:
+                              - member
+                              - staff
+                              - admin
+              example:
+                status: success
+                message: Đăng nhập thành công
+                data:
+                  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImIyZGYw...
+                  user:
+                    id: b2df0d5d-1234-4abc-9def-bbbd02910001
+                    name: Demo User
+                    email: demo@junkio.com
+                    role: member
+        '400':
+          description: Email hoặc mật khẩu không đúng (INVALID_CREDENTIALS)
+        '423':
+          description: Tài khoản đã bị khóa bởi admin (ACCOUNT_LOCKED)
+  /api/auth/refresh-token:
+    post:
+      summary: Làm mới access token từ refresh token cookie
+      description: >
+        Khi access token hết hạn (sau 15 phút), Frontend tự động gọi API này
+
+        để lấy token mới mà không cần người dùng đăng nhập lại.
+
+
+        **Cách hoạt động:**
+
+        - Server đọc `refresh_token` từ cookie HttpOnly (tự động gửi kèm bởi
+        trình duyệt)
+
+        - Nếu hợp lệ, trả về access token mới
+
+        - Nếu refresh token cũng hết hạn (sau 7 ngày), yêu cầu đăng nhập lại
+
+
+        **Lưu ý:** API này không cần gửi body, chỉ cần cookie hợp lệ.
+      tags:
+        - Auth
+      security: []
+      responses:
+        '200':
+          description: Làm mới token thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      token:
+                        type: string
+                      user:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                          name:
+                            type: string
+                          email:
+                            type: string
+                          role:
+                            type: string
+                            enum:
+                              - member
+                              - staff
+                              - admin
+              example:
+                status: success
+                message: Làm mới token thành công
+                data:
+                  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.newToken...
+                  user:
+                    id: b2df0d5d-1234-4abc-9def-bbbd02910001
+                    name: Demo User
+                    email: demo@junkio.com
+                    role: member
+        '401':
+          description: Không có refresh token trong cookie (REFRESH_TOKEN_MISSING)
+        '403':
+          description: Refresh token hết hạn hoặc không hợp lệ (REFRESH_TOKEN_EXPIRED)
+  /api/auth/logout:
+    post:
+      summary: Đăng xuất và xóa refresh token
+      description: >
+        Xóa refresh token cookie khỏi trình duyệt.
+
+        Sau khi gọi API này, access token hiện tại vẫn hoạt động cho đến khi hết
+        hạn,
+
+        nhưng không thể làm mới token nữa.
+
+
+        **Lưu ý:** Frontend nên xóa access token khỏi bộ nhớ local sau khi gọi
+        API này.
+      tags:
+        - Auth
+      responses:
+        '200':
+          description: Đăng xuất thành công
+          content:
+            application/json:
+              example:
+                status: success
+                message: Đăng xuất thành công
+  /api/auth/me:
+    get:
+      summary: Lấy thông tin người dùng hiện tại
+      description: |
+        Endpoint tương thích (alias) cho `/api/users/me`.
+        Trả về thông tin profile của user đang đăng nhập dựa trên Bearer token.
+
+        Canonical endpoint: `/api/users/me`
+      tags:
+        - Auth
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Thông tin người dùng hiện tại
+          content:
+            application/json:
+              example:
+                status: success
+                message: Lấy profile thành công
+                data:
+                  id: b2df0d5d-1234-4abc-9def-bbbd02910001
+                  name: Demo User
+                  email: demo@junkio.com
+                  role: member
+                  avatar_url: /uploads/avatars/demo-avatar.jpg
+        '401':
+          description: Chưa đăng nhập hoặc token hết hạn
+  /api/auth/avatar:
+    post:
+      summary: Tải lên ảnh đại diện (avatar)
+      description: |
+        Upload hoặc thay đổi ảnh đại diện của người dùng hiện tại.
+        Endpoint tương thích (alias) cho `/api/users/me/avatar`.
+
+        **Yêu cầu file:**
+        - Định dạng: JPEG, JPG, PNG
+        - Dung lượng tối đa: **5MB**
+        - Tên field trong form: `avatar`
+
+        **Lưu ý:** Ảnh cũ sẽ bị thay thế bởi ảnh mới sau khi upload thành công.
+      tags:
+        - Auth
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - avatar
+              properties:
+                avatar:
+                  type: string
+                  format: binary
+                  description: File ảnh đại diện (JPEG/PNG, max 5MB)
+      responses:
+        '200':
+          description: Cập nhật avatar thành công
+          content:
+            application/json:
+              example:
+                status: success
+                message: Cập nhật avatar thành công
+                data:
+                  avatar_url: /uploads/avatars/b2df0d5d-avatar-1711792000.jpg
+        '400':
+          description: File không hợp lệ (sai định dạng hoặc vượt quá 5MB)
+        '401':
+          description: Chưa đăng nhập
+  /api/auth/forgot-password:
+    post:
+      summary: Gửi email khôi phục mật khẩu
+      description: >
+        Gửi email chứa link đặt lại mật khẩu đến địa chỉ email đã đăng ký.
+
+        Link khôi phục có hiệu lực trong **1 giờ**.
+
+
+        **Quy trình:**
+
+        1. Người dùng nhập email
+
+        2. Server gửi email chứa token khôi phục
+
+        3. Người dùng click link trong email
+
+        4. Gọi API `/api/auth/reset-password/{token}` với mật khẩu mới
+
+
+        **Lưu ý:** API luôn trả về thành công để tránh lộ thông tin email nào
+        tồn tại.
+      tags:
+        - Auth
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@junkio.com
+                  description: Email đã đăng ký trên hệ thống
+            example:
+              email: user@junkio.com
+      responses:
+        '200':
+          description: Email khôi phục đã được gửi
+          content:
+            application/json:
+              example:
+                status: success
+                message: Email khôi phục đã được gửi
+        '404':
+          description: Email không tồn tại trên hệ thống (EMAIL_NOT_FOUND)
+  /api/auth/reset-password/{token}:
+    post:
+      summary: Đặt lại mật khẩu bằng token khôi phục
+      description: >
+        Thiết lập mật khẩu mới cho tài khoản sử dụng token nhận được qua email.
+
+
+        **Yêu cầu:**
+
+        - Token phải còn hiệu lực (trong vòng 1 giờ kể từ khi gửi)
+
+        - Mật khẩu mới tối thiểu 6 ký tự
+
+        - Mỗi token chỉ sử dụng được **một lần**
+
+
+        Sau khi đặt lại thành công, người dùng cần đăng nhập lại với mật khẩu
+        mới.
+      tags:
+        - Auth
+      security: []
+      parameters:
+        - in: path
+          name: token
+          required: true
+          schema:
+            type: string
+          description: Token khôi phục nhận được qua email (chuỗi hex dài)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - password
+              properties:
+                password:
+                  type: string
+                  format: password
+                  example: newPassword123
+                  description: Mật khẩu mới (tối thiểu 6 ký tự)
+            example:
+              password: newPassword123
+      responses:
+        '200':
+          description: Mật khẩu đã được đặt lại thành công
+          content:
+            application/json:
+              example:
+                status: success
+                message: Mật khẩu đã được đặt lại thành công
+        '400':
+          description: Token không hợp lệ hoặc đã hết hạn (INVALID_RESET_TOKEN)
+  /api/budgets:
+    get:
+      summary: Lấy danh sách ngân sách mà user có quyền xem
+      description: |
+        Trả về toàn bộ ngân sách:
+        - **Ngân sách cá nhân** của user
+        - **Ngân sách gia đình** thuộc các family mà user là thành viên
+
+        Mỗi budget bao gồm: danh mục, hạn mức, khoảng thời gian, số tiền đã chi.
+      tags:
+        - Budgets
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Danh sách ngân sách thành công
+          content:
+            application/json:
+              example:
+                status: success
+                message: Lấy danh sách budget thành công
+                data:
+                  - id: b1a2b3c4-...
+                    category_id: c1a2b3c4-...
+                    category_name: Ăn uống
+                    amount_limit: 3000000
+                    spent: 1850000
+                    start_date: '2026-03-01'
+                    end_date: '2026-03-31'
+                    family_id: null
+                  - id: b2b3c4d5-...
+                    category_id: c2b3c4d5-...
+                    category_name: Di chuyển
+                    amount_limit: 5000000
+                    spent: 2100000
+                    start_date: '2026-03-01'
+                    end_date: '2026-03-31'
+                    family_id: f1a2b3c4-...
+    post:
+      summary: Tạo ngân sách mới
+      description: >
+        Tạo một ngân sách mới để giới hạn chi tiêu theo danh mục và thời gian.
+
+
+        **Hướng dẫn:**
+
+        - Bỏ qua `family_id` (hoặc gửi null) -> Tạo **ngân sách cá nhân**
+
+        - Gửi `family_id` hợp lệ -> Tạo **ngân sách gia đình** (phải là thành
+        viên family đó)
+
+
+        **Ví dụ:** Đặt ngân sách 3 triệu VND cho danh mục "Ăn uống" trong tháng
+        3/2026.
+      tags:
+        - Budgets
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - category_id
+                - amount_limit
+                - start_date
+                - end_date
+              properties:
+                category_id:
+                  type: string
+                  format: uuid
+                  description: UUID của danh mục chi tiêu
+                amount_limit:
+                  type: number
+                  minimum: 0.01
+                  example: 3000000
+                  description: Hạn mức chi tiêu (VND)
+                start_date:
+                  type: string
+                  format: date
+                  example: '2026-03-01'
+                  description: Ngày bắt đầu (YYYY-MM-DD)
+                end_date:
+                  type: string
+                  format: date
+                  example: '2026-03-31'
+                  description: Ngày kết thúc (YYYY-MM-DD)
+                family_id:
+                  type: string
+                  format: uuid
+                  nullable: true
+                  description: UUID gia đình (để null nếu là ngân sách cá nhân)
+            examples:
+              ngan_sach_ca_nhan:
+                summary: Tạo ngân sách cá nhân
+                value:
+                  category_id: 11111111-1111-1111-1111-111111111111
+                  amount_limit: 3000000
+                  start_date: '2026-03-01'
+                  end_date: '2026-03-31'
+              ngan_sach_gia_dinh:
+                summary: Tạo ngân sách gia đình
+                value:
+                  category_id: 11111111-1111-1111-1111-111111111111
+                  amount_limit: 5000000
+                  start_date: '2026-03-01'
+                  end_date: '2026-03-31'
+                  family_id: 22222222-2222-2222-2222-222222222222
+      responses:
+        '201':
+          description: Tạo ngân sách thành công
+          content:
+            application/json:
+              example:
+                status: success
+                message: Tạo budget thành công
+        '403':
+          description: User không thuộc gia đình được chỉ định (NOT_FAMILY_MEMBER)
+        '422':
+          description: Dữ liệu không hợp lệ
+  /api/budgets/{id}:
+    put:
+      summary: Cập nhật ngân sách
+      description: |
+        Cập nhật hạn mức, khoảng thời gian hoặc scope của ngân sách.
+
+        **Chuyển đổi scope:**
+        - Gửi `family_id: null` -> Chuyển budget về **cá nhân**
+        - Gửi `family_id` hợp lệ -> Chuyển sang **gia đình**
+
+        Chỉ gửi các field muốn thay đổi (partial update).
+      tags:
+        - Budgets
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: UUID của ngân sách cần cập nhật
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                category_id:
+                  type: string
+                  format: uuid
+                amount_limit:
+                  type: number
+                  minimum: 0.01
+                start_date:
+                  type: string
+                  format: date
+                end_date:
+                  type: string
+                  format: date
+                family_id:
+                  type: string
+                  format: uuid
+                  nullable: true
+            example:
+              amount_limit: 4000000
+      responses:
+        '200':
+          description: Cập nhật ngân sách thành công
+          content:
+            application/json:
+              example:
+                status: success
+                message: Cập nhật budget thành công
+        '404':
+          description: Không tìm thấy ngân sách (BUDGET_NOT_FOUND)
+    delete:
+      summary: Xóa ngân sách
+      description: >
+        Xóa vĩnh viễn một ngân sách. Hành động này không ảnh hưởng đến các giao
+        dịch
+
+        đã thực hiện trước đó, chỉ xóa bỏ giới hạn theo dõi chi tiêu.
+      tags:
+        - Budgets
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: UUID của ngân sách cần xóa
+      responses:
+        '200':
+          description: Xóa ngân sách thành công
+          content:
+            application/json:
+              example:
+                status: success
+                message: Xóa budget thành công
+        '404':
+          description: Không tìm thấy ngân sách (BUDGET_NOT_FOUND)
+  /api/categories:
+    get:
+      summary: Lấy danh sách tất cả danh mục
+      description: |
+        Trả về toàn bộ danh mục thu/chi có sẵn trong hệ thống.
+        Danh mục được chia thành 2 loại:
+        - **INCOME**: Danh mục thu nhập (VD: Lương, Thưởng, Đầu tư)
+        - **EXPENSE**: Danh mục chi tiêu (VD: Ăn uống, Di chuyển, Giải trí)
+
+        Mỗi danh mục có thể có `parent_id` trỏ đến danh mục cha (cấu trúc cây).
+      tags:
+        - Categories
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Danh sách danh mục thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    name:
+                      type: string
+                    type:
+                      type: string
+                      enum:
+                        - INCOME
+                        - EXPENSE
+                    icon:
+                      type: string
+                    parent_id:
+                      type: string
+                      nullable: true
+              example:
+                - id: c1a2b3c4-...
+                  name: Ăn uống
+                  type: EXPENSE
+                  icon: Utensils
+                  parent_id: null
+                - id: c2b3c4d5-...
+                  name: Cà phê
+                  type: EXPENSE
+                  icon: Coffee
+                  parent_id: c1a2b3c4-...
+                - id: c3c4d5e6-...
+                  name: Lương
+                  type: INCOME
+                  icon: Banknote
+                  parent_id: null
+    post:
+      summary: Tạo danh mục thu/chi mới
+      description: >
+        Tạo một danh mục mới để phân loại giao dịch.
+
+
+        **Hướng dẫn:**
+
+        - `name`: Tên danh mục (bắt buộc, VD: "Ăn uống", "Lương")
+
+        - `type`: INCOME (thu nhập) hoặc EXPENSE (chi tiêu)
+
+        - `icon`: Tên icon hiển thị trên giao diện (icon từ thư viện Lucide
+        React)
+
+        - `parent_id`: UUID của danh mục cha (để null nếu là danh mục gốc)
+      tags:
+        - Categories
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - type
+              properties:
+                name:
+                  type: string
+                  example: Ăn uống
+                  description: Tên danh mục
+                type:
+                  type: string
+                  enum:
+                    - INCOME
+                    - EXPENSE
+                  example: EXPENSE
+                  description: Loại danh mục
+                parent_id:
+                  type: string
+                  format: uuid
+                  nullable: true
+                  description: UUID danh mục cha (để trống nếu là gốc)
+                icon:
+                  type: string
+                  example: Utensils
+                  description: Tên icon Lucide React
+            examples:
+              danh_muc_goc:
+                summary: Tạo danh mục gốc (chi tiêu)
+                value:
+                  name: Giải trí
+                  type: EXPENSE
+                  icon: Gamepad2
+              danh_muc_con:
+                summary: Tạo danh mục con
+                value:
+                  name: Xem phim
+                  type: EXPENSE
+                  icon: Film
+                  parent_id: c1a2b3c4-uuid-cua-danh-muc-cha
+      responses:
+        '201':
+          description: Tạo danh mục thành công
+          content:
+            application/json:
+              example:
+                status: success
+                message: Tạo danh mục thành công
+                data:
+                  id: c-new-category-id
+                  name: Giải trí
+                  type: EXPENSE
+                  icon: Gamepad2
+                  parent_id: null
+        '400':
+          description: Dữ liệu không hợp lệ (thiếu name hoặc type)
+  /api/categories/{id}:
+    put:
+      summary: Cập nhật thông tin danh mục
+      description: |
+        Thay đổi tên, loại hoặc icon của một danh mục hiện có.
+        Chỉ gửi các field muốn cập nhật (partial update).
+
+        **Lưu ý:** Thay đổi `type` (INCOME <-> EXPENSE) sẽ ảnh hưởng đến
+        cách hiển thị các giao dịch đã gắn danh mục này.
+      tags:
+        - Categories
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: UUID của danh mục cần cập nhật
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Tên mới của danh mục
+                type:
+                  type: string
+                  enum:
+                    - INCOME
+                    - EXPENSE
+                  description: Loại mới
+                icon:
+                  type: string
+                  description: Icon mới
+            example:
+              name: Ăn vặt
+              icon: Cookie
+      responses:
+        '200':
+          description: Cập nhật danh mục thành công
+          content:
+            application/json:
+              example:
+                status: success
+                message: Cập nhật danh mục thành công
+        '404':
+          description: Không tìm thấy danh mục (CATEGORY_NOT_FOUND)
+    delete:
+      summary: Xóa danh mục
+      description: |
+        Xóa vĩnh viễn một danh mục khỏi hệ thống.
+
+        **Lưu ý:** Các giao dịch đã gắn danh mục này sẽ bị mất liên kết
+        (category_id trở thành null). Nên kiểm tra trước khi xóa.
+      tags:
+        - Categories
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: UUID của danh mục cần xóa
+      responses:
+        '200':
+          description: Xóa danh mục thành công
+          content:
+            application/json:
+              example:
+                status: success
+                message: Xóa danh mục thành công
+        '404':
+          description: Không tìm thấy danh mục (CATEGORY_NOT_FOUND)
+  /api/debts/pending:
+    get:
+      summary: Lấy danh sách khoản chia tiền đang chờ xử lý
+      description: |
+        Trả về các khoản chia tiền mà người dùng hiện tại chưa xử lý
+        (trạng thái PENDING). Đây là các khoản mà người khác đã tạo
+        và chia phần cho bạn, cần bạn chấp nhận hoặc từ chối.
+      tags:
+        - Debts
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Danh sách khoản chia chờ xử lý
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    amount:
+                      type: number
+                    approval_status:
+                      type: string
+                      enum:
+                        - PENDING
+                        - APPROVED
+                        - REJECTED
+              example:
+                - id: s1a2b3c4-...
+                  amount: 250000
+                  approval_status: PENDING
+                  from_user: Nguyễn Văn A
+                  description: Chia tiền ăn tối
+                  created_at: '2026-03-30T08:00:00.000Z'
+                - id: s2b3c4d5-...
+                  amount: 150000
+                  approval_status: PENDING
+                  from_user: Trần Thị B
+                  description: Chia tiền taxi
+                  created_at: '2026-03-29T20:00:00.000Z'
+  /api/debts/{shareId}/approve:
+    put:
+      summary: Chấp nhận khoản chia tiền
+      description: |
+        Xác nhận rằng bạn đồng ý với khoản chia tiền này.
+        Sau khi chấp nhận, khoản nợ sẽ được ghi nhận chính thức.
+
+        **Lưu ý:** Chỉ có thể duyệt khoản chia thuộc về chính mình.
+      tags:
+        - Debts
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: shareId
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: UUID của khoản chia tiền
+      responses:
+        '200':
+          description: Đã chấp nhận khoản chia
+          content:
+            application/json:
+              example:
+                status: success
+                message: Đã chấp nhận khoản chia
+        '403':
+          description: Không có quyền duyệt khoản chia này
+        '404':
+          description: Không tìm thấy khoản chia (SHARE_NOT_FOUND)
+  /api/debts/{shareId}/reject:
+    put:
+      summary: Từ chối khoản chia tiền
+      description: |
+        Từ chối khoản chia tiền. Khoản nợ sẽ không được ghi nhận.
+
+        **Lưu ý:** Chỉ có thể từ chối khoản chia thuộc về chính mình.
+      tags:
+        - Debts
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: shareId
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: UUID của khoản chia tiền
+      responses:
+        '200':
+          description: Đã từ chối khoản chia
+          content:
+            application/json:
+              example:
+                status: success
+                message: Đã từ chối khoản chia
+        '403':
+          description: Không có quyền từ chối khoản chia này
+        '404':
+          description: Không tìm thấy khoản chia (SHARE_NOT_FOUND)
+  /api/debts/settle:
+    post:
+      summary: Tất toán nợ qua chuyển khoản nội bộ
+      description: >
+        Thanh toán khoản nợ bằng cách chuyển tiền trực tiếp giữa 2 ví trong hệ
+        thống.
+
+        Hệ thống sẽ tạo 2 giao dịch (TRANSFER_OUT / TRANSFER_IN) và đánh dấu nợ
+        đã thanh toán.
+
+
+        **Yêu cầu:**
+
+        - Ví nguồn (`from_wallet_id`) phải có đủ số dư
+
+        - Ví đích (`to_wallet_id`) phải thuộc người nhận thanh toán
+      tags:
+        - Debts
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - to_user_id
+                - amount
+                - from_wallet_id
+                - to_wallet_id
+              properties:
+                to_user_id:
+                  type: string
+                  format: uuid
+                  description: UUID người nhận thanh toán
+                amount:
+                  type: number
+                  example: 250000
+                  description: Số tiền tất toán (VND)
+                from_wallet_id:
+                  type: string
+                  format: uuid
+                  description: UUID ví người trả (ví của bạn)
+                to_wallet_id:
+                  type: string
+                  format: uuid
+                  description: UUID ví người nhận
+            example:
+              to_user_id: u-receiver-1234-...
+              amount: 250000
+              from_wallet_id: w-my-wallet-...
+              to_wallet_id: w-their-wallet-...
+      responses:
+        '200':
+          description: Tất toán nợ thành công
+          content:
+            application/json:
+              example:
+                status: success
+                message: Tất toán nợ thành công
+        '400':
+          description: Số dư không đủ hoặc dữ liệu không hợp lệ (INSUFFICIENT_BALANCE)
+  /api/debts/simplified/{familyId}:
+    get:
+      summary: Gợi ý tối ưu thanh toán nợ trong gia đình
+      description: >
+        Sử dụng thuật toán Greedy để tính toán cách thanh toán nợ **tối ưu
+        nhất**
+
+        giữa các thành viên trong một gia đình. Giảm thiểu số lượng giao dịch
+        cần thực hiện.
+
+
+        **Ví dụ:** Nếu A nợ B 100k, B nợ C 100k -> Gợi ý: A chuyển thẳng cho C
+        100k
+
+        (giảm từ 2 giao dịch xuống 1).
+      tags:
+        - Debts
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: familyId
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: UUID gia đình cần tối ưu nợ
+      responses:
+        '200':
+          description: Danh sách gợi ý thanh toán tối ưu
+          content:
+            application/json:
+              example:
+                status: success
+                data:
+                  - from: Nguyễn Văn A
+                    to: Trần Thị B
+                    amount: 350000
+                  - from: Lê Văn C
+                    to: Trần Thị B
+                    amount: 150000
+  /api/families:
+    get:
+      summary: Lấy danh sách gia đình mà tôi tham gia
+      description: |
+        Trả về tất cả các nhóm gia đình mà người dùng hiện tại là thành viên
+        (bao gồm cả gia đình do mình tạo và gia đình được mời vào).
+      tags:
+        - Families
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Danh sách gia đình thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    name:
+                      type: string
+                    created_by:
+                      type: string
+              example:
+                - id: f1a2b3c4-...
+                  name: Gia đình Nguyễn
+                  created_by: b2df0d5d-...
+                - id: f2b3c4d5-...
+                  name: Nhóm bạn thân
+                  created_by: c3ef1e6e-...
+    post:
+      summary: Tạo nhóm gia đình mới
+      description: >
+        Tạo một nhóm gia đình mới. Người tạo tự động trở thành **ADMIN** của gia
+        đình.
+
+        Sau khi tạo, có thể mời thêm thành viên bằng email qua API thêm thành
+        viên.
+      tags:
+        - Families
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                  example: Gia đình Nguyễn
+                  description: Tên nhóm gia đình
+            example:
+              name: Gia đình Nguyễn
+      responses:
+        '201':
+          description: Tạo gia đình thành công
+          content:
+            application/json:
+              example:
+                status: success
+                message: Tạo gia đình thành công
+                data:
+                  id: f-new-family-id
+                  name: Gia đình Nguyễn
+                  created_by: b2df0d5d-...
+        '400':
+          description: Dữ liệu không hợp lệ (thiếu tên)
+  /api/families/{id}:
+    get:
+      summary: Xem chi tiết gia đình và danh sách thành viên
+      description: |
+        Trả về thông tin chi tiết của một gia đình, bao gồm:
+        - Tên gia đình, người tạo
+        - Danh sách tất cả thành viên (tên, email, vai trò trong gia đình)
+
+        Chỉ thành viên của gia đình mới có quyền xem.
+      tags:
+        - Families
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: UUID của gia đình
+      responses:
+        '200':
+          description: Chi tiết gia đình thành công
+          content:
+            application/json:
+              example:
+                status: success
+                data:
+                  id: f1a2b3c4-...
+                  name: Gia đình Nguyễn
+                  created_by: b2df0d5d-...
+                  members:
+                    - id: b2df0d5d-...
+                      name: Nguyễn Văn A
+                      email: nguyenvana@junkio.com
+                      role: ADMIN
+                    - id: c3ef1e6e-...
+                      name: Nguyễn Thị B
+                      email: nguyenthib@junkio.com
+                      role: MEMBER
+        '404':
+          description: Gia đình không tồn tại (FAMILY_NOT_FOUND)
+    delete:
+      summary: Xóa gia đình vĩnh viễn
+      description: |
+        Xóa hoàn toàn nhóm gia đình và tất cả dữ liệu liên quan.
+        Hành động này **không thể hoàn tác**.
+
+        **Chỉ người tạo (owner)** gia đình mới có quyền xóa.
+        Ví gia đình, giao dịch chung, ngân sách gia đình sẽ bị xóa theo.
+      tags:
+        - Families
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: UUID của gia đình cần xóa
+      responses:
+        '200':
+          description: Xóa gia đình thành công
+          content:
+            application/json:
+              example:
+                status: success
+                message: Xóa gia đình thành công
+        '403':
+          description: Chỉ người tạo mới có quyền xóa (NOT_FAMILY_OWNER)
+        '404':
+          description: Gia đình không tồn tại (FAMILY_NOT_FOUND)
+  /api/families/{id}/members:
+    post:
+      summary: Thêm thành viên vào gia đình bằng email
+      description: |
+        Mời một người dùng khác vào gia đình bằng địa chỉ email.
+
+        **Yêu cầu:**
+        - Email phải thuộc về một tài khoản Junkio đã đăng ký
+        - Người được mời chưa là thành viên của gia đình này
+        - Người mời phải là ADMIN của gia đình
+
+        **Vai trò trong gia đình:**
+        - `ADMIN`: Có quyền quản lý thành viên, xóa gia đình
+        - `MEMBER`: Thành viên thường, có quyền xem/tạo giao dịch chung
+      tags:
+        - Families
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: UUID của gia đình
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  example: member@junkio.com
+                  description: Email của người muốn mời
+                role:
+                  type: string
+                  enum:
+                    - ADMIN
+                    - MEMBER
+                  default: MEMBER
+                  description: Vai trò trong gia đình
+            example:
+              email: member@junkio.com
+              role: MEMBER
+      responses:
+        '200':
+          description: Thêm thành viên thành công
+          content:
+            application/json:
+              example:
+                status: success
+                message: Thêm thành viên thành công
+        '404':
+          description: Gia đình hoặc user không tồn tại
+        '409':
+          description: User đã là thành viên của gia đình (MEMBER_EXISTS)
+  /api/families/{id}/members/{userIdToRemove}:
+    delete:
+      summary: Xóa thành viên khỏi gia đình
+      description: >
+        Xóa một thành viên ra khỏi nhóm gia đình.
+
+
+        **Quy tắc:**
+
+        - Chỉ ADMIN gia đình mới có quyền xóa thành viên khác
+
+        - Thành viên có thể tự rời gia đình bằng cách gửi `userIdToRemove` =
+        chính mình
+
+        - Không thể xóa người tạo (owner) ra khỏi gia đình
+      tags:
+        - Families
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: UUID của gia đình
+        - in: path
+          name: userIdToRemove
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: UUID user cần xóa khỏi gia đình
+      responses:
+        '200':
+          description: Xóa thành viên thành công
+          content:
+            application/json:
+              example:
+                status: success
+                message: Xóa thành viên thành công
+        '403':
+          description: Chỉ admin gia đình mới có quyền xóa
+        '404':
+          description: Thành viên không tồn tại trong gia đình
+  /api/forecast:
+    get:
+      summary: Dự báo thu/chi trong tương lai
+      description: |
+        Phân tích dữ liệu giao dịch lịch sử và dự đoán thu nhập / chi tiêu
+        cho các tháng tiếp theo.
+
+        **Cách hoạt động:**
+        1. Hệ thống lấy dữ liệu giao dịch 6 tháng gần nhất
+        2. Tính trung bình thu/chi theo tháng
+        3. Áp dụng mô hình xu hướng tuyến tính để dự đoán
+
+        **Tham số:**
+        - `months`: Số tháng muốn dự báo (mặc định 3, tối đa 12)
+      tags:
+        - Forecast
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: months
+          schema:
+            type: integer
+            default: 3
+          description: Số tháng muốn dự báo (1-12)
+      responses:
+        '200':
+          description: Kết quả dự báo thành công
+          content:
+            application/json:
+              example:
+                status: success
+                message: Dự báo dòng tiền thành công
+                data:
+                  forecast:
+                    - month: 2026-04
+                      predictedIncome: 28000000
+                      predictedExpense: 18500000
+                      netFlow: 9500000
+                    - month: 2026-05
+                      predictedIncome: 28500000
+                      predictedExpense: 19000000
+                      netFlow: 9500000
+                    - month: 2026-06
+                      predictedIncome: 29000000
+                      predictedExpense: 19500000
+                      netFlow: 9500000
+                  confidence: 0.82
+  /api/goals:
+    get:
+      summary: Lấy danh sách mục tiêu tài chính
+      description: >
+        Trả về tất cả mục tiêu của người dùng hiện tại,
+
+        bao gồm cả mục tiêu cá nhân và mục tiêu gia đình (nếu có).
+
+        Mỗi mục tiêu hiển thị: tên, số tiền mục tiêu, số tiền đã nạp, trạng
+        thái, deadline.
+      tags:
+        - Goals
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Danh sách mục tiêu thành công
+          content:
+            application/json:
+              example:
+                status: success
+                message: Lấy danh sách mục tiêu thành công
+                data:
+                  - id: g1a2b3c4-...
+                    name: Mua laptop mới
+                    targetAmount: 30000000
+                    currentAmount: 12000000
+                    status: IN_PROGRESS
+                    deadline: '2026-12-31'
+                    colorCode: '#16a34a'
+                  - id: g2b3c4d5-...
+                    name: Du lịch Đà Lạt
+                    targetAmount: 10000000
+                    currentAmount: 10000000
+                    status: ACHIEVED
+                    deadline: '2026-06-01'
+                    colorCode: '#2563eb'
+    post:
+      summary: Tạo mục tiêu tiết kiệm mới
+      description: |
+        Tạo một mục tiêu tài chính mới để theo dõi tiến độ tiết kiệm.
+
+        **Các trường:**
+        - `name`: Tên mục tiêu (bắt buộc)
+        - `targetAmount`: Số tiền mục tiêu cần đạt (bắt buộc, > 0)
+        - `deadline`: Hạn chót (tùy chọn, định dạng YYYY-MM-DD)
+        - `colorCode`: Mã màu hex hiển thị trên giao diện
+        - `imageUrl`: Tên icon đại diện cho mục tiêu
+      tags:
+        - Goals
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - targetAmount
+              properties:
+                name:
+                  type: string
+                  example: Mua laptop mới
+                  description: Tên mục tiêu
+                targetAmount:
+                  type: number
+                  minimum: 0.01
+                  example: 30000000
+                  description: Số tiền mục tiêu (VND)
+                deadline:
+                  type: string
+                  format: date
+                  nullable: true
+                  example: '2026-12-31'
+                  description: Hạn chót (tùy chọn)
+                colorCode:
+                  type: string
+                  example: '#16a34a'
+                  description: Mã màu hex
+                imageUrl:
+                  type: string
+                  example: Laptop
+                  description: Tên icon
+            example:
+              name: Mua laptop mới
+              targetAmount: 30000000
+              deadline: '2026-12-31'
+              colorCode: '#16a34a'
+              imageUrl: Laptop
+      responses:
+        '201':
+          description: Tạo mục tiêu thành công
+          content:
+            application/json:
+              example:
+                status: success
+                message: Tạo mục tiêu thành công
+                data:
+                  id: g-new-goal-id
+                  name: Mua laptop mới
+                  targetAmount: 30000000
+                  currentAmount: 0
+                  status: IN_PROGRESS
+        '422':
+          description: Dữ liệu không hợp lệ (thiếu name hoặc targetAmount <= 0)
+  /api/goals/{id}:
+    put:
+      summary: Cập nhật thông tin mục tiêu
+      description: >
+        Thay đổi tên, số tiền mục tiêu, deadline hoặc trạng thái của một mục
+        tiêu.
+
+        Chỉ gửi các field muốn cập nhật (partial update).
+
+
+        **Trạng thái hợp lệ:**
+
+        - `IN_PROGRESS`: Đang thực hiện
+
+        - `ACHIEVED`: Đã hoàn thành (người dùng tự đánh dấu hoặc hệ thống tự
+        chuyển khi đạt mục tiêu)
+      tags:
+        - Goals
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: UUID của mục tiêu
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                targetAmount:
+                  type: number
+                deadline:
+                  type: string
+                  format: date
+                  nullable: true
+                colorCode:
+                  type: string
+                imageUrl:
+                  type: string
+                status:
+                  type: string
+                  enum:
+                    - IN_PROGRESS
+                    - ACHIEVED
+            example:
+              name: Mua MacBook Pro M4
+              targetAmount: 45000000
+      responses:
+        '200':
+          description: Cập nhật mục tiêu thành công
+          content:
+            application/json:
+              example:
+                status: success
+                message: Cập nhật mục tiêu thành công
+        '404':
+          description: Không tìm thấy mục tiêu (GOAL_NOT_FOUND)
+    delete:
+      summary: Xóa mục tiêu tiết kiệm
+      description: >
+        Xóa vĩnh viễn một mục tiêu. Hành động này không thể hoàn tác.
+
+
+        **Lưu ý:** Số tiền đã nạp vào mục tiêu sẽ **không** được hoàn lại tự
+        động.
+
+        Nếu muốn lấy lại tiền, hãy rút trước khi xóa.
+      tags:
+        - Goals
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: UUID của mục tiêu cần xóa
+      responses:
+        '200':
+          description: Xóa mục tiêu thành công
+          content:
+            application/json:
+              example:
+                status: success
+                message: Xóa mục tiêu thành công
+        '404':
+          description: Không tìm thấy mục tiêu (GOAL_NOT_FOUND)
+  /api/goals/{id}/deposit:
+    post:
+      summary: Nạp tiền vào mục tiêu từ ví cá nhân
+      description: >
+        Chuyển một khoản tiền từ ví cá nhân vào mục tiêu tiết kiệm.
+
+
+        **Quy tắc:**
+
+        - `wallet_id` phải là ví cá nhân của chính user (không dùng ví gia đình)
+
+        - Số dư ví phải đủ để nạp
+
+        - Sau khi nạp, số dư ví sẽ bị trừ và `currentAmount` của mục tiêu tăng
+        lên
+
+        - Nếu `currentAmount >= targetAmount`, trạng thái tự động chuyển sang
+        ACHIEVED
+      tags:
+        - Goals
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: UUID của mục tiêu cần nạp
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - amount
+                - wallet_id
+              properties:
+                amount:
+                  type: number
+                  minimum: 0.01
+                  example: 5000000
+                  description: Số tiền muốn nạp (VND)
+                wallet_id:
+                  type: string
+                  format: uuid
+                  example: 11111111-1111-1111-1111-111111111111
+                  description: UUID ví cá nhân nguồn tiền
+            example:
+              amount: 5000000
+              wallet_id: 11111111-1111-1111-1111-111111111111
+      responses:
+        '200':
+          description: Nạp tiền vào mục tiêu thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      currentAmount:
+                        type: number
+                      status:
+                        type: string
+                      sourceWallet:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                          balance:
+                            type: number
+              example:
+                status: success
+                message: Nạp tiền vào mục tiêu thành công
+                data:
+                  id: g1a2b3c4-...
+                  currentAmount: 17000000
+                  status: IN_PROGRESS
+                  sourceWallet:
+                    id: 11111111-...
+                    balance: 8000000
+        '403':
+          description: Ví không phải ví cá nhân hợp lệ (INVALID_WALLET)
+        '404':
+          description: Mục tiêu không tồn tại (GOAL_NOT_FOUND)
+  /api/notifications:
+    get:
+      summary: Lấy danh sách thông báo của tôi
+      description: >
+        Trả về tối đa **50 thông báo** mới nhất của người dùng hiện tại.
+
+        Mỗi thông báo bao gồm: loại, nội dung, trạng thái đã đọc, thời gian.
+
+
+        Frontend dùng API này để hiển thị badge số thông báo chưa đọc và danh
+        sách popup.
+      tags:
+        - Notifications
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Danh sách thông báo
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    type:
+                      type: string
+                    message:
+                      type: string
+                    isRead:
+                      type: boolean
+                    created_at:
+                      type: string
+                      format: date-time
+              example:
+                - id: n1a2b3c4-...
+                  type: BUDGET_WARNING
+                  message: Bạn đã chi 85% ngân sách Ăn uống tháng này
+                  isRead: false
+                  created_at: '2026-03-30T08:00:00.000Z'
+                - id: n2b3c4d5-...
+                  type: GOAL_ACHIEVED
+                  message: Chúc mừng! Mục tiêu Mua laptop đã hoàn thành
+                  isRead: true
+                  created_at: '2026-03-29T15:30:00.000Z'
+  /api/notifications/read-all:
+    put:
+      summary: Đánh dấu tất cả thông báo đã đọc
+      description: |
+        Đánh dấu toàn bộ thông báo chưa đọc thành đã đọc.
+        Thường được gọi khi người dùng mở dropdown thông báo.
+      tags:
+        - Notifications
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Đánh dấu tất cả đã đọc thành công
+          content:
+            application/json:
+              example:
+                msg: All notifications marked as read
+  /api/notifications/{id}/read:
+    put:
+      summary: Đánh dấu một thông báo cụ thể đã đọc
+      description: |
+        Đánh dấu một thông báo đã đọc theo UUID.
+        Chỉ có thể đánh dấu thông báo thuộc về chính mình.
+      tags:
+        - Notifications
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: UUID của thông báo
+      responses:
+        '200':
+          description: Đánh dấu đã đọc thành công
+          content:
+            application/json:
+              example:
+                status: success
+                message: Đã đánh dấu đã đọc
+        '404':
+          description: Không tìm thấy thông báo (NOTIFICATION_NOT_FOUND)
+  /api/notifications/broadcast:
+    post:
+      summary: Gửi thông báo broadcast tới tất cả user (chỉ admin)
+      description: >
+        Gửi một thông báo đến **toàn bộ** người dùng trên hệ thống.
+
+        Chỉ tài khoản có quyền **admin** mới được phép sử dụng.
+
+
+        Hữu ích cho: thông báo bảo trì, cập nhật tính năng mới, cảnh báo hệ
+        thống.
+      tags:
+        - Notifications
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - message
+              properties:
+                message:
+                  type: string
+                  example: Hệ thống sẽ bảo trì vào 22:00 tối nay
+                  description: Nội dung thông báo
+                type:
+                  type: string
+                  example: SYSTEM
+                  description: Loại thông báo (mặc định SYSTEM)
+            example:
+              message: Hệ thống sẽ bảo trì vào 22:00 tối nay. Vui lòng lưu dữ liệu.
+              type: SYSTEM
+      responses:
+        '200':
+          description: Đã gửi broadcast thành công
+          content:
+            application/json:
+              example:
+                status: success
+                message: Đã gửi broadcast tới tất cả user
+        '403':
+          description: Chỉ admin mới có quyền gửi broadcast
+  /api/recurring:
+    get:
+      summary: Lấy danh sách mẫu giao dịch định kỳ
+      description: >
+        Trả về tất cả mẫu giao dịch định kỳ của người dùng hiện tại.
+
+        Mỗi mẫu hiển thị: số tiền, tần suất, ngày chạy tiếp theo, trạng thái
+        hoạt động.
+      tags:
+        - Recurring
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Danh sách giao dịch định kỳ thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    amount:
+                      type: number
+                    frequency:
+                      type: string
+                      enum:
+                        - DAILY
+                        - WEEKLY
+                        - MONTHLY
+                        - YEARLY
+                    next_run_date:
+                      type: string
+                      format: date
+                    is_active:
+                      type: boolean
+              example:
+                - id: r1a2b3c4-...
+                  amount: 300000
+                  type: EXPENSE
+                  description: Tiền điện hàng tháng
+                  frequency: MONTHLY
+                  next_run_date: '2026-04-01'
+                  is_active: true
+                - id: r2b3c4d5-...
+                  amount: 25000000
+                  type: INCOME
+                  description: Lương tháng
+                  frequency: MONTHLY
+                  next_run_date: '2026-04-28'
+                  is_active: true
+    post:
+      summary: Tạo mẫu giao dịch định kỳ mới
+      description: >
+        Thiết lập một giao dịch tự động lặp lại theo chu kỳ.
+
+
+        **Tần suất hỗ trợ:**
+
+        - `DAILY`: Hàng ngày
+
+        - `WEEKLY`: Hàng tuần
+
+        - `MONTHLY`: Hàng tháng (phổ biến nhất)
+
+        - `YEARLY`: Hàng năm
+
+
+        Hệ thống sẽ tự động tạo giao dịch vào `next_run_date` và cập nhật ngày
+        chạy tiếp theo.
+      tags:
+        - Recurring
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - wallet_id
+                - amount
+                - frequency
+                - next_run_date
+              properties:
+                wallet_id:
+                  type: string
+                  format: uuid
+                  description: UUID ví thực hiện giao dịch
+                category_id:
+                  type: string
+                  format: uuid
+                  nullable: true
+                  description: UUID danh mục (tùy chọn)
+                amount:
+                  type: number
+                  example: 300000
+                  description: Số tiền mỗi lần (VND)
+                type:
+                  type: string
+                  enum:
+                    - INCOME
+                    - EXPENSE
+                  default: EXPENSE
+                  description: Loại giao dịch
+                description:
+                  type: string
+                  example: Tiền điện hàng tháng
+                  description: Mô tả giao dịch
+                frequency:
+                  type: string
+                  enum:
+                    - DAILY
+                    - WEEKLY
+                    - MONTHLY
+                    - YEARLY
+                  example: MONTHLY
+                  description: Tần suất lặp lại
+                next_run_date:
+                  type: string
+                  format: date
+                  example: '2026-04-01'
+                  description: Ngày chạy tiếp theo (YYYY-MM-DD)
+            example:
+              wallet_id: w1a2b3c4-...
+              amount: 300000
+              type: EXPENSE
+              description: Tiền điện hàng tháng
+              frequency: MONTHLY
+              next_run_date: '2026-04-01'
+      responses:
+        '201':
+          description: Tạo mẫu định kỳ thành công
+          content:
+            application/json:
+              example:
+                status: success
+                message: Tạo giao dịch định kỳ thành công
+        '400':
+          description: Thiếu trường bắt buộc hoặc dữ liệu không hợp lệ
+  /api/recurring/trigger-cron:
+    post:
+      summary: Kích hoạt xử lý giao dịch định kỳ ngay lập tức
+      description: >
+        Chạy ngay lập tức job cron xử lý các giao dịch định kỳ đến hạn.
+
+        API này thường được gọi tự động bởi hệ thống cron,
+
+        nhưng cũng có thể kích hoạt thủ công để debug hoặc test.
+
+
+        Job sẽ quét tất cả mẫu có `is_active = true` và `next_run_date <=
+        today`,
+
+        tạo giao dịch tương ứng và cập nhật `next_run_date` cho chu kỳ tiếp
+        theo.
+      tags:
+        - Recurring
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Kết quả chạy cron
+          content:
+            application/json:
+              example:
+                message: Đã chạy thành công 3 giao dịch định kỳ.
+  /api/recurring/{id}:
+    put:
+      summary: Cập nhật mẫu giao dịch định kỳ
+      description: >
+        Thay đổi số tiền, tần suất, trạng thái hoặc ngày chạy của một mẫu định
+        kỳ.
+
+        Chỉ gửi các field muốn cập nhật.
+
+
+        **Tạm dừng:** Gửi `is_active: false` để tạm ngừng (không xóa).
+      tags:
+        - Recurring
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: UUID của mẫu định kỳ
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  type: number
+                frequency:
+                  type: string
+                  enum:
+                    - DAILY
+                    - WEEKLY
+                    - MONTHLY
+                    - YEARLY
+                is_active:
+                  type: boolean
+                next_run_date:
+                  type: string
+                  format: date
+                description:
+                  type: string
+            example:
+              amount: 350000
+              description: Tiền điện (đã tăng)
+      responses:
+        '200':
+          description: Cập nhật thành công
+          content:
+            application/json:
+              example:
+                status: success
+                message: Cập nhật giao dịch định kỳ thành công
+        '404':
+          description: Không tìm thấy mẫu định kỳ (RECURRING_NOT_FOUND)
+    delete:
+      summary: Xóa mẫu giao dịch định kỳ
+      description: |
+        Xóa vĩnh viễn một mẫu giao dịch định kỳ.
+        Các giao dịch đã tạo trước đó **không bị ảnh hưởng** (vẫn được lưu).
+        Chỉ ngừng tạo giao dịch mới trong tương lai.
+      tags:
+        - Recurring
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: UUID của mẫu định kỳ cần xóa
+      responses:
+        '200':
+          description: Xóa thành công
+          content:
+            application/json:
+              example:
+                status: success
+                message: Xóa giao dịch định kỳ thành công
+        '404':
+          description: Không tìm thấy mẫu định kỳ (RECURRING_NOT_FOUND)
+  /api/transactions:
+    get:
+      summary: Lấy danh sách giao dịch có phân trang và bộ lọc
+      description: >
+        Trả về danh sách giao dịch của người dùng hiện tại, hỗ trợ nhiều bộ lọc:
+
+        - **Context**: Xem giao dịch cá nhân (`personal`) hoặc gia đình
+        (`family`)
+
+        - **Loại giao dịch**: INCOME, EXPENSE, TRANSFER_IN, TRANSFER_OUT
+
+        - **Khoảng thời gian**: Lọc theo ngày bắt đầu / kết thúc
+
+        - **Ví cụ thể**: Lọc theo wallet_id
+
+        - **Danh mục**: Lọc theo category_id
+
+        - **Tìm kiếm**: Tìm theo mô tả giao dịch
+
+
+        Kết quả có phân trang, mặc định 10 bản ghi mỗi trang.
+      tags:
+        - Transactions
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: context
+          schema:
+            type: string
+            enum:
+              - personal
+              - family
+          description: Chọn ngữ cảnh dữ liệu cần xem (cá nhân hoặc gia đình)
+        - in: query
+          name: family_id
+          schema:
+            type: string
+            format: uuid
+          description: ID gia đình (bắt buộc khi context = family)
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+          description: Số trang hiện tại (bắt đầu từ 1)
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+          description: Số giao dịch mỗi trang
+        - in: query
+          name: type
+          schema:
+            type: string
+            enum:
+              - INCOME
+              - EXPENSE
+              - TRANSFER_IN
+              - TRANSFER_OUT
+          description: Lọc theo loại giao dịch
+        - in: query
+          name: startDate
+          schema:
+            type: string
+            format: date
+          description: Ngày bắt đầu lọc (YYYY-MM-DD)
+        - in: query
+          name: endDate
+          schema:
+            type: string
+            format: date
+          description: Ngày kết thúc lọc (YYYY-MM-DD)
+        - in: query
+          name: wallet_id
+          schema:
+            type: string
+            format: uuid
+          description: Lọc theo ID ví cụ thể
+        - in: query
+          name: category_id
+          schema:
+            type: string
+            format: uuid
+          description: Lọc theo danh mục thu/chi
+        - in: query
+          name: search
+          schema:
+            type: string
+          description: Tìm kiếm theo từ khóa trong mô tả giao dịch
+      responses:
+        '200':
+          description: Danh sách giao dịch thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      transactions:
+                        type: array
+                        items:
+                          type: object
+                      totalItems:
+                        type: integer
+                      totalPages:
+                        type: integer
+                      currentPage:
+                        type: integer
+              example:
+                status: success
+                message: Lấy danh sách giao dịch thành công
+                data:
+                  transactions:
+                    - id: t1a2b3c4-5678-9abc-def0-123456789001
+                      amount: 150000
+                      type: EXPENSE
+                      description: Cà phê buổi sáng
+                      date: '2026-03-30'
+                      wallet_id: w1a2b3c4-...
+                      category_id: c1a2b3c4-...
+                    - id: t1a2b3c4-5678-9abc-def0-123456789002
+                      amount: 25000000
+                      type: INCOME
+                      description: Lương tháng 3
+                      date: '2026-03-28'
+                      wallet_id: w1a2b3c4-...
+                      category_id: null
+                  totalItems: 342
+                  totalPages: 35
+                  currentPage: 1
+    post:
+      summary: Tạo giao dịch mới (thu nhập hoặc chi tiêu)
+      description: >
+        Ghi nhận một giao dịch thu nhập hoặc chi tiêu mới vào ví.
+
+
+        **Yêu cầu:**
+
+        - Phải có ít nhất một ví hợp lệ trước khi tạo giao dịch
+
+        - `wallet_id` phải là ví mà bạn sở hữu hoặc có quyền truy cập (ví gia
+        đình)
+
+        - Khi tạo giao dịch EXPENSE, số dư ví phải đủ
+
+
+        **Luồng xử lý:**
+
+        - INCOME: Tự động cộng `amount` vào số dư ví
+
+        - EXPENSE: Tự động trừ `amount` khỏi số dư ví
+      tags:
+        - Transactions
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - wallet_id
+                - amount
+                - type
+                - date
+              properties:
+                wallet_id:
+                  type: string
+                  format: uuid
+                  description: ID ví thực hiện giao dịch
+                amount:
+                  type: number
+                  minimum: 0.01
+                  example: 150000
+                  description: Số tiền giao dịch (phải lớn hơn 0)
+                type:
+                  type: string
+                  enum:
+                    - INCOME
+                    - EXPENSE
+                  example: EXPENSE
+                  description: Loại giao dịch
+                description:
+                  type: string
+                  example: Cà phê buổi sáng
+                  description: Mô tả giao dịch (tùy chọn)
+                category_id:
+                  type: string
+                  format: uuid
+                  nullable: true
+                  description: ID danh mục (tùy chọn)
+                date:
+                  type: string
+                  format: date
+                  example: '2026-03-30'
+                  description: Ngày giao dịch (YYYY-MM-DD)
+            examples:
+              chi_tieu:
+                summary: Ghi nhận chi tiêu
+                value:
+                  wallet_id: w1a2b3c4-5678-9abc-def0-123456789001
+                  amount: 150000
+                  type: EXPENSE
+                  description: Cà phê buổi sáng
+                  date: '2026-03-30'
+              thu_nhap:
+                summary: Ghi nhận thu nhập
+                value:
+                  wallet_id: w1a2b3c4-5678-9abc-def0-123456789001
+                  amount: 25000000
+                  type: INCOME
+                  description: Lương tháng 3/2026
+                  date: '2026-03-28'
+      responses:
+        '201':
+          description: Tạo giao dịch thành công
+          content:
+            application/json:
+              example:
+                status: success
+                message: Tạo giao dịch thành công
+                data:
+                  id: t1a2b3c4-new-transaction-id
+                  amount: 150000
+                  type: EXPENSE
+                  description: Cà phê buổi sáng
+                  wallet_balance: 9850000
+        '400':
+          description: Chưa có ví hoặc số dư không đủ (INSUFFICIENT_BALANCE)
+        '422':
+          description: Dữ liệu body không hợp lệ
+  /api/transactions/transfer:
+    post:
+      summary: Chuyển tiền giữa hai ví
+      description: >
+        Thực hiện chuyển tiền từ ví nguồn sang ví đích.
+
+        Hệ thống tự động tạo 2 giao dịch liên kết:
+
+        - **TRANSFER_OUT** trên ví nguồn (trừ tiền)
+
+        - **TRANSFER_IN** trên ví đích (cộng tiền)
+
+
+        Cả hai ví phải thuộc quyền quản lý của user (ví cá nhân hoặc ví gia
+        đình).
+
+        Hai giao dịch được liên kết bằng `transfer_group_id` để dễ truy vết.
+      tags:
+        - Transactions
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - from_wallet_id
+                - to_wallet_id
+                - amount
+              properties:
+                from_wallet_id:
+                  type: string
+                  format: uuid
+                  description: ID ví nguồn (trừ tiền)
+                to_wallet_id:
+                  type: string
+                  format: uuid
+                  description: ID ví đích (cộng tiền)
+                amount:
+                  type: number
+                  minimum: 0.01
+                  example: 5000000
+                  description: Số tiền chuyển (phải nhỏ hơn hoặc bằng số dư ví nguồn)
+                description:
+                  type: string
+                  example: Chuyển tiền tiết kiệm
+                  description: Ghi chú chuyển khoản
+                date:
+                  type: string
+                  format: date
+                  description: Ngày chuyển khoản
+            example:
+              from_wallet_id: w-source-1234-...
+              to_wallet_id: w-dest-5678-...
+              amount: 5000000
+              description: Chuyển sang ví tiết kiệm
+      responses:
+        '201':
+          description: Chuyển tiền thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      transfer_group_id:
+                        type: string
+                        format: uuid
+                      transfer_out_id:
+                        type: string
+                        format: uuid
+                      transfer_in_id:
+                        type: string
+                        format: uuid
+                      from_wallet_balance:
+                        type: number
+                      to_wallet_balance:
+                        type: number
+              example:
+                status: success
+                message: Chuyển tiền thành công
+                data:
+                  transfer_group_id: tg-a1b2c3d4-...
+                  transfer_out_id: t-out-5678-...
+                  transfer_in_id: t-in-9012-...
+                  from_wallet_balance: 5000000
+                  to_wallet_balance: 15000000
+        '400':
+          description: Ví không hợp lệ hoặc số dư không đủ (INSUFFICIENT_BALANCE)
+  /api/transactions/import:
+    post:
+      summary: Nhập hàng loạt giao dịch (Bulk Import)
+      description: |
+        Cho phép nhập nhiều giao dịch cùng lúc trong một request.
+        Hữu ích khi:
+        - Chuyển dữ liệu từ ứng dụng khác sang Junkio
+        - Nhập dữ liệu từ file Excel/CSV đã parse
+        - Tự động hóa việc ghi nhận giao dịch
+
+        **Lưu ý:** Mỗi giao dịch trong mảng sẽ được xử lý độc lập.
+        Nếu một giao dịch lỗi, các giao dịch khác vẫn được tạo thành công.
+      tags:
+        - Transactions
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - transactions
+              properties:
+                transactions:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: object
+                    required:
+                      - wallet_id
+                      - amount
+                      - type
+                      - date
+                    properties:
+                      wallet_id:
+                        type: string
+                        format: uuid
+                      amount:
+                        type: number
+                      type:
+                        type: string
+                        enum:
+                          - INCOME
+                          - EXPENSE
+                      description:
+                        type: string
+                      category_id:
+                        type: string
+                        format: uuid
+                        nullable: true
+                      date:
+                        type: string
+                        format: date
+            example:
+              transactions:
+                - wallet_id: w1a2b3c4-...
+                  amount: 50000
+                  type: EXPENSE
+                  description: Grab đi làm
+                  date: '2026-03-28'
+                - wallet_id: w1a2b3c4-...
+                  amount: 200000
+                  type: EXPENSE
+                  description: Mua sách
+                  date: '2026-03-29'
+      responses:
+        '200':
+          description: Nhập dữ liệu thành công
+          content:
+            application/json:
+              example:
+                status: success
+                message: Nhập 2 giao dịch thành công
+        '400':
+          description: Body request rỗng hoặc bạn chưa có ví hợp lệ
+  /api/transactions/export:
+    get:
+      summary: Xuất danh sách giao dịch ra file (CSV/PDF)
+      description: >
+        Tải xuống file chứa danh sách giao dịch theo bộ lọc hiện tại.
+
+        Hỗ trợ 2 định dạng:
+
+        - **CSV**: Phù hợp để mở bằng Excel, Google Sheets
+
+        - **PDF**: Phù hợp để in hoặc chia sẻ báo cáo
+
+
+        Các tham số lọc giống với API `GET /api/transactions` (context, type,
+        date range...).
+
+        Response trả về file binary, trình duyệt sẽ tự tải về.
+      tags:
+        - Transactions
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: format
+          schema:
+            type: string
+            enum:
+              - csv
+              - pdf
+            default: csv
+          description: Định dạng file xuất (csv hoặc pdf)
+        - in: query
+          name: context
+          schema:
+            type: string
+            enum:
+              - personal
+              - family
+          description: Ngữ cảnh dữ liệu
+        - in: query
+          name: family_id
+          schema:
+            type: string
+            format: uuid
+          description: ID gia đình (khi context = family)
+        - in: query
+          name: startDate
+          schema:
+            type: string
+            format: date
+          description: Ngày bắt đầu (YYYY-MM-DD)
+        - in: query
+          name: endDate
+          schema:
+            type: string
+            format: date
+          description: Ngày kết thúc (YYYY-MM-DD)
+        - in: query
+          name: type
+          schema:
+            type: string
+            enum:
+              - INCOME
+              - EXPENSE
+              - TRANSFER_IN
+              - TRANSFER_OUT
+          description: Lọc theo loại giao dịch
+        - in: query
+          name: wallet_id
+          schema:
+            type: string
+            format: uuid
+          description: Lọc theo ví
+        - in: query
+          name: category_id
+          schema:
+            type: string
+            format: uuid
+          description: Lọc theo danh mục
+        - in: query
+          name: search
+          schema:
+            type: string
+          description: Tìm kiếm theo mô tả
+      responses:
+        '200':
+          description: File export được tạo thành công (tự động tải về)
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+  /api/transactions/{id}:
+    get:
+      summary: Lấy chi tiết một giao dịch
+      description: >
+        Trả về thông tin đầy đủ của một giao dịch cụ thể.
+
+        User chỉ có thể xem giao dịch thuộc ví mà mình sở hữu hoặc có quyền truy
+        cập.
+
+
+        Thông tin bao gồm: số tiền, loại, mô tả, ngày, ví liên quan, danh mục.
+      tags:
+        - Transactions
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: UUID của giao dịch cần xem
+      responses:
+        '200':
+          description: Chi tiết giao dịch thành công
+          content:
+            application/json:
+              example:
+                status: success
+                message: Lấy chi tiết giao dịch thành công
+                data:
+                  id: t1a2b3c4-...
+                  amount: 150000
+                  type: EXPENSE
+                  description: Cà phê buổi sáng
+                  date: '2026-03-30'
+                  wallet:
+                    id: w1a2b3c4-...
+                    name: Ví MB Bank
+                  category:
+                    id: c1a2b3c4-...
+                    name: Ăn uống
+        '404':
+          description: Không tìm thấy giao dịch hoặc không có quyền (TRANSACTION_NOT_FOUND)
+    delete:
+      summary: Xóa giao dịch (tự động hoàn tác số dư ví)
+      description: >
+        Xóa một giao dịch và **tự động hoàn tác** số dư ví tương ứng:
+
+        - Xóa giao dịch **EXPENSE**: Cộng lại tiền vào ví
+
+        - Xóa giao dịch **INCOME**: Trừ tiền khỏi ví
+
+
+        Hành động này không thể hoàn tác. Nếu cần, hãy tạo giao dịch mới để bù
+        lại.
+      tags:
+        - Transactions
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: UUID của giao dịch cần xóa
+      responses:
+        '200':
+          description: Xóa giao dịch thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    nullable: true
+              example:
+                status: success
+                message: Xóa giao dịch thành công
+                data: null
+        '404':
+          description: Không tìm thấy giao dịch hoặc không có quyền (TRANSACTION_NOT_FOUND)
+  /api/users/me:
+    get:
+      summary: Lấy thông tin hồ sơ cá nhân
+      description: |
+        Trả về đầy đủ thông tin profile của người dùng đang đăng nhập,
+        bao gồm tên, email, role, và đường dẫn avatar.
+
+        Đây là **canonical endpoint** (endpoint chính).
+        Alias tương thích: `/api/auth/me`
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lấy hồ sơ thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      name:
+                        type: string
+                      email:
+                        type: string
+                      avatar:
+                        type: string
+                        nullable: true
+                      role:
+                        type: string
+                        enum:
+                          - member
+                          - staff
+                          - admin
+              example:
+                status: success
+                message: Lấy profile thành công
+                data:
+                  id: b2df0d5d-1234-4abc-9def-bbbd02910001
+                  name: Nguyễn Văn A
+                  email: nguyenvana@junkio.com
+                  avatar: /uploads/avatars/b2df0d5d-avatar.jpg
+                  role: member
+        '401':
+          description: Chưa đăng nhập hoặc token hết hạn
+        '404':
+          description: Không tìm thấy user (USER_NOT_FOUND)
+    put:
+      summary: Cập nhật hồ sơ cá nhân
+      description: |
+        Cho phép người dùng thay đổi tên hiển thị và các thông tin cá nhân khác.
+        Chỉ cần gửi các field muốn thay đổi, không bắt buộc gửi tất cả.
+
+        **Lưu ý:** Không thể thay đổi email hoặc role qua API này.
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: Nguyễn Văn B
+                  description: Tên hiển thị mới
+            example:
+              name: Nguyễn Văn B
+      responses:
+        '200':
+          description: Cập nhật hồ sơ thành công
+          content:
+            application/json:
+              example:
+                status: success
+                message: Cập nhật profile thành công
+                data:
+                  id: b2df0d5d-1234-4abc-9def-bbbd02910001
+                  name: Nguyễn Văn B
+                  email: nguyenvana@junkio.com
+        '401':
+          description: Chưa đăng nhập
+    delete:
+      summary: Xóa tài khoản vĩnh viễn
+      description: >
+        Xóa hoàn toàn tài khoản và tất cả dữ liệu liên quan (ví, giao dịch, mục
+        tiêu...).
+
+        Hành động này **không thể hoàn tác**.
+
+
+        **Bảo mật:** Yêu cầu nhập đúng mật khẩu hiện tại để xác nhận.
+
+        Đây là biện pháp chống xóa nhầm khi token bị đánh cắp.
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - password
+              properties:
+                password:
+                  type: string
+                  format: password
+                  description: Mật khẩu hiện tại (để xác nhận xóa)
+            example:
+              password: myCurrentPassword123
+      responses:
+        '200':
+          description: Xóa tài khoản thành công
+          content:
+            application/json:
+              example:
+                status: success
+                message: Tài khoản đã được xóa vĩnh viễn
+        '400':
+          description: Mật khẩu không đúng (WRONG_PASSWORD)
+  /api/users/me/avatar:
+    post:
+      summary: Cập nhật ảnh đại diện (avatar)
+      description: |
+        Upload hoặc thay thế ảnh đại diện của người dùng hiện tại.
+        Đây là **canonical endpoint** (endpoint chính).
+        Alias tương thích: `/api/auth/avatar`
+
+        **Yêu cầu file:**
+        - Định dạng hỗ trợ: JPEG, JPG, PNG, GIF
+        - Dung lượng tối đa: **5MB**
+        - Tên field trong form-data: `avatar`
+
+        Ảnh cũ sẽ tự động bị xóa khi upload ảnh mới.
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - avatar
+              properties:
+                avatar:
+                  type: string
+                  format: binary
+                  description: File ảnh (JPEG/PNG/GIF, tối đa 5MB)
+      responses:
+        '200':
+          description: Cập nhật avatar thành công
+          content:
+            application/json:
+              example:
+                status: success
+                message: Cập nhật avatar thành công
+                data:
+                  avatar_url: /uploads/avatars/b2df0d5d-avatar-1711792000.jpg
+        '400':
+          description: File không hợp lệ (sai định dạng hoặc vượt quá 5MB)
+  /api/users/me/password:
+    put:
+      summary: Đổi mật khẩu tài khoản
+      description: >
+        Cho phép người dùng thay đổi mật khẩu hiện tại.
+
+        Yêu cầu nhập đúng mật khẩu hiện tại (`currentPassword`) để xác minh danh
+        tính.
+
+
+        **Yêu cầu mật khẩu mới:**
+
+        - Tối thiểu 6 ký tự
+
+        - Phải khác mật khẩu hiện tại
+
+
+        Sau khi đổi thành công, token hiện tại vẫn hoạt động bình thường.
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - currentPassword
+                - newPassword
+              properties:
+                currentPassword:
+                  type: string
+                  format: password
+                  example: oldPassword123
+                  description: Mật khẩu hiện tại (để xác minh)
+                newPassword:
+                  type: string
+                  format: password
+                  example: newPassword456
+                  minLength: 6
+                  description: Mật khẩu mới (tối thiểu 6 ký tự)
+            example:
+              currentPassword: oldPassword123
+              newPassword: newPassword456
+      responses:
+        '200':
+          description: Đổi mật khẩu thành công
+          content:
+            application/json:
+              example:
+                status: success
+                message: Đổi mật khẩu thành công
+        '400':
+          description: Mật khẩu hiện tại sai hoặc mật khẩu mới quá ngắn (WRONG_PASSWORD)
+  /api/wallets:
+    get:
+      summary: Lấy danh sách ví mà người dùng có quyền truy cập
+      tags:
+        - Wallets
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Trả về danh sách ví thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        name:
+                          type: string
+                        balance:
+                          type: number
+                        currency:
+                          type: string
+                          example: VND
+                        user_id:
+                          type: string
+                          format: uuid
+                          nullable: true
+                        family_id:
+                          type: string
+                          format: uuid
+                          nullable: true
+    post:
+      summary: Tạo ví mới
+      description: >-
+        Bỏ qua \`family_id\` để tạo ví cá nhân. Gửi \`family_id\` để tạo ví gia
+        đình trong gia đình mà bạn được phép quản lý.
+      tags:
+        - Wallets
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                  example: Ví MB Bank
+                balance:
+                  type: number
+                  example: 10000000
+                currency:
+                  type: string
+                  enum:
+                    - VND
+                    - USD
+                    - EUR
+                  example: VND
+                family_id:
+                  type: string
+                  format: uuid
+                  nullable: true
+            examples:
+              personal:
+                summary: Tạo ví cá nhân (Personal Wallet)
+                value:
+                  name: Ví Cá Nhân ACB
+                  balance: 15000000
+                  currency: VND
+              family:
+                summary: Tạo ví gia đình (Family Wallet)
+                value:
+                  name: Quỹ Sinh Hoạt Chung
+                  balance: 5000000
+                  currency: VND
+                  family_id: 11111111-1111-1111-1111-111111111111
+      responses:
+        '201':
+          description: Tạo ví mới thành công
+        '409':
+          description: Tên ví đã tồn tại trong cùng danh mục
+        '422':
+          description: Dữ liệu gửi lên không đúng định dạng
+  /api/wallets/{id}:
+    put:
+      summary: Cập nhật thông tin ví
+      tags:
+        - Wallets
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: Ví Lương Tháng
+                balance:
+                  type: number
+                  example: 25000000
+                currency:
+                  type: string
+                  enum:
+                    - VND
+                    - USD
+                    - EUR
+      responses:
+        '200':
+          description: Cập nhật ví thành công
+        '404':
+          description: Không tìm thấy ví tương ứng (WALLET_NOT_FOUND)
+    delete:
+      summary: Xóa ví vĩnh viễn
+      tags:
+        - Wallets
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Xóa ví thành công
+        '404':
+          description: Không tìm thấy ví
+tags:
+  - name: Admin
+    description: |
+      Quản trị hệ thống, chỉ dành cho tài khoản có role **admin**.
+      Tất cả các endpoint trong nhóm này yêu cầu Bearer Token của admin.
+      Nếu bạn chưa có quyền admin, hãy liên hệ quản trị viên hệ thống.
+  - name: Analytics
+    description: |
+      Báo cáo và thống kê tài chính cá nhân.
+      Cung cấp dữ liệu tổng quan (dashboard) và báo cáo chi tiết
+      theo tháng/năm để người dùng theo dõi tình hình tài chính.
+  - name: Auth
+    description: >
+      Xác thực người dùng và quản lý phiên đăng nhập.
+
+      Nhóm API này bao gồm đăng ký, đăng nhập, làm mới token, đăng xuất
+
+      và các chức năng khôi phục mật khẩu. Hầu hết các endpoint **không yêu cầu
+      token**
+
+      (ngoại trừ /me và /avatar).
+  - name: Budgets
+    description: >
+      Quản lý ngân sách thu/chi theo danh mục và khoảng thời gian.
+
+      Budget giúp người dùng đặt giới hạn chi tiêu cho từng danh mục
+
+      (VD: Ăn uống tối đa 3 triệu/tháng). Hỗ trợ cả ngân sách cá nhân và gia
+      đình.
+  - name: Categories
+    description: |
+      Quản lý danh mục thu/chi.
+      Danh mục dùng để phân loại giao dịch (VD: Ăn uống, Di chuyển, Lương...).
+      Hỗ trợ danh mục cha-con (parent_id) để tổ chức phân cấp.
+  - name: Debts
+    description: |
+      Quản lý chia sẻ chi phí và nợ trong nhóm gia đình.
+      Khi một thành viên gia đình tạo giao dịch chi tiêu chung,
+      hệ thống tự động chia đều cho các thành viên và tạo khoản nợ.
+      Mỗi thành viên có thể chấp nhận/từ chối khoản chia, và tất toán nợ.
+  - name: Families
+    description: >
+      Quản lý nhóm gia đình và thành viên.
+
+      Gia đình cho phép nhiều người dùng chia sẻ ví chung, theo dõi chi tiêu
+      chung,
+
+      và phân chia nợ trong nhóm.
+  - name: Forecast
+    description: |
+      Dự báo dòng tiền dựa trên dữ liệu lịch sử.
+      Sử dụng thuật toán phân tích xu hướng thu/chi trong quá khứ
+      để dự đoán tình hình tài chính trong các tháng tới.
+  - name: Goals
+    description: >
+      Quản lý mục tiêu tài chính (tiết kiệm).
+
+      Mục tiêu giúp người dùng theo dõi tiến độ tiết kiệm cho một mục đích cụ
+      thể
+
+      (VD: mua laptop, du lịch, quỹ khẩn cấp...).
+
+      Người dùng có thể nạp tiền từ ví cá nhân vào mục tiêu.
+  - name: Notifications
+    description: >
+      Quản lý thông báo hệ thống.
+
+      Hệ thống tự động gửi thông báo khi có sự kiện quan trọng:
+
+      vượt ngân sách, mục tiêu đạt được, khoản chia tiền mới, broadcast từ
+      admin...
+  - name: Recurring
+    description: |
+      Quản lý giao dịch định kỳ (tự động lặp lại).
+      Cho phép người dùng thiết lập mẫu giao dịch tự động tạo theo chu kỳ:
+      hàng ngày, hàng tuần, hàng tháng hoặc hàng năm.
+      VD: Tiền điện hàng tháng, lương hàng tháng, tiền thuê nhà...
+  - name: Transactions
+    description: |
+      Quản lý giao dịch thu chi, chuyển tiền, nhập và xuất dữ liệu.
+      Đây là nhóm API trọng tâm của hệ thống, cho phép người dùng:
+      - Ghi nhận thu nhập / chi tiêu hàng ngày
+      - Chuyển tiền giữa các ví
+      - Nhập hàng loạt giao dịch từ file
+      - Xuất dữ liệu ra CSV/PDF
+  - name: Users
+    description: |
+      Quản lý hồ sơ cá nhân của người dùng đang đăng nhập.
+      Tất cả endpoint trong nhóm này yêu cầu Bearer Token.
+      Đây là nhóm endpoint chính (canonical) cho profile, avatar, đổi mật khẩu.
+  - name: Wallets
+    description: Quản lý ví cá nhân và ví gia đình

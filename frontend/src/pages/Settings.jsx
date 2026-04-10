@@ -1,17 +1,19 @@
+import React, { useState } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { useTheme } from "@/components/theme-provider"
-import { Moon, Sun, Laptop, Download, Trash2, LogOut, Upload, Settings2, Bell, Database, Shield, AlertTriangle } from "lucide-react"
+import { Moon, Sun, Laptop, Download, Trash2, LogOut, Upload, Settings2, Bell, Database, Shield, AlertTriangle, HelpCircle, ExternalLink, Github, Mail, Info } from "lucide-react"
 import { useSelector, useDispatch } from "react-redux"
 import { toast } from "sonner"
 import { store } from "@/store"
 import { logout } from "@/features/auth/authSlice"
-import { updateCurrency, updateLanguage, toggleNotification } from "@/features/settings/settingsSlice"
-import { useState } from "react"
+import { updateCurrency, updateLanguage, toggleNotification, resetSettings } from "@/features/settings/settingsSlice"
 import api from "@/lib/api"
 import { Modal } from "@/components/ui/modal"
 import { useTranslation } from "react-i18next"
@@ -21,29 +23,33 @@ export function Settings() {
     return (
         <div className="space-y-6 max-w-5xl mx-auto pb-10">
             <div>
-                <h1 className="text-3xl font-bold tracking-tight">{t('settings.title')}</h1>
+                <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{t('settings.title')}</h1>
                 <p className="text-muted-foreground mt-2">{t('settings.subtitle')}</p>
             </div>
 
             {/* Sidebar Desktop Layout */}
-            <Tabs defaultValue="appearance" className="flex flex-col md:flex-row gap-6 mt-8">
+            <Tabs defaultValue="appearance" className="mt-8 flex flex-col gap-6 md:flex-row">
                 {/* Left Navigation */}
-                <TabsList className="flex flex-col h-auto bg-transparent items-stretch justify-start space-y-1 w-full md:w-[250px] shrink-0 p-0 font-medium">
-                    <TabsTrigger value="appearance" className="justify-start px-4 py-2.5 data-[state=active]:bg-muted data-[state=active]:shadow-none rounded-md transition-colors hover:bg-muted/50">
+                <TabsList className="scrollbar-hidden flex h-auto w-full items-stretch justify-start gap-1 overflow-x-auto bg-transparent p-0 font-medium md:w-[250px] md:flex-col md:overflow-visible">
+                    <TabsTrigger value="appearance" className="touch-target shrink-0 justify-start rounded-md px-4 py-2.5 data-[state=active]:bg-muted data-[state=active]:shadow-none transition-colors hover:bg-muted/50">
                         <Settings2 className="w-4 h-4 mr-2" />
                         {t('settings.tabs.appearance')}
                     </TabsTrigger>
-                    <TabsTrigger value="notifications" className="justify-start px-4 py-2.5 data-[state=active]:bg-muted data-[state=active]:shadow-none rounded-md transition-colors hover:bg-muted/50">
+                    <TabsTrigger value="notifications" className="touch-target shrink-0 justify-start rounded-md px-4 py-2.5 data-[state=active]:bg-muted data-[state=active]:shadow-none transition-colors hover:bg-muted/50">
                         <Bell className="w-4 h-4 mr-2" />
                         {t('settings.tabs.notifications')}
                     </TabsTrigger>
-                    <TabsTrigger value="data" className="justify-start px-4 py-2.5 data-[state=active]:bg-muted data-[state=active]:shadow-none rounded-md transition-colors hover:bg-muted/50">
+                    <TabsTrigger value="data" className="touch-target shrink-0 justify-start rounded-md px-4 py-2.5 data-[state=active]:bg-muted data-[state=active]:shadow-none transition-colors hover:bg-muted/50">
                         <Database className="w-4 h-4 mr-2" />
                         {t('settings.tabs.data')}
                     </TabsTrigger>
-                    <TabsTrigger value="account" className="justify-start px-4 py-2.5 text-destructive data-[state=active]:text-destructive data-[state=active]:bg-destructive/10 data-[state=active]:shadow-none rounded-md transition-colors hover:bg-destructive/5 hover:text-destructive">
+                    <TabsTrigger value="account" className="touch-target shrink-0 justify-start rounded-md px-4 py-2.5 text-destructive data-[state=active]:text-destructive data-[state=active]:bg-destructive/10 data-[state=active]:shadow-none transition-colors hover:bg-destructive/5 hover:text-destructive">
                         <Shield className="w-4 h-4 mr-2" />
                         {t('settings.tabs.account')}
+                    </TabsTrigger>
+                    <TabsTrigger value="support" className="touch-target shrink-0 justify-start rounded-md px-4 py-2.5 data-[state=active]:bg-muted data-[state=active]:shadow-none transition-colors hover:bg-muted/50">
+                        <HelpCircle className="w-4 h-4 mr-2" />
+                        {t('settings.tabs.support')}
                     </TabsTrigger>
                 </TabsList>
 
@@ -63,6 +69,10 @@ export function Settings() {
 
                     <TabsContent value="account" className="m-0 space-y-6">
                         <AccountSettings />
+                    </TabsContent>
+
+                    <TabsContent value="support" className="m-0 space-y-6">
+                        <SupportSettings />
                     </TabsContent>
                 </div>
             </Tabs>
@@ -175,7 +185,7 @@ function NotificationSettings() {
                 <CardDescription>{t('settings.notifications.desc')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-                <div className="flex items-center justify-between space-x-2 rounded-lg border p-4">
+                <div className="flex flex-col gap-4 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between sm:space-x-2">
                     <div className="space-y-0.5">
                         <Label className="text-base">{t('settings.notifications.debtTitle')}</Label>
                         <p className="text-sm text-muted-foreground">{t('settings.notifications.debtDesc')}</p>
@@ -186,7 +196,7 @@ function NotificationSettings() {
                     />
                 </div>
 
-                <div className="flex items-center justify-between space-x-2 rounded-lg border p-4">
+                <div className="flex flex-col gap-4 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between sm:space-x-2">
                     <div className="space-y-0.5">
                         <Label className="text-base">{t('settings.notifications.budgetTitle')}</Label>
                         <p className="text-sm text-muted-foreground">{t('settings.notifications.budgetDesc')}</p>
@@ -197,7 +207,7 @@ function NotificationSettings() {
                     />
                 </div>
 
-                <div className="flex items-center justify-between space-x-2 rounded-lg border p-4">
+                <div className="flex flex-col gap-4 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between sm:space-x-2">
                     <div className="space-y-0.5">
                         <Label className="text-base">{t('settings.notifications.weeklyTitle')}</Label>
                         <p className="text-sm text-muted-foreground">{t('settings.notifications.weeklyDesc')}</p>
@@ -214,7 +224,12 @@ function NotificationSettings() {
 
 function DataSettings() {
     const { t } = useTranslation();
+    const dispatch = useDispatch();
     const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+    const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+    const [importData, setImportData] = useState(null);
+    const [importFileName, setImportFileName] = useState('');
+    const fileInputRef = React.useRef(null);
 
     const handleBackup = () => {
         const state = store.getState()
@@ -223,9 +238,8 @@ function DataSettings() {
             transactions: state.transactions.transactions,
             families: state.families.families,
             recurringRules: state.recurring.rules,
-            settings: state.settings // Lấy luôn cả settings hiện tại
+            settings: state.settings
         }
-
         const json = JSON.stringify(data, null, 2)
         const blob = new Blob([json], { type: "application/json" })
         const url = URL.createObjectURL(blob)
@@ -235,17 +249,50 @@ function DataSettings() {
         document.body.appendChild(link)
         link.click()
         document.body.removeChild(link)
-
         toast.success(t('settings.data.backupSuccess'))
     }
 
-    const handleImportPlaceholder = () => {
-        toast.info(t('settings.data.importNotice'))
-    }
+    const handleImportFile = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        if (!file.name.endsWith('.json')) {
+            toast.error(t('settings.data.importInvalidType'));
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+            try {
+                const parsed = JSON.parse(evt.target.result);
+                if (typeof parsed !== 'object' || parsed === null) {
+                    toast.error(t('settings.data.importInvalidFormat'));
+                    return;
+                }
+                setImportData(parsed);
+                setImportFileName(file.name);
+                setIsImportModalOpen(true);
+            } catch {
+                toast.error(t('settings.data.importInvalidFormat'));
+            }
+        };
+        reader.readAsText(file);
+        e.target.value = '';
+    };
+
+    const confirmImport = () => {
+        if (!importData) return;
+        if (importData.settings) {
+            if (importData.settings.currency) dispatch(updateCurrency(importData.settings.currency));
+            if (importData.settings.language) dispatch(updateLanguage(importData.settings.language));
+        }
+        toast.success(t('settings.data.importSuccess'));
+        setIsImportModalOpen(false);
+        setImportData(null);
+    };
 
     const confirmHardReset = () => {
-        localStorage.clear()
-        window.location.reload()
+        dispatch(resetSettings());
+        toast.success(t('settings.data.resetSuccess'));
+        setIsResetModalOpen(false);
     }
 
     return (
@@ -270,7 +317,8 @@ function DataSettings() {
                         <Label className="text-base">{t('settings.data.importTitle')}</Label>
                         <p className="text-sm text-muted-foreground">{t('settings.data.importDesc')}</p>
                     </div>
-                    <Button variant="outline" onClick={handleImportPlaceholder} className="w-full sm:w-auto h-10 px-5">
+                    <input ref={fileInputRef} type="file" accept=".json" onChange={handleImportFile} className="hidden" />
+                    <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="w-full sm:w-auto h-10 px-5">
                         <Upload className="mr-2 h-4 w-4" /> {t('settings.data.importBtn')}
                     </Button>
                 </div>
@@ -301,12 +349,37 @@ function DataSettings() {
                         {t('settings.data.resetModalDesc3')}
                     </p>
                 </div>
-                <div className="flex items-center justify-end gap-3 mt-4">
-                    <Button variant="outline" onClick={() => setIsResetModalOpen(false)}>
+                <div className="mt-4 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                    <Button variant="outline" onClick={() => setIsResetModalOpen(false)} className="w-full sm:w-auto">
                         {t('common.cancel')}
                     </Button>
-                    <Button variant="destructive" onClick={confirmHardReset}>
+                    <Button variant="destructive" onClick={confirmHardReset} className="w-full sm:w-auto">
                         <Trash2 className="mr-2 h-4 w-4" /> {t('settings.data.resetModalConfirm')}
+                    </Button>
+                </div>
+            </Modal>
+
+            {/* Import Confirmation Modal */}
+            <Modal isOpen={isImportModalOpen} onClose={() => { setIsImportModalOpen(false); setImportData(null); }} title={t('settings.data.importModalTitle')}>
+                <div className="py-4 space-y-3">
+                    <p className="text-sm text-muted-foreground">{t('settings.data.importModalDesc')}</p>
+                    {importFileName && (
+                        <div className="rounded-lg border bg-muted/50 p-3">
+                            <p className="text-sm font-medium">{importFileName}</p>
+                            {importData && (
+                                <p className="text-xs text-muted-foreground mt-1">
+                                    {Object.keys(importData).length} {t('settings.data.importModalKeys')}
+                                </p>
+                            )}
+                        </div>
+                    )}
+                </div>
+                <div className="flex flex-col-reverse gap-3 border-t pt-4 sm:flex-row sm:justify-end">
+                    <Button variant="outline" onClick={() => { setIsImportModalOpen(false); setImportData(null); }} className="w-full sm:w-auto">
+                        {t('common.cancel')}
+                    </Button>
+                    <Button onClick={confirmImport} className="w-full sm:w-auto">
+                        <Upload className="mr-2 h-4 w-4" /> {t('settings.data.importConfirmBtn')}
                     </Button>
                 </div>
             </Modal>
@@ -319,6 +392,28 @@ function AccountSettings() {
     const dispatch = useDispatch()
     const { user } = useSelector(state => state.auth)
     const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+
+    // Password strength
+    const [newPasswordValue, setNewPasswordValue] = useState('');
+    const getPasswordStrength = (pwd) => {
+        let score = 0;
+        if (pwd.length >= 6) score++;
+        if (pwd.length >= 10) score++;
+        if (/[A-Z]/.test(pwd)) score++;
+        if (/[0-9]/.test(pwd)) score++;
+        if (/[^A-Za-z0-9]/.test(pwd)) score++;
+        if (score <= 1) return { level: 0, label: t('settings.account.strengthWeak'), color: 'bg-red-500' };
+        if (score <= 2) return { level: 1, label: t('settings.account.strengthMedium'), color: 'bg-orange-500' };
+        if (score <= 3) return { level: 2, label: t('settings.account.strengthStrong'), color: 'bg-green-500' };
+        return { level: 3, label: t('settings.account.strengthVeryStrong'), color: 'bg-blue-500' };
+    };
+    const passwordStrength = newPasswordValue ? getPasswordStrength(newPasswordValue) : null;
+
+    // Delete account states
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [deletePassword, setDeletePassword] = useState('');
+    const [deleteConfirmText, setDeleteConfirmText] = useState('');
+    const [isDeleting, setIsDeleting] = useState(false);
 
     // Broadcast states
     const [broadcastTitle, setBroadcastTitle] = useState('');
@@ -333,7 +428,7 @@ function AccountSettings() {
 
     const handleBroadcast = async (e) => {
         e.preventDefault();
-        if (!broadcastMsg.trim()) return toast.error('Nội dung không được để trống');
+        if (!broadcastMsg.trim()) return toast.error(t('settings.account.broadcastEmpty'));
         setIsSending(true);
         try {
             const res = await api.post('/notifications/broadcast', {
@@ -341,11 +436,11 @@ function AccountSettings() {
                 message: broadcastMsg,
                 type: 'SYSTEM'
             });
-            toast.success(res.data.msg || 'Đã gửi thông báo thành công!');
+            toast.success(res.data.msg || t('settings.account.broadcastSuccess'));
             setBroadcastTitle('');
             setBroadcastMsg('');
         } catch (error) {
-            toast.error(error.response?.data?.msg || 'Gửi thất bại');
+            toast.error(error.response?.data?.msg || t('settings.account.broadcastFailed'));
         } finally {
             setIsSending(false);
         }
@@ -361,8 +456,8 @@ function AccountSettings() {
                 {/* Change Password Area */}
                 <div className="rounded-xl border p-5 space-y-4">
                     <div className="space-y-1">
-                        <Label className="text-base font-semibold">Đổi mật khẩu</Label>
-                        <p className="text-sm text-muted-foreground">Để bảo vệ tài khoản, xin vui lòng không chia sẻ mật khẩu của bạn.</p>
+                        <Label className="text-base font-semibold">{t('settings.account.changePasswordTitle')}</Label>
+                        <p className="text-sm text-muted-foreground">{t('settings.account.changePasswordDesc')}</p>
                     </div>
                     <form className="space-y-4 max-w-sm" onSubmit={async (e) => {
                         e.preventDefault();
@@ -371,40 +466,49 @@ function AccountSettings() {
                         const confirmPassword = e.target.confirmPassword.value;
 
                         if (!currentPassword || !newPassword || !confirmPassword) {
-                            return toast.error("Vui lòng điền đầy đủ các trường");
+                            return toast.error(t('settings.account.fillAllFields'));
                         }
                         if (newPassword !== confirmPassword) {
-                            return toast.error("Mật khẩu xác nhận không khớp");
+                            return toast.error(t('settings.account.passwordConfirmMismatch'));
                         }
                         
                         try {
-                            // Using standard API call since authSlice doesn't have changePassword thunk yet
                             await api.put('/users/me/password', { currentPassword, newPassword });
-                            toast.success("Thay đổi mật khẩu thành công!");
+                            toast.success(t('settings.account.passwordUpdateSuccess'));
                             e.target.reset();
                         } catch (error) {
-                            toast.error(error.response?.data?.message || "Đổi mật khẩu thất bại");
+                            toast.error(error.response?.data?.message || t('settings.account.passwordUpdateFailed'));
                         }
                     }}>
                         <div className="space-y-2">
-                            <Label htmlFor="currentPassword">Mật khẩu hiện tại</Label>
-                            <input id="currentPassword" type="password" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" required />
+                            <Label htmlFor="currentPassword">{t('settings.account.currentPassword')}</Label>
+                            <Input id="currentPassword" type="password" required />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="newPassword">Mật khẩu mới</Label>
-                            <input id="newPassword" type="password" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" required minLength="6" />
+                            <Label htmlFor="newPassword">{t('settings.account.newPassword')}</Label>
+                            <Input id="newPassword" type="password" required minLength="6" value={newPasswordValue} onChange={(e) => setNewPasswordValue(e.target.value)} />
+                            {passwordStrength && (
+                                <div className="space-y-1.5">
+                                    <div className="flex gap-1">
+                                        {[0, 1, 2, 3].map((i) => (
+                                            <div key={i} className={`h-1.5 flex-1 rounded-full transition-colors duration-300 ${i <= passwordStrength.level ? passwordStrength.color : 'bg-muted'}`} />
+                                        ))}
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">{passwordStrength.label}</p>
+                                </div>
+                            )}
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="confirmPassword">Xác nhận Mật khẩu mới</Label>
-                            <input id="confirmPassword" type="password" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" required minLength="6" />
+                            <Label htmlFor="confirmPassword">{t('settings.account.confirmNewPassword')}</Label>
+                            <Input id="confirmPassword" type="password" required minLength="6" />
                         </div>
-                        <Button type="submit">Cập nhật mật khẩu</Button>
+                        <Button type="submit">{t('settings.account.updatePasswordBtn')}</Button>
                     </form>
                 </div>
 
                 {/* Logout Area */}
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 rounded-xl border border-destructive/20 bg-destructive/5 p-5">
-                    <div className="space-y-1 max-w-[80%]">
+                <div className="flex flex-col justify-between gap-4 rounded-xl border border-destructive/20 bg-destructive/5 p-5 lg:flex-row lg:items-center">
+                    <div className="space-y-1">
                         <Label className="text-base font-semibold text-destructive">{t('settings.account.logoutTitle')}</Label>
                         <p className="text-sm text-muted-foreground">
                             {t('settings.account.logoutDesc')}
@@ -412,6 +516,22 @@ function AccountSettings() {
                     </div>
                     <Button variant="destructive" onClick={() => setIsLogoutModalOpen(true)} className="w-full lg:w-auto shrink-0 shadow-sm shadow-destructive/20">
                         <LogOut className="mr-2 h-4 w-4" /> {t('settings.account.logoutBtn')}
+                    </Button>
+                </div>
+
+                {/* Delete Account Area */}
+                <div className="flex flex-col justify-between gap-4 rounded-xl border border-destructive/40 bg-destructive/10 p-5 lg:flex-row lg:items-center">
+                    <div className="space-y-1">
+                        <Label className="text-base font-semibold text-destructive flex items-center gap-2">
+                            <AlertTriangle className="w-4 h-4" />
+                            {t('settings.account.deleteTitle')}
+                        </Label>
+                        <p className="text-sm text-muted-foreground">
+                            {t('settings.account.deleteDesc')}
+                        </p>
+                    </div>
+                    <Button variant="destructive" onClick={() => setIsDeleteModalOpen(true)} className="w-full lg:w-auto shrink-0 shadow-sm shadow-destructive/20">
+                        <Trash2 className="mr-2 h-4 w-4" /> {t('settings.account.deleteBtn')}
                     </Button>
                 </div>
             </CardContent>
@@ -422,34 +542,32 @@ function AccountSettings() {
                     <div className="border-t border-border/50 my-6 mx-6"></div>
                     <CardHeader className="pt-0">
                         <CardTitle className="text-xl text-primary flex items-center gap-2">
-                            <Shield className="w-5 h-5" /> Admin Panel - Broadcast
+                            <Shield className="w-5 h-5" /> {t('settings.account.broadcastTitle')}
                         </CardTitle>
-                        <CardDescription>Gửi thông báo tới toàn bộ người dùng trong hệ thống (Hành động Quản trị).</CardDescription>
+                        <CardDescription>{t('settings.account.broadcastDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleBroadcast} className="space-y-4 max-w-lg border rounded-lg p-5 bg-card">
                             <div className="space-y-2">
-                                <Label>Tiêu đề (Tùy chọn)</Label>
-                                <input
+                                <Label>{t('settings.account.broadcastOptionalTitle')}</Label>
+                                <Input
                                     type="text"
-                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                                    placeholder="Thêm tính năng mới, Khuyến mãi..."
+                                    placeholder={t('settings.account.broadcastTitlePlaceholder')}
                                     value={broadcastTitle}
                                     onChange={e => setBroadcastTitle(e.target.value)}
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label>Nội dung thông báo *</Label>
-                                <textarea
-                                    className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                    placeholder="Nhập nội dung muốn gửi..."
+                                <Label>{t('settings.account.broadcastMessage')} *</Label>
+                                <Textarea
+                                    placeholder={t('settings.account.broadcastMessagePlaceholder')}
                                     value={broadcastMsg}
                                     onChange={e => setBroadcastMsg(e.target.value)}
                                     required
                                 />
                             </div>
                             <Button type="submit" disabled={isSending}>
-                                {isSending ? 'Đang gửi...' : 'Phát tán Thông Báo'}
+                                {isSending ? t('settings.account.broadcastSending') : t('settings.account.broadcastSend')}
                             </Button>
                         </form>
                     </CardContent>
@@ -462,15 +580,170 @@ function AccountSettings() {
                         {t('settings.account.logoutModalQ')}
                     </p>
                 </div>
-                <div className="flex items-center justify-end gap-3 border-t pt-4">
-                    <Button variant="outline" onClick={() => setIsLogoutModalOpen(false)}>
+                <div className="flex flex-col-reverse gap-3 border-t pt-4 sm:flex-row sm:justify-end">
+                    <Button variant="outline" onClick={() => setIsLogoutModalOpen(false)} className="w-full sm:w-auto">
                         {t('settings.account.stayBtn')}
                     </Button>
-                    <Button variant="destructive" onClick={confirmLogout}>
+                    <Button variant="destructive" onClick={confirmLogout} className="w-full sm:w-auto">
                         {t('settings.account.logoutConfirmBtn')}
                     </Button>
                 </div>
             </Modal>
+
+            {/* Delete Account Modal */}
+            <Modal isOpen={isDeleteModalOpen} onClose={() => { setIsDeleteModalOpen(false); setDeletePassword(''); setDeleteConfirmText(''); }} title={t('settings.account.deleteModalTitle')}>
+                <div className="py-2 pb-4 space-y-4">
+                    <div className="rounded-lg bg-destructive/10 border border-destructive/30 p-3">
+                        <p className="text-sm text-destructive font-medium flex items-center gap-2">
+                            <AlertTriangle className="w-4 h-4 shrink-0" />
+                            {t('settings.account.deleteModalQ')}
+                        </p>
+                    </div>
+                    <div className="space-y-2">
+                        <Label>{t('settings.account.deletePasswordLabel')}</Label>
+                        <Input type="password" value={deletePassword} onChange={e => setDeletePassword(e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label>{t('settings.account.deleteTypeConfirm')}</Label>
+                        <Input value={deleteConfirmText} onChange={e => setDeleteConfirmText(e.target.value)} placeholder={t('settings.account.deleteTypeHint')} />
+                    </div>
+                </div>
+                <div className="flex flex-col-reverse gap-3 border-t pt-4 sm:flex-row sm:justify-end">
+                    <Button variant="outline" onClick={() => { setIsDeleteModalOpen(false); setDeletePassword(''); setDeleteConfirmText(''); }} className="w-full sm:w-auto">
+                        {t('common.cancel')}
+                    </Button>
+                    <Button
+                        variant="destructive"
+                        disabled={isDeleting || !deletePassword || deleteConfirmText !== t('settings.account.deleteConfirmWord')}
+                        className="w-full sm:w-auto"
+                        onClick={async () => {
+                            setIsDeleting(true);
+                            try {
+                                await api.delete('/users/me', { data: { password: deletePassword } });
+                                localStorage.clear();
+                                window.location.href = '/login';
+                            } catch (error) {
+                                toast.error(error.response?.data?.message || t('settings.account.deleteFailed'));
+                                setIsDeleting(false);
+                            }
+                        }}
+                    >
+                        {isDeleting ? t('settings.account.deleteDeleting') : t('settings.account.deleteConfirmBtn')}
+                    </Button>
+                </div>
+            </Modal>
         </Card>
+    )
+}
+
+function SupportSettings() {
+    const { t } = useTranslation();
+
+    const techStack = [
+        { name: "React 19", color: "bg-sky-500/10 text-sky-600 dark:text-sky-400" },
+        { name: "Vite", color: "bg-violet-500/10 text-violet-600 dark:text-violet-400" },
+        { name: "Tailwind CSS", color: "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400" },
+        { name: "Redux Toolkit", color: "bg-purple-500/10 text-purple-600 dark:text-purple-400" },
+        { name: "Node.js", color: "bg-green-500/10 text-green-600 dark:text-green-400" },
+        { name: "Express", color: "bg-gray-500/10 text-gray-600 dark:text-gray-400" },
+        { name: "PostgreSQL", color: "bg-blue-500/10 text-blue-600 dark:text-blue-400" },
+        { name: "Redis", color: "bg-red-500/10 text-red-600 dark:text-red-400" },
+        { name: "Sequelize ORM", color: "bg-orange-500/10 text-orange-600 dark:text-orange-400" },
+        { name: "Socket.IO", color: "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400" },
+        { name: "Docker", color: "bg-blue-500/10 text-blue-600 dark:text-blue-400" },
+        { name: "Nginx", color: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" },
+    ];
+
+    return (
+        <div className="space-y-6">
+            {/* App Info Card */}
+            <Card className="shadow-none border-muted/60">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <Info className="w-5 h-5" />
+                        {t('settings.support.appInfoTitle')}
+                    </CardTitle>
+                    <CardDescription>{t('settings.support.desc')}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="rounded-lg border p-4 space-y-1">
+                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{t('settings.support.appVersionLabel')}</p>
+                            <p className="text-lg font-bold">{t('settings.support.appName')} <span className="text-primary">v{t('settings.support.appVersion')}</span></p>
+                        </div>
+                        <div className="rounded-lg border p-4 space-y-1">
+                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{t('settings.support.appAuthorLabel')}</p>
+                            <p className="text-lg font-bold">{t('settings.support.appAuthor')}</p>
+                        </div>
+                    </div>
+                    <div className="space-y-3 pt-2">
+                        <Label className="text-base font-semibold">{t('settings.support.techStackTitle')}</Label>
+                        <div className="flex flex-wrap gap-2">
+                            {techStack.map((tech) => (
+                                <span key={tech.name} className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${tech.color} transition-transform hover:scale-105`}>
+                                    {tech.name}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Legal & Policies Card */}
+            <Card className="shadow-none border-muted/60">
+                <CardHeader>
+                    <CardTitle>{t('settings.support.legalTitle')}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="rounded-lg border p-4 space-y-1">
+                        <div className="flex items-center gap-2">
+                            <Shield className="w-4 h-4 text-primary" />
+                            <Label className="text-base font-semibold">{t('settings.support.termsTitle')}</Label>
+                        </div>
+                        <p className="text-sm text-muted-foreground pl-6">{t('settings.support.termsDesc')}</p>
+                    </div>
+                    <div className="rounded-lg border p-4 space-y-1">
+                        <div className="flex items-center gap-2">
+                            <Shield className="w-4 h-4 text-primary" />
+                            <Label className="text-base font-semibold">{t('settings.support.privacyTitle')}</Label>
+                        </div>
+                        <p className="text-sm text-muted-foreground pl-6">{t('settings.support.privacyDesc')}</p>
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Feedback & Source Code Card */}
+            <Card className="shadow-none border-muted/60">
+                <CardHeader>
+                    <CardTitle>{t('settings.support.feedbackTitle')}</CardTitle>
+                    <CardDescription>{t('settings.support.feedbackDesc')}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                            <Label className="text-base">{t('settings.support.feedbackTitle')}</Label>
+                            <p className="text-sm text-muted-foreground">{t('settings.support.feedbackDesc')}</p>
+                        </div>
+                        <Button variant="outline" className="w-full sm:w-auto" asChild>
+                            <a href="mailto:support@junkio.com">
+                                <Mail className="mr-2 h-4 w-4" /> {t('settings.support.feedbackBtn')}
+                            </a>
+                        </Button>
+                    </div>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                            <Label className="text-base">{t('settings.support.sourceCodeTitle')}</Label>
+                            <p className="text-sm text-muted-foreground">{t('settings.support.sourceCodeDesc')}</p>
+                        </div>
+                        <Button variant="outline" className="w-full sm:w-auto" asChild>
+                            <a href="https://github.com/ngainhau1/qltc-junkio" target="_blank" rel="noopener noreferrer">
+                                <Github className="mr-2 h-4 w-4" /> {t('settings.support.sourceCodeBtn')}
+                                <ExternalLink className="ml-1 h-3 w-3" />
+                            </a>
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
     )
 }

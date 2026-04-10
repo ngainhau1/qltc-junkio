@@ -5,46 +5,76 @@ services:
     image: postgres:15-alpine
     container_name: junkio_db
     environment:
-      POSTGRES_USER: admin        # Tên đăng nhập DB
-      POSTGRES_PASSWORD: password123 # Mật khẩu DB
-      POSTGRES_DB: expense_tracker_db # Tên Database
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "5432:5432" # Cho phép máy ngoài truy cập vào DB qua cổng 5432
+      - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data # Lưu dữ liệu vĩnh viễn, tắt Docker không mất
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # --- DỊCH VỤ 2: BACKEND (NODEJS) ---
   api:
-    build: ./backend # Dựng từ Dockerfile trong thư mục backend
+    build: ./backend
     container_name: junkio_api
     ports:
       - "5000:5000"
     environment:
-      # LƯU Ý: Host không phải là 'localhost' mà là tên service 'db'
-      DB_HOST: db 
-      DB_USER: admin
-      DB_PASS: password123
-      DB_NAME: expense_tracker_db
-      PORT: 5000
+      DB_HOST: ${DB_HOST}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      DB_NAME: ${DB_NAME}
+      PORT: ${PORT}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      VITE_FRONTEND_URL: ${VITE_FRONTEND_URL}
+      AUTO_SEED: ${AUTO_SEED}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      EMAIL_HOST: ${EMAIL_HOST}
+      EMAIL_PORT: ${EMAIL_PORT}
+      EMAIL_USER: ${EMAIL_USER}
+      EMAIL_PASS: ${EMAIL_PASS}
     depends_on:
-      - db # Chỉ chạy khi Database đã khởi động xong
-    volumes:
-      - ./backend:/app # Map code máy thật vào container để sửa code là cập nhật ngay
-      - /app/node_modules # Giữ nguyên node_modules của container
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
 
-  # --- DỊCH VỤ 3: FRONTEND (REACT) ---
+  # --- DỊCH VỤ 3: FRONTEND (REACT + NGINX) ---
   web:
-    build: ./frontend # Dựng từ Dockerfile trong thư mục frontend
+    build: ./frontend
     container_name: junkio_web
     ports:
-      - "5173:5173"
-    environment:
-      - VITE_API_URL=http://localhost:5000 # API Backend
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
+      - "80:80"
     depends_on:
-      - api
+      api:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # --- DỊCH VỤ 4: REDIS CACHE ---
+  redis:
+    image: redis:7-alpine
+    container_name: junkio_cache
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
 
 volumes:
-  postgres_data: # Khai báo nơi lưu dữ liệu DB
+  postgres_data:

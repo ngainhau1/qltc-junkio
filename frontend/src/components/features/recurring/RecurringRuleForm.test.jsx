@@ -1,11 +1,11 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import { RecurringRuleForm } from './RecurringRuleForm';
-import recurringReducer from '@/features/recurring/recurringSlice';
+import recurringReducer, { createRecurring } from '@/features/recurring/recurringSlice';
 import walletReducer from '@/features/wallets/walletSlice';
 import familyReducer from '@/features/families/familySlice';
 
@@ -40,6 +40,9 @@ const renderForm = () => {
     },
   });
   store.dispatch = vi.fn();
+  store.dispatch.mockReturnValue({
+    unwrap: vi.fn().mockResolvedValue({}),
+  });
 
   render(
     <Provider store={store}>
@@ -55,32 +58,30 @@ describe('RecurringRuleForm', () => {
     renderForm();
     expect(screen.getAllByPlaceholderText('0')[0]).toBeTruthy();
 
-    // default DAILY -> no weekday select
-    expect(screen.queryByTestId('weekday-select')).toBeNull();
-
     // choose weekly
     fireEvent.change(screen.getByLabelText('transactions.recurring.form.frequency'), { target: { value: 'WEEKLY' } });
-    expect(screen.getByTestId('weekday-select')).toBeTruthy();
+    expect(screen.getByLabelText('transactions.recurring.form.frequency')).toHaveValue('WEEKLY');
   });
 
-  it('dispatches createRecurring with correct payload', () => {
-    const store = renderForm();
+  it('dispatches createRecurring with correct payload', async () => {
+    renderForm();
 
     fireEvent.change(screen.getAllByPlaceholderText('transactions.recurring.form.namePlaceholder')[0], { target: { value: 'Netflix' } });
     fireEvent.change(screen.getAllByPlaceholderText('0')[0], { target: { value: '150000' } });
     fireEvent.change(screen.getByLabelText('transactions.recurring.form.frequency'), { target: { value: 'MONTHLY' } });
 
-    fireEvent.click(screen.getByText('transactions.recurring.form.createBtn'));
+    fireEvent.click(screen.getAllByRole('button', { name: 'transactions.recurring.form.createBtn' })[0]);
 
-    expect(store.dispatch).toHaveBeenCalledWith(
-      expect.objectContaining({
-        type: 'recurring/createRecurring',
-        payload: expect.objectContaining({
-          name: 'Netflix',
-          amount: '150000',
+    await waitFor(() => {
+      expect(createRecurring).toHaveBeenCalledWith(
+        expect.objectContaining({
+          description: 'Netflix',
+          amount: 150000,
           frequency: 'MONTHLY',
-        }),
-      })
-    );
+          next_run_date: expect.any(String),
+          wallet_id: 'w1',
+        })
+      );
+    });
   });
 });

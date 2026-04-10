@@ -8,7 +8,13 @@
     "lint": "eslint .",
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "prepare": "husky"
+    "prepare": "husky",
+    "postman:test": "newman run ../doc/Junkio.postman_collection.json -e ../doc/Junkio.postman_environment.json",
+    "test:smoke": "npm test -- --runTestsByPath tests/auth.test.js tests/transaction.test.js",
+    "test:newman": "node scripts/run-newman.js",
+    "test:all-api": "npm run test:smoke && npm run test:newman",
+    "check:admin": "node scripts/admin-check.js",
+    "docs:build": "node scripts/generate-docs.js"
   },
   "keywords": [],
   "author": "",
@@ -34,40 +40,48 @@
     "pdfkit": "^0.17.2",
     "pg": "^8.11.3",
     "pg-hstore": "^2.3.4",
+    "redis": "^4.7.1",
     "sequelize": "^6.37.1",
+    "sequelize-cli": "^6.6.2",
     "socket.io": "^4.8.3",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
-    "uuid": "^13.0.0"
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",
     "@babel/preset-env": "^7.29.0",
     "@eslint/js": "^9.21.0",
     "babel-jest": "^30.3.0",
-    "eslint": "^9.21.0",
+    "eslint": "^10.1.0",
     "globals": "^16.0.0",
     "husky": "^9.1.7",
     "jest": "^30.3.0",
+    "js-yaml": "^4.1.1",
     "lint-staged": "^15.4.3",
+    "newman": "^6.2.2",
     "nodemon": "^3.0.3",
+    "openapi-to-postmanv2": "^6.0.0",
+    "prettier": "^3.8.1",
     "sqlite3": "^5.1.7",
-    "supertest": "^7.2.2"
+    "supertest": "^7.2.2",
+    "swagger-markdown": "^3.1.1"
   },
   "lint-staged": {
     "*.js": [
       "eslint --fix"
     ]
   },
-    "jest": {
-        "testEnvironment": "node",
-        "moduleNameMapper": {
-            "^uuid$": "<rootDir>/tests/__mocks__/uuid-mock.js"
-        },
-        "coveragePathIgnorePatterns": [
-            "/node_modules/",
-            "/migrations/",
-            "/seeders/"
-        ]
-    }
+  "jest": {
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "^uuid$": "<rootDir>/tests/__mocks__/uuid-mock.js",
+      "^redis$": "<rootDir>/tests/__mocks__/redis.js"
+    },
+    "coveragePathIgnorePatterns": [
+      "/node_modules/",
+      "/migrations/",
+      "/seeders/"
+    ]
+  }
 }

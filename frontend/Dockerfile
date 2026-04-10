@@ -1,20 +1,32 @@
-# 1. Chọn nền Node.js
-FROM node:18-alpine
+# ==========================================
+# STAGE 1: Build React app
+# ==========================================
+FROM node:18-alpine AS builder
 
-# 2. Thư mục làm việc
 WORKDIR /app
 
-# 3. Copy và cài thư viện
+# Copy package files và cài dependencies
 COPY package*.json ./
 RUN npm install
 
-# 4. Copy code nguồn
+# Copy toàn bộ source code
 COPY . .
 
-# 5. Mở cổng 5173 (Cổng mặc định của Vite React)
-EXPOSE 5173
+# Build React → /app/dist
+RUN npm run build
 
-# 6. Lệnh chạy dev server (để nhận diện hot-reload khi code)
-# Lưu ý: Trong package.json của Frontend, lệnh dev cần thêm --host
-# Ví dụ: "dev": "vite --host"
-CMD ["npm", "run", "dev"]
+# ==========================================
+# STAGE 2: Serve với Nginx (nhẹ ~25MB)
+# ==========================================
+FROM nginx:alpine AS runner
+
+# Copy static files từ stage build
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Copy cấu hình Nginx custom (SPA routing)
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Expose port 80
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]

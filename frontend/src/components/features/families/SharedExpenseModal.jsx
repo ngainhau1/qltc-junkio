@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { createTransaction } from "@/features/transactions/transactionSlice"
+import { refreshFinanceData } from "@/features/finance/refreshFinanceData"
 import { toast } from "sonner"
 import { useTranslation } from "react-i18next"
 import { formatCurrency, generateId } from "@/lib/utils"
@@ -50,11 +51,11 @@ export function SharedExpenseModal({ isOpen, onClose, family, familyWalletId }) 
 
             const newTx = {
                 amount: totalAmount,
-                transaction_date: new Date().toISOString(),
+                date: new Date().toISOString(),
                 description: values.description,
                 type: 'EXPENSE',
                 wallet_id: familyWalletId,
-                category_id: 'general',
+                category_id: null,
                 user_id: values.paidBy,
                 family_id: family.id,
                 shares: shares
@@ -62,6 +63,7 @@ export function SharedExpenseModal({ isOpen, onClose, family, familyWalletId }) 
 
             try {
                 await dispatch(createTransaction(newTx)).unwrap();
+                await dispatch(refreshFinanceData());
 
                 toast.success(t('sharedExpense.successMsg'));
                 formik.resetForm();
@@ -142,9 +144,9 @@ export function SharedExpenseModal({ isOpen, onClose, family, familyWalletId }) 
                     </div>
                 )}
 
-                <div className="pt-2 flex justify-end gap-2 border-t mt-6">
-                    <Button type="button" variant="ghost" onClick={onClose}>{t('sharedExpense.cancelBtn')}</Button>
-                    <Button type="submit">{t('sharedExpense.submitBtn')}</Button>
+                <div className="mt-6 flex flex-col-reverse gap-2 border-t pt-2 sm:flex-row sm:justify-end">
+                    <Button type="button" variant="ghost" onClick={onClose} className="w-full sm:w-auto">{t('sharedExpense.cancelBtn')}</Button>
+                    <Button type="submit" className="w-full sm:w-auto">{t('sharedExpense.submitBtn')}</Button>
                 </div>
             </form>
         </Modal>

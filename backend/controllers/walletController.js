@@ -1,146 +1,169 @@
-const { Wallet, Transaction } = require('../models');
+const { Wallet, Transaction, FamilyMember } = require('../models');
+const { Op, fn, col, where } = require('sequelize');
+const { success, error, notFound, serverError, created } = require('../utils/responseHelper');
+
+const getUserFamilyIds = async (userId) => {
+    const userFamilies = await FamilyMember.findAll({
+        where: { user_id: userId },
+        attributes: ['family_id']
+    });
+    return userFamilies.map((f) => f.family_id);
+};
+
+const buildWalletAccessWhere = (id, userId, familyIds) => ({
+    ...(id ? { id } : {}),
+    [Op.or]: [
+        { user_id: userId },
+        ...(familyIds.length > 0 ? [{ family_id: { [Op.in]: familyIds } }] : [])
+    ]
+});
+
+const hasDuplicateWalletName = async ({ name, userId, familyId = null, excludeId = null }) => {
+    const normalizedName = String(name || '').trim().toLowerCase();
+    if (!normalizedName) return false;
+
+    const whereClause = {
+        [Op.and]: [
+            where(fn('lower', col('name')), normalizedName),
+            familyId ? { family_id: familyId } : { user_id: userId, family_id: null }
+        ]
+    };
+
+    if (excludeId) {
+        whereClause.id = { [Op.ne]: excludeId };
+    }
+
+    const existed = await Wallet.findOne({ where: whereClause, attributes: ['id'] });
+    return Boolean(existed);
+};
 
 // GET /api/wallets
-// Get all wallets for the logged in user (personal + family wallets)
 exports.getUserWallets = async (req, res) => {
     try {
         const userId = req.user.id;
-
-        // Find wallets where user is the owner OR family_id is in the user's family memberships
-        // For simplicity right now, we just fetch personal wallets and wallets belonging to families the user is part of.
-        // We will need the FamilyMember model to join properly.
-        const { FamilyMember } = require('../models');
-
-        const userFamilies = await FamilyMember.findAll({
-            where: { user_id: userId },
-            attributes: ['family_id']
-        });
-        const familyIds = userFamilies.map(f => f.family_id);
+        const familyIds = await getUserFamilyIds(userId);
 
         const wallets = await Wallet.findAll({
-            where: {
-                // Sequelize OR condition
-                [require('sequelize').Op.or]: [
-                    { user_id: userId },
-                    { family_id: { [require('sequelize').Op.in]: familyIds } }
-                ]
-            },
+            where: buildWalletAccessWhere(null, userId, familyIds),
             order: [['createdAt', 'DESC']]
         });
 
-        res.json(wallets);
-    } catch (error) {
-        console.error('Error fetching wallets:', error);
-        res.status(500).json({ message: 'Server error' });
+        success(res, wallets, 'WALLETS_LOADED');
+    } catch (err) {
+        console.error('Error fetching wallets:', err);
+        serverError(res, 'WALLET_LOAD_FAILED');
     }
 };
 
 // POST /api/wallets
-// Create a new wallet
 exports.createWallet = async (req, res) => {
     try {
         const userId = req.user.id;
-        const { name, balance, currency, type, family_id } = req.body;
+        const { name, balance, currency, family_id } = req.body;
+        const normalizedName = String(name || '').trim();
+        const familyIds = await getUserFamilyIds(userId);
+
+        if (family_id && !familyIds.includes(family_id)) {
+            return error(res, 'WALLET_FAMILY_FORBIDDEN', 403);
+        }
+
+        const duplicated = await hasDuplicateWalletName({
+            name: normalizedName,
+            userId,
+            familyId: family_id || null
+        });
+        if (duplicated) {
+            return error(res, 'WALLET_NAME_EXISTS', 409);
+        }
 
         const newWallet = await Wallet.create({
-            name,
+            name: normalizedName,
             balance: balance || 0,
             currency: currency || 'VND',
-            user_id: family_id ? null : userId, // If it's a family wallet, user_id might be null or the creator
-            family_id: family_id || null,
-            // Assuming 'type' is stored somewhere or mapped to currency/name. The model doesn't have 'type' explicitly, let's just use what's in model.
+            user_id: family_id ? null : userId,
+            family_id: family_id || null
         });
 
-        res.status(201).json(newWallet);
-    } catch (error) {
-        console.error('Error creating wallet:', error);
-        res.status(500).json({ message: 'Server error' });
+        created(res, newWallet, 'WALLET_CREATED');
+    } catch (err) {
+        console.error('Error creating wallet:', err);
+        if (err.name === 'SequelizeUniqueConstraintError') {
+            return error(res, 'WALLET_NAME_EXISTS', 409);
+        }
+        serverError(res, 'WALLET_CREATE_FAILED');
     }
 };
 
 // PUT /api/wallets/:id
-// Update a wallet
 exports.updateWallet = async (req, res) => {
     try {
         const { id } = req.params;
         const userId = req.user.id;
         const { name, balance, currency } = req.body;
 
-        // Security: Check ownership (personal or family wallet)
-        const { FamilyMember } = require('../models');
-        const { Op } = require('sequelize');
-        const userFamilies = await FamilyMember.findAll({
-            where: { user_id: userId }, attributes: ['family_id']
-        });
-        const familyIds = userFamilies.map(f => f.family_id);
+        const familyIds = await getUserFamilyIds(userId);
 
         const wallet = await Wallet.findOne({
-            where: {
-                id,
-                [Op.or]: [
-                    { user_id: userId },
-                    ...(familyIds.length > 0 ? [{ family_id: { [Op.in]: familyIds } }] : [])
-                ]
-            }
+            where: buildWalletAccessWhere(id, userId, familyIds)
         });
 
         if (!wallet) {
-            return res.status(404).json({ message: 'Ví không tồn tại hoặc bạn không có quyền' });
+            return notFound(res, 'WALLET_NOT_FOUND');
+        }
+
+        const nextName = name !== undefined ? String(name).trim() : wallet.name;
+        const duplicated = await hasDuplicateWalletName({
+            name: nextName,
+            userId,
+            familyId: wallet.family_id || null,
+            excludeId: wallet.id
+        });
+        if (duplicated) {
+            return error(res, 'WALLET_NAME_EXISTS', 409);
         }
 
         await wallet.update({
-            name: name !== undefined ? name : wallet.name,
+            name: nextName,
             balance: balance !== undefined ? balance : wallet.balance,
             currency: currency !== undefined ? currency : wallet.currency
         });
 
-        res.json(wallet);
-    } catch (error) {
-        console.error('Error updating wallet:', error);
-        res.status(500).json({ message: 'Server error' });
+        success(res, wallet, 'WALLET_UPDATED');
+    } catch (err) {
+        console.error('Error updating wallet:', err);
+        if (err.name === 'SequelizeUniqueConstraintError') {
+            return error(res, 'WALLET_NAME_EXISTS', 409);
+        }
+        serverError(res, 'WALLET_UPDATE_FAILED');
     }
 };
 
 // DELETE /api/wallets/:id
-// Delete a wallet
 exports.deleteWallet = async (req, res) => {
     try {
         const { id } = req.params;
         const userId = req.user.id;
 
-        // Security: Check ownership (personal or family wallet)
-        const { FamilyMember } = require('../models');
-        const { Op } = require('sequelize');
-        const userFamilies = await FamilyMember.findAll({
-            where: { user_id: userId }, attributes: ['family_id']
-        });
-        const familyIds = userFamilies.map(f => f.family_id);
+        const familyIds = await getUserFamilyIds(userId);
 
         const wallet = await Wallet.findOne({
-            where: {
-                id,
-                [Op.or]: [
-                    { user_id: userId },
-                    ...(familyIds.length > 0 ? [{ family_id: { [Op.in]: familyIds } }] : [])
-                ]
-            }
+            where: buildWalletAccessWhere(id, userId, familyIds)
         });
 
         if (!wallet) {
-            return res.status(404).json({ message: 'Ví không tồn tại hoặc bạn không có quyền' });
+            return notFound(res, 'WALLET_NOT_FOUND');
         }
 
-        // Check for existing transactions
         const transactionCount = await Transaction.count({ where: { wallet_id: id } });
         if (transactionCount > 0) {
-            return res.status(400).json({ message: 'Cannot delete wallet with existing transactions' });
+            return error(res, 'WALLET_HAS_TRANSACTIONS', 400);
         }
 
         await wallet.destroy();
 
-        res.json({ message: 'Wallet deleted successfully' });
-    } catch (error) {
-        console.error('Error deleting wallet:', error);
-        res.status(500).json({ message: 'Server error' });
+        success(res, null, 'WALLET_DELETED');
+    } catch (err) {
+        console.error('Error deleting wallet:', err);
+        serverError(res, 'WALLET_DELETE_FAILED');
     }
 };

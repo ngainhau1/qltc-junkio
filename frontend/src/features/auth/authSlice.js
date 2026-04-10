@@ -9,15 +9,14 @@ const initialState = {
     error: null
 };
 
-// --- Thunks ---
 export const loginUser = createAsyncThunk(
     'auth/loginUser',
     async (credentials, { rejectWithValue }) => {
         try {
             const response = await api.post('/auth/login', credentials);
-            return response.data; // { token, user: {id, name, email, role} }
+            return response.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.msg || 'Đăng nhập thất bại');
+            return rejectWithValue(error.response?.data?.message || 'LOGIN_FAILED');
         }
     }
 );
@@ -27,9 +26,9 @@ export const registerUser = createAsyncThunk(
     async (userData, { rejectWithValue }) => {
         try {
             const response = await api.post('/auth/register', userData);
-            return response.data; // { token, user }
+            return response.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.msg || 'Đăng ký thất bại');
+            return rejectWithValue(error.response?.data?.message || 'REGISTER_FAILED');
         }
     }
 );
@@ -38,10 +37,10 @@ export const fetchCurrentUser = createAsyncThunk(
     'auth/fetchCurrentUser',
     async (_, { rejectWithValue }) => {
         try {
-            const response = await api.get('/auth/me');
+            const response = await api.get('/users/me');
             return response.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.msg || 'Phiên đăng nhập hết hạn');
+            return rejectWithValue(error.response?.data?.message || 'SESSION_EXPIRED');
         }
     }
 );
@@ -50,14 +49,14 @@ export const uploadUserAvatar = createAsyncThunk(
     'auth/uploadUserAvatar',
     async (formData, { rejectWithValue }) => {
         try {
-            const response = await api.post('/auth/avatar', formData, {
+            const response = await api.post('/users/me/avatar', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
             });
-            return response.data; // { msg: "...", avatarUrl: "..." }
+            return response.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.msg || 'Lỗi khi tải ảnh lên');
+            return rejectWithValue(error.response?.data?.message || 'UPLOAD_FAILED');
         }
     }
 );
@@ -67,9 +66,9 @@ export const updateProfileAsync = createAsyncThunk(
     async (profileData, { rejectWithValue }) => {
         try {
             const response = await api.put('/users/me', profileData);
-            return response.data; // The backend returns the updated user object
+            return response.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.msg || 'Cập nhật hồ sơ thất bại');
+            return rejectWithValue(error.response?.data?.message || 'PROFILE_UPDATE_FAILED');
         }
     }
 );
@@ -84,7 +83,6 @@ const authSlice = createSlice({
             state.token = null;
             state.error = null;
             localStorage.removeItem('auth_token');
-            // Tùy chọn: Gọi API backend để clear Http-only cookie 'refresh_token' nếu có Route
             api.post('/auth/logout').catch(() => { });
         },
         clearAuthError: (state) => {
@@ -93,79 +91,83 @@ const authSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
-            // Login
             .addCase(loginUser.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
             .addCase(loginUser.fulfilled, (state, action) => {
                 state.loading = false;
-                state.isAuthenticated = true;
-                state.token = action.payload.token;
-                state.user = {
-                    ...action.payload.user,
-                    avatarUrl: action.payload.user.avatar || `https://api.dicebear.com/7.x/notionists/svg?seed=${action.payload.user.name}`
-                };
-                localStorage.setItem('auth_token', action.payload.token);
+                const { token, user } = action.payload || {};
+                state.isAuthenticated = Boolean(token && user);
+                state.token = token || null;
+                state.user = user ? {
+                    ...user,
+                    avatarUrl: user.avatar || `https://api.dicebear.com/7.x/notionists/svg?seed=${user.name}`
+                } : null;
+                if (token) localStorage.setItem('auth_token', token);
             })
             .addCase(loginUser.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
             })
-            // Register
             .addCase(registerUser.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
             .addCase(registerUser.fulfilled, (state, action) => {
                 state.loading = false;
-                state.isAuthenticated = true;
-                state.token = action.payload.token;
-                state.user = {
-                    ...action.payload.user,
-                    avatarUrl: action.payload.user.avatar || `https://api.dicebear.com/7.x/notionists/svg?seed=${action.payload.user.name}`
-                };
-                localStorage.setItem('auth_token', action.payload.token);
+                const { token, user } = action.payload || {};
+                state.isAuthenticated = Boolean(token && user);
+                state.token = token || null;
+                state.user = user ? {
+                    ...user,
+                    avatarUrl: user.avatar || `https://api.dicebear.com/7.x/notionists/svg?seed=${user.name}`
+                } : null;
+                if (token) localStorage.setItem('auth_token', token);
             })
             .addCase(registerUser.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
             })
-            // Fetch Current User on Page Load
             .addCase(fetchCurrentUser.pending, (state) => {
                 state.loading = true;
             })
             .addCase(fetchCurrentUser.fulfilled, (state, action) => {
                 state.loading = false;
+                if (!action.payload) {
+                    state.isAuthenticated = false;
+                    state.user = null;
+                    state.token = null;
+                    localStorage.removeItem('auth_token');
+                    return;
+                }
                 state.isAuthenticated = true;
+                const user = action.payload;
                 state.user = {
-                    ...action.payload,
-                    avatarUrl: action.payload.avatar || `https://api.dicebear.com/7.x/notionists/svg?seed=${action.payload.name}`
+                    ...user,
+                    avatarUrl: user.avatar || `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(user.name || 'user')}`
                 };
             })
             .addCase(fetchCurrentUser.rejected, (state) => {
                 state.loading = false;
-                // Nếu fetch me thất bại, nghĩa là token (hoặc refresh cookie) hỏng -> logout
                 state.isAuthenticated = false;
                 state.token = null;
                 state.user = null;
                 localStorage.removeItem('auth_token');
             })
-            // Upload Avatar
             .addCase(uploadUserAvatar.pending, (state) => {
                 state.loading = true;
             })
             .addCase(uploadUserAvatar.fulfilled, (state, action) => {
                 state.loading = false;
-                if (state.user) {
-                    state.user.avatarUrl = action.payload.avatarUrl;
+                if (state.user && action.payload) {
+                    state.user.avatarUrl = action.payload.avatarUrl || state.user.avatarUrl;
                 }
             })
             .addCase(uploadUserAvatar.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
             })
-            // Update Profile
             .addCase(updateProfileAsync.pending, (state) => {
                 state.loading = true;
                 state.error = null;

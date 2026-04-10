@@ -1,5 +1,6 @@
 const { Transaction } = require('../models');
 const { Op, fn, col, literal } = require('sequelize');
+const { success, serverError } = require('../utils/responseHelper');
 
 // GET /api/forecast?months=3
 // Dự báo dòng tiền dựa trên lịch sử 6 tháng — Linear Regression y = ax + b
@@ -62,13 +63,13 @@ exports.getForecast = async (req, res) => {
         // Cảnh báo nếu chi > thu trong tương lai
         const warningMonth = forecast.find(f => f.predictedNet < 0);
 
-        res.json({
+        success(res, {
             historical: monthlyData,
             forecast,
             warningMonth: warningMonth ? warningMonth.month : null
-        });
+        }, 'Lấy dự báo ngân sách thành công');
     } catch (error) {
         console.error('Forecast error:', error);
-        res.status(500).json({ message: 'Server error' });
+        serverError(res, 'Server error');
     }
 };

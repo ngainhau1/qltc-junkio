@@ -1,105 +1,121 @@
-import { useMemo, memo } from 'react';
-import { formatCurrency, formatDateString } from "@/lib/utils";
-import { ArrowUpRight, ArrowDownLeft } from "lucide-react";
-import { EmptyState } from "@/components/ui/empty-state";
-import { useTranslation } from "react-i18next";
+import { memo, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
+import { ArrowDownLeft, ArrowRightLeft, ArrowUpRight, ChevronRight } from 'lucide-react';
+import { EmptyState } from '@/components/ui/empty-state';
+import { formatCurrency, formatDateString } from '@/lib/utils';
 
-// Row Item Component (Adapted for standard list)
-const TransactionRow = memo(({ item }) => {
-    // Render Date Header
+const TransactionRow = memo(({ item, onRowClick }) => {
+    const { t } = useTranslation();
+
     if (item.type === 'HEADER') {
         return (
-            <div className="bg-muted/20 px-4 py-2 font-medium text-sm flex items-center text-muted-foreground w-full sticky top-0 z-10">
+            <div className="sticky top-0 z-10 flex w-full items-center border-b bg-background/95 px-4 py-2 text-sm font-medium text-muted-foreground backdrop-blur-md">
                 {item.date}
             </div>
         );
     }
 
-    // Render Transaction Item
-    const t = item.transaction;
+    const transaction = item.transaction;
+    const isTransfer = transaction.type === 'TRANSFER_IN' || transaction.type === 'TRANSFER_OUT';
+    const isIncome = transaction.type === 'INCOME' || transaction.type === 'TRANSFER_IN';
+    const toneClasses = isTransfer
+        ? 'border-sky-200 bg-sky-100'
+        : isIncome
+            ? 'border-green-200 bg-green-100'
+            : 'border-red-200 bg-red-100';
+    const amountClasses = isTransfer
+        ? 'text-sky-600'
+        : isIncome
+            ? 'text-green-600'
+            : 'text-red-600';
+    const secondaryText = isTransfer
+        ? t('transactionForm.tabs.transfer')
+        : transaction.Category?.name || transaction.category_id || '-';
+    const transactionDate = transaction.date || transaction.transaction_date;
+
     return (
-        <div className="px-4 w-full">
-            <div className="flex items-center justify-between py-3 border-b h-full hover:bg-muted/50 transition-colors rounded-lg px-2">
-                <div className="flex items-center gap-4">
-                    <div className={`flex h-10 w-10 items-center justify-center rounded-full border ${t.type === 'INCOME' ? 'bg-green-100 border-green-200' : 'bg-red-100 border-red-200'}`}>
-                        {t.type === 'INCOME'
-                            ? <ArrowDownLeft className={`h-5 w-5 ${t.type === 'INCOME' ? 'text-green-600' : 'text-red-600'}`} />
-                            : <ArrowUpRight className={`h-5 w-5 ${t.type === 'INCOME' ? 'text-green-600' : 'text-red-600'}`} />
-                        }
+        <div className="w-full px-3 sm:px-4">
+            <div
+                className="group flex h-full cursor-pointer flex-col gap-3 rounded-lg border-b px-2 py-3 transition-colors hover:bg-muted/50 sm:flex-row sm:items-center sm:justify-between"
+                onClick={() => onRowClick && onRowClick(transaction)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(event) => event.key === 'Enter' && onRowClick && onRowClick(transaction)}
+                aria-label={`View details: ${transaction.description || 'Transaction'}`}
+            >
+                <div className="flex min-w-0 items-start gap-3 sm:items-center">
+                    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border ${toneClasses}`}>
+                        {isTransfer ? (
+                            <ArrowRightLeft className="h-5 w-5 text-sky-600" />
+                        ) : isIncome ? (
+                            <ArrowDownLeft className="h-5 w-5 text-green-600" />
+                        ) : (
+                            <ArrowUpRight className="h-5 w-5 text-red-600" />
+                        )}
                     </div>
-                    <div>
-                        <p className="font-medium truncate max-w-[200px]">{t.description}</p>
-                        <p className="text-xs text-muted-foreground capitalize">{t.category_id}</p>
+                    <div className="min-w-0 flex-1">
+                        <p className="truncate font-medium">{transaction.description || '-'}</p>
+                        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+                            <span className="capitalize">{secondaryText}</span>
+                            <span className="hidden sm:inline">•</span>
+                            <span>{transactionDate ? formatDateString(transactionDate) : '-'}</span>
+                        </div>
                     </div>
                 </div>
-                <div className={`font-semibold ${t.type === 'INCOME' ? 'text-green-600' : 'text-red-600'}`}>
-                    {t.type === 'INCOME' ? '+' : '-'}{formatCurrency(t.amount)}
+                <div className="flex items-center justify-between gap-2 sm:justify-end">
+                    <span className={`font-semibold ${amountClasses}`}>
+                        {isIncome ? '+' : '-'}
+                        {formatCurrency(transaction.amount)}
+                    </span>
+                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/50 transition-colors group-hover:text-muted-foreground" />
                 </div>
             </div>
         </div>
     );
 });
 
-export function VirtualizedTransactionList({ transactions }) {
-    const { t } = useTranslation()
-    // 1. Flatten Data: Convert grouped object to flat list with Headers
+TransactionRow.displayName = 'TransactionRow';
+
+export function VirtualizedTransactionList({ transactions, onRowClick, groupByDate = true }) {
+    const { t } = useTranslation();
+
     const flatData = useMemo(() => {
-        const groups = transactions.reduce((acc, transaction) => {
-            const rawDate = transaction.date || transaction.transaction_date;
-            if (!rawDate) return acc; // Skip invalid transactions
-
-            try {
-                const dateObj = new Date(rawDate);
-                if (isNaN(dateObj.getTime())) return acc; // Skip invalid dates
-
-                const date = formatDateString(rawDate);
-                if (!acc[date]) {
-                    acc[date] = [];
-                }
-                acc[date].push(transaction);
-            } catch (e) {
-                console.error("Date parsing error", transaction, e);
-            }
-            return acc;
-        }, {});
-
         const flattened = [];
-        // Sort dates descending (newest first)
-        const sortedDates = Object.keys(groups).sort((a, b) => {
-            // Convert dd/mm/yyyy to yyyy-mm-dd for sorting
-            const [d1, m1, y1] = a.split('/');
-            const [d2, m2, y2] = b.split('/');
-            return new Date(`${y2}-${m2}-${d2}`) - new Date(`${y1}-${m1}-${d1}`);
+        let lastDate = null;
+
+        transactions.forEach((transaction) => {
+            const rawDate = transaction.date || transaction.transaction_date;
+            if (!rawDate) return;
+
+            if (groupByDate) {
+                const dateStr = formatDateString(rawDate);
+                if (dateStr !== lastDate) {
+                    flattened.push({ type: 'HEADER', date: dateStr });
+                    lastDate = dateStr;
+                }
+            }
+            
+            flattened.push({ type: 'ITEM', transaction });
         });
 
-        sortedDates.forEach(date => {
-            flattened.push({ type: 'HEADER', date }); // Add Header
-            groups[date].forEach(t => {
-                flattened.push({ type: 'ITEM', transaction: t }); // Add Items
-            });
-        });
         return flattened;
-    }, [transactions]);
+    }, [transactions, groupByDate]);
 
     if (flatData.length === 0) {
         return (
             <div className="py-8">
-                <EmptyState
-                    title={t('transactions.list.emptyTitle')}
-                    description={t('transactions.list.emptyDesc')}
-                />
+                <EmptyState title={t('transactions.list.emptyTitle')} description={t('transactions.list.emptyDesc')} />
             </div>
         );
     }
 
     return (
-        <div
-            className="h-[600px] w-full border rounded-md bg-background overflow-y-auto"
-        >
+        <div className="max-h-[70dvh] w-full overflow-y-auto rounded-md border bg-background md:h-[600px]">
             {flatData.map((item) => (
                 <TransactionRow
                     key={item.type === 'HEADER' ? `header-${item.date}` : `item-${item.transaction.id}`}
                     item={item}
+                    onRowClick={onRowClick}
                 />
             ))}
         </div>

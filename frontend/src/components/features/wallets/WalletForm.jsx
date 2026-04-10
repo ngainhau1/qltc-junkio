@@ -1,22 +1,45 @@
-import { useFormik } from "formik"
-import * as Yup from "yup"
-import { useDispatch } from "react-redux"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { createWallet, editWallet } from "@/features/wallets/walletSlice"
-import { useTranslation } from "react-i18next"
+import { useFormik } from 'formik';
+import * as Yup from 'yup';
+import { useDispatch, useSelector } from 'react-redux';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { createWallet, editWallet } from '@/features/wallets/walletSlice';
+import { getFinanceScopeLabels } from '@/features/finance/context';
+import { useTranslation } from 'react-i18next';
+
+import { resolveError } from '@/utils/authErrors';
+
+const resolveWalletSubmitError = (rawError, t) => {
+    const message = String(rawError || '').trim();
+
+    if (message === 'WALLET_NAME_EXISTS') {
+        return t('wallets.form.validation.duplicateName');
+    }
+
+    // Fall back to centralized error mapper
+    return resolveError(message, t, 'wallets.form.validation.saveFailed');
+};
 
 export function WalletForm({ onSuccess, initialData = null }) {
     const { t } = useTranslation();
+    const dispatch = useDispatch();
+    const { activeFamilyId, families } = useSelector((state) => state.families ?? {});
     const isEdit = !!initialData;
+    const [submitError, setSubmitError] = useState('');
+    const walletScope = getFinanceScopeLabels(t, {
+        activeFamilyId: activeFamilyId ?? null,
+        families: families ?? [],
+        familyId: initialData?.family_id,
+    });
+    const createButtonLabel =
+        walletScope.scope === 'family' ? t('wallets.form.createFamilyBtn') : t('wallets.form.createPersonalBtn');
 
     const validationSchema = Yup.object().shape({
         name: Yup.string().required(t('wallets.form.validation.nameRequired')),
         balance: Yup.number().min(0, t('wallets.form.validation.balanceMin')).required(t('wallets.form.validation.balanceRequired')),
         type: Yup.string().oneOf(['cash', 'bank', 'credit-card', 'e-wallet']).required(t('wallets.form.validation.typeRequired')),
-    })
-
-    const dispatch = useDispatch()
+    });
 
     const formik = useFormik({
         initialValues: {
@@ -26,12 +49,14 @@ export function WalletForm({ onSuccess, initialData = null }) {
         },
         validationSchema,
         onSubmit: async (values) => {
+            setSubmitError('');
             const walletData = {
                 name: values.name,
                 balance: parseFloat(values.balance),
-                currency: initialData?.currency || "VND", // Assuming config for now
+                currency: initialData?.currency || 'VND',
                 type: values.type,
-            }
+                family_id: initialData?.family_id ?? activeFamilyId ?? null,
+            };
 
             try {
                 if (isEdit) {
@@ -41,29 +66,36 @@ export function WalletForm({ onSuccess, initialData = null }) {
                 }
                 if (onSuccess) onSuccess();
             } catch (err) {
-                console.error("Lỗi lưu ví: ", err);
+                setSubmitError(resolveWalletSubmitError(err, t));
             }
         },
-    })
+    });
 
     return (
         <form onSubmit={formik.handleSubmit} className="space-y-4">
+            <div className="rounded-md border bg-muted/30 px-3 py-2" data-testid="wallet-form-scope">
+                <p className="text-xs font-medium text-muted-foreground">{t('wallets.context.scopeLabel')}</p>
+                <p className="text-sm font-medium">{walletScope.scopeTargetLabel}</p>
+            </div>
+
             <div>
-                <label className="text-sm font-medium mb-1 block">{t('wallets.form.name')}</label>
+                <label htmlFor="wallet-name" className="text-sm font-medium mb-1 block">{t('wallets.form.name')}</label>
                 <Input
+                    id="wallet-name"
                     name="name"
                     placeholder={t('wallets.form.namePlaceholder')}
                     value={formik.values.name}
                     onChange={formik.handleChange}
-                    className={formik.errors.name ? "border-red-500" : ""}
+                    className={formik.errors.name ? 'border-red-500' : ''}
                 />
                 {formik.errors.name && <p className="text-xs text-red-500 mt-1">{formik.errors.name}</p>}
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                    <label className="text-sm font-medium mb-1 block">{t('wallets.form.balance')}</label>
+                    <label htmlFor="wallet-balance" className="text-sm font-medium mb-1 block">{t('wallets.form.balance')}</label>
                     <Input
+                        id="wallet-balance"
                         name="balance"
                         type="number"
                         placeholder="0"
@@ -72,8 +104,9 @@ export function WalletForm({ onSuccess, initialData = null }) {
                     />
                 </div>
                 <div>
-                    <label className="text-sm font-medium mb-1 block">{t('wallets.form.type')}</label>
+                    <label htmlFor="wallet-type" className="text-sm font-medium mb-1 block">{t('wallets.form.type')}</label>
                     <select
+                        id="wallet-type"
                         name="type"
                         className="w-full border rounded-md h-10 px-3 text-sm bg-background"
                         value={formik.values.type}
@@ -87,9 +120,11 @@ export function WalletForm({ onSuccess, initialData = null }) {
                 </div>
             </div>
 
+            {submitError && <p className="text-sm text-red-500">{submitError}</p>}
+
             <div className="pt-4 flex justify-end gap-2">
-                <Button type="submit" className="w-full">{isEdit ? t('common.save') : t('wallets.form.createBtn')}</Button>
+                <Button type="submit" className="w-full">{isEdit ? t('common.save') : createButtonLabel}</Button>
             </div>
         </form>
-    )
+    );
 }

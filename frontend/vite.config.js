@@ -18,4 +18,16 @@ export default defineConfig({
   optimizeDeps: {
     include: ['react-window', 'react-virtualized-auto-sizer'],
   },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      },
+      '/socket.io': {
+        target: 'http://localhost:5000',
+        ws: true,
+      }
+    }
+  }
 })
