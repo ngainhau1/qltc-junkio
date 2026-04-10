@@ -75,6 +75,7 @@ backend/parse_output.txt
 backend/test_results.txt
 backend/jest*.json
 backend/jest*.txt
+backend/uploads/
 /baocao/
 # Ignore agent and AI tool folders
 .ai-devkit.json
