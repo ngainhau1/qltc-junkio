@@ -138,7 +138,7 @@ Hệ thống tự động phát sinh các account (tài khoản) mẫu sau để
 
 ### Nguồn Tài liệu API
 - **Swagger Interactive UI**: Hỗ trợ gọi API sống tại `http://localhost:5000/api-docs`
-- **Postman Data**: Collection và Environment sẵn sàng import nằm ở nhánh `doc/` ngay thư mục Root.
+- **Postman Data**: Collection và Environment sẵn sàng import nằm trong `docx/07-tham-chieu/postman/` ở thư mục Root.
 
 ### Quy trình chạy Test tự động hóa (QA)
 Toàn bộ dự án đi kèm hệ thống kiểm thử tự động, bạn có thể dễ dàng chạy các bộ công cụ phát hiện lỗi cú pháp và regression testing bằng NPM:

@@ -9,7 +9,7 @@
     "start": "node index.js",
     "dev": "nodemon index.js",
     "prepare": "husky",
-    "postman:test": "newman run ../doc/Junkio.postman_collection.json -e ../doc/Junkio.postman_environment.json",
+    "postman:test": "newman run ../docx/07-tham-chieu/postman/Junkio.postman_collection.json -e ../docx/07-tham-chieu/postman/Junkio.postman_environment.json",
     "test:smoke": "npm test -- --runTestsByPath tests/auth.test.js tests/transaction.test.js",
     "test:newman": "node scripts/run-newman.js",
     "test:all-api": "npm run test:smoke && npm run test:newman",

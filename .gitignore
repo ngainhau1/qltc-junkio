@@ -39,10 +39,8 @@ security_*.txt
 lint*.json
 phaseC-*.txt
 
-# Ignore docs by default but keep QA artifacts tracked
-doc/*
-!doc/qa/
-!doc/qa/**
+# Ignore temporary documentation workspace artifacts only
+docx/_tmp/
 
 # Ignore temporary and local Postman workspace state
 tmp/

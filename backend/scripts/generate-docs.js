@@ -6,7 +6,7 @@ const Converter = require('openapi-to-postmanv2');
 
 // Output paths
 const DOCS_DIR = path.join(__dirname, '../docs');
-const POSTMAN_PATH = path.join(__dirname, '../../doc/Junkio.postman_collection.json');
+const POSTMAN_PATH = path.join(__dirname, '..', '..', 'docx', '07-tham-chieu', 'postman', 'Junkio.postman_collection.json');
 
 if (!fs.existsSync(DOCS_DIR)) {
     fs.mkdirSync(DOCS_DIR, { recursive: true });
@@ -242,7 +242,7 @@ try {
                 const collection = result.output[0].data;
                 collection.info.name = 'Junkio Expense Tracker API';
                 fs.writeFileSync(POSTMAN_PATH, JSON.stringify(collection, null, 2), 'utf8');
-                console.log('[OK] doc/Junkio.postman_collection.json');
+                console.log('[OK] docx/07-tham-chieu/postman/Junkio.postman_collection.json');
             } else {
                 console.error('[ERR] Postman convert failed:', result.reason);
             }

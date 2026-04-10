@@ -1,0 +1,76 @@
+@startuml
+left to right direction
+skinparam backgroundColor white
+skinparam actorStyle awesome
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam usecase {
+  BackgroundColor #F8FAFC
+  BorderColor #1F2937
+  ArrowColor #475569
+}
+skinparam actor {
+  BorderColor #1F2937
+  BackgroundColor #E2E8F0
+}
+
+actor "Khach" as Guest
+actor "Nguoi dung" as User
+actor "Admin" as Admin
+actor "He thong nen" as System
+
+rectangle "Junkio Expense Tracker" {
+  usecase "Dang ky tai khoan" as UC01
+  usecase "Dang nhap" as UC02
+  usecase "Quen mat khau" as UC03
+  usecase "Dat lai mat khau" as UC04
+
+  usecase "Quan ly ho so\nva cai dat" as UC05
+  usecase "Quan ly vi tien" as UC06
+  usecase "Quan ly giao dich" as UC07
+  usecase "Quan ly muc tieu" as UC08
+  usecase "Quan ly gia dinh\nva quy chung" as UC09
+  usecase "Xem bao cao" as UC10
+  usecase "Xem du bao" as UC11
+  usecase "Nhan thong bao\nva dong bo realtime" as UC12
+
+  usecase "Xem dashboard admin" as UC13
+  usecase "Quan tri nguoi dung" as UC14
+  usecase "Xem activity logs" as UC15
+
+  usecase "Dong bo realtime" as UC16
+  usecase "Chay cron job" as UC17
+  usecase "Phuc vu Swagger\nva healthcheck" as UC18
+}
+
+Guest --> UC01
+Guest --> UC02
+Guest --> UC03
+Guest --> UC04
+
+User --> UC05
+User --> UC06
+User --> UC07
+User --> UC08
+User --> UC09
+User --> UC10
+User --> UC11
+User --> UC12
+
+Admin --> UC13
+Admin --> UC14
+Admin --> UC15
+
+System --> UC16
+System --> UC17
+System --> UC18
+
+UC07 .> UC06 : <<include>>
+UC08 .> UC06 : <<include>>
+UC09 .> UC06 : <<include>>
+UC10 .> UC07 : <<include>>
+UC11 .> UC07 : <<include>>
+UC12 .> UC16 : <<include>>
+UC13 .> UC14 : <<extend>>
+UC13 .> UC15 : <<extend>>
+@enduml

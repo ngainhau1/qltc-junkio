@@ -4,14 +4,14 @@
  *
  * Env vars:
  *   BASE_URL     - override baseUrl variable (default http://localhost:5000)
- *   NEWMAN_ENV   - path to environment file (default doc/Junkio.postman_environment.json)
+ *   NEWMAN_ENV   - path to environment file (default docx/07-tham-chieu/postman/Junkio.postman_environment.json)
  *   REPORT_JUNIT - "true" to emit JUnit report newman-results.xml
  */
 const { spawnSync } = require('child_process');
 const path = require('path');
 
-const collection = path.join(__dirname, '..', '..', 'doc', 'Junkio.postman_collection.json');
-const envPath = process.env.NEWMAN_ENV || path.join(__dirname, '..', '..', 'doc', 'Junkio.postman_environment.json');
+const collection = path.join(__dirname, '..', '..', 'docx', '07-tham-chieu', 'postman', 'Junkio.postman_collection.json');
+const envPath = process.env.NEWMAN_ENV || path.join(__dirname, '..', '..', 'docx', '07-tham-chieu', 'postman', 'Junkio.postman_environment.json');
 const rawBaseUrl = process.env.BASE_URL || 'http://localhost:5000';
 const baseUrl = rawBaseUrl.endsWith('/api') ? rawBaseUrl.slice(0, -4) : rawBaseUrl;
 
