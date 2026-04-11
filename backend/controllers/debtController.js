@@ -175,8 +175,14 @@ exports.getSimplifiedDebts = async (req, res) => {
         const shares = await TransactionShare.findAll({
             where: { status: 'UNPAID', approval_status: 'APPROVED' },
             include: [{
-                model: Transaction, as: 'Transaction',
-                include: [{ model: Wallet, where: { family_id: familyId } }]
+                model: Transaction,
+                as: 'Transaction',
+                required: true,
+                include: [{
+                    model: Wallet,
+                    required: true,
+                    where: { family_id: familyId }
+                }]
             }]
         });
 

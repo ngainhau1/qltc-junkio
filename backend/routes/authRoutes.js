@@ -335,7 +335,7 @@ router.post('/avatar', authMiddleware, uploadAvatar.single('avatar'), userContro
  *     summary: Gửi email khôi phục mật khẩu
  *     description: |
  *       Gửi email chứa link đặt lại mật khẩu đến địa chỉ email đã đăng ký.
- *       Link khôi phục có hiệu lực trong **1 giờ**.
+ *       Link khôi phục có hiệu lực trong **10 phút**.
  *
  *       **Quy trình:**
  *       1. Người dùng nhập email
@@ -383,7 +383,7 @@ router.post('/forgot-password', authValidator.validateForgotPassword, authContro
  *       Thiết lập mật khẩu mới cho tài khoản sử dụng token nhận được qua email.
  *
  *       **Yêu cầu:**
- *       - Token phải còn hiệu lực (trong vòng 1 giờ kể từ khi gửi)
+ *       - Token phải còn hiệu lực (trong vòng 10 phút kể từ khi gửi)
  *       - Mật khẩu mới tối thiểu 6 ký tự
  *       - Mỗi token chỉ sử dụng được **một lần**
  *

@@ -5,6 +5,9 @@ const request = require('supertest');
 const express = require('express');
 const { Sequelize, DataTypes } = require('sequelize');
 
+const TEST_USER_ID = '11111111-1111-4111-8111-111111111111';
+const SECOND_USER_ID = '22222222-2222-4222-8222-222222222222';
+
 jest.mock('uuid', () => ({
     v4: jest.fn(() => require('crypto').randomUUID())
 }));
@@ -15,7 +18,7 @@ jest.mock('../middleware/uploadMiddleware', () => ({
 jest.mock('../middleware/auditMiddleware', () => () => (req, res, next) => next());
 
 jest.mock('../middleware/authMiddleware', () => (req, res, next) => {
-    req.user = { id: 'test-user-id', role: 'member' };
+    req.user = { id: TEST_USER_ID, role: 'member' };
     next();
 });
 
@@ -99,7 +102,7 @@ beforeAll(async () => {
     const primaryWallet = await mockWallet.create({
         name: 'Primary Wallet',
         balance: 1000000,
-        user_id: 'test-user-id'
+        user_id: TEST_USER_ID
     });
     primaryWalletId = primaryWallet.id;
 
@@ -195,6 +198,68 @@ describe('Transaction API create transaction', () => {
         expect(res.body.data).toHaveProperty('id');
         expect(parseFloat(res.body.data.amount)).toEqual(150000);
     });
+
+    it('creates a family shared expense and persists transaction shares', async () => {
+        const familyId = '33333333-3333-4333-8333-333333333333';
+
+        await mockUser.findOrCreate({
+            where: { id: TEST_USER_ID },
+            defaults: { name: 'Alice', email: 'alice@example.com' }
+        });
+        await mockUser.findOrCreate({
+            where: { id: SECOND_USER_ID },
+            defaults: { name: 'Bob', email: 'bob@example.com' }
+        });
+        await mockFamilyMember.create({
+            user_id: TEST_USER_ID,
+            family_id: familyId
+        });
+
+        const familyWallet = await mockWallet.create({
+            name: 'Family Fund',
+            balance: 500000,
+            family_id: familyId
+        });
+
+        const res = await request(app)
+            .post('/api/transactions')
+            .send({
+                wallet_id: familyWallet.id,
+                family_id: familyId,
+                amount: 120000,
+                type: 'EXPENSE',
+                description: 'Shared dinner',
+                shares: [
+                    {
+                        user_id: TEST_USER_ID,
+                        amount: 60000,
+                        status: 'PAID',
+                        approval_status: 'APPROVED'
+                    },
+                    {
+                        user_id: SECOND_USER_ID,
+                        amount: 60000,
+                        status: 'UNPAID',
+                        approval_status: 'PENDING'
+                    }
+                ]
+            });
+
+        expect(res.statusCode).toEqual(201);
+
+        const persistedShares = await mockTransactionShare.findAll({
+            where: { transaction_id: res.body.data.id },
+            order: [['amount', 'ASC']]
+        });
+
+        expect(persistedShares).toHaveLength(2);
+        expect(persistedShares.map((share) => share.user_id)).toEqual([TEST_USER_ID, SECOND_USER_ID]);
+        expect(persistedShares.map((share) => share.status)).toEqual(['PAID', 'UNPAID']);
+        expect(persistedShares.map((share) => share.approval_status)).toEqual(['APPROVED', 'PENDING']);
+
+        const updatedFamilyWallet = await mockWallet.findByPk(familyWallet.id);
+        expect(Number(updatedFamilyWallet.balance)).toBe(380000);
+    });
 });
 
 describe('Transaction API transfer flow', () => {
@@ -215,12 +280,12 @@ describe('Transaction API transfer flow', () => {
         const fromWallet = await mockWallet.create({
             name: 'Transfer Source',
             balance: 600000,
-            user_id: 'test-user-id'
+            user_id: TEST_USER_ID
         });
         const toWallet = await mockWallet.create({
             name: 'Transfer Destination',
             balance: 100000,
-            user_id: 'test-user-id'
+            user_id: TEST_USER_ID
         });
 
         const res = await request(app)
@@ -252,12 +317,12 @@ describe('Transaction API transfer flow', () => {
         const fromWallet = await mockWallet.create({
             name: 'Delete Source',
             balance: 500000,
-            user_id: 'test-user-id'
+            user_id: TEST_USER_ID
         });
         const toWallet = await mockWallet.create({
             name: 'Delete Destination',
             balance: 200000,
-            user_id: 'test-user-id'
+            user_id: TEST_USER_ID
         });
 
         const createRes = await request(app)

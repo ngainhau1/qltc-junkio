@@ -3,6 +3,7 @@ process.env.JWT_REFRESH_SECRET = 'test-refresh';
 const request = require('supertest');
 const express = require('express');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
 const cookieParser = require('cookie-parser');
 const { Sequelize } = require('sequelize');
 const { DataTypes } = require('sequelize');
@@ -16,6 +17,9 @@ jest.mock('../middleware/uploadMiddleware', () => ({
 }));
 
 jest.mock('../middleware/auditMiddleware', () => () => (req, res, next) => next());
+jest.mock('../services/emailService', () => jest.fn());
+
+const sendEmail = require('../services/emailService');
 
 const mockSequelize = new Sequelize({ dialect: 'sqlite', storage: ':memory:', logging: false });
 
@@ -24,6 +28,8 @@ const mockUser = mockSequelize.define('User', {
     name: { type: DataTypes.STRING, allowNull: false },
     email: { type: DataTypes.STRING, allowNull: false, unique: true },
     password_hash: { type: DataTypes.STRING, allowNull: false },
+    reset_password_token: { type: DataTypes.STRING, allowNull: true },
+    reset_password_expires: { type: DataTypes.DATE, allowNull: true },
     role: { type: DataTypes.ENUM('admin', 'member', 'staff'), defaultValue: 'member' },
     avatar: { type: DataTypes.STRING, allowNull: true },
     is_locked: { type: DataTypes.BOOLEAN, defaultValue: false }
@@ -158,6 +164,54 @@ describe('Auth API Endpoints', () => {
         const res = await request(app).post('/api/auth/logout');
         expect(res.statusCode).toEqual(200);
         expect(res.body.message).toEqual('LOGOUT_SUCCESS');
+    });
+
+    it('completes forgot/reset password and clears the reset token', async () => {
+        sendEmail.mockResolvedValueOnce(undefined);
+
+        const resetUser = await mockUser.create({
+            id: '44444444-4444-4444-8444-444444444444',
+            name: 'Reset User',
+            email: 'reset@example.com',
+            password_hash: await bcrypt.hash('oldpassword123', 10),
+            role: 'member'
+        });
+
+        const forgotRes = await request(app)
+            .post('/api/auth/forgot-password')
+            .send({ email: resetUser.email });
+
+        expect(forgotRes.statusCode).toEqual(200);
+        expect(sendEmail).toHaveBeenCalledTimes(1);
+
+        const persistedAfterForgot = await mockUser.findByPk(resetUser.id);
+        expect(persistedAfterForgot.reset_password_token).toBeTruthy();
+        expect(persistedAfterForgot.reset_password_expires).toBeTruthy();
+
+        const tokenMatch = sendEmail.mock.calls[0][0].message.match(/\/reset-password\/([a-f0-9]+)/i);
+        expect(tokenMatch).toBeTruthy();
+        const plainToken = tokenMatch[1];
+
+        const resetRes = await request(app)
+            .post(`/api/auth/reset-password/${plainToken}`)
+            .send({ password: 'newpassword123' });
+
+        expect(resetRes.statusCode).toEqual(200);
+        expect(resetRes.body.message).toEqual('RESET_PASSWORD_SUCCESS');
+
+        const persistedAfterReset = await mockUser.findByPk(resetUser.id);
+        expect(persistedAfterReset.reset_password_token).toBeNull();
+        expect(persistedAfterReset.reset_password_expires).toBeNull();
+
+        const loginRes = await request(app)
+            .post('/api/auth/login')
+            .send({
+                email: resetUser.email,
+                password: 'newpassword123'
+            });
+
+        expect(loginRes.statusCode).toEqual(200);
+        expect(loginRes.body.data.user.email).toEqual(resetUser.email);
     });
 });
 

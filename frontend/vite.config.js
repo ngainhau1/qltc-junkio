@@ -15,9 +15,6 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  optimizeDeps: {
-    include: ['react-window', 'react-virtualized-auto-sizer'],
-  },
   server: {
     proxy: {
       '/api': {

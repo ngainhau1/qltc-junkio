@@ -29,6 +29,11 @@ exports.validateTransactionCreate = [
     body('type').isIn(['INCOME', 'EXPENSE']).withMessage('type khong hop le'),
     body('category_id').optional({ nullable: true }).isUUID().withMessage('category_id phai la UUID'),
     body('family_id').optional({ nullable: true }).isUUID().withMessage('family_id phai la UUID'),
+    body('shares').optional({ nullable: true }).isArray().withMessage('shares phai la mang'),
+    body('shares.*.user_id').optional().isUUID().withMessage('shares.user_id phai la UUID'),
+    body('shares.*.amount').optional().isFloat({ gt: 0 }).withMessage('shares.amount phai > 0').toFloat(),
+    body('shares.*.status').optional().isIn(['PAID', 'UNPAID']).withMessage('shares.status khong hop le'),
+    body('shares.*.approval_status').optional().isIn(['APPROVED', 'PENDING', 'REJECTED']).withMessage('shares.approval_status khong hop le'),
     body('date').optional().isISO8601().toDate().withMessage('date phai la ISO-8601'),
     body('description').optional().trim().escape().isLength({ max: 255 }).withMessage('description qua dai'),
     handleValidation(['body'])

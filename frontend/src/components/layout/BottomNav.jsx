@@ -48,17 +48,21 @@ export function BottomNav({ className }) {
     return (
         <div
             className={cn(
-                "fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-lg md:hidden",
+                "pointer-events-none fixed bottom-0 left-0 right-0 z-[60] pb-[env(safe-area-inset-bottom)] md:hidden",
                 className
             )}
         >
-            <div className="mx-auto flex h-16 max-w-md items-center justify-around px-2">
+            <nav
+                aria-label={t('nav.mobileBottom')}
+                className="pointer-events-auto mx-auto flex h-16 max-w-md items-center justify-around border-t bg-background/95 px-2 shadow-[0_-12px_30px_rgba(15,23,42,0.08)] backdrop-blur-lg"
+            >
                 {leftItems.map(renderNavItem)}
 
-                <div className="relative -top-4">
+                <div className="relative z-[2] -top-4 shrink-0">
                     <button
+                        type="button"
                         onClick={() => dispatch(openAddTransactionModal())}
-                        className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 transition-all hover:bg-primary/90 active:scale-90"
+                        className="relative z-[2] flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 transition-all hover:bg-primary/90 active:scale-90"
                         aria-label={t('sidebar.addTransaction')}
                     >
                         <Plus className="h-7 w-7" />
@@ -66,7 +70,7 @@ export function BottomNav({ className }) {
                 </div>
 
                 {rightItems.map(renderNavItem)}
-            </div>
+            </nav>
         </div>
     )
 }
