@@ -13,6 +13,7 @@
         "prev": "Trang trước",
         "next": "Trang sau",
         "page": "Trang",
+        "total": "Tổng",
         "restoringSession": "Đang khôi phục phiên...",
         "noDataTitle": "Không có dữ liệu",
         "noDataDesc": "Hiện tại chưa có dữ liệu nào để hiển thị.",
@@ -96,6 +97,7 @@
         "forecast": "Dự Báo",
         "admin": "Quản Trị",
         "menu": "Menu",
+        "mobileBottom": "Điều hướng dưới",
         "features": "Tính năng",
         "recurring": "Giao dịch định kỳ",
         "system": "Hệ thống"
@@ -787,7 +789,10 @@
         "cashflow": "Dòng tiền",
         "titleTracker": "JUNKIO EXPENSE TRACKER",
         "titleDefault": "BÁO CÁO JUNKIO",
-        "exportDate": "Ngày tạo:"
+        "exportDate": "Ngày tạo:",
+        "records": "bản ghi",
+        "sheetTransactions": "Giao dịch",
+        "sheetReport": "Báo cáo"
     },
     "errors": {
         "uploadFailed": "Lỗi khi tải ảnh lên.",

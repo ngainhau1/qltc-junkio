@@ -110,6 +110,8 @@ describe('Debt API Endpoints', () => {
         const wD = await mockWallet.create({ name: 'W_D', family_id: familyId, balance: 5000 });
         walletDebtorId = wD.id;
 
+        const unrelatedWallet = await mockWallet.create({ name: 'W_OTHER', family_id: crypto.randomUUID(), balance: 2000 });
+
         // Transaction driven by creditor
         const tx = await mockTransaction.create({
             user_id: creditorId,
@@ -135,6 +137,22 @@ describe('Debt API Endpoints', () => {
             transaction_id: tx.id,
             user_id: debtorId,
             amount: 500,
+            status: 'UNPAID',
+            approval_status: 'APPROVED'
+        });
+
+        const unrelatedTx = await mockTransaction.create({
+            user_id: creditorId,
+            wallet_id: unrelatedWallet.id,
+            amount: 900,
+            type: 'EXPENSE',
+            description: 'Outside family scope'
+        });
+
+        await mockTransactionShare.create({
+            transaction_id: unrelatedTx.id,
+            user_id: debtorId,
+            amount: 900,
             status: 'UNPAID',
             approval_status: 'APPROVED'
         });

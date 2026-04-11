@@ -17,7 +17,7 @@ export function MainLayout() {
         <div className="relative min-h-screen bg-background">
             <Sidebar />
 
-            <main className="min-h-screen pb-28 transition-all duration-300 md:pb-8 md:pl-64">
+            <main className="relative z-0 min-h-screen overflow-x-hidden pb-[calc(5.5rem+env(safe-area-inset-bottom))] transition-all duration-300 md:ml-64 md:pb-8">
                 <Header />
                 <div className="container mx-auto max-w-7xl px-4 py-4 md:p-8">
                     <Outlet />

@@ -13,6 +13,7 @@
         "prev": "Previous",
         "next": "Next",
         "page": "Page",
+        "total": "Total",
         "restoringSession": "Restoring your session...",
         "noDataTitle": "No data available",
         "noDataDesc": "There is no data to display right now.",
@@ -96,6 +97,7 @@
         "forecast": "Forecast",
         "admin": "Admin",
         "menu": "Menu",
+        "mobileBottom": "Bottom navigation",
         "features": "Features",
         "recurring": "Recurring",
         "system": "System"
@@ -787,7 +789,10 @@
         "cashflow": "Cashflow",
         "titleTracker": "JUNKIO EXPENSE TRACKER",
         "titleDefault": "JUNKIO REPORT",
-        "exportDate": "Export Date:"
+        "exportDate": "Export Date:",
+        "records": "records",
+        "sheetTransactions": "Transactions",
+        "sheetReport": "Report"
     },
     "errors": {
         "uploadFailed": "Failed to upload image.",

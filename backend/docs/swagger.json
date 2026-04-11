@@ -1384,7 +1384,7 @@
     "/api/auth/forgot-password": {
       "post": {
         "summary": "Gửi email khôi phục mật khẩu",
-        "description": "Gửi email chứa link đặt lại mật khẩu đến địa chỉ email đã đăng ký.\nLink khôi phục có hiệu lực trong **1 giờ**.\n\n**Quy trình:**\n1. Người dùng nhập email\n2. Server gửi email chứa token khôi phục\n3. Người dùng click link trong email\n4. Gọi API `/api/auth/reset-password/{token}` với mật khẩu mới\n\n**Lưu ý:** API luôn trả về thành công để tránh lộ thông tin email nào tồn tại.\n",
+        "description": "Gửi email chứa link đặt lại mật khẩu đến địa chỉ email đã đăng ký.\nLink khôi phục có hiệu lực trong **10 phút**.\n\n**Quy trình:**\n1. Người dùng nhập email\n2. Server gửi email chứa token khôi phục\n3. Người dùng click link trong email\n4. Gọi API `/api/auth/reset-password/{token}` với mật khẩu mới\n\n**Lưu ý:** API luôn trả về thành công để tránh lộ thông tin email nào tồn tại.\n",
         "tags": [
           "Auth"
         ],
@@ -1434,7 +1434,7 @@
     "/api/auth/reset-password/{token}": {
       "post": {
         "summary": "Đặt lại mật khẩu bằng token khôi phục",
-        "description": "Thiết lập mật khẩu mới cho tài khoản sử dụng token nhận được qua email.\n\n**Yêu cầu:**\n- Token phải còn hiệu lực (trong vòng 1 giờ kể từ khi gửi)\n- Mật khẩu mới tối thiểu 6 ký tự\n- Mỗi token chỉ sử dụng được **một lần**\n\nSau khi đặt lại thành công, người dùng cần đăng nhập lại với mật khẩu mới.\n",
+        "description": "Thiết lập mật khẩu mới cho tài khoản sử dụng token nhận được qua email.\n\n**Yêu cầu:**\n- Token phải còn hiệu lực (trong vòng 10 phút kể từ khi gửi)\n- Mật khẩu mới tối thiểu 6 ký tự\n- Mỗi token chỉ sử dụng được **một lần**\n\nSau khi đặt lại thành công, người dùng cần đăng nhập lại với mật khẩu mới.\n",
         "tags": [
           "Auth"
         ],

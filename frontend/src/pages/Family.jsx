@@ -140,12 +140,12 @@ export function Family() {
         setSettlements(results)
     }
 
-    const handleShareAction = async (transactionId, shareId, newStatus) => {
+    const handleShareAction = async (shareId, newStatus) => {
         try {
             if (newStatus === 'APPROVED') {
-                await dispatch(approveDebt(transactionId)).unwrap();
+                await dispatch(approveDebt(shareId)).unwrap();
             } else {
-                await dispatch(rejectDebt(transactionId)).unwrap();
+                await dispatch(rejectDebt(shareId)).unwrap();
             }
             toast.success(newStatus === 'APPROVED' ? t('family.toasts.debtApproved') : t('family.toasts.debtRejected'));
             // Recalculate settlements automatically so UI feels alive
@@ -356,14 +356,14 @@ export function Family() {
                                         variant="outline"
                                         size="sm"
                                         className="w-full sm:w-auto border-red-200 text-red-600 hover:bg-red-50 dark:border-red-900 dark:hover:bg-red-900/20"
-                                        onClick={() => handleShareAction(debt.transactionId, debt.shareId, 'REJECTED')}
+                                        onClick={() => handleShareAction(debt.shareId, 'REJECTED')}
                                     >
                                         <XCircle className="h-4 w-4 mr-1.5" /> {t('family.pendingDebts.btnReject')}
                                     </Button>
                                     <Button
                                         size="sm"
                                         className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white"
-                                        onClick={() => handleShareAction(debt.transactionId, debt.shareId, 'APPROVED')}
+                                        onClick={() => handleShareAction(debt.shareId, 'APPROVED')}
                                     >
                                         <CheckCircle2 className="h-4 w-4 mr-1.5" /> {t('family.pendingDebts.btnApprove')}
                                     </Button>
