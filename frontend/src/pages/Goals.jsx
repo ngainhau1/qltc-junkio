@@ -30,7 +30,7 @@ export function Goals() {
     // Derived states
     const activeGoals = goals.filter(g => g.status === 'IN_PROGRESS');
     const achievedGoals = goals.filter(g => g.status === 'ACHIEVED');
-    const totalSaved = activeGoals.reduce((sum, g) => sum + g.currentAmount, 0);
+    const totalSaved = activeGoals.reduce((sum, g) => sum + parseFloat(g.currentAmount || 0), 0);
 
     // Modal states
     const [selectedGoal, setSelectedGoal] = useState(null);
@@ -99,7 +99,7 @@ export function Goals() {
                     <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 sm:gap-6">
                         {activeGoals.map(goal => {
                             const IconComponent = iconMap[goal.imageUrl] || Target;
-                            const percentage = Math.min(100, Math.round((goal.currentAmount / goal.targetAmount) * 100));
+                            const percentage = Math.min(100, Math.round((parseFloat(goal.currentAmount || 0) / parseFloat(goal.targetAmount || 1)) * 100));
 
                             return (
                                 <Card
@@ -125,7 +125,7 @@ export function Goals() {
                                                 <div className="text-left sm:text-right">
                                                     <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-1">{t('goals.remainingNeeded')}</p>
                                                     <p className="text-lg font-bold text-destructive">
-                                                        {formatCurrency(goal.targetAmount - goal.currentAmount)}
+                                                        {formatCurrency(parseFloat(goal.targetAmount || 0) - parseFloat(goal.currentAmount || 0))}
                                                     </p>
                                                 </div>
                                             </div>

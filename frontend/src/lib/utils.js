@@ -16,10 +16,11 @@ export const formatCurrency = (amount) => {
     const locale = currency === 'USD' ? 'en-US' : 'vi-VN';
     const curr = currency === 'USD' ? 'USD' : 'VND';
 
+    const numericAmount = Number(amount) || 0;
     return new Intl.NumberFormat(locale, {
         style: 'currency',
         currency: curr,
-    }).format(amount);
+    }).format(numericAmount);
 }
 
 export function generateId(prefix = 'id') {
