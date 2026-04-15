@@ -15,6 +15,19 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          pdf: ['jspdf', 'jspdf-autotable'],
+          excel: ['xlsx'],
+          charts: ['recharts']
+        }
+      }
+    },
+    chunkSizeWarningLimit: 1000 // Raise the warning limit since we've split the heaviest parts
+  },
   server: {
     proxy: {
       '/api': {

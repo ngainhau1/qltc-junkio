@@ -603,7 +603,9 @@
         "markRead": "Mark all as read",
         "empty": "No notifications",
         "budgetAlertTitle": "Spending alert",
-        "budgetAlertDesc": "This expense brings total spending to {{amount}} and may push you beyond the planned spending limit."
+        "budgetAlertDesc": "This expense brings total spending to {{amount}} and may push you beyond the planned spending limit.",
+        "debtSettledTitle": "Debt Settlement Received",
+        "debtSettledMsg": "You just received a debt payment of {{amount}} from {{from}}. Please check your wallet."
     },
     "transactionForm": {
         "title": "Add New Transaction",

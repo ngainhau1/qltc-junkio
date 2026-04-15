@@ -8,7 +8,6 @@ const path = require('path');
 const http = require('http'); // Add HTTP module
 const socketConfig = require('./config/socket'); // Add Socket config
 const responseMiddleware = require('./middleware/responseMiddleware');
-const { connectRedis } = require('./utils/redisClient');
 require('dotenv').config();
 
 const app = express();
@@ -99,8 +98,9 @@ app.get('/health', async (req, res) => {
         result.db = `down: ${err.message}`;
     }
     try {
+        const { connectRedis, client } = require('./config/redis');
         await connectRedis();
-        await require('./utils/redisClient').client.ping();
+        await client.ping();
         result.redis = 'up';
     } catch (err) {
         result.redis = `down: ${err.message}`;
@@ -127,12 +127,15 @@ httpServer.listen(PORT, async () => {
     try {
         await sequelize.authenticate();
         console.log(' Database connected successfully!');
+        
+        // Connect to Redis for Caching layer
+        const { connectRedis } = require('./config/redis');
         await connectRedis();
 
         // Khởi chạy hệ thống báo thức giao dịch định kỳ
         const { startCronJobs } = require('./services/cronJobs');
         startCronJobs();
     } catch (error) {
-        console.error(' Unable to connect to the database:', error.message);
+        console.error(' Startup connection error:', error.message);
     }
 });

@@ -603,7 +603,9 @@
         "markRead": "Đánh dấu đã đọc",
         "empty": "Không có thông báo nào",
         "budgetAlertTitle": "Cảnh báo chi tiêu",
-        "budgetAlertDesc": "Khoản chi này đưa tổng chi lên {{amount}} và có thể khiến bạn vượt ngưỡng chi tiêu dự kiến."
+        "budgetAlertDesc": "Khoản chi này đưa tổng chi lên {{amount}} và có thể khiến bạn vượt ngưỡng chi tiêu dự kiến.",
+        "debtSettledTitle": "Nợ đã được thanh toán",
+        "debtSettledMsg": "Bạn vừa nhận được khoản trả nợ {{amount}} từ {{from}}. Vui lòng kiểm tra ví."
     },
     "transactionForm": {
         "title": "Thêm Giao Dịch Mới",

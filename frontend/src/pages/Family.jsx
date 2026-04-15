@@ -70,7 +70,14 @@ export function Family() {
     })
 
     // UI purely for displaying the expense list (Limit to 50 items and hide settlements)
-    const displayExpenses = allFamilyDebts.filter(t => t.type !== 'TRANSFER').slice(0, 50)
+    const displayExpenses = allFamilyDebts.filter(t => {
+        if (t.type === 'TRANSFER') return false;
+        if (t.shares && t.shares.length > 0) {
+            const isFullyPaid = t.shares.every(s => s.status === 'PAID');
+            if (isFullyPaid) return false;
+        }
+        return true;
+    }).slice(0, 50);
 
     const pendingDebts = allFamilyDebts.flatMap(tx => {
         if (!tx.shares) return [];
@@ -193,8 +200,12 @@ export function Family() {
             toast.success(t('family.toasts.paymentRecorded', { amount: formatCurrency(amount) }));
             
             // Reload transactions so the debts recalculate over the wire
-            dispatch(fetchTransactions());
+            await dispatch(fetchTransactions()).unwrap();
             setSettleModalOpen(false);
+            
+            // Allow Redux to update component state, then remove this specific debt from active view
+            // to mimic immediate feedback
+            setSettlements(prev => prev.filter(s => !(s.from === from && s.to === to && s.amount === amount)));
         } catch (error) {
             console.error('Settlement error:', error);
             toast.error(error);

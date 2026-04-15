@@ -143,11 +143,19 @@ exports.settleDebt = async (req, res) => {
 
         try {
             if (Notification) {
+                const fromUser = await User.findByPk(from_user_id);
+                const fromUserName = fromUser ? fromUser.name : 'Người dùng không xác định';
+
+                const payload = JSON.stringify({
+                    key: "notifications.debtSettledMsg",
+                    params: { amount: amount.toString(), from: fromUserName }
+                });
+
                 const notif = await Notification.create({
                     user_id: to_user_id,
                     type: 'DEBT_SETTLED',
-                    title: 'Nợ đã được thanh toán',
-                    message: `Bạn vừa nhận được khoản trả nợ ${amount} từ người dùng có ID ${from_user_id}.`
+                    title: 'notifications.debtSettledTitle',
+                    message: payload
                 });
                 const io = require('../config/socket').getIO();
                 io.to(to_user_id).emit('NEW_NOTIFICATION', serializeNotification(notif));
@@ -186,46 +194,18 @@ exports.getSimplifiedDebts = async (req, res) => {
             }]
         });
 
-        // 2. Tính Net Balance mỗi người (số dư ròng)
-        const balances = {};
-        for (const share of shares) {
-            const debtor = share.user_id;               // người nợ
-            const creditor = share.Transaction.user_id;  // người chi (chủ nợ)
-            const amount = parseFloat(share.amount);
+        // 2. Định dạng lại Input cho hàm Thuật toán
+        const mappedDebts = shares.map(share => ({
+            debtor: share.user_id,
+            creditor: share.Transaction.user_id,
+            amount: share.amount
+        }));
 
-            balances[debtor] = (balances[debtor] || 0) - amount;
-            balances[creditor] = (balances[creditor] || 0) + amount;
-        }
+        // 3. Sử dụng Core Algorithm (Tham Lam + Bipartite Graph Matching)
+        const { simplifyDebts } = require('../services/debtService');
+        const suggestions = simplifyDebts(mappedDebts);
 
-        // 3. Phân mảnh: Tách Debtors (< 0) và Creditors (> 0)
-        const debtors = [];
-        const creditors = [];
-        for (const [userId, balance] of Object.entries(balances)) {
-            if (balance < -0.01) debtors.push({ userId, amount: Math.abs(balance) });
-            else if (balance > 0.01) creditors.push({ userId, amount: balance });
-        }
-
-        // Sắp xếp giảm dần theo giá trị tuyệt đối
-        debtors.sort((a, b) => b.amount - a.amount);
-        creditors.sort((a, b) => b.amount - a.amount);
-
-        // 4. Ghép cặp Tham lam (Greedy Matching)
-        const suggestions = [];
-        let i = 0, j = 0;
-        while (i < debtors.length && j < creditors.length) {
-            const transferAmount = Math.min(debtors[i].amount, creditors[j].amount);
-            suggestions.push({
-                from: debtors[i].userId,
-                to: creditors[j].userId,
-                amount: Math.round(transferAmount * 100) / 100
-            });
-            debtors[i].amount -= transferAmount;
-            creditors[j].amount -= transferAmount;
-            if (debtors[i].amount < 0.01) i++;
-            if (creditors[j].amount < 0.01) j++;
-        }
-
-        // 5. Enrich với thông tin user (tên, avatar)
+        // 4. Enrich với thông tin user (tên, avatar)
         const userIds = [...new Set(suggestions.flatMap(s => [s.from, s.to]))];
         const users = await User.findAll({
             where: { id: userIds },
