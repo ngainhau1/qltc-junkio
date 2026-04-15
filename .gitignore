@@ -2,6 +2,9 @@
 node_modules/
 /backend/node_modules/
 /frontend/node_modules/
+package-lock.json
+*package-lock.json
+
 
 # Ignore database state
 postgres_data/
@@ -75,6 +78,8 @@ backend/jest*.json
 backend/jest*.txt
 backend/uploads/
 /baocao/
+rule.md
+backend/coverage/
 # Ignore agent and AI tool folders
 .ai-devkit.json
 

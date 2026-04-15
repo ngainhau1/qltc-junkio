@@ -80,5 +80,44 @@ describe('Forecast API', () => {
             // but we ensure the property exists
             expect(res.body.data).toHaveProperty('warningMonth');
         });
+
+        it('returns ML forecast data with model metadata', async () => {
+            mockUserId = userId;
+
+            mockTransaction.findAll.mockResolvedValue([
+                { month: '2023-01-01', income: 1200, expense: 900 },
+                { month: '2023-02-01', income: 1400, expense: 950 },
+                { month: '2023-03-01', income: 1500, expense: 1100 }
+            ]);
+
+            const res = await request(app).get('/api/forecast/ml?months=2');
+
+            expect(res.statusCode).toEqual(200);
+            expect(res.body.status).toBe('success');
+            expect(res.body.data.forecast).toHaveLength(2);
+            expect(res.body.data.model).toEqual({
+                type: 'SIMPLE_LINEAR_REGRESSION',
+                sourceMonths: 3,
+                forecastMonths: 2
+            });
+            expect(res.body.data).toHaveProperty('warningMonth');
+        });
+
+        it('returns zeroed ML forecast when there is no history', async () => {
+            mockUserId = userId;
+            mockTransaction.findAll.mockResolvedValue([]);
+
+            const res = await request(app).get('/api/forecast/ml?months=3');
+
+            expect(res.statusCode).toEqual(200);
+            expect(res.body.data.historical).toEqual([]);
+            expect(res.body.data.forecast).toHaveLength(3);
+            expect(res.body.data.forecast.every((entry) => (
+                entry.predictedIncome === 0 &&
+                entry.predictedExpense === 0 &&
+                entry.predictedNet === 0
+            ))).toBe(true);
+            expect(res.body.data.warningMonth).toBeNull();
+        });
     });
 });

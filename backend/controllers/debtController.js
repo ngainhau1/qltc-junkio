@@ -147,7 +147,7 @@ exports.settleDebt = async (req, res) => {
                 const fromUserName = fromUser ? fromUser.name : 'Người dùng không xác định';
 
                 const payload = JSON.stringify({
-                    key: "notifications.debtSettledMsg",
+                    key: 'notifications.debtSettledMsg',
                     params: { amount: amount.toString(), from: fromUserName }
                 });
 

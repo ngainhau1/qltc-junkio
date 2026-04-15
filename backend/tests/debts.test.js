@@ -217,6 +217,74 @@ describe('Debt API Endpoints', () => {
             expect(res.body.data.suggestions[0].to.id).toBe(creditorId);
             expect(res.body.data.suggestions[0].amount).toBe(1500); // 1000+500
         });
+
+        it('reduces chained debts to the minimum settlement set', async () => {
+            mockUserId = creditorId;
+
+            const crypto = require('crypto');
+            const chainedFamilyId = crypto.randomUUID();
+            const debtorAId = crypto.randomUUID();
+            const debtorBId = crypto.randomUUID();
+            const creditorCId = crypto.randomUUID();
+
+            await mockUser.bulkCreate([
+                { id: debtorAId, name: 'Debtor A' },
+                { id: debtorBId, name: 'Debtor B' },
+                { id: creditorCId, name: 'Creditor C' }
+            ]);
+
+            const walletB = await mockWallet.create({
+                name: 'Wallet B',
+                family_id: chainedFamilyId,
+                balance: 5000
+            });
+            const walletC = await mockWallet.create({
+                name: 'Wallet C',
+                family_id: chainedFamilyId,
+                balance: 5000
+            });
+
+            const transactionB = await mockTransaction.create({
+                user_id: debtorBId,
+                wallet_id: walletB.id,
+                amount: 500,
+                type: 'EXPENSE',
+                description: 'B paid for A'
+            });
+            const transactionC = await mockTransaction.create({
+                user_id: creditorCId,
+                wallet_id: walletC.id,
+                amount: 500,
+                type: 'EXPENSE',
+                description: 'C paid for B'
+            });
+
+            await mockTransactionShare.bulkCreate([
+                {
+                    transaction_id: transactionB.id,
+                    user_id: debtorAId,
+                    amount: 500,
+                    status: 'UNPAID',
+                    approval_status: 'APPROVED'
+                },
+                {
+                    transaction_id: transactionC.id,
+                    user_id: debtorBId,
+                    amount: 500,
+                    status: 'UNPAID',
+                    approval_status: 'APPROVED'
+                }
+            ]);
+
+            const res = await request(app).get(`/api/debts/simplified/${chainedFamilyId}`);
+
+            expect(res.statusCode).toEqual(200);
+            expect(res.body.data.originalTransactions).toBe(2);
+            expect(res.body.data.simplifiedTransactions).toBe(1);
+            expect(res.body.data.suggestions[0].from.id).toBe(debtorAId);
+            expect(res.body.data.suggestions[0].to.id).toBe(creditorCId);
+            expect(res.body.data.suggestions[0].amount).toBe(500);
+        });
     });
 
     describe('POST /api/debts/settle', () => {

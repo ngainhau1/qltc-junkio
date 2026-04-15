@@ -2,6 +2,10 @@
 import { describe, it, expect, vi } from 'vitest';
 import { exportToCSV, exportToPDF } from './exportService';
 
+vi.mock('./pdfFont', () => ({
+    loadRobotoBase64: vi.fn().mockResolvedValue(null),
+}));
+
 // Mock DOM elements for download
 global.URL.createObjectURL = vi.fn();
 global.document.createElement = vi.fn().mockReturnValue({
@@ -35,4 +39,3 @@ describe('exportService', () => {
         await expect(exportToPDF(transactions)).resolves.toBeUndefined();
     });
 });
-
