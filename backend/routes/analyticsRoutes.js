@@ -15,6 +15,8 @@ router.use(authMiddleware);
  *     theo tháng/năm để người dùng theo dõi tình hình tài chính.
  */
 
+const { cacheDashboard } = require('../middleware/redisCache');
+
 /**
  * @swagger
  * /api/analytics/dashboard:
@@ -54,7 +56,8 @@ router.use(authMiddleware);
  *                     description: "Lương tháng 3"
  *                     date: "2026-03-28"
  */
-router.get('/dashboard', analyticsController.getDashboardStats);
+router.get('/dashboard', cacheDashboard(300), analyticsController.getDashboardStats);
+
 
 /**
  * @swagger

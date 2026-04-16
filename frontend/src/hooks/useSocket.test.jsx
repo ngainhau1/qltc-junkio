@@ -36,6 +36,12 @@ vi.mock('sonner', () => ({
     toast: toastMocks,
 }));
 
+vi.mock('react-i18next', () => ({
+    useTranslation: () => ({
+        t: (value) => value,
+    }),
+}));
+
 function Harness() {
     useSocket();
     return <div>socket-ready</div>;
@@ -88,6 +94,6 @@ describe('useSocket', () => {
 
         expect(store.getState().notifications.items).toHaveLength(1);
         expect(store.getState().notifications.items[0].title).toBe('Warning');
-        expect(toastMocks.info).toHaveBeenCalledWith('Budget warning');
+        expect(toastMocks.info).toHaveBeenCalledWith('Warning: Budget warning');
     });
 });

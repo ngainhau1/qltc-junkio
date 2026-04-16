@@ -313,6 +313,65 @@ describe('Transaction API transfer flow', () => {
         expect(Number(updatedToWallet.balance)).toBe(300000);
     });
 
+    it('keeps balances consistent when concurrent transfers target the same source wallet', async () => {
+        const fromWallet = await mockWallet.create({
+            name: 'Concurrent Source',
+            balance: 300000,
+            user_id: TEST_USER_ID
+        });
+        const firstDestination = await mockWallet.create({
+            name: 'Concurrent Destination A',
+            balance: 100000,
+            user_id: TEST_USER_ID
+        });
+        const secondDestination = await mockWallet.create({
+            name: 'Concurrent Destination B',
+            balance: 100000,
+            user_id: TEST_USER_ID
+        });
+
+        const [firstResponse, secondResponse] = await Promise.all([
+            request(app)
+                .post('/api/transactions/transfer')
+                .send({
+                    from_wallet_id: fromWallet.id,
+                    to_wallet_id: firstDestination.id,
+                    amount: 200000,
+                    description: 'Concurrent transfer A'
+                }),
+            request(app)
+                .post('/api/transactions/transfer')
+                .send({
+                    from_wallet_id: fromWallet.id,
+                    to_wallet_id: secondDestination.id,
+                    amount: 200000,
+                    description: 'Concurrent transfer B'
+                })
+        ]);
+
+        const statusCodes = [firstResponse.statusCode, secondResponse.statusCode]
+            .sort((left, right) => left - right);
+        expect(statusCodes).toEqual([201, 400]);
+
+        const refreshedSourceWallet = await mockWallet.findByPk(fromWallet.id);
+        const refreshedFirstDestination = await mockWallet.findByPk(firstDestination.id);
+        const refreshedSecondDestination = await mockWallet.findByPk(secondDestination.id);
+
+        expect(Number(refreshedSourceWallet.balance)).toBe(100000);
+
+        const creditedDestinations = [
+            Number(refreshedFirstDestination.balance),
+            Number(refreshedSecondDestination.balance)
+        ].filter((balance) => balance === 300000);
+        const untouchedDestinations = [
+            Number(refreshedFirstDestination.balance),
+            Number(refreshedSecondDestination.balance)
+        ].filter((balance) => balance === 100000);
+
+        expect(creditedDestinations).toHaveLength(1);
+        expect(untouchedDestinations).toHaveLength(1);
+    });
+
     it('deletes both transfer entries and restores both balances', async () => {
         const fromWallet = await mockWallet.create({
             name: 'Delete Source',

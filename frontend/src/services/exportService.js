@@ -3,6 +3,7 @@ import api from '@/lib/api';
 import { cleanQueryParams } from '@/features/finance/context';
 import { formatDateString } from '@/lib/utils';
 import i18n from '@/lib/i18n';
+import { loadRobotoBase64 } from './pdfFont';
 
 const downloadBlob = (blob, filename) => {
     const url = URL.createObjectURL(blob);
@@ -118,19 +119,23 @@ export const exportRowsToPDF = async (
         filename = `report_${getTodaySuffix()}.pdf`,
     } = {}
 ) => {
-    const [{ default: jsPDF }, { default: autoTable }, { robotoBase64 }] = await Promise.all([
+    const [{ default: jsPDF }, { default: autoTable }, robotoBase64] = await Promise.all([
         import('jspdf'),
         import('jspdf-autotable'),
-        import('./Roboto-Regular-normal'),
+        loadRobotoBase64().catch(() => null),
     ]);
 
     const normalizedRows = normalizeRows(rows);
     const columns = Object.keys(normalizedRows[0] || { Data: '' });
     const doc = new jsPDF({ orientation: columns.length > 5 ? 'landscape' : 'portrait' });
 
-    doc.addFileToVFS('Roboto-Regular.ttf', robotoBase64);
-    doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
-    doc.setFont('Roboto', 'normal');
+    if (robotoBase64) {
+        doc.addFileToVFS('Roboto-Regular.ttf', robotoBase64);
+        doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
+        doc.setFont('Roboto', 'normal');
+    } else {
+        doc.setFont('helvetica', 'normal');
+    }
 
     // Header
     doc.setFontSize(20);
@@ -158,7 +163,7 @@ export const exportRowsToPDF = async (
         startY: 52,
         theme: 'grid',
         styles: {
-            font: 'Roboto',
+            font: robotoBase64 ? 'Roboto' : 'helvetica',
             fontStyle: 'normal',
             fontSize: 9,
             cellPadding: 3,

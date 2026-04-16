@@ -23,13 +23,13 @@ jobs:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
         cache-dependency-path: |
-          backend/package-lock.json
-          frontend/package-lock.json
+          backend/package.json
+          frontend/package.json
 
     - name: Install Backend Dependencies
       run: |
         cd backend
-        npm ci || npm install
+        npm install --no-package-lock
 
     - name: Run Backend Lint
       run: |
@@ -44,7 +44,7 @@ jobs:
     - name: Install Frontend Dependencies
       run: |
         cd frontend
-        npm ci || npm install
+        npm install --no-package-lock
 
     - name: Run Frontend Lint
       run: |

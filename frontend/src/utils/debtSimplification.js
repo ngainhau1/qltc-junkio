@@ -19,6 +19,13 @@ export function simplifyDebts(transactions) {
         if (t.shares && t.shares.length > 0) {
             t.shares.forEach(share => {
                 const shareAmount = parseFloat(share.amount) || 0;
+                // Nếu khoản chia sẻ đã được PAID thì không còn là nợ nữa
+                if (share.status === 'PAID') {
+                    // Payer already got this back, reduce their credit
+                    balances[payer] = (balances[payer] || 0) - shareAmount;
+                    return;
+                }
+
                 // Backward compatibility: If approval_status is missing (old mock data), treat it as APPROVED
                 if (share.approval_status === 'APPROVED' || share.approval_status === undefined) {
                     // Nếu đã APPROVED, người bị gán nợ phải gánh

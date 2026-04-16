@@ -1,10 +1,35 @@
 const { Transaction, Wallet, User, Category, sequelize } = require('../models');
 const { randomUUID } = require('crypto');
-const { Op } = require('sequelize');
+const { Op, literal } = require('sequelize');
 const { Parser } = require('json2csv');
 const PDFDocument = require('pdfkit');
 const { success, error: sendError } = require('../utils/responseHelper');
 const { getAccessibleWalletIds, getAccessibleWallets } = require('../utils/accessScope');
+
+const transferLocks = new Map();
+
+const withTransferLock = async (walletId, task) => {
+    const previous = transferLocks.get(walletId) || Promise.resolve();
+    let releaseLock;
+
+    const next = new Promise((resolve) => {
+        releaseLock = resolve;
+    });
+
+    transferLocks.set(walletId, next);
+
+    await previous;
+
+    try {
+        return await task();
+    } finally {
+        releaseLock();
+
+        if (transferLocks.get(walletId) === next) {
+            transferLocks.delete(walletId);
+        }
+    }
+};
 
 const buildTransactionWhere = ({ walletIds, filters }) => {
     const whereClause = {
@@ -284,86 +309,113 @@ exports.deleteTransaction = async (req, res) => {
 exports.createTransfer = async (req, res) => {
     const { from_wallet_id, to_wallet_id, amount, description, date } = req.body;
 
-    const t = await sequelize.transaction();
-    try {
-        const parsedAmount = parseFloat(amount);
-        const transferGroupId = randomUUID();
-        const { wallets } = await getAccessibleWallets({
-            userId: req.user.id,
-            transaction: t
-        });
+    return withTransferLock(from_wallet_id, async () => {
+        const t = await sequelize.transaction();
 
-        if (wallets.length === 0) {
-            await t.rollback();
-            return sendError(res, 'WALLET_REQUIRED', 400);
+        try {
+            const parsedAmount = parseFloat(amount);
+            const transferGroupId = randomUUID();
+            const { wallets } = await getAccessibleWallets({
+                userId: req.user.id,
+                transaction: t
+            });
+
+            if (wallets.length === 0) {
+                await t.rollback();
+                return sendError(res, 'WALLET_REQUIRED', 400);
+            }
+
+            const fromWallet = wallets.find((wallet) => wallet.id === from_wallet_id) || null;
+            if (!fromWallet) {
+                await t.rollback();
+                return sendError(res, 'WALLET_NOT_FOUND', 404);
+            }
+
+            const toWallet = wallets.find((wallet) => wallet.id === to_wallet_id) || null;
+            if (!toWallet) {
+                await t.rollback();
+                return sendError(res, 'WALLET_NOT_FOUND', 404);
+            }
+
+            if (from_wallet_id === to_wallet_id) {
+                await t.rollback();
+                return sendError(res, 'TRANSFER_SAME_WALLET', 400);
+            }
+
+            if (parsedAmount <= 0) {
+                await t.rollback();
+                return sendError(res, 'INVALID_AMOUNT', 400);
+            }
+            if (parseFloat(fromWallet.balance) < parsedAmount) {
+                await t.rollback();
+                return sendError(res, 'INSUFFICIENT_BALANCE', 400);
+            }
+
+            const [debitedWalletCount] = await Wallet.update({
+                balance: literal(`balance - ${parsedAmount}`),
+            }, {
+                where: {
+                    id: from_wallet_id,
+                    balance: {
+                        [Op.gte]: parsedAmount,
+                    },
+                },
+                transaction: t,
+            });
+
+            if (!debitedWalletCount) {
+                await t.rollback();
+                return sendError(res, 'INSUFFICIENT_BALANCE', 400);
+            }
+
+            await Wallet.update({
+                balance: literal(`balance + ${parsedAmount}`),
+            }, {
+                where: { id: to_wallet_id },
+                transaction: t,
+            });
+
+            const updatedFromWallet = await Wallet.findByPk(from_wallet_id, { transaction: t });
+            const updatedToWallet = await Wallet.findByPk(to_wallet_id, { transaction: t });
+
+            const transferOut = await Transaction.create({
+                user_id: req.user.id,
+                amount: parsedAmount,
+                date: date || new Date(),
+                description: description || `Chuyen tien toi vi ${toWallet.name}`,
+                type: 'TRANSFER_OUT',
+                wallet_id: from_wallet_id,
+                family_id: fromWallet.family_id || null,
+                transfer_group_id: transferGroupId
+            }, { transaction: t });
+
+            const transferIn = await Transaction.create({
+                user_id: req.user.id,
+                amount: parsedAmount,
+                date: date || new Date(),
+                description: description || `Nhan tien tu vi ${fromWallet.name}`,
+                type: 'TRANSFER_IN',
+                wallet_id: to_wallet_id,
+                family_id: toWallet.family_id || null,
+                transfer_group_id: transferGroupId
+            }, { transaction: t });
+
+            await t.commit();
+            return success(res, {
+                transfer_group_id: transferGroupId,
+                transfer_out_id: transferOut.id,
+                transfer_in_id: transferIn.id,
+                from_wallet_balance: updatedFromWallet.balance,
+                to_wallet_balance: updatedToWallet.balance
+            }, 'TRANSFER_CREATED', 201);
+        } catch (err) {
+            if (!t.finished) {
+                await t.rollback();
+            }
+            console.error('createTransfer error:', err);
+            return sendError(res, 'TRANSFER_FAILED', 500);
         }
-
-        const fromWallet = wallets.find((wallet) => wallet.id === from_wallet_id) || null;
-        if (!fromWallet) {
-            await t.rollback();
-            return sendError(res, 'WALLET_NOT_FOUND', 404);
-        }
-
-        const toWallet = wallets.find((wallet) => wallet.id === to_wallet_id) || null;
-        if (!toWallet) {
-            await t.rollback();
-            return sendError(res, 'WALLET_NOT_FOUND', 404);
-        }
-
-        if (from_wallet_id === to_wallet_id) {
-            await t.rollback();
-            return sendError(res, 'TRANSFER_SAME_WALLET', 400);
-        }
-
-        if (parsedAmount <= 0) {
-            await t.rollback();
-            return sendError(res, 'INVALID_AMOUNT', 400);
-        }
-        if (parseFloat(fromWallet.balance) < parsedAmount) {
-            await t.rollback();
-            return sendError(res, 'INSUFFICIENT_BALANCE', 400);
-        }
-
-        fromWallet.balance = parseFloat(fromWallet.balance) - parsedAmount;
-        toWallet.balance = parseFloat(toWallet.balance) + parsedAmount;
-        await fromWallet.save({ transaction: t });
-        await toWallet.save({ transaction: t });
-
-        const transferOut = await Transaction.create({
-            user_id: req.user.id,
-            amount: parsedAmount,
-            date: date || new Date(),
-            description: description || `Chuyen tien toi vi ${toWallet.name}`,
-            type: 'TRANSFER_OUT',
-            wallet_id: from_wallet_id,
-            family_id: fromWallet.family_id || null,
-            transfer_group_id: transferGroupId
-        }, { transaction: t });
-
-        const transferIn = await Transaction.create({
-            user_id: req.user.id,
-            amount: parsedAmount,
-            date: date || new Date(),
-            description: description || `Nhan tien tu vi ${fromWallet.name}`,
-            type: 'TRANSFER_IN',
-            wallet_id: to_wallet_id,
-            family_id: toWallet.family_id || null,
-            transfer_group_id: transferGroupId
-        }, { transaction: t });
-
-        await t.commit();
-        success(res, {
-            transfer_group_id: transferGroupId,
-            transfer_out_id: transferOut.id,
-            transfer_in_id: transferIn.id,
-            from_wallet_balance: fromWallet.balance,
-            to_wallet_balance: toWallet.balance
-        }, 'TRANSFER_CREATED', 201);
-    } catch (err) {
-        await t.rollback();
-        console.error('createTransfer error:', err);
-        sendError(res, 'TRANSFER_FAILED', 500);
-    }
+    });
 };
 
 // POST /api/transactions/import

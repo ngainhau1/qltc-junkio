@@ -18,6 +18,7 @@ import {
 import { formatDistanceToNow } from 'date-fns';
 import { getDateLocale } from '@/lib/utils';
 import { createPortal } from 'react-dom';
+import { parseNotificationText } from '@/utils/notificationHelper';
 
 function MobileNotificationSheet({ isOpen, onClose, items, unreadCount, dispatch, t }) {
     useEffect(() => {
@@ -70,7 +71,7 @@ function MobileNotificationSheet({ isOpen, onClose, items, unreadCount, dispatch
                             >
                                 <div className="mb-1 flex w-full justify-between">
                                     <span className={`text-sm font-semibold ${(!notif.isRead && !notif.is_read) && 'text-foreground'}`}>
-                                        {notif.title}
+                                        {parseNotificationText(notif.title, t)}
                                     </span>
                                     <span className="ml-2 whitespace-nowrap text-xs text-muted-foreground">
                                         {(notif.created_at || notif.createdAt)
@@ -78,7 +79,7 @@ function MobileNotificationSheet({ isOpen, onClose, items, unreadCount, dispatch
                                             : ''}
                                     </span>
                                 </div>
-                                <p className="w-full text-sm text-muted-foreground">{notif.message}</p>
+                                <p className="w-full text-sm text-muted-foreground">{parseNotificationText(notif.message, t)}</p>
                             </button>
                         ))}
                     </div>
@@ -153,14 +154,14 @@ export function NotificationBell() {
                                         }}
                                     >
                                         <div className="mb-1 flex w-full justify-between">
-                                            <span className={`text-sm font-medium ${(!notif.isRead && !notif.is_read) && 'text-foreground'}`}>{notif.title}</span>
+                                            <span className={`text-sm font-medium ${(!notif.isRead && !notif.is_read) && 'text-foreground'}`}>{parseNotificationText(notif.title, t)}</span>
                                             <span className="ml-2 whitespace-nowrap text-xs text-muted-foreground">
                                                 {(notif.created_at || notif.createdAt)
                                                     ? formatDistanceToNow(new Date(notif.created_at || notif.createdAt), { addSuffix: true, locale: getDateLocale() })
                                                     : ''}
                                             </span>
                                         </div>
-                                        <p className="w-full text-left text-xs text-muted-foreground line-clamp-2">{notif.message}</p>
+                                        <p className="w-full text-left text-xs text-muted-foreground line-clamp-2">{parseNotificationText(notif.message, t)}</p>
                                     </DropdownMenuItem>
                                 ))
                             )}
