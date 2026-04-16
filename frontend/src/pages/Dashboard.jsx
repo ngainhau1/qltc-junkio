@@ -1,5 +1,6 @@
 import { useSelector } from 'react-redux';
 import { DashboardStats } from '@/components/dashboard/DashboardStats';
+import { GoldPriceCard } from '@/components/dashboard/GoldPriceCard';
 import { RecentTransactions } from '@/components/dashboard/RecentTransactions';
 import { FinancialChart } from '@/components/dashboard/FinancialChart';
 import { useTranslation } from 'react-i18next';
@@ -21,6 +22,7 @@ export function Dashboard() {
             />
 
             <DashboardStats stats={stats} />
+            <GoldPriceCard />
 
             {loading ? (
                 <div className="flex min-h-[280px] items-center justify-center rounded-xl border bg-card">

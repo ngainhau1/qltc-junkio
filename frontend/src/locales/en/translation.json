@@ -135,6 +135,22 @@
                                     "desc":  "Income and expense tracking over time."
                                 }
                   },
+    "marketGold":  {
+                        "title":  "Live gold price",
+                        "description":  "SJC gold prices pulled directly from the public source.",
+                        "loading":  "Loading gold price...",
+                        "unavailable":  "Unable to load the gold price right now.",
+                        "unavailableDesc":  "The SJC feed is temporarily unavailable. The widget will retry automatically.",
+                        "refreshing":  "Refreshing",
+                        "autoRefresh":  "Auto-refresh every 60 seconds",
+                        "sourceLabel":  "Source: {{value}}",
+                        "product":  "Product",
+                        "branchLabel":  "Branch: {{value}}",
+                        "updatedLabel":  "Updated: {{value}}",
+                        "buy":  "Buy price",
+                        "sell":  "Sell price",
+                        "unitValue":  "Unit: VND / luong"
+                    },
     "wallets":  {
                     "title":  "My Wallets",
                     "desc":  "Manage your sources of funds.",

@@ -56,6 +56,7 @@ app.use('/api/budgets', require('./routes/budgetRoutes'));
 app.use('/api/categories', require('./routes/categoryRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/forecast', require('./routes/forecastRoutes'));
+app.use('/api/market', require('./routes/marketRoutes'));
 
 // Swagger API Documentation (truy cập: /api-docs)
 const swaggerUi = require('swagger-ui-express');
