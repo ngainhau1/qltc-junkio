@@ -10,7 +10,13 @@ jest.mock('../middleware/authMiddleware', () => (req, res, next) => {
     next();
 });
 
+jest.mock('../services/goldPriceSnapshotService', () => ({
+    getGoldPriceHistory: jest.fn(),
+    upsertGoldPriceSnapshot: jest.fn(),
+}));
+
 const { client } = require('../config/redis');
+const { getGoldPriceHistory, upsertGoldPriceSnapshot } = require('../services/goldPriceSnapshotService');
 const marketRoutes = require('../routes/marketRoutes');
 
 const app = express();
@@ -45,6 +51,7 @@ describe('Market API', () => {
     });
 
     it('returns the exact Ho Chi Minh SJC gold record with normalized fields', async () => {
+        upsertGoldPriceSnapshot.mockResolvedValue(null);
         global.fetch.mockResolvedValue(
             buildFetchResponse({
                 success: true,
@@ -82,9 +89,11 @@ describe('Market API', () => {
             updatedAt: '2026-04-16T13:52:00+07:00',
             updatedLabel: '13:52 16/04/2026',
         });
+        expect(upsertGoldPriceSnapshot).toHaveBeenCalledTimes(1);
     });
 
     it('uses Redis cache on the second request within the TTL', async () => {
+        upsertGoldPriceSnapshot.mockResolvedValue(null);
         global.fetch.mockResolvedValue(
             buildFetchResponse({
                 success: true,
@@ -106,9 +115,11 @@ describe('Market API', () => {
         expect(firstResponse.statusCode).toBe(200);
         expect(secondResponse.statusCode).toBe(200);
         expect(global.fetch).toHaveBeenCalledTimes(1);
+        expect(upsertGoldPriceSnapshot).toHaveBeenCalledTimes(1);
     });
 
     it('falls back to the first generic Vàng SJC record when the exact match is missing', async () => {
+        upsertGoldPriceSnapshot.mockResolvedValue(null);
         global.fetch.mockResolvedValue(
             buildFetchResponse({
                 success: true,
@@ -151,5 +162,62 @@ describe('Market API', () => {
         expect(response.statusCode).toBe(502);
         expect(response.body.status).toBe('error');
         expect(response.body.message).toBe('GOLD_PRICE_FETCH_FAILED');
+    });
+
+    it('returns gold history for a valid range', async () => {
+        getGoldPriceHistory.mockResolvedValue({
+            range: '24H',
+            source: 'sjc',
+            branch: 'Hồ Chí Minh',
+            productName: 'Vàng SJC 1L, 10L, 1KG',
+            currency: 'VND',
+            unit: 'VND_PER_LUONG',
+            points: [
+                {
+                    capturedAt: '2026-04-16T12:00:00+07:00',
+                    buy: 168500000,
+                    sell: 172000000,
+                },
+            ],
+            summary: {
+                startCapturedAt: '2026-04-16T12:00:00+07:00',
+                latestCapturedAt: '2026-04-16T12:00:00+07:00',
+                startBuy: 168500000,
+                latestBuy: 168500000,
+                absoluteChangeBuy: 0,
+                percentChangeBuy: 0,
+                startSell: 172000000,
+                latestSell: 172000000,
+                absoluteChangeSell: 0,
+                percentChangeSell: 0,
+            },
+        });
+
+        const response = await request(app).get('/api/market/gold/history?range=24H');
+
+        expect(response.statusCode).toBe(200);
+        expect(response.body.status).toBe('success');
+        expect(response.body.message).toBe('GOLD_PRICE_HISTORY_FETCHED');
+        expect(getGoldPriceHistory).toHaveBeenCalledWith('24H');
+    });
+
+    it('returns 400 for an invalid history range', async () => {
+        getGoldPriceHistory.mockRejectedValue(new Error('GOLD_PRICE_HISTORY_RANGE_INVALID'));
+
+        const response = await request(app).get('/api/market/gold/history?range=INVALID');
+
+        expect(response.statusCode).toBe(400);
+        expect(response.body.status).toBe('error');
+        expect(response.body.message).toBe('GOLD_PRICE_HISTORY_RANGE_INVALID');
+    });
+
+    it('returns 500 when the history service fails', async () => {
+        getGoldPriceHistory.mockRejectedValue(new Error('database down'));
+
+        const response = await request(app).get('/api/market/gold/history?range=7D');
+
+        expect(response.statusCode).toBe(500);
+        expect(response.body.status).toBe('error');
+        expect(response.body.message).toBe('GOLD_PRICE_HISTORY_FETCH_FAILED');
     });
 });

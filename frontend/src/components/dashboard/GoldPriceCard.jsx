@@ -1,12 +1,29 @@
-import { useEffect } from 'react';
+import { startTransition, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
-import { ArrowDownRight, ArrowUpRight, Clock3, Coins, MapPin } from 'lucide-react';
+import {
+    ArrowDownRight,
+    ArrowUpRight,
+    ChartNoAxesCombined,
+    Clock3,
+    Coins,
+    MapPin,
+    TrendingDown,
+    TrendingUp,
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { fetchGoldPrice } from '@/features/market/goldPriceSlice';
+import { cn } from '@/lib/utils';
+import {
+    fetchGoldPrice,
+    fetchGoldPriceHistory,
+    GOLD_HISTORY_RANGE_OPTIONS,
+    setGoldHistoryRange,
+} from '@/features/market/goldPriceSlice';
+import { GoldPriceMiniChart } from './GoldPriceMiniChart';
 
-const REFRESH_INTERVAL_MS = 60_000;
+const CURRENT_REFRESH_INTERVAL_MS = 60_000;
+const HISTORY_REFRESH_INTERVAL_MS = 5 * 60_000;
 
 const vndFormatter = new Intl.NumberFormat('vi-VN', {
     style: 'currency',
@@ -15,23 +32,73 @@ const vndFormatter = new Intl.NumberFormat('vi-VN', {
 });
 
 const formatGoldPrice = (value) => vndFormatter.format(Number(value || 0));
+const formatSignedPrice = (value) => `${Number(value || 0) >= 0 ? '+' : '-'}${formatGoldPrice(Math.abs(Number(value || 0)))}`;
+const formatSignedPercent = (value) => `${Number(value || 0) >= 0 ? '+' : '-'}${Math.abs(Number(value || 0)).toFixed(2)}%`;
+
+const getTrendConfig = (changeValue) => {
+    if (changeValue > 0) {
+        return {
+            color: '#059669',
+            badgeClassName: 'border-emerald-300/70 bg-emerald-500/10 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-300',
+            icon: TrendingUp,
+        };
+    }
+
+    if (changeValue < 0) {
+        return {
+            color: '#e11d48',
+            badgeClassName: 'border-rose-300/70 bg-rose-500/10 text-rose-700 dark:border-rose-800 dark:bg-rose-500/10 dark:text-rose-300',
+            icon: TrendingDown,
+        };
+    }
+
+    return {
+        color: '#d97706',
+        badgeClassName: 'border-amber-300/70 bg-amber-500/10 text-amber-700 dark:border-amber-800 dark:bg-amber-500/10 dark:text-amber-200',
+        icon: ChartNoAxesCombined,
+    };
+};
 
 export function GoldPriceCard() {
     const dispatch = useDispatch();
     const { t } = useTranslation();
-    const { data, loading, error } = useSelector((state) => state.goldPrice);
+    const {
+        data,
+        loading,
+        error,
+        selectedRange,
+        historyByRange,
+    } = useSelector((state) => state.goldPrice);
+    const historyState = historyByRange[selectedRange];
+    const historyData = historyState?.data;
+    const historyPoints = historyData?.points || [];
+    const historySummary = historyData?.summary;
+    const trendConfig = getTrendConfig(historySummary?.absoluteChangeSell || 0);
+    const TrendIcon = trendConfig.icon;
 
     useEffect(() => {
         dispatch(fetchGoldPrice());
 
         const intervalId = window.setInterval(() => {
             dispatch(fetchGoldPrice());
-        }, REFRESH_INTERVAL_MS);
+        }, CURRENT_REFRESH_INTERVAL_MS);
 
         return () => {
             window.clearInterval(intervalId);
         };
     }, [dispatch]);
+
+    useEffect(() => {
+        dispatch(fetchGoldPriceHistory({ range: selectedRange }));
+
+        const intervalId = window.setInterval(() => {
+            dispatch(fetchGoldPriceHistory({ range: selectedRange, force: true }));
+        }, HISTORY_REFRESH_INTERVAL_MS);
+
+        return () => {
+            window.clearInterval(intervalId);
+        };
+    }, [dispatch, selectedRange]);
 
     if (!data && loading) {
         return (
@@ -149,6 +216,89 @@ export function GoldPriceCard() {
                                 {formatGoldPrice(data.sell)}
                             </p>
                         </div>
+                    </div>
+                </div>
+
+                <div className="rounded-xl border border-amber-200/80 bg-white/70 p-4 shadow-sm dark:border-amber-900/50 dark:bg-background/40">
+                    <div className="flex flex-col gap-3 border-b border-amber-200/70 pb-4 dark:border-amber-900/40 md:flex-row md:items-start md:justify-between">
+                        <div className="space-y-2">
+                            <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                                <TrendIcon className="h-4 w-4" style={{ color: trendConfig.color }} />
+                                <span>{t('marketGold.trendLabel')}</span>
+                            </div>
+                            {historySummary ? (
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <Badge className={cn('border text-sm font-semibold', trendConfig.badgeClassName)} variant="outline">
+                                        {formatSignedPrice(historySummary.absoluteChangeSell)}
+                                    </Badge>
+                                    <span className="text-sm font-medium text-muted-foreground">
+                                        {formatSignedPercent(historySummary.percentChangeSell)} {t('marketGold.vsRangeStart')}
+                                    </span>
+                                </div>
+                            ) : (
+                                <p className="text-sm text-muted-foreground">{t('marketGold.vsRangeStart')}</p>
+                            )}
+                        </div>
+
+                        <div className="inline-flex w-fit rounded-lg bg-amber-500/10 p-1">
+                            {GOLD_HISTORY_RANGE_OPTIONS.map((range) => (
+                                <button
+                                    key={range}
+                                    type="button"
+                                    className={cn(
+                                        'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
+                                        selectedRange === range
+                                            ? 'bg-white text-amber-900 shadow-sm dark:bg-background dark:text-amber-100'
+                                            : 'text-amber-700 hover:bg-white/60 dark:text-amber-200 dark:hover:bg-background/70'
+                                    )}
+                                    onClick={() => {
+                                        startTransition(() => {
+                                            dispatch(setGoldHistoryRange(range));
+                                        });
+                                    }}
+                                >
+                                    {range === '24H' ? t('marketGold.range24h') : t('marketGold.range7d')}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="pt-4">
+                        {historyState.loading && !historyData ? (
+                            <div className="flex h-[180px] items-center justify-center rounded-xl border border-dashed border-amber-300/70 bg-amber-50/60 text-sm font-medium text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/20 dark:text-amber-100">
+                                {t('marketGold.loading')}
+                            </div>
+                        ) : historyState.error || !historyData ? (
+                            <div
+                                className="flex h-[180px] flex-col items-center justify-center rounded-xl border border-dashed border-rose-300/70 bg-rose-50/60 px-4 text-center dark:border-rose-900/50 dark:bg-rose-950/20"
+                                data-testid="gold-history-unavailable"
+                            >
+                                <p className="text-sm font-semibold text-rose-700 dark:text-rose-200">
+                                    {t('marketGold.historyUnavailable')}
+                                </p>
+                                <p className="mt-2 text-sm text-muted-foreground">
+                                    {t('marketGold.historyUnavailableDesc')}
+                                </p>
+                            </div>
+                        ) : historyPoints.length < 2 ? (
+                            <div
+                                className="flex h-[180px] flex-col items-center justify-center rounded-xl border border-dashed border-amber-300/70 bg-amber-50/60 px-4 text-center dark:border-amber-900/60 dark:bg-amber-950/20"
+                                data-testid="gold-history-accumulating"
+                            >
+                                <p className="text-sm font-semibold text-amber-800 dark:text-amber-100">
+                                    {t('marketGold.historyAccumulating')}
+                                </p>
+                                <p className="mt-2 text-sm text-muted-foreground">
+                                    {t('marketGold.historyAccumulatingDesc')}
+                                </p>
+                            </div>
+                        ) : (
+                            <GoldPriceMiniChart
+                                color={trendConfig.color}
+                                points={historyPoints}
+                                range={selectedRange}
+                            />
+                        )}
                     </div>
                 </div>
             </CardContent>

@@ -3,8 +3,11 @@ const { client } = require('../config/redis');
 const CACHE_KEY = 'market:gold:sjc:hcm:current';
 const CACHE_TTL_SECONDS = 60;
 const SJC_PRICE_SERVICE_URL = 'https://sjc.com.vn/GoldPrice/Services/PriceService.ashx';
+const TARGET_SOURCE = 'sjc';
 const TARGET_BRANCH = 'Hồ Chí Minh';
 const TARGET_PRODUCT = 'Vàng SJC 1L, 10L, 1KG';
+const TARGET_CURRENCY = 'VND';
+const TARGET_UNIT = 'VND_PER_LUONG';
 
 const parseSjcLatestDate = (value) => {
     if (typeof value !== 'string') {
@@ -47,13 +50,13 @@ const normalizeSjcResponse = (payload) => {
     const updatedLabel = payload.latestDate || null;
 
     return {
-        source: 'sjc',
+        source: TARGET_SOURCE,
         branch: selectedRecord.BranchName || TARGET_BRANCH,
         productName: selectedRecord.TypeName || TARGET_PRODUCT,
         buy: Number(selectedRecord.BuyValue || 0),
         sell: Number(selectedRecord.SellValue || 0),
-        currency: 'VND',
-        unit: 'VND_PER_LUONG',
+        currency: TARGET_CURRENCY,
+        unit: TARGET_UNIT,
         updatedAt: parseSjcLatestDate(updatedLabel),
         updatedLabel,
     };
@@ -98,6 +101,13 @@ const getGoldPrice = async () => {
         console.error('Gold price cache write error:', error);
     }
 
+    try {
+        const { upsertGoldPriceSnapshot } = require('./goldPriceSnapshotService');
+        await upsertGoldPriceSnapshot(freshData);
+    } catch (error) {
+        console.error('Gold price snapshot write error:', error);
+    }
+
     return freshData;
 };
 
@@ -105,7 +115,10 @@ module.exports = {
     CACHE_KEY,
     CACHE_TTL_SECONDS,
     TARGET_BRANCH,
+    TARGET_CURRENCY,
     TARGET_PRODUCT,
+    TARGET_SOURCE,
+    TARGET_UNIT,
     fetchSjcGoldPrice,
     getGoldPrice,
     normalizeSjcResponse,

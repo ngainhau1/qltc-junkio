@@ -23,24 +23,34 @@ router.use(authMiddleware);
  *     responses:
  *       200:
  *         description: Gold price loaded successfully
- *         content:
- *           application/json:
- *             example:
- *               status: success
- *               message: GOLD_PRICE_FETCHED
- *               data:
- *                 source: sjc
- *                 branch: Hồ Chí Minh
- *                 productName: Vàng SJC 1L, 10L, 1KG
- *                 buy: 168500000
- *                 sell: 172000000
- *                 currency: VND
- *                 unit: VND_PER_LUONG
- *                 updatedAt: 2026-04-16T13:52:00+07:00
- *                 updatedLabel: 13:52 16/04/2026
  *       502:
  *         description: Upstream gold price service failed
  */
 router.get('/gold', marketController.getGoldPrice);
+
+/**
+ * @swagger
+ * /api/market/gold/history:
+ *   get:
+ *     summary: Load the cached SJC gold price history for the dashboard chart
+ *     description: Returns the locally stored SJC history for the selected range. Live snapshots take precedence over demo-seeded points at the same timestamp.
+ *     tags: [Market]
+ *     security: [ { bearerAuth: [] } ]
+ *     parameters:
+ *       - in: query
+ *         name: range
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [24H, 7D]
+ *     responses:
+ *       200:
+ *         description: Gold price history loaded successfully
+ *       400:
+ *         description: Invalid history range
+ *       500:
+ *         description: Gold price history failed to load
+ */
+router.get('/gold/history', marketController.getGoldPriceHistory);
 
 module.exports = router;
