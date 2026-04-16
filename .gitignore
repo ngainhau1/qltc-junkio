@@ -67,7 +67,7 @@ _agent/
 _agents/
 .playwright-cli/
 .gemini/
-
+docx/
 # Ignore backend testing logs and outputs
 backend/*-log.txt
 backend/*_error.txt

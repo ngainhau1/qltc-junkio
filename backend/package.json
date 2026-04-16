@@ -8,6 +8,7 @@
     "lint": "eslint .",
     "start": "node index.js",
     "dev": "nodemon index.js",
+    "seed:demo": "node scripts/seed-demo.js",
     "postman:test": "newman run ../docx/07-tham-chieu/postman/Junkio.postman_collection.json -e ../docx/07-tham-chieu/postman/Junkio.postman_environment.json",
     "test:smoke": "npm test -- --runTestsByPath tests/auth.test.js tests/transaction.test.js",
     "test:newman": "node scripts/run-newman.js",
