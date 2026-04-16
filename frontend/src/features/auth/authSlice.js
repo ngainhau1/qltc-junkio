@@ -51,7 +51,7 @@ export const uploadUserAvatar = createAsyncThunk(
         try {
             const response = await api.post('/users/me/avatar', formData, {
                 headers: {
-                    'Content-Type': 'multipart/form-data'
+                    'Content-Type': undefined
                 }
             });
             return response.data;
@@ -60,6 +60,7 @@ export const uploadUserAvatar = createAsyncThunk(
         }
     }
 );
+
 
 export const updateProfileAsync = createAsyncThunk(
     'auth/updateProfileAsync',
