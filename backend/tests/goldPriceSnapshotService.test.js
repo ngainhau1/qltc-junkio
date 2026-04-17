@@ -26,6 +26,13 @@ describe('goldPriceSnapshotService', () => {
             timestamps: true,
             createdAt: 'created_at',
             updatedAt: 'updated_at',
+            indexes: [
+                {
+                    unique: true,
+                    name: 'gold_price_snapshots_unique_capture_origin',
+                    fields: ['source', 'branch', 'product_name', 'captured_at', 'data_origin'],
+                }
+            ]
         });
 
         await mockSequelize.sync({ force: true });
@@ -101,6 +108,35 @@ describe('goldPriceSnapshotService', () => {
             latestSell: 172000000,
             absoluteChangeSell: 300000,
         });
+    });
+
+    it('handles concurrent identical snapshot writes cleanly without TOCTOU race conditions', async () => {
+        const livePriceData = {
+            source: 'sjc',
+            branch: 'Hồ Chí Minh',
+            productName: 'Vàng SJC 1L, 10L, 1KG',
+            buy: 168000000,
+            sell: 171700000,
+            currency: 'VND',
+            unit: 'VND_PER_LUONG',
+            updatedAt: '2026-04-16T08:00:00+07:00',
+        };
+
+        // Fire multiple upserts simultaneously to simulate race condition
+        const results = await Promise.all([
+            service.upsertGoldPriceSnapshot(livePriceData),
+            service.upsertGoldPriceSnapshot(livePriceData),
+            service.upsertGoldPriceSnapshot(livePriceData)
+        ]);
+
+        // Expect all to resolve successfully (return snapshot shapes) without throwing errors
+        expect(results[0]).not.toBeNull();
+        expect(results[1]).not.toBeNull();
+        expect(results[2]).not.toBeNull();
+
+        // Exactly 1 row should be persisted in the DB
+        const count = (await GoldPriceSnapshot.findAll()).length;
+        expect(count).toBe(1);
     });
 
     it('skips live snapshot persistence when updatedAt is missing', async () => {
