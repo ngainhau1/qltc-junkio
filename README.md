@@ -118,12 +118,19 @@ Lúc này bạn trải nghiệm dự án qua các cổng:
 - **Tài liệu API Swagger**: `http://localhost:5000/api-docs`
 *(Lưu ý: API Container đã được lập trình sẵn để tự động chạy database migration và cấy dữ liệu mẫu nếu có flag `AUTO_SEED=true`).*
 
-### Phương án 2: Chạy Thủ Công Từng Nền Tảng (Cho Local Development)
+### Phương án 2: Chạy Thủ Công Từng Nền Tảng
 
-**Bước 1: Chuẩn bị Storage & DB**
-Đảm bảo bạn đã cài đặt và cấu hình PostgreSQL & Redis hoạt động trên máy với cổng mặc định `5432` và `6379`. Đảm bảo file `backend/.env` đã trỏ đúng Host.
+
+**Bước 1: Chuẩn bị Storage & Caching (PostgreSQL & Redis)**
+Bạn cần cài đặt trực tiếp hệ quản trị Database và Caching vào máy tính Windows của mình:
+1. **PostgreSQL**: Tải và cài đặt [PostgreSQL cho Windows](https://www.postgresql.org/download/windows/). Mở PgAdmin và thực hiện:
+   - Tạo User Role: `admin` (Với password: `password123`)
+   - Tạo Database: `expense_tracker_db` (Gán Owner là `admin`)
+2. **Redis**: Vì Redis không chính thức hỗ trợ môi trường Windows, khuyến nghị tốt nhất là tải [Memurai Developer](https://www.memurai.com/) - Bản tương thích 100% Redis cho Windows. Cứ cài đặt bình thường (Next liên tục), hệ thống sẽ tự mở cổng `6379`. (Hoặc nếu máy có WSL thì cài `redis-server` trên Ubuntu).
+3. **Môi trường**: Bạn chỉ cần định nghĩa `DB_HOST=localhost` và `REDIS_HOST=localhost` trong file `backend/.env`.
 
 **Bước 2: Khởi động Backend API**
+Mở thư mục `backend`, cài đặt thư viện và kích hoạt Node:
 ```bash
 cd backend
 npm install
@@ -131,13 +138,13 @@ npm run dev
 ```
 
 **Bước 3: Khởi động Frontend Web**
-Mở thêm một cửa sổ terminal mới:
+Mở thêm một cửa sổ terminal mới hướng vào thư mục `frontend`:
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-Truy cập `http://localhost:5173` để thấy giao diện chính ứng dụng.
+Truy cập `http://localhost:5173` để thấy giao diện chính ứng dụng. Mọi thao tác tải ảnh, lưu CSDL đều sẽ gửi thẳng xuống Windows của bạn.
 
 ---
 

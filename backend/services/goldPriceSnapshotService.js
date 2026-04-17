@@ -71,7 +71,7 @@ const upsertGoldPriceSnapshot = async (livePrice) => {
         return null;
     }
 
-    const [snapshot] = await GoldPriceSnapshot.upsert({
+    const snapshotData = {
         source: livePrice.source || TARGET_SOURCE,
         branch: livePrice.branch || TARGET_BRANCH,
         productName: livePrice.productName || TARGET_PRODUCT,
@@ -81,11 +81,45 @@ const upsertGoldPriceSnapshot = async (livePrice) => {
         unit: livePrice.unit || TARGET_UNIT,
         dataOrigin: LIVE_DATA_ORIGIN,
         capturedAt: new Date(livePrice.updatedAt),
-    }, {
-        returning: true,
+    };
+
+    let snapshot = await GoldPriceSnapshot.findOne({
+        where: {
+            source: snapshotData.source,
+            branch: snapshotData.branch,
+            productName: snapshotData.productName,
+            capturedAt: snapshotData.capturedAt,
+            dataOrigin: snapshotData.dataOrigin,
+        }
     });
 
-    return snapshot || null;
+    if (snapshot) {
+        snapshot = await snapshot.update(snapshotData);
+    } else {
+        try {
+            snapshot = await GoldPriceSnapshot.create(snapshotData);
+        } catch (error) {
+            if (error.name === 'SequelizeUniqueConstraintError') {
+                // Handle TOCTOU concurrency race condition where another worker created it
+                snapshot = await GoldPriceSnapshot.findOne({
+                    where: {
+                        source: snapshotData.source,
+                        branch: snapshotData.branch,
+                        productName: snapshotData.productName,
+                        capturedAt: snapshotData.capturedAt,
+                        dataOrigin: snapshotData.dataOrigin,
+                    }
+                });
+                if (snapshot) {
+                    snapshot = await snapshot.update(snapshotData);
+                }
+            } else {
+                throw error;
+            }
+        }
+    }
+
+    return snapshot;
 };
 
 const captureLatestGoldPriceSnapshot = async () => {
