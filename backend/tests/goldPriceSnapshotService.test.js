@@ -29,6 +29,7 @@ describe('goldPriceSnapshotService', () => {
             indexes: [
                 {
                     unique: true,
+                    name: 'gold_price_snapshots_unique_capture_origin',
                     fields: ['source', 'branch', 'product_name', 'captured_at', 'data_origin'],
                 }
             ]

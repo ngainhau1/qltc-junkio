@@ -110,9 +110,11 @@ const upsertGoldPriceSnapshot = async (livePrice) => {
                         dataOrigin: snapshotData.dataOrigin,
                     }
                 });
-                if (snapshot) {
-                    snapshot = await snapshot.update(snapshotData);
+                if (!snapshot) {
+                    throw error;
                 }
+
+                snapshot = await snapshot.update(snapshotData);
             } else {
                 throw error;
             }
