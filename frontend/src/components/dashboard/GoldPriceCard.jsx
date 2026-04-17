@@ -59,6 +59,12 @@ const getTrendConfig = (changeValue) => {
     };
 };
 
+/**
+ * Thành phần hiển thị Widget Giá vàng SJC trên Dashboard.
+ * - Tự động cập nhật giá mới sau mỗi 1 phút (CURRENT_REFRESH_INTERVAL_MS).
+ * - Hiển thị biểu đồ thu nhỏ (Mini Chart) tương ứng với khoảng thời gian được chọn.
+ * - Hiển thị trend tăng/giảm dựa trên bảng tóm tắt lịch sử.
+ */
 export function GoldPriceCard() {
     const dispatch = useDispatch();
     const { t } = useTranslation();

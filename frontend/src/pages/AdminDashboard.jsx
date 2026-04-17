@@ -12,6 +12,12 @@ import { Users, ArrowRightLeft, Home as HomeIcon, Search, Lock, Unlock, Shield, 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, LineChart, Line } from "recharts"
 import api from "@/lib/api"
 
+/**
+ * Trang chính dành cho Quản trị viên (Admin Dashboard).
+ * - Hiển thị biểu đồ tăng trưởng người dùng, hoạt động giao dịch và danh mục chi tiêu.
+ * - Quản lý danh sách người dùng (khóa, mở khóa, đổi role, xóa).
+ * - Theo dõi nhật ký hệ thống (Audit Logs).
+ */
 export function AdminDashboard() {
     const { t } = useTranslation()
     const { user } = useSelector(state => state.auth)
@@ -153,6 +159,9 @@ export function AdminDashboard() {
         }
     }
 
+    /**
+     * Xóa người dùng khỏi hệ thống.
+     */
     const deleteUser = async () => {
         if (!userToDelete) return;
         try {

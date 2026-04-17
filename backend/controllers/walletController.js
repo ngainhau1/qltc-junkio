@@ -38,6 +38,11 @@ const hasDuplicateWalletName = async ({ name, userId, familyId = null, excludeId
 };
 
 // GET /api/wallets
+/**
+ * Lấy danh sách tất cả các ví mà người dùng có quyền truy cập.
+ * - Bao gồm ví cá nhân (tự tạo).
+ * - Bao gồm các ví dùng chung của các nhóm Gia đình mà user là thành viên.
+ */
 exports.getUserWallets = async (req, res) => {
     try {
         const userId = req.user.id;
@@ -56,6 +61,11 @@ exports.getUserWallets = async (req, res) => {
 };
 
 // POST /api/wallets
+/**
+ * Tạo ví mới.
+ * - Cho phép tạo ví cá nhân hoặc gán ví vào một nhóm Gia đình (nếu user có quyền).
+ * - Kiểm tra trùng tên ví trong cùng một phạm vi (cá nhân hoặc gia đình).
+ */
 exports.createWallet = async (req, res) => {
     try {
         const userId = req.user.id;
@@ -95,6 +105,11 @@ exports.createWallet = async (req, res) => {
 };
 
 // PUT /api/wallets/:id
+/**
+ * Cập nhật thông tin ví.
+ * - Cho phép đổi tên, số dư khởi tạo hoặc loại tiền tệ.
+ * - Kiểm tra quyền sở hữu/quyền truy cập trước khi thực hiện.
+ */
 exports.updateWallet = async (req, res) => {
     try {
         const { id } = req.params;
@@ -139,6 +154,10 @@ exports.updateWallet = async (req, res) => {
 };
 
 // DELETE /api/wallets/:id
+/**
+ * Xóa ví.
+ * - Ràng buộc: Không cho phép xóa nếu ví đã có các giao dịch phát sinh để đảm bảo toàn vẹn dữ liệu.
+ */
 exports.deleteWallet = async (req, res) => {
     try {
         const { id } = req.params;

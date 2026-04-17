@@ -2,6 +2,9 @@ const { Category } = require('../models');
 const { success, notFound, serverError, created } = require('../utils/responseHelper');
 
 // GET /api/categories
+/**
+ * Lấy danh sách tất cả các danh mục thu và chi hiện có trong hệ thống.
+ */
 exports.getCategories = async (req, res) => {
     try {
         const categories = await Category.findAll({
@@ -15,6 +18,10 @@ exports.getCategories = async (req, res) => {
 };
 
 // POST /api/categories
+/**
+ * Tạo danh mục mới.
+ * - Hỗ trợ thiết lập icon và phân loại danh mục (INCOME/EXPENSE).
+ */
 exports.createCategory = async (req, res) => {
     try {
         const { name, type, parent_id, icon } = req.body;
@@ -34,6 +41,9 @@ exports.createCategory = async (req, res) => {
 };
 
 // PUT /api/categories/:id
+/**
+ * Cập nhật thông tin danh mục (tên, icon, loại).
+ */
 exports.updateCategory = async (req, res) => {
     try {
         const { id } = req.params;
@@ -56,6 +66,9 @@ exports.updateCategory = async (req, res) => {
 };
 
 // DELETE /api/categories/:id
+/**
+ * Xóa danh mục khỏi hệ thống.
+ */
 exports.deleteCategory = async (req, res) => {
     try {
         const { id } = req.params;
