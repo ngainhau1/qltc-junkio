@@ -80,7 +80,7 @@ export function AdminDashboard() {
         }
     }, [activeTab, logPage, logAction]) // eslint-disable-line react-hooks/exhaustive-deps
 
-    const fetchLogs = async () => {
+    async function fetchLogs() {
         try {
             const { data } = await api.get(`/admin/logs?page=${logPage}&limit=20&action=${logAction}`)
             if (logPage === 1) {
@@ -94,7 +94,7 @@ export function AdminDashboard() {
         }
     }
 
-    const fetchAnalytics = async () => {
+    async function fetchAnalytics() {
         try {
             const { data } = await api.get("/admin/analytics")
             setAnalytics(data)
@@ -103,7 +103,7 @@ export function AdminDashboard() {
         }
     }
 
-    const fetchFinancialOverview = async () => {
+    async function fetchFinancialOverview() {
         try {
             const { data } = await api.get("/admin/financial-overview")
             setFinancial(data)
@@ -112,7 +112,7 @@ export function AdminDashboard() {
         }
     }
 
-    const fetchUsers = async () => {
+    async function fetchUsers() {
         try {
             setLoading(true)
             const { data } = await api.get(`/admin/users?page=${page}&limit=10&search=${search}&role=${roleFilter}&status=${statusFilter}`)
