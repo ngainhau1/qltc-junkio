@@ -364,17 +364,17 @@
             "settleUp": "(Settle Up)",
             "splitMembers": "(Chia cho {{count}} người)",
             "splitEven": "(Chia đều cho {{count}} người)",
-            "optimizeBtn": "Tối Ưu Hóa Nợ (Thuật Toán Splitwise)"
+            "optimizeBtn": "Tối Ưu Chi Tiêu Chung"
         },
         "settlement": {
-            "title": "Thanh Toán Tối Ưu",
+            "title": "Tối Ưu Chi Tiêu Chung",
             "desc": "Ai cần phải trả cho ai để cân bằng.",
             "emptyTitle": "Không có nợ",
             "emptyDescZero": "Cần có giao dịch để chia tiền.",
             "emptyDescHasTx": "Các khoản nợ đã được cân bằng.",
             "debtor": "Người nợ",
             "creditor": "Chủ nợ",
-            "payBtn": "Trả Nợ",
+            "payBtn": "Trả",
             "algorithmNote": "Giao dịch được giảm thiểu bằng Thuật Toán Tham Lam (Greedy)."
         },
         "modals": {

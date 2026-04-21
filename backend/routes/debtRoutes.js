@@ -158,6 +158,10 @@ router.put('/:shareId/reject', auth, validateShareParam, debtController.rejectSh
  *                 type: string
  *                 format: uuid
  *                 description: UUID người nhận thanh toán
+ *               from_user_id:
+ *                 type: string
+ *                 format: uuid
+ *                 description: Required with family_id; debtor being settled by the family owner
  *               amount:
  *                 type: number
  *                 example: 250000
@@ -170,11 +174,17 @@ router.put('/:shareId/reject', auth, validateShareParam, debtController.rejectSh
  *                 type: string
  *                 format: uuid
  *                 description: UUID ví người nhận
+ *               family_id:
+ *                 type: string
+ *                 format: uuid
+ *                 description: Family id for owner-managed optimized settlements
  *           example:
  *             to_user_id: "u-receiver-1234-..."
+ *             from_user_id: "u-debtor-1234-..."
  *             amount: 250000
  *             from_wallet_id: "w-my-wallet-..."
  *             to_wallet_id: "w-their-wallet-..."
+ *             family_id: "family-1234-..."
  *     responses:
  *       200:
  *         description: Tất toán nợ thành công

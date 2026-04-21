@@ -74,6 +74,10 @@ const ERROR_MAP = {
     FAMILY_DETAIL_FAILED: 'errors.families.detailFailed',
     FAMILY_INVITE_FAILED: 'errors.families.inviteFailed',
     FAMILY_REMOVE_FAILED: 'errors.families.removeFailed',
+    FAMILY_NOT_FOUND: 'errors.families.detailFailed',
+    FORBIDDEN_FAMILY_SETTLEMENT: 'errors.families.forbidden',
+    NO_PAYABLE_DEBT_FOUND: 'family.toasts.optimizationZero',
+    SETTLE_DEBT_FAILED: 'errors.transactions.transferFailed',
 
     // ── Recurring ──
     RECURRING_LOAD_FAILED: 'errors.recurring.loadFailed',

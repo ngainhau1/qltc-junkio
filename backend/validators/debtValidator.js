@@ -19,6 +19,11 @@ exports.validateSettle = [
     body('amount').isFloat({ gt: 0 }).withMessage('Số tiền phải > 0').toFloat(),
     body('from_wallet_id').isUUID().withMessage('from_wallet_id phải là UUID'),
     body('to_wallet_id').isUUID().withMessage('to_wallet_id phải là UUID'),
+    body('from_user_id')
+        .if(body('family_id').exists({ checkFalsy: true }))
+        .isUUID()
+        .withMessage('from_user_id phai la UUID'),
+    body('family_id').optional({ nullable: true }).isUUID().withMessage('family_id phai la UUID'),
     handleValidation(['body'])
 ];
 

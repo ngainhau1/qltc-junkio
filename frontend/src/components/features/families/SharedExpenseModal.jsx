@@ -11,6 +11,7 @@ import { refreshFinanceData } from "@/features/finance/refreshFinanceData"
 import { toast } from "sonner"
 import { useTranslation } from "react-i18next"
 import { formatCurrency, generateId } from "@/lib/utils"
+import { resolveError } from "@/utils/authErrors"
 
 export function SharedExpenseModal({ isOpen, onClose, family, familyWalletId }) {
     const { t } = useTranslation()
@@ -41,13 +42,17 @@ export function SharedExpenseModal({ isOpen, onClose, family, familyWalletId }) 
             const memberCount = family?.members.length || 1;
             const splitAmount = totalAmount / memberCount;
 
-            const shares = family.members.map(m => ({
-                id: generateId('s'),
-                user_id: m.id,
-                amount: splitAmount,
-                status: m.id === values.paidBy ? 'PAID' : 'UNPAID',
-                approval_status: m.id === values.paidBy ? 'APPROVED' : 'PENDING'
-            }));
+            const shares = family.members.map(m => {
+                const isPayer = String(m.id) === String(values.paidBy);
+
+                return {
+                    id: generateId('s'),
+                    user_id: m.id,
+                    amount: splitAmount,
+                    status: isPayer ? 'PAID' : 'UNPAID',
+                    approval_status: 'APPROVED'
+                };
+            });
 
             const newTx = {
                 amount: totalAmount,
@@ -70,7 +75,7 @@ export function SharedExpenseModal({ isOpen, onClose, family, familyWalletId }) 
                 onClose();
             } catch (error) {
                 console.error("Lỗi tạo chi tiêu chung:", error);
-                toast.error(error);
+                toast.error(resolveError(error, t, 'errors.transactions.createFailed'));
             }
         }
     });

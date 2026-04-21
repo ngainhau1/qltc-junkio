@@ -18,6 +18,12 @@ const mockWallet = mockSequelize.define('Wallet', {
     balance: { type: DataTypes.DECIMAL(15, 2), defaultValue: 0 }
 });
 
+const mockFamily = mockSequelize.define('Family', {
+    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    name: { type: DataTypes.STRING },
+    owner_id: { type: DataTypes.UUID }
+});
+
 const mockTransaction = mockSequelize.define('Transaction', {
     id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
     user_id: { type: DataTypes.UUID },
@@ -54,6 +60,7 @@ mockTransaction.belongsTo(mockWallet, { foreignKey: 'wallet_id' });
 jest.mock('../models/index', () => ({
     sequelize: mockSequelize, // Also mocking the literal sequelize instance
     User: mockUser,
+    Family: mockFamily,
     Wallet: mockWallet,
     Transaction: mockTransaction,
     TransactionShare: mockTransactionShare,
@@ -63,6 +70,7 @@ jest.mock('../models/index', () => ({
 jest.mock('../models', () => ({
     sequelize: mockSequelize,
     User: mockUser,
+    Family: mockFamily,
     Wallet: mockWallet,
     Transaction: mockTransaction,
     TransactionShare: mockTransactionShare,
@@ -103,6 +111,7 @@ describe('Debt API Endpoints', () => {
 
         await mockUser.create({ id: creditorId, name: 'Creditor' });
         await mockUser.create({ id: debtorId, name: 'Debtor' });
+        await mockFamily.create({ id: familyId, name: 'Main Family', owner_id: creditorId });
 
         const wC = await mockWallet.create({ name: 'W_C', family_id: familyId, balance: 10000 });
         walletCreditorId = wC.id;
@@ -285,6 +294,46 @@ describe('Debt API Endpoints', () => {
             expect(res.body.data.suggestions[0].to.id).toBe(creditorCId);
             expect(res.body.data.suggestions[0].amount).toBe(500);
         });
+
+        it('includes legacy pending shares unless they were rejected', async () => {
+            const crypto = require('crypto');
+            const legacyFamilyId = crypto.randomUUID();
+            const legacyCreditorId = crypto.randomUUID();
+            const legacyDebtorId = crypto.randomUUID();
+
+            await mockUser.bulkCreate([
+                { id: legacyCreditorId, name: 'Legacy Creditor' },
+                { id: legacyDebtorId, name: 'Legacy Debtor' }
+            ]);
+
+            const legacyWallet = await mockWallet.create({
+                name: 'Legacy Wallet',
+                family_id: legacyFamilyId,
+                balance: 1000
+            });
+            const legacyTx = await mockTransaction.create({
+                user_id: legacyCreditorId,
+                wallet_id: legacyWallet.id,
+                amount: 200,
+                type: 'EXPENSE',
+                description: 'Legacy pending dinner'
+            });
+
+            await mockTransactionShare.create({
+                transaction_id: legacyTx.id,
+                user_id: legacyDebtorId,
+                amount: 200,
+                status: 'UNPAID',
+                approval_status: 'PENDING'
+            });
+
+            const res = await request(app).get(`/api/debts/simplified/${legacyFamilyId}`);
+
+            expect(res.statusCode).toEqual(200);
+            expect(res.body.data.originalTransactions).toBe(1);
+            expect(res.body.data.suggestions[0].from.id).toBe(legacyDebtorId);
+            expect(res.body.data.suggestions[0].to.id).toBe(legacyCreditorId);
+        });
     });
 
     describe('POST /api/debts/settle', () => {
@@ -298,7 +347,7 @@ describe('Debt API Endpoints', () => {
             });
 
             expect(res.statusCode).toEqual(200);
-            expect(res.body.message).toMatch(/Thanh toán bù trừ thành công/);
+            expect(res.body.message).toBe('DEBT_SETTLED');
 
             // Verify wallet balances updated
             const vDebtor = await mockWallet.findByPk(walletDebtorId);
@@ -314,6 +363,206 @@ describe('Debt API Endpoints', () => {
             // Verify transactions generated
             const rx = await mockTransaction.findAll();
             expect(rx.length).toBeGreaterThan(1); // 1 original + 2 transfers
+        });
+
+        it('should settle full direct debt once and reject duplicate settlement', async () => {
+            const crypto = require('crypto');
+            const directFamilyId = crypto.randomUUID();
+            const directCreditorId = crypto.randomUUID();
+            const directDebtorId = crypto.randomUUID();
+
+            await mockUser.bulkCreate([
+                { id: directCreditorId, name: 'Direct Creditor' },
+                { id: directDebtorId, name: 'Direct Debtor' }
+            ]);
+
+            const directCreditorWallet = await mockWallet.create({
+                name: 'Direct Creditor Wallet',
+                family_id: directFamilyId,
+                balance: 1000
+            });
+            const directDebtorWallet = await mockWallet.create({
+                name: 'Direct Debtor Wallet',
+                family_id: directFamilyId,
+                balance: 1000
+            });
+            const directTx = await mockTransaction.create({
+                user_id: directCreditorId,
+                wallet_id: directCreditorWallet.id,
+                amount: 300,
+                type: 'EXPENSE',
+                description: 'Direct dinner'
+            });
+            const directShare = await mockTransactionShare.create({
+                transaction_id: directTx.id,
+                user_id: directDebtorId,
+                amount: 300,
+                status: 'UNPAID',
+                approval_status: 'APPROVED'
+            });
+
+            mockUserId = directDebtorId;
+            const firstRes = await request(app).post('/api/debts/settle').send({
+                to_user_id: directCreditorId,
+                amount: 300,
+                from_wallet_id: directDebtorWallet.id,
+                to_wallet_id: directCreditorWallet.id
+            });
+
+            expect(firstRes.statusCode).toEqual(200);
+            const settledShare = await mockTransactionShare.findByPk(directShare.id);
+            expect(settledShare.status).toBe('PAID');
+
+            const transactionCountAfterFirstSettle = await mockTransaction.count();
+            const secondRes = await request(app).post('/api/debts/settle').send({
+                to_user_id: directCreditorId,
+                amount: 300,
+                from_wallet_id: directDebtorWallet.id,
+                to_wallet_id: directCreditorWallet.id
+            });
+
+            expect(secondRes.statusCode).toEqual(409);
+            expect(secondRes.body.message).toBe('NO_PAYABLE_DEBT_FOUND');
+            expect(await mockTransaction.count()).toBe(transactionCountAfterFirstSettle);
+        });
+
+        it('should settle optimized chained debt in a family and mark source shares paid', async () => {
+            const crypto = require('crypto');
+            const chainFamilyId = crypto.randomUUID();
+            const familyOwnerId = crypto.randomUUID();
+            const debtorAId = crypto.randomUUID();
+            const middleBId = crypto.randomUUID();
+            const creditorCId = crypto.randomUUID();
+
+            await mockUser.bulkCreate([
+                { id: familyOwnerId, name: 'Chain Owner' },
+                { id: debtorAId, name: 'Chain A' },
+                { id: middleBId, name: 'Chain B' },
+                { id: creditorCId, name: 'Chain C' }
+            ]);
+            await mockFamily.create({ id: chainFamilyId, name: 'Chain Family', owner_id: familyOwnerId });
+
+            const walletA = await mockWallet.create({
+                name: 'Wallet A',
+                family_id: chainFamilyId,
+                balance: 1000
+            });
+            const walletB = await mockWallet.create({
+                name: 'Wallet B Chain',
+                family_id: chainFamilyId,
+                balance: 1000
+            });
+            const walletC = await mockWallet.create({
+                name: 'Wallet C',
+                family_id: chainFamilyId,
+                balance: 1000
+            });
+
+            const transactionB = await mockTransaction.create({
+                user_id: middleBId,
+                wallet_id: walletB.id,
+                amount: 500,
+                type: 'EXPENSE',
+                description: 'B paid for A'
+            });
+            const transactionC = await mockTransaction.create({
+                user_id: creditorCId,
+                wallet_id: walletC.id,
+                amount: 500,
+                type: 'EXPENSE',
+                description: 'C paid for B'
+            });
+
+            const shareAtoB = await mockTransactionShare.create({
+                transaction_id: transactionB.id,
+                user_id: debtorAId,
+                amount: 500,
+                status: 'UNPAID',
+                approval_status: 'APPROVED'
+            });
+            const shareBtoC = await mockTransactionShare.create({
+                transaction_id: transactionC.id,
+                user_id: middleBId,
+                amount: 500,
+                status: 'UNPAID',
+                approval_status: 'APPROVED'
+            });
+
+            mockUserId = familyOwnerId;
+            const res = await request(app).post('/api/debts/settle').send({
+                from_user_id: debtorAId,
+                to_user_id: creditorCId,
+                amount: 500,
+                from_wallet_id: walletA.id,
+                to_wallet_id: walletC.id,
+                family_id: chainFamilyId
+            });
+
+            expect(res.statusCode).toEqual(200);
+
+            const settledAtoB = await mockTransactionShare.findByPk(shareAtoB.id);
+            const settledBtoC = await mockTransactionShare.findByPk(shareBtoC.id);
+            expect(settledAtoB.status).toBe('PAID');
+            expect(settledBtoC.status).toBe('PAID');
+
+            const simplifiedRes = await request(app).get(`/api/debts/simplified/${chainFamilyId}`);
+            expect(simplifiedRes.body.data.simplifiedTransactions).toBe(0);
+        });
+
+        it('should reject family optimized settlement from non-owner users', async () => {
+            const crypto = require('crypto');
+            const ownerId = crypto.randomUUID();
+            const nonOwnerId = crypto.randomUUID();
+            const familyDebtorId = crypto.randomUUID();
+            const familyCreditorId = crypto.randomUUID();
+            const protectedFamilyId = crypto.randomUUID();
+
+            await mockUser.bulkCreate([
+                { id: ownerId, name: 'Protected Owner' },
+                { id: nonOwnerId, name: 'Protected Member' },
+                { id: familyDebtorId, name: 'Protected Debtor' },
+                { id: familyCreditorId, name: 'Protected Creditor' }
+            ]);
+            await mockFamily.create({
+                id: protectedFamilyId,
+                name: 'Protected Family',
+                owner_id: ownerId
+            });
+
+            const protectedWallet = await mockWallet.create({
+                name: 'Protected Wallet',
+                family_id: protectedFamilyId,
+                balance: 1000
+            });
+            const protectedTx = await mockTransaction.create({
+                user_id: familyCreditorId,
+                wallet_id: protectedWallet.id,
+                amount: 250,
+                type: 'EXPENSE',
+                description: 'Protected dinner'
+            });
+            await mockTransactionShare.create({
+                transaction_id: protectedTx.id,
+                user_id: familyDebtorId,
+                amount: 250,
+                status: 'UNPAID',
+                approval_status: 'APPROVED'
+            });
+
+            const transactionCountBefore = await mockTransaction.count();
+            mockUserId = nonOwnerId;
+            const res = await request(app).post('/api/debts/settle').send({
+                from_user_id: familyDebtorId,
+                to_user_id: familyCreditorId,
+                amount: 250,
+                from_wallet_id: protectedWallet.id,
+                to_wallet_id: protectedWallet.id,
+                family_id: protectedFamilyId
+            });
+
+            expect(res.statusCode).toEqual(403);
+            expect(res.body.message).toBe('FORBIDDEN_FAMILY_SETTLEMENT');
+            expect(await mockTransaction.count()).toBe(transactionCountBefore);
         });
     });
 });

@@ -216,7 +216,7 @@ exports.createTransaction = async (req, res) => {
                 user_id: share.user_id,
                 amount: share.amount,
                 status: share.status || 'UNPAID',
-                approval_status: share.approval_status || 'PENDING'
+                approval_status: share.approval_status || 'APPROVED'
             }));
             await sequelize.models.TransactionShare.bulkCreate(sharesToCreate, { transaction: t });
         }

@@ -26,8 +26,8 @@ export function simplifyDebts(transactions) {
                     return;
                 }
 
-                // Backward compatibility: If approval_status is missing (old mock data), treat it as APPROVED
-                if (share.approval_status === 'APPROVED' || share.approval_status === undefined) {
+                // Backward compatibility: legacy PENDING shares still count unless explicitly rejected.
+                if (share.approval_status !== 'REJECTED') {
                     // Nếu đã APPROVED, người bị gán nợ phải gánh
                     balances[String(share.user_id)] = (balances[String(share.user_id)] || 0) - shareAmount;
                 } else {

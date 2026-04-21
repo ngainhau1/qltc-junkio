@@ -1,6 +1,91 @@
-const { TransactionShare, Transaction, Wallet, User, sequelize, Notification } = require('../models');
+const { Op } = require('sequelize');
+const { TransactionShare, Transaction, Wallet, User, Family, sequelize, Notification } = require('../models');
 const { success, error: sendError, notFound, serverError } = require('../utils/responseHelper');
 const { serializeNotification } = require('../utils/notificationPresenter');
+
+const SETTLEMENT_EPSILON = 0.01;
+
+const toMoney = (value) => Math.round((parseFloat(value) || 0) * 100) / 100;
+
+const getShareDebt = (share) => ({
+    share,
+    debtor: share.user_id,
+    creditor: share.Transaction.user_id,
+    amount: toMoney(share.amount)
+});
+
+const findSettlementPath = (debts, fromUserId, toUserId) => {
+    const queue = [{ userId: fromUserId, path: [] }];
+    const visited = new Set([fromUserId]);
+
+    while (queue.length > 0) {
+        const current = queue.shift();
+        const outgoing = debts.filter((debt) => (
+            debt.debtor === current.userId &&
+            debt.amount > SETTLEMENT_EPSILON
+        ));
+
+        for (const debt of outgoing) {
+            const path = [...current.path, debt];
+
+            if (debt.creditor === toUserId) {
+                return path;
+            }
+
+            if (!visited.has(debt.creditor)) {
+                visited.add(debt.creditor);
+                queue.push({ userId: debt.creditor, path });
+            }
+        }
+    }
+
+    return null;
+};
+
+const buildPathSettlementPlan = (shares, fromUserId, toUserId, amount) => {
+    const debts = shares.map(getShareDebt);
+    const reductions = new Map();
+    let remainingAmount = toMoney(amount);
+
+    while (remainingAmount > SETTLEMENT_EPSILON) {
+        const path = findSettlementPath(debts, fromUserId, toUserId);
+
+        if (!path) {
+            return null;
+        }
+
+        const pathCapacity = Math.min(...path.map((debt) => debt.amount));
+        const settledAmount = Math.min(remainingAmount, pathCapacity);
+
+        for (const debt of path) {
+            debt.amount = toMoney(debt.amount - settledAmount);
+            reductions.set(
+                debt.share.id,
+                toMoney((reductions.get(debt.share.id) || 0) + settledAmount)
+            );
+        }
+
+        remainingAmount = toMoney(remainingAmount - settledAmount);
+    }
+
+    return reductions;
+};
+
+const applyShareReductions = async (shares, reductions, transaction) => {
+    for (const share of shares) {
+        const paidAmount = reductions.get(share.id) || 0;
+        if (paidAmount <= SETTLEMENT_EPSILON) continue;
+
+        const remainingAmount = toMoney(parseFloat(share.amount) - paidAmount);
+        if (remainingAmount <= SETTLEMENT_EPSILON) {
+            share.status = 'PAID';
+        } else {
+            share.amount = remainingAmount;
+        }
+
+        await share.save({ transaction });
+    }
+};
 
 // GET /api/debts/pending
 exports.getPendingDebts = async (req, res) => {
@@ -57,98 +142,128 @@ exports.rejectShare = async (req, res) => {
 };
 
 // POST /api/debts/settle
-// Body: { to_user_id, amount, from_wallet_id, to_wallet_id }
+// Body: { to_user_id, amount, from_wallet_id, to_wallet_id, family_id?, from_user_id? }
 exports.settleDebt = async (req, res) => {
-    const { to_user_id, amount, from_wallet_id, to_wallet_id } = req.body;
-    const from_user_id = req.user.id; // Security: LUÔN dùng user đang đăng nhập
+    const { to_user_id, amount, from_wallet_id, to_wallet_id, family_id } = req.body;
+    const from_user_id = family_id ? req.body.from_user_id : req.user.id;
+    const parsedAmount = toMoney(amount);
 
-    // Security: Validate amount
-    if (!amount || parseFloat(amount) <= 0) {
-        return sendError(res, 'Số tiền thanh toán phải lớn hơn 0', 400);
+    if (!parsedAmount || parsedAmount <= 0) {
+        return sendError(res, 'INVALID_AMOUNT', 400);
+    }
+
+    if (from_user_id === to_user_id) {
+        return sendError(res, 'INVALID_SETTLEMENT_USERS', 400);
     }
 
     const t = await sequelize.transaction();
     try {
-        // 1. Tạo Transaction TRANSFER
         const fromWallet = await Wallet.findByPk(from_wallet_id, { transaction: t });
-        let toWallet;
+        const toWallet = from_wallet_id === to_wallet_id
+            ? fromWallet
+            : await Wallet.findByPk(to_wallet_id, { transaction: t });
 
-        if (from_wallet_id === to_wallet_id) {
-            toWallet = fromWallet;
-            // No net change to balance if it's the exact same wallet conceptually
+        if (!fromWallet || !toWallet) {
+            await t.rollback();
+            return sendError(res, 'WALLET_NOT_FOUND', 404);
+        }
+
+        if (from_wallet_id !== to_wallet_id && parseFloat(fromWallet.balance) < parsedAmount) {
+            await t.rollback();
+            return sendError(res, 'INSUFFICIENT_BALANCE', 400);
+        }
+
+        if (family_id) {
+            const family = await Family.findByPk(family_id, { transaction: t });
+
+            if (!family) {
+                await t.rollback();
+                return sendError(res, 'FAMILY_NOT_FOUND', 404);
+            }
+
+            if (family.owner_id !== req.user.id) {
+                await t.rollback();
+                return sendError(res, 'FORBIDDEN_FAMILY_SETTLEMENT', 403);
+            }
+        }
+
+        const shareQuery = {
+            where: {
+                status: 'UNPAID',
+                approval_status: { [Op.ne]: 'REJECTED' }
+            },
+            include: [{
+                model: Transaction,
+                as: 'Transaction',
+                required: true
+            }],
+            transaction: t
+        };
+
+        if (family_id) {
+            shareQuery.include[0].include = [{
+                model: Wallet,
+                required: true,
+                where: { family_id }
+            }];
         } else {
-            toWallet = await Wallet.findByPk(to_wallet_id, { transaction: t });
-            if (!fromWallet || !toWallet) throw new Error('Ví không hợp lệ');
+            shareQuery.where.user_id = from_user_id;
+            shareQuery.include[0].where = { user_id: to_user_id };
+        }
 
-            fromWallet.balance = parseFloat(fromWallet.balance) - parseFloat(amount);
-            toWallet.balance = parseFloat(toWallet.balance) + parseFloat(amount);
+        const unpaidShares = await TransactionShare.findAll(shareQuery);
+        const reductions = buildPathSettlementPlan(
+            unpaidShares,
+            from_user_id,
+            to_user_id,
+            parsedAmount
+        );
+
+        if (!reductions || reductions.size === 0) {
+            await t.rollback();
+            return sendError(res, 'NO_PAYABLE_DEBT_FOUND', 409);
+        }
+
+        if (from_wallet_id !== to_wallet_id) {
+            fromWallet.balance = toMoney(parseFloat(fromWallet.balance) - parsedAmount);
+            toWallet.balance = toMoney(parseFloat(toWallet.balance) + parsedAmount);
 
             await fromWallet.save({ transaction: t });
             await toWallet.save({ transaction: t });
         }
 
-        const transferTxOut = await Transaction.create({
-            amount: amount,
+        await Transaction.create({
+            amount: parsedAmount,
             date: new Date(),
-            description: `Trả nợ cho user ${to_user_id}`,
+            description: `Tra no cho user ${to_user_id}`,
             type: 'TRANSFER_OUT',
             wallet_id: from_wallet_id,
-            user_id: from_user_id
+            user_id: from_user_id,
+            family_id: family_id || fromWallet.family_id || null
         }, { transaction: t });
 
-        const transferTxIn = await Transaction.create({
-            amount: amount,
+        await Transaction.create({
+            amount: parsedAmount,
             date: new Date(),
-            description: `Nhận tiền trả nợ từ ${from_user_id}`,
+            description: `Nhan tien tra no tu ${from_user_id}`,
             type: 'TRANSFER_IN',
             wallet_id: to_wallet_id,
-            user_id: to_user_id
+            user_id: to_user_id,
+            family_id: family_id || toWallet.family_id || null
         }, { transaction: t });
 
-        // 2. Tìm tất cả các TransactionShare đang nợ giữa 2 người và gạch nợ (đổi thành PAID)
-        // Tìm các khoản mà from_user_id nợ to_user_id (đã APPROVED)
-        const unpaidShares = await TransactionShare.findAll({
-            where: {
-                user_id: from_user_id,
-                status: 'UNPAID',
-                approval_status: 'APPROVED'
-            },
-            include: [{
-                model: Transaction,
-                as: 'Transaction',
-                where: { user_id: to_user_id }
-            }],
-            transaction: t
-        });
-
-        let remainingAmountToSettle = parseFloat(amount);
-
-        for (let share of unpaidShares) {
-            if (remainingAmountToSettle <= 0) break;
-            const shareAmount = parseFloat(share.amount);
-
-            // Xóa nợ toàn phần hoặc 1 phần (để đơn giản ta mark PAID nếu trả đủ hoặc dôi ra)
-            if (remainingAmountToSettle >= shareAmount) {
-                share.status = 'PAID';
-                remainingAmountToSettle -= shareAmount;
-            } else {
-                // Trả một phần nợ
-                share.amount = shareAmount - remainingAmountToSettle;
-                remainingAmountToSettle = 0;
-            }
-            await share.save({ transaction: t });
-        }
+        await applyShareReductions(unpaidShares, reductions, t);
 
         await t.commit();
 
         try {
             if (Notification) {
                 const fromUser = await User.findByPk(from_user_id);
-                const fromUserName = fromUser ? fromUser.name : 'Người dùng không xác định';
+                const fromUserName = fromUser ? fromUser.name : 'Nguoi dung khong xac dinh';
 
                 const payload = JSON.stringify({
                     key: 'notifications.debtSettledMsg',
-                    params: { amount: amount.toString(), from: fromUserName }
+                    params: { amount: parsedAmount.toString(), from: fromUserName }
                 });
 
                 const notif = await Notification.create({
@@ -164,12 +279,14 @@ exports.settleDebt = async (req, res) => {
             console.error('Socket emit error:', err);
         }
 
-        success(res, null, 'Thanh toán bù trừ thành công');
+        success(res, null, 'DEBT_SETTLED');
 
     } catch (err) {
-        await t.rollback();
+        if (!t.finished) {
+            await t.rollback();
+        }
         console.error(err);
-        serverError(res, 'Thanh toán nợ thất bại: ' + err.message);
+        serverError(res, 'SETTLE_DEBT_FAILED');
     }
 };
 
@@ -181,7 +298,10 @@ exports.getSimplifiedDebts = async (req, res) => {
 
         // 1. Lấy tất cả TransactionShare UNPAID + APPROVED trong family
         const shares = await TransactionShare.findAll({
-            where: { status: 'UNPAID', approval_status: 'APPROVED' },
+            where: {
+                status: 'UNPAID',
+                approval_status: { [Op.ne]: 'REJECTED' }
+            },
             include: [{
                 model: Transaction,
                 as: 'Transaction',
