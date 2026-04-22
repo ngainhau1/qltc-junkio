@@ -1,84 +1,70 @@
 const { Category } = require('../models');
 const { success, notFound, serverError, created } = require('../utils/responseHelper');
 
-// GET /api/categories
-/**
- * Lấy danh sách tất cả các danh mục thu và chi hiện có trong hệ thống.
- */
 exports.getCategories = async (req, res) => {
     try {
-        const categories = await Category.findAll({
-            // could include parent/child relation if needed
-        });
-        success(res, categories, 'Lấy danh sách danh mục thành công');
-    } catch (err) {
-        console.error('Error fetching categories:', err);
-        serverError(res, 'Lỗi Server: Không thể tải danh mục');
+        const categories = await Category.findAll();
+        return success(res, categories, 'CATEGORY_LIST_FETCH_SUCCESS');
+    } catch (error) {
+        console.error('Error fetching categories:', error);
+        return serverError(res, 'CATEGORY_LOAD_FAILED');
     }
 };
 
-// POST /api/categories
-/**
- * Tạo danh mục mới.
- * - Hỗ trợ thiết lập icon và phân loại danh mục (INCOME/EXPENSE).
- */
 exports.createCategory = async (req, res) => {
     try {
         const { name, type, parent_id, icon } = req.body;
 
         const newCategory = await Category.create({
             name,
-            type, // 'INCOME', 'EXPENSE'
+            type,
             parent_id: parent_id || null,
-            icon: icon || 'Circle'
+            icon: icon || 'Circle',
         });
 
-        created(res, newCategory, 'Tạo danh mục mới thành công');
-    } catch (err) {
-        console.error('Error creating category:', err);
-        serverError(res, 'Lỗi Server: Không thể tạo danh mục');
+        return created(res, newCategory, 'CATEGORY_CREATE_SUCCESS');
+    } catch (error) {
+        console.error('Error creating category:', error);
+        return serverError(res, 'CATEGORY_CREATE_FAILED');
     }
 };
 
-// PUT /api/categories/:id
-/**
- * Cập nhật thông tin danh mục (tên, icon, loại).
- */
 exports.updateCategory = async (req, res) => {
     try {
         const { id } = req.params;
         const { name, type, icon } = req.body;
 
         const category = await Category.findByPk(id);
-        if (!category) return notFound(res, 'Danh mục không tồn tại');
+        if (!category) {
+            return notFound(res, 'CATEGORY_NOT_FOUND');
+        }
 
         await category.update({
             name: name !== undefined ? name : category.name,
             type: type !== undefined ? type : category.type,
-            icon: icon !== undefined ? icon : category.icon
+            icon: icon !== undefined ? icon : category.icon,
         });
 
-        success(res, category, 'Cập nhật danh mục thành công');
-    } catch (err) {
-        console.error('Error updating category:', err);
-        serverError(res, 'Lỗi Server: Không thể cập nhật danh mục');
+        return success(res, category, 'CATEGORY_UPDATE_SUCCESS');
+    } catch (error) {
+        console.error('Error updating category:', error);
+        return serverError(res, 'CATEGORY_UPDATE_FAILED');
     }
 };
 
-// DELETE /api/categories/:id
-/**
- * Xóa danh mục khỏi hệ thống.
- */
 exports.deleteCategory = async (req, res) => {
     try {
         const { id } = req.params;
         const category = await Category.findByPk(id);
-        if (!category) return notFound(res, 'Danh mục không tồn tại');
+
+        if (!category) {
+            return notFound(res, 'CATEGORY_NOT_FOUND');
+        }
 
         await category.destroy();
-        success(res, null, 'Đã xóa danh mục thành công');
-    } catch (err) {
-        console.error('Error deleting category:', err);
-        serverError(res, 'Lỗi Server: Không thể xóa danh mục');
+        return success(res, null, 'CATEGORY_DELETE_SUCCESS');
+    } catch (error) {
+        console.error('Error deleting category:', error);
+        return serverError(res, 'CATEGORY_DELETE_FAILED');
     }
 };

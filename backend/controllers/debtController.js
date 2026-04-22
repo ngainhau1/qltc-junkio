@@ -295,7 +295,7 @@ exports.settleDebt = async (req, res) => {
         try {
             if (Notification) {
                 const fromUser = await User.findByPk(payerUserId);
-                const fromUserName = fromUser ? fromUser.name : 'Nguoi dung khong xac dinh';
+                const fromUserName = fromUser ? fromUser.name : payerUserId;
 
                 const payload = JSON.stringify({
                     key: 'notifications.debtSettledMsg',
@@ -378,8 +378,8 @@ exports.getSimplifiedDebts = async (req, res) => {
         const userMap = Object.fromEntries(users.map(u => [u.id, { id: u.id, name: u.name, avatar: u.avatar }]));
 
         const result = suggestions.map(s => ({
-            from: userMap[s.from] || { id: s.from, name: 'Unknown' },
-            to: userMap[s.to] || { id: s.to, name: 'Unknown' },
+            from: userMap[s.from] || { id: s.from, name: s.from },
+            to: userMap[s.to] || { id: s.to, name: s.to },
             amount: s.amount
         }));
 

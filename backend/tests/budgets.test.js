@@ -5,7 +5,7 @@ const { Sequelize, DataTypes } = require('sequelize');
 jest.mock('uuid', () => {
     const crypto = require('crypto');
     return {
-        v4: () => crypto.randomUUID()
+        v4: () => crypto.randomUUID(),
     };
 });
 
@@ -19,12 +19,12 @@ const mockSequelize = new Sequelize('sqlite::memory:', { logging: false });
 const mockCategory = mockSequelize.define('Category', {
     id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
     name: { type: DataTypes.STRING },
-    icon: { type: DataTypes.STRING }
+    icon: { type: DataTypes.STRING },
 });
 
 const mockFamilyMember = mockSequelize.define('FamilyMember', {
     user_id: { type: DataTypes.STRING },
-    family_id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4 }
+    family_id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4 },
 });
 
 const mockBudget = mockSequelize.define('Budget', {
@@ -34,7 +34,7 @@ const mockBudget = mockSequelize.define('Budget', {
     end_date: { type: DataTypes.DATEONLY },
     category_id: { type: DataTypes.UUID },
     family_id: { type: DataTypes.UUID, allowNull: true },
-    user_id: { type: DataTypes.STRING, allowNull: true }
+    user_id: { type: DataTypes.STRING, allowNull: true },
 });
 
 mockBudget.belongsTo(mockCategory, { foreignKey: 'category_id' });
@@ -43,7 +43,7 @@ jest.mock('../models', () => ({
     sequelize: mockSequelize,
     Budget: mockBudget,
     Category: mockCategory,
-    FamilyMember: mockFamilyMember
+    FamilyMember: mockFamilyMember,
 }));
 
 const budgetRoutes = require('../routes/budgetRoutes');
@@ -73,7 +73,7 @@ describe('Budget API Endpoints', () => {
             start_date: '2025-01-01',
             end_date: '2025-01-31',
             category_id: testCategory.id,
-            user_id: 'user-1'
+            user_id: 'user-1',
         });
         personalBudgetId = personalBudget.id;
 
@@ -82,7 +82,7 @@ describe('Budget API Endpoints', () => {
             start_date: '2025-02-01',
             end_date: '2025-02-28',
             category_id: testCategory.id,
-            family_id: accessibleFamilyId
+            family_id: accessibleFamilyId,
         });
         familyBudgetId = familyBudget.id;
 
@@ -91,7 +91,7 @@ describe('Budget API Endpoints', () => {
             start_date: '2025-03-01',
             end_date: '2025-03-31',
             category_id: testCategory.id,
-            family_id: inaccessibleFamilyId
+            family_id: inaccessibleFamilyId,
         });
 
         await mockBudget.create({
@@ -99,7 +99,7 @@ describe('Budget API Endpoints', () => {
             start_date: '2025-04-01',
             end_date: '2025-04-30',
             category_id: testCategory.id,
-            user_id: 'user-2'
+            user_id: 'user-2',
         });
     });
 
@@ -123,7 +123,7 @@ describe('Budget API Endpoints', () => {
                 amount_limit: 2000,
                 start_date: '2025-05-01',
                 end_date: '2025-05-31',
-                category_id: testCategory.id
+                category_id: testCategory.id,
             });
 
             expect(res.statusCode).toEqual(201);
@@ -137,7 +137,7 @@ describe('Budget API Endpoints', () => {
                 start_date: '2025-06-01',
                 end_date: '2025-06-30',
                 category_id: testCategory.id,
-                family_id: accessibleFamilyId
+                family_id: accessibleFamilyId,
             });
 
             expect(res.statusCode).toEqual(201);
@@ -151,7 +151,7 @@ describe('Budget API Endpoints', () => {
                 start_date: '2025-06-01',
                 end_date: '2025-06-30',
                 category_id: testCategory.id,
-                family_id: inaccessibleFamilyId
+                family_id: inaccessibleFamilyId,
             });
 
             expect(res.statusCode).toEqual(403);
@@ -163,17 +163,24 @@ describe('Budget API Endpoints', () => {
                 amount_limit: -50,
                 start_date: '2025-02-01',
                 end_date: '2025-02-28',
-                category_id: testCategory.id
+                category_id: testCategory.id,
             });
+
             expect(res.statusCode).toEqual(422);
-            expect(res.body.errors[0].msg).toMatch(/amount_limit phai > 0/);
+            expect(res.body.message).toEqual('VALIDATION_FAILED');
+            expect(res.body.errors[0]).toEqual(
+                expect.objectContaining({
+                    field: 'amount_limit',
+                    code: 'VALIDATION_AMOUNT_LIMIT_MUST_BE_POSITIVE',
+                })
+            );
         });
     });
 
     describe('PUT /api/budgets/:id', () => {
         it('updates an accessible personal budget', async () => {
             const res = await request(app).put(`/api/budgets/${personalBudgetId}`).send({
-                amount_limit: 3600
+                amount_limit: 3600,
             });
 
             expect(res.statusCode).toEqual(200);
@@ -183,7 +190,7 @@ describe('Budget API Endpoints', () => {
 
         it('can move a personal budget into an accessible family scope', async () => {
             const res = await request(app).put(`/api/budgets/${personalBudgetId}`).send({
-                family_id: accessibleFamilyId
+                family_id: accessibleFamilyId,
             });
 
             expect(res.statusCode).toEqual(200);
@@ -194,7 +201,7 @@ describe('Budget API Endpoints', () => {
         it('returns 404 for an inaccessible budget', async () => {
             const alienBudget = await mockBudget.findOne({ where: { family_id: inaccessibleFamilyId } });
             const res = await request(app).put(`/api/budgets/${alienBudget.id}`).send({
-                amount_limit: 999
+                amount_limit: 999,
             });
 
             expect(res.statusCode).toEqual(404);

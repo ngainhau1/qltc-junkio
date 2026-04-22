@@ -5,7 +5,7 @@ const { Sequelize, DataTypes } = require('sequelize');
 jest.mock('uuid', () => {
     const crypto = require('crypto');
     return {
-        v4: () => crypto.randomUUID()
+        v4: () => crypto.randomUUID(),
     };
 });
 
@@ -16,28 +16,32 @@ jest.mock('../middleware/authMiddleware', () => (req, res, next) => {
 
 const mockSequelize = new Sequelize('sqlite::memory:', { logging: false });
 
-const mockGoal = mockSequelize.define('Goal', {
-    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
-    name: { type: DataTypes.STRING },
-    targetAmount: { type: DataTypes.DECIMAL(15, 2) },
-    currentAmount: { type: DataTypes.DECIMAL(15, 2), defaultValue: 0 },
-    deadline: { type: DataTypes.DATE },
-    colorCode: { type: DataTypes.STRING },
-    imageUrl: { type: DataTypes.STRING },
-    status: { type: DataTypes.STRING, defaultValue: 'IN_PROGRESS' },
-    user_id: { type: DataTypes.STRING },
-    created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
-    updated_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW }
-}, {
-    timestamps: false
-});
+const mockGoal = mockSequelize.define(
+    'Goal',
+    {
+        id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+        name: { type: DataTypes.STRING },
+        targetAmount: { type: DataTypes.DECIMAL(15, 2) },
+        currentAmount: { type: DataTypes.DECIMAL(15, 2), defaultValue: 0 },
+        deadline: { type: DataTypes.DATE },
+        colorCode: { type: DataTypes.STRING },
+        imageUrl: { type: DataTypes.STRING },
+        status: { type: DataTypes.STRING, defaultValue: 'IN_PROGRESS' },
+        user_id: { type: DataTypes.STRING },
+        created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+        updated_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+    },
+    {
+        timestamps: false,
+    }
+);
 
 const mockWallet = mockSequelize.define('Wallet', {
     id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
     name: { type: DataTypes.STRING },
     balance: { type: DataTypes.DECIMAL(15, 2), defaultValue: 0 },
     user_id: { type: DataTypes.STRING },
-    family_id: { type: DataTypes.UUID, allowNull: true }
+    family_id: { type: DataTypes.UUID, allowNull: true },
 });
 
 const mockTransaction = mockSequelize.define('Transaction', {
@@ -48,7 +52,7 @@ const mockTransaction = mockSequelize.define('Transaction', {
     amount: { type: DataTypes.DECIMAL(15, 2) },
     type: { type: DataTypes.STRING },
     description: { type: DataTypes.STRING },
-    date: { type: DataTypes.DATE }
+    date: { type: DataTypes.DATE },
 });
 
 mockTransaction.belongsTo(mockWallet, { foreignKey: 'wallet_id' });
@@ -57,7 +61,7 @@ jest.mock('../models', () => ({
     sequelize: mockSequelize,
     Goal: mockGoal,
     Wallet: mockWallet,
-    Transaction: mockTransaction
+    Transaction: mockTransaction,
 }));
 
 const goalRoutes = require('../routes/goalRoutes');
@@ -79,14 +83,14 @@ describe('Goal API Endpoints', () => {
             targetAmount: 30000000,
             currentAmount: 10000000,
             deadline: '2025-12-31',
-            user_id: 'user-1'
+            user_id: 'user-1',
         });
         testGoalId = goal.id;
 
         const personalWallet = await mockWallet.create({
             name: 'Main Wallet',
             balance: 50000000,
-            user_id: 'user-1'
+            user_id: 'user-1',
         });
         personalWalletId = personalWallet.id;
 
@@ -94,7 +98,7 @@ describe('Goal API Endpoints', () => {
             name: 'Family Wallet',
             balance: 90000000,
             user_id: 'user-1',
-            family_id: '7c3fc358-157d-4614-9720-f5a74c76b9b4'
+            family_id: '7c3fc358-157d-4614-9720-f5a74c76b9b4',
         });
         familyWalletId = familyWallet.id;
     });
@@ -104,7 +108,7 @@ describe('Goal API Endpoints', () => {
     });
 
     describe('GET /api/goals', () => {
-        it('returns 200 and lists personal goals', async () => {
+        it('returns personal goals', async () => {
             const res = await request(app).get('/api/goals');
             expect(res.statusCode).toEqual(200);
             expect(res.body.data).toBeInstanceOf(Array);
@@ -118,8 +122,9 @@ describe('Goal API Endpoints', () => {
             const res = await request(app).post('/api/goals').send({
                 name: 'Travel to Japan',
                 targetAmount: 50000000,
-                deadline: '2026-06-01'
+                deadline: '2026-06-01',
             });
+
             expect(res.statusCode).toEqual(201);
             expect(res.body.data.name).toEqual('Travel to Japan');
             expect(Number(res.body.data.targetAmount)).toEqual(50000000);
@@ -129,10 +134,17 @@ describe('Goal API Endpoints', () => {
         it('returns 422 if targetAmount <= 0', async () => {
             const res = await request(app).post('/api/goals').send({
                 name: 'Bad Goal',
-                targetAmount: -100
+                targetAmount: -100,
             });
+
             expect(res.statusCode).toEqual(422);
-            expect(res.body.errors[0].msg).toMatch(/targetAmount/);
+            expect(res.body.message).toEqual('VALIDATION_FAILED');
+            expect(res.body.errors[0]).toEqual(
+                expect.objectContaining({
+                    field: 'targetAmount',
+                    code: 'VALIDATION_TARGET_AMOUNT_MUST_BE_POSITIVE',
+                })
+            );
         });
     });
 
@@ -140,8 +152,9 @@ describe('Goal API Endpoints', () => {
         it('updates goal details', async () => {
             const res = await request(app).put(`/api/goals/${testGoalId}`).send({
                 name: 'Buy iPhone 16 Pro Max',
-                targetAmount: 35000000
+                targetAmount: 35000000,
             });
+
             expect(res.statusCode).toEqual(200);
             expect(res.body.data.name).toEqual('Buy iPhone 16 Pro Max');
             expect(Number(res.body.data.targetAmount)).toEqual(35000000);
@@ -150,8 +163,9 @@ describe('Goal API Endpoints', () => {
         it('returns 404 for an alien goal', async () => {
             const crypto = require('crypto');
             const res = await request(app).put(`/api/goals/${crypto.randomUUID()}`).send({
-                name: 'Alien Goal'
+                name: 'Alien Goal',
             });
+
             expect(res.statusCode).toEqual(404);
             expect(res.body.message).toEqual('GOAL_NOT_FOUND');
         });
@@ -162,7 +176,7 @@ describe('Goal API Endpoints', () => {
             const depositAmount = 5000000;
             const res = await request(app).post(`/api/goals/${testGoalId}/deposit`).send({
                 amount: depositAmount,
-                wallet_id: personalWalletId
+                wallet_id: personalWalletId,
             });
 
             expect(res.statusCode).toEqual(200);
@@ -183,7 +197,7 @@ describe('Goal API Endpoints', () => {
         it('rejects deposits from family wallets', async () => {
             const res = await request(app).post(`/api/goals/${testGoalId}/deposit`).send({
                 amount: 1000,
-                wallet_id: familyWalletId
+                wallet_id: familyWalletId,
             });
 
             expect(res.statusCode).toEqual(403);
@@ -193,7 +207,7 @@ describe('Goal API Endpoints', () => {
         it('returns 400 if wallet balance is insufficient', async () => {
             const res = await request(app).post(`/api/goals/${testGoalId}/deposit`).send({
                 amount: 100000000,
-                wallet_id: personalWalletId
+                wallet_id: personalWalletId,
             });
 
             expect(res.statusCode).toEqual(400);
@@ -207,7 +221,7 @@ describe('Goal API Endpoints', () => {
         beforeAll(async () => {
             const goal = await mockGoal.create({
                 name: 'To delete',
-                user_id: 'user-1'
+                user_id: 'user-1',
             });
             deleteId = goal.id;
         });

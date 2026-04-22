@@ -129,8 +129,14 @@ describe('Transaction API validation', () => {
                 description: 'Missing wallet'
             });
 
-        expect([400, 422]).toContain(res.statusCode);
-        expect(res.body.message || res.body.errors).toBeDefined();
+        expect(res.statusCode).toEqual(422);
+        expect(res.body.message).toBe('VALIDATION_FAILED');
+        expect(res.body.errors[0]).toEqual(
+            expect.objectContaining({
+                field: 'wallet_id',
+                code: 'VALIDATION_WALLET_ID_INVALID_UUID',
+            })
+        );
     });
 
     it('returns an error when amount is negative', async () => {
@@ -144,7 +150,13 @@ describe('Transaction API validation', () => {
             });
 
         expect(res.statusCode).toEqual(422);
-        expect(res.body.message || JSON.stringify(res.body.errors)).toMatch(/amount phai > 0|greater than/i);
+        expect(res.body.message).toBe('VALIDATION_FAILED');
+        expect(res.body.errors[0]).toEqual(
+            expect.objectContaining({
+                field: 'amount',
+                code: 'VALIDATION_AMOUNT_MUST_BE_POSITIVE',
+            })
+        );
     });
 
     it('returns an error when amount is zero', async () => {
@@ -158,6 +170,7 @@ describe('Transaction API validation', () => {
             });
 
         expect(res.statusCode).toEqual(422);
+        expect(res.body.message).toBe('VALIDATION_FAILED');
     });
 
     it('returns an error when type is invalid', async () => {
@@ -171,7 +184,13 @@ describe('Transaction API validation', () => {
             });
 
         expect(res.statusCode).toEqual(422);
-        expect(res.body.message || JSON.stringify(res.body.errors)).toMatch(/type khong hop le|Invalid value/i);
+        expect(res.body.message).toBe('VALIDATION_FAILED');
+        expect(res.body.errors[0]).toEqual(
+            expect.objectContaining({
+                field: 'type',
+                code: 'VALIDATION_TYPE_INVALID_ENUM',
+            })
+        );
     });
 });
 
@@ -256,12 +275,14 @@ describe('Transaction API create transaction', () => {
                 wallet_id: primaryWalletId,
                 amount: 150000,
                 type: 'EXPENSE',
-                description: 'Lunch'
+                description: 'Lunch',
+                date: '2026-04-22'
             });
 
         expect(res.statusCode).toEqual(201);
         expect(res.body.data).toHaveProperty('id');
         expect(parseFloat(res.body.data.amount)).toEqual(150000);
+        expect(new Date(res.body.data.date).toISOString()).toContain('2026-04-22');
     });
 
     it('creates a family shared expense and persists transaction shares', async () => {
@@ -294,6 +315,7 @@ describe('Transaction API create transaction', () => {
                 amount: 120000,
                 type: 'EXPENSE',
                 description: 'Shared dinner',
+                date: '2026-04-22',
                 shares: [
                     {
                         user_id: TEST_USER_ID,
@@ -311,6 +333,7 @@ describe('Transaction API create transaction', () => {
             });
 
         expect(res.statusCode).toEqual(201);
+        expect(new Date(res.body.data.date).toISOString()).toContain('2026-04-22');
 
         const persistedShares = await mockTransactionShare.findAll({
             where: { transaction_id: res.body.data.id },

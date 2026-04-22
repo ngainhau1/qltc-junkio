@@ -3,7 +3,11 @@ const router = express.Router();
 const userController = require('../controllers/userController');
 const authMiddleware = require('../middleware/authMiddleware');
 const { uploadAvatar } = require('../middleware/uploadMiddleware');
-const { validateUpdateProfile, validateChangePassword } = require('../validators/userValidator');
+const {
+    validateUpdateProfile,
+    validateChangePassword,
+    validateDeleteAccount,
+} = require('../validators/userValidator');
 
 router.use(authMiddleware);
 
@@ -251,6 +255,6 @@ router.put('/me/password', validateChangePassword, userController.changePassword
  *       400:
  *         description: Mật khẩu không đúng (WRONG_PASSWORD)
  */
-router.delete('/me', userController.deleteAccount);
+router.delete('/me', validateDeleteAccount, userController.deleteAccount);
 
 module.exports = router;

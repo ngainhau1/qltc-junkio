@@ -1,10 +1,4 @@
-/**
- * Centralized error code to i18n key mapping for the entire application.
- * Backend returns error codes, this utility resolves them to localized messages.
- */
-
 const ERROR_MAP = {
-    // ── Auth ──
     INVALID_CREDENTIALS: 'auth.errors.invalidCredentials',
     ACCOUNT_LOCKED: 'auth.errors.accountLocked',
     LOGIN_FAILED: 'auth.loginFailed',
@@ -16,14 +10,22 @@ const ERROR_MAP = {
     SESSION_EXPIRED: 'auth.errors.sessionExpired',
     REFRESH_TOKEN_MISSING: 'auth.errors.sessionExpired',
     REFRESH_TOKEN_INVALID: 'auth.errors.sessionExpired',
+    AUTH_TOKEN_MISSING: 'auth.errors.sessionExpired',
+    AUTH_TOKEN_INVALID: 'auth.errors.sessionExpired',
     USER_NOT_FOUND: 'auth.errors.userNotFound',
     TOKEN_INVALID_OR_EXPIRED: 'auth.resetPasswordFailed',
     EMAIL_SEND_FAILED: 'auth.forgotPasswordFailed',
     RESET_PASSWORD_FAILED: 'auth.resetPasswordFailed',
-    UPLOAD_FAILED: 'errors.uploadFailed',
-    PROFILE_UPDATE_FAILED: 'errors.profileUpdateFailed',
+    JWT_SECRET_MISSING: 'common.error',
 
-    // ── Wallets ──
+    PROFILE_LOAD_FAILED: 'errors.profileLoadFailed',
+    PROFILE_UPDATE_FAILED: 'errors.profileUpdateFailed',
+    PASSWORD_CHANGE_FAILED: 'errors.passwordChangeFailed',
+    CURRENT_PASSWORD_INCORRECT: 'errors.currentPasswordIncorrect',
+    ACCOUNT_DELETE_FAILED: 'errors.accountDeleteFailed',
+    UPLOAD_FAILED: 'errors.uploadFailed',
+    UPLOAD_FILE_REQUIRED: 'errors.uploadFileRequired',
+
     WALLET_LOAD_FAILED: 'errors.wallets.loadFailed',
     WALLET_CREATE_FAILED: 'errors.wallets.createFailed',
     WALLET_UPDATE_FAILED: 'errors.wallets.updateFailed',
@@ -36,7 +38,6 @@ const ERROR_MAP = {
     WALLET_PERSONAL_ONLY: 'errors.wallets.personalOnly',
     WALLET_ID_REQUIRED: 'errors.wallets.idRequired',
 
-    // ── Transactions ──
     TRANSACTION_NOT_FOUND: 'errors.transactions.notFound',
     TRANSACTION_LOAD_FAILED: 'errors.transactions.loadFailed',
     TRANSACTIONS_LOAD_FAILED: 'errors.transactions.loadFailed',
@@ -51,8 +52,9 @@ const ERROR_MAP = {
     IMPORT_FAILED: 'errors.transactions.importFailed',
     EXPORT_FORMAT_UNSUPPORTED: 'errors.transactions.exportUnsupported',
     EXPORT_FAILED: 'errors.transactions.exportFailed',
+    SETTLEMENT_AMOUNT_EXCEEDS_DEBT: 'errors.transactions.settlementAmountExceedsDebt',
+    SETTLE_DEBT_FAILED: 'errors.transactions.transferFailed',
 
-    // ── Goals ──
     GOAL_LOAD_FAILED: 'errors.goals.loadFailed',
     GOAL_CREATE_FAILED: 'errors.goals.createFailed',
     GOAL_UPDATE_FAILED: 'errors.goals.updateFailed',
@@ -60,45 +62,49 @@ const ERROR_MAP = {
     GOAL_NOT_FOUND: 'errors.goals.notFound',
     GOAL_DEPOSIT_FAILED: 'errors.goals.depositFailed',
 
-    // ── Budgets ──
     BUDGET_LOAD_FAILED: 'errors.budgets.loadFailed',
     BUDGET_CREATE_FAILED: 'errors.budgets.createFailed',
     BUDGET_UPDATE_FAILED: 'errors.budgets.updateFailed',
     BUDGET_DELETE_FAILED: 'errors.budgets.deleteFailed',
     BUDGET_NOT_FOUND: 'errors.budgets.notFound',
 
-    // ── Families ──
     FAMILY_FORBIDDEN: 'errors.families.forbidden',
     FAMILY_LOAD_FAILED: 'errors.families.loadFailed',
     FAMILY_CREATE_FAILED: 'errors.families.createFailed',
     FAMILY_DETAIL_FAILED: 'errors.families.detailFailed',
     FAMILY_INVITE_FAILED: 'errors.families.inviteFailed',
     FAMILY_REMOVE_FAILED: 'errors.families.removeFailed',
-    FAMILY_NOT_FOUND: 'errors.families.detailFailed',
+    FAMILY_DELETE_FAILED: 'errors.families.deleteFailed',
+    FAMILY_NOT_FOUND: 'errors.families.notFound',
+    FAMILY_ADMIN_REQUIRED: 'errors.families.adminRequired',
+    FAMILY_MEMBER_ALREADY_EXISTS: 'errors.families.memberExists',
+    FAMILY_OWNER_CANNOT_BE_REMOVED: 'errors.families.ownerCannotBeRemoved',
+    FAMILY_OWNER_REQUIRED: 'errors.families.ownerRequired',
     FORBIDDEN_FAMILY_SETTLEMENT: 'errors.families.forbidden',
     INVALID_SETTLEMENT_USERS: 'errors.transactions.transferFailed',
     NO_PAYABLE_DEBT_FOUND: 'family.toasts.optimizationZero',
-    SETTLEMENT_AMOUNT_EXCEEDS_DEBT: 'errors.transactions.settlementAmountExceedsDebt',
-    SETTLE_DEBT_FAILED: 'errors.transactions.transferFailed',
 
-    // ── Recurring ──
     RECURRING_LOAD_FAILED: 'errors.recurring.loadFailed',
     RECURRING_CREATE_FAILED: 'errors.recurring.createFailed',
     RECURRING_UPDATE_FAILED: 'errors.recurring.updateFailed',
     RECURRING_DELETE_FAILED: 'errors.recurring.deleteFailed',
+    RECURRING_NOT_FOUND: 'errors.recurring.notFound',
+    RECURRING_TRIGGER_FAILED: 'errors.recurring.triggerFailed',
 
-    // ── Notifications ──
     NOTIFICATION_LOAD_FAILED: 'errors.notifications.loadFailed',
     NOTIFICATION_UPDATE_FAILED: 'errors.notifications.updateFailed',
+    NOTIFICATION_NOT_FOUND: 'errors.notifications.notFound',
+    NOTIFICATION_BROADCAST_FAILED: 'errors.notifications.broadcastFailed',
 
-    // ── Categories ──
     CATEGORY_LOAD_FAILED: 'errors.categories.loadFailed',
+    CATEGORY_CREATE_FAILED: 'errors.categories.createFailed',
+    CATEGORY_UPDATE_FAILED: 'errors.categories.updateFailed',
+    CATEGORY_DELETE_FAILED: 'errors.categories.deleteFailed',
+    CATEGORY_NOT_FOUND: 'errors.categories.notFound',
 
-    // ── Analytics ──
     ANALYTICS_OVERVIEW_FAILED: 'errors.analytics.overviewFailed',
     ANALYTICS_REPORT_FAILED: 'errors.analytics.reportFailed',
 
-    // ── Admin ──
     ADMIN_DASHBOARD_FAILED: 'errors.admin.dashboardFailed',
     ADMIN_ANALYTICS_FAILED: 'errors.admin.analyticsFailed',
     ADMIN_USERS_FAILED: 'errors.admin.usersFailed',
@@ -112,20 +118,58 @@ const ERROR_MAP = {
     CANNOT_DELETE_SELF: 'errors.admin.cannotDeleteSelf',
     CANNOT_LOCK_SELF: 'errors.admin.cannotLockSelf',
     CANNOT_CHANGE_OWN_ROLE: 'errors.admin.cannotChangeOwnRole',
+
+    FORBIDDEN: 'errors.forbidden',
+    UNAUTHORIZED: 'auth.errors.sessionExpired',
+    RESOURCE_NOT_FOUND: 'common.error',
+    INTERNAL_SERVER_ERROR: 'common.error',
 };
 
-/**
- * Resolves a backend error code to a localized message using i18n.
- * @param {string} errorCode - The error code from the backend
- * @param {Function} t - The i18n translation function
- * @param {string} [fallbackKey] - Optional fallback i18n key
- * @returns {string} Localized error message
- */
-export function resolveError(errorCode, t, fallbackKey = 'common.error') {
-    if (!errorCode) return t(fallbackKey);
+const codeToTranslationSuffix = (code, prefix) => {
+    return code
+        .replace(new RegExp(`^${prefix}_`), '')
+        .toLowerCase();
+};
 
-    const i18nKey = ERROR_MAP[errorCode];
-    if (i18nKey) return t(i18nKey);
+export function extractErrorCode(error, fallbackCode = null) {
+    if (!error) {
+        return fallbackCode;
+    }
+
+    if (typeof error === 'string') {
+        return error;
+    }
+
+    return error.response?.data?.message || error.message || fallbackCode;
+}
+
+export function resolveError(errorCode, t, fallbackKey = 'common.error') {
+    if (!errorCode) {
+        return t(fallbackKey);
+    }
+
+    const mappedKey = ERROR_MAP[errorCode];
+    if (mappedKey) {
+        return t(mappedKey);
+    }
+
+    if (errorCode === 'VALIDATION_FAILED') {
+        return t('errors.validation.failed', { defaultValue: t(fallbackKey) });
+    }
+
+    if (errorCode.startsWith('VALIDATION_')) {
+        const validationKey = ['errors', 'validation', codeToTranslationSuffix(errorCode, 'VALIDATION')].join('.');
+        return t(validationKey, {
+            defaultValue: t(fallbackKey),
+        });
+    }
+
+    if (errorCode.startsWith('IMPORT_')) {
+        const importKey = ['errors', 'import', codeToTranslationSuffix(errorCode, 'IMPORT')].join('.');
+        return t(importKey, {
+            defaultValue: t(fallbackKey),
+        });
+    }
 
     return t(fallbackKey);
 }

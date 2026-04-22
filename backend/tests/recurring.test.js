@@ -15,14 +15,14 @@ const mockRecurringPattern = mockSequelize.define('RecurringPattern', {
     frequency: { type: DataTypes.STRING },
     next_run_date: { type: DataTypes.DATEONLY },
     is_active: { type: DataTypes.BOOLEAN, defaultValue: true },
-    created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW }
+    created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
 });
 
 const mockWallet = mockSequelize.define('Wallet', {
     id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
     name: { type: DataTypes.STRING },
     balance: { type: DataTypes.DECIMAL(15, 2), defaultValue: 0 },
-    family_id: { type: DataTypes.UUID, allowNull: true }
+    family_id: { type: DataTypes.UUID, allowNull: true },
 });
 
 const mockTransaction = mockSequelize.define('Transaction', {
@@ -34,14 +34,14 @@ const mockTransaction = mockSequelize.define('Transaction', {
     category_id: { type: DataTypes.UUID },
     type: { type: DataTypes.STRING },
     description: { type: DataTypes.STRING },
-    family_id: { type: DataTypes.UUID, allowNull: true }
+    family_id: { type: DataTypes.UUID, allowNull: true },
 });
 
 jest.mock('../models', () => ({
     sequelize: mockSequelize,
     RecurringPattern: mockRecurringPattern,
     Wallet: mockWallet,
-    Transaction: mockTransaction
+    Transaction: mockTransaction,
 }));
 
 let mockUserId;
@@ -78,10 +78,11 @@ describe('Recurring Transactions API', () => {
             mockUserId = userId;
 
             const res = await request(app).post('/api/recurring').send({
-                amount: 100
+                amount: 100,
             });
 
             expect(res.statusCode).toEqual(422);
+            expect(res.body.message).toEqual('VALIDATION_FAILED');
             expect(res.body.errors.length).toBeGreaterThan(0);
         });
 
@@ -95,7 +96,7 @@ describe('Recurring Transactions API', () => {
                 type: 'EXPENSE',
                 frequency: 'MONTHLY',
                 next_run_date: tomorrow.toISOString().split('T')[0],
-                description: 'Netflix Subscription'
+                description: 'Netflix Subscription',
             });
 
             expect(res.statusCode).toEqual(201);
@@ -125,7 +126,7 @@ describe('Recurring Transactions API', () => {
             const res = await request(app).put(`/api/recurring/${patternId}`).send({ amount: 600 });
 
             expect(res.statusCode).toEqual(404);
-            expect(res.body.message).toMatch(/Khong tim thay/);
+            expect(res.body.message).toEqual('RECURRING_NOT_FOUND');
         });
 
         it('updates the pattern', async () => {
@@ -133,7 +134,7 @@ describe('Recurring Transactions API', () => {
 
             const res = await request(app).put(`/api/recurring/${patternId}`).send({
                 amount: 600,
-                is_active: false
+                is_active: false,
             });
 
             expect(res.statusCode).toEqual(200);
@@ -147,7 +148,7 @@ describe('Recurring Transactions API', () => {
             const res = await request(app).post('/api/recurring/trigger-cron');
 
             expect(res.statusCode).toEqual(200);
-            expect(res.body.message).toMatch(/Khong co giao dich dinh ky/);
+            expect(res.body.message).toEqual('RECURRING_TRIGGER_NOOP');
         });
 
         it('executes an active pattern and updates the wallet balance', async () => {
@@ -160,7 +161,7 @@ describe('Recurring Transactions API', () => {
             const res = await request(app).post('/api/recurring/trigger-cron');
 
             expect(res.statusCode).toEqual(200);
-            expect(res.body.message).toMatch(/Da chay thanh cong 1/);
+            expect(res.body.message).toEqual('RECURRING_TRIGGER_SUCCESS');
 
             const transactions = await mockTransaction.findAll();
             expect(transactions).toHaveLength(1);
@@ -182,7 +183,7 @@ describe('Recurring Transactions API', () => {
                 frequency: 'DAILY',
                 next_run_date: '2026-03-20',
                 description: 'Daily snack',
-                is_active: true
+                is_active: true,
             });
 
             const res = await request(app).post('/api/recurring/trigger-cron');
@@ -205,7 +206,7 @@ describe('Recurring Transactions API', () => {
                 frequency: 'DAILY',
                 next_run_date: '2026-03-26',
                 description: 'Too expensive',
-                is_active: true
+                is_active: true,
             });
 
             const beforeCount = await mockTransaction.count();
@@ -230,7 +231,7 @@ describe('Recurring Transactions API', () => {
             const res = await request(app).delete(`/api/recurring/${patternId}`);
 
             expect(res.statusCode).toEqual(200);
-            expect(res.body.message).toMatch(/Xoa giao dich dinh ky/);
+            expect(res.body.message).toEqual('RECURRING_DELETE_SUCCESS');
 
             const count = await mockRecurringPattern.count({ where: { id: patternId } });
             expect(count).toBe(0);

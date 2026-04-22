@@ -28,7 +28,7 @@ export const fetchNotifications = createAsyncThunk(
             const response = await api.get('/notifications');
             return response.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.msg || 'NOTIFICATION_LOAD_FAILED');
+            return rejectWithValue(error.response?.data?.message || 'NOTIFICATION_LOAD_FAILED');
         }
     }
 );
@@ -40,7 +40,7 @@ export const markAllNotificationsRead = createAsyncThunk(
             const response = await api.put('/notifications/read-all');
             return response.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.msg || 'NOTIFICATION_UPDATE_FAILED');
+            return rejectWithValue(error.response?.data?.message || 'NOTIFICATION_UPDATE_FAILED');
         }
     }
 );
@@ -52,7 +52,7 @@ export const markSingleNotificationRead = createAsyncThunk(
             const response = await api.put(`/notifications/${id}/read`);
             return { id, ...response.data };
         } catch (error) {
-            return rejectWithValue(error.response?.data?.msg || 'NOTIFICATION_UPDATE_FAILED');
+            return rejectWithValue(error.response?.data?.message || 'NOTIFICATION_UPDATE_FAILED');
         }
     }
 );

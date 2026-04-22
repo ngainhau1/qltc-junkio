@@ -79,7 +79,7 @@ api.interceptors.response.use(
                 const newToken = refreshedPayload?.token;
 
                 if (!newToken) {
-                    throw new Error('Missing refreshed access token');
+                    throw new Error('AUTH_TOKEN_INVALID');
                 }
 
                 localStorage.setItem('auth_token', newToken);

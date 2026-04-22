@@ -7,6 +7,7 @@ import { AlertCircle, CheckCircle2, FileType, Loader2, Upload } from 'lucide-rea
 import { getFinanceScopeLabels } from '@/features/finance/context';
 import { importFromFile } from '@/services/importService';
 import { refreshFinanceData } from '@/features/finance/refreshFinanceData';
+import { extractErrorCode, resolveError } from '@/utils/authErrors';
 
 export function ImportTransactionsModal({ isOpen, onClose }) {
     const { t } = useTranslation();
@@ -56,7 +57,7 @@ export function ImportTransactionsModal({ isOpen, onClose }) {
         try {
             const result = await importFromFile(file, targetWalletId, wallets, categories);
             setStatus('SUCCESS');
-            setMessage(result.message || t('transactions.import.success', { count: result.count }));
+            setMessage(t('transactions.import.success', { count: result.count }));
             await dispatch(refreshFinanceData());
 
             setTimeout(() => {
@@ -64,7 +65,7 @@ export function ImportTransactionsModal({ isOpen, onClose }) {
             }, 1200);
         } catch (error) {
             setStatus('ERROR');
-            setMessage(error.message);
+            setMessage(resolveError(extractErrorCode(error), t, 'errors.transactions.importFailed'));
         }
     };
 

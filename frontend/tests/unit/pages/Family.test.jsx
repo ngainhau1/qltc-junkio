@@ -2,6 +2,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { Family } from '@/pages/Family'
+import { setActiveFamily } from '@/features/families/familySlice'
 
 const { mockDispatch, mockSettleDebts, mockFetchTransactions, mockFetchWallets, mockState } = vi.hoisted(() => ({
     mockDispatch: vi.fn(),
@@ -120,6 +121,7 @@ describe('Family shared expense settlement flow', () => {
         mockSettleDebts.mockClear()
         mockFetchTransactions.mockClear()
         mockFetchWallets.mockClear()
+        setActiveFamily.mockClear()
         mockDispatch.mockReset()
         mockDispatch.mockImplementation((action) => ({
             unwrap: () => Promise.resolve(
@@ -265,6 +267,19 @@ describe('Family shared expense settlement flow', () => {
 
         expect(screen.queryByText('Family groceries')).toBeNull()
         expect(screen.getByText('family.expenses.optimizeBtn').disabled).toBe(true)
+    })
+
+    it('keeps the active family selected when the active switch button is clicked again', () => {
+        render(<Family />)
+
+        fireEvent.click(screen.getByTestId('family-switch-button'))
+
+        expect(setActiveFamily).toHaveBeenCalledWith('fam1')
+        expect(setActiveFamily).not.toHaveBeenCalledWith(null)
+        expect(mockDispatch).toHaveBeenCalledWith({
+            type: 'families/setActiveFamily',
+            payload: 'fam1'
+        })
     })
 
     it('shows optimized settlements to owners without pay action when they are not the debtor', () => {

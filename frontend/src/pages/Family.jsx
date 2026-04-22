@@ -263,7 +263,8 @@ export function Family() {
                                                         variant={activeFamilyId === family.id ? "default" : "outline"}
                                                         size="sm"
                                                         className="w-full sm:w-auto"
-                                                        onClick={() => dispatch(setActiveFamily(activeFamilyId === family.id ? null : family.id))}
+                                                        aria-pressed={activeFamilyId === family.id}
+                                                        onClick={() => dispatch(setActiveFamily(family.id))}
                                                     >
                                                         {activeFamilyId === family.id ? t('family.list.active') : t('family.list.switch')}
                                                     </Button>

@@ -1,48 +1,99 @@
-const { body, param, validationResult, matchedData } = require('express-validator');
-
-const handleValidation = (locations = ['body']) => (req, res, next) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(422).json({ errors: errors.array() });
-    }
-    if (locations.includes('body')) {
-        req.body = matchedData(req, { locations: ['body'], includeOptionals: true });
-    }
-    if (locations.includes('params')) {
-        req.params = matchedData(req, { locations: ['params'], includeOptionals: true });
-    }
-    next();
-};
+const { body, param } = require('express-validator');
+const { buildValidationHandler, createValidationCode } = require('./validationHelper');
 
 exports.validateCreateGoal = [
-    body('name').trim().escape().isLength({ min: 2, max: 120 }).withMessage('Tên mục tiêu phải từ 2-120 ký tự'),
-    body('targetAmount').isFloat({ gt: 0 }).withMessage('targetAmount phải > 0').toFloat(),
-    body('currentAmount').optional().isFloat({ min: 0 }).toFloat(),
-    body('deadline').optional().isISO8601().withMessage('deadline phải là ISO-8601'),
-    body('colorCode').optional().trim().escape(),
-    body('imageUrl').optional().trim().escape(),
-    handleValidation(['body'])
+    body('name')
+        .trim()
+        .notEmpty()
+        .withMessage(createValidationCode('name', 'REQUIRED'))
+        .bail()
+        .isLength({ min: 2 })
+        .withMessage(createValidationCode('name', 'MIN_LENGTH_NOT_MET'))
+        .bail()
+        .escape()
+        .isLength({ max: 120 })
+        .withMessage(createValidationCode('name', 'MAX_LENGTH_EXCEEDED')),
+    body('targetAmount')
+        .isFloat({ gt: 0 })
+        .withMessage(createValidationCode('targetAmount', 'MUST_BE_POSITIVE'))
+        .toFloat(),
+    body('currentAmount')
+        .optional()
+        .isFloat({ min: 0 })
+        .withMessage(createValidationCode('currentAmount', 'INVALID_RANGE'))
+        .toFloat(),
+    body('deadline')
+        .optional()
+        .isISO8601()
+        .withMessage(createValidationCode('deadline', 'INVALID_ISO8601')),
+    body('colorCode')
+        .optional()
+        .trim()
+        .escape()
+        .isLength({ max: 50 })
+        .withMessage(createValidationCode('colorCode', 'MAX_LENGTH_EXCEEDED')),
+    body('imageUrl')
+        .optional()
+        .trim()
+        .escape()
+        .isLength({ max: 255 })
+        .withMessage(createValidationCode('imageUrl', 'MAX_LENGTH_EXCEEDED')),
+    buildValidationHandler(['body']),
 ];
 
 exports.validateUpdateGoal = [
-    param('id').isUUID().withMessage('id phải là UUID'),
-    body('name').optional().trim().escape().isLength({ min: 2, max: 120 }),
-    body('targetAmount').optional().isFloat({ gt: 0 }).toFloat(),
-    body('currentAmount').optional().isFloat({ min: 0 }).toFloat(),
-    body('deadline').optional().isISO8601(),
-    body('colorCode').optional().trim().escape(),
-    body('imageUrl').optional().trim().escape(),
-    handleValidation(['params', 'body'])
+    param('id').isUUID().withMessage(createValidationCode('id', 'INVALID_UUID')),
+    body('name')
+        .optional()
+        .trim()
+        .isLength({ min: 2 })
+        .withMessage(createValidationCode('name', 'MIN_LENGTH_NOT_MET'))
+        .bail()
+        .escape()
+        .isLength({ max: 120 })
+        .withMessage(createValidationCode('name', 'MAX_LENGTH_EXCEEDED')),
+    body('targetAmount')
+        .optional()
+        .isFloat({ gt: 0 })
+        .withMessage(createValidationCode('targetAmount', 'MUST_BE_POSITIVE'))
+        .toFloat(),
+    body('currentAmount')
+        .optional()
+        .isFloat({ min: 0 })
+        .withMessage(createValidationCode('currentAmount', 'INVALID_RANGE'))
+        .toFloat(),
+    body('deadline')
+        .optional()
+        .isISO8601()
+        .withMessage(createValidationCode('deadline', 'INVALID_ISO8601')),
+    body('colorCode')
+        .optional()
+        .trim()
+        .escape()
+        .isLength({ max: 50 })
+        .withMessage(createValidationCode('colorCode', 'MAX_LENGTH_EXCEEDED')),
+    body('imageUrl')
+        .optional()
+        .trim()
+        .escape()
+        .isLength({ max: 255 })
+        .withMessage(createValidationCode('imageUrl', 'MAX_LENGTH_EXCEEDED')),
+    buildValidationHandler(['params', 'body']),
 ];
 
 exports.validateDepositGoal = [
-    param('id').isUUID().withMessage('id phải là UUID'),
-    body('amount').isFloat({ gt: 0 }).withMessage('amount phải > 0').toFloat(),
-    body('wallet_id').isUUID().withMessage('wallet_id phải là UUID'),
-    handleValidation(['params', 'body'])
+    param('id').isUUID().withMessage(createValidationCode('id', 'INVALID_UUID')),
+    body('amount')
+        .isFloat({ gt: 0 })
+        .withMessage(createValidationCode('amount', 'MUST_BE_POSITIVE'))
+        .toFloat(),
+    body('wallet_id')
+        .isUUID()
+        .withMessage(createValidationCode('wallet_id', 'INVALID_UUID')),
+    buildValidationHandler(['params', 'body']),
 ];
 
 exports.validateDeleteGoal = [
-    param('id').isUUID().withMessage('id phải là UUID'),
-    handleValidation(['params'])
+    param('id').isUUID().withMessage(createValidationCode('id', 'INVALID_UUID')),
+    buildValidationHandler(['params']),
 ];

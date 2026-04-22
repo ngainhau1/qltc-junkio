@@ -65,6 +65,39 @@ const mockWallets = [
 ]
 
 describe('TransactionForm Transfer Feature', () => {
+    it('shows translated submit errors instead of raw backend codes', async () => {
+        const store = createMockStore({ wallets: { wallets: mockWallets }, families: { activeFamilyId: null, families: [] } })
+        store.dispatch = vi.fn((action) => {
+            if (typeof action === 'function') {
+                return {
+                    unwrap: () => Promise.reject('TRANSACTION_CREATE_FAILED')
+                }
+            }
+
+            return action
+        })
+
+        const { container } = render(
+            <Provider store={store}>
+                <TransactionForm />
+            </Provider>
+        )
+
+        fireEvent.change(container.querySelector('#transaction-amount'), { target: { value: '50000' } })
+        fireEvent.change(container.querySelector('#transaction-description'), { target: { value: 'Lunch' } })
+        fireEvent.submit(screen.getByTestId('form-EXPENSE'))
+
+        await waitFor(() => {
+            const visibleErrors = Array.from(container.querySelectorAll('.text-red-500'))
+                .map((node) => node.textContent)
+                .filter(Boolean)
+
+            expect(visibleErrors.length).toBeGreaterThan(0)
+            expect(screen.queryByText('TRANSACTION_CREATE_FAILED')).toBeNull()
+            expect(visibleErrors).not.toContain('TRANSACTION_CREATE_FAILED')
+        })
+    })
+
     it('should switch to Transfer mode and show correct fields', async () => {
         const store = createMockStore({ wallets: { wallets: mockWallets }, families: { activeFamilyId: null, families: [] } })
         render(

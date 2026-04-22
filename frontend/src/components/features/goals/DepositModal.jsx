@@ -8,6 +8,7 @@ import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { extractErrorCode, resolveError } from '@/utils/authErrors';
 import { Target, Laptop, Plane, ShieldCheck, Gamepad2, Home as HomeIcon, Car, Smartphone, GraduationCap, Coins, Wallet } from 'lucide-react';
 
 const ICONS = {
@@ -72,7 +73,7 @@ export function DepositModal({ isOpen, onClose, goal }) {
             setSelectedWalletId(null);
         } catch (error) {
             console.error('Goal deposit failed:', error);
-            toast.error(error);
+            toast.error(resolveError(extractErrorCode(error), t, 'errors.goals.depositFailed'));
         }
     };
 

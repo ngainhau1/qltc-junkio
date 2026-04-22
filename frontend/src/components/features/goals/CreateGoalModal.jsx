@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { formatCurrency } from '@/lib/utils';
+import { extractErrorCode, resolveError } from '@/utils/authErrors';
 import { Laptop, Plane, ShieldCheck, Gamepad2, Home as HomeIcon, Car, Smartphone, GraduationCap, Coins, Target } from 'lucide-react';
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
@@ -75,7 +76,7 @@ export function CreateGoalModal({ isOpen, onClose }) {
             onClose();
         } catch (error) {
             console.error("Goal creation failed:", error);
-            toast.error(error);
+            toast.error(resolveError(extractErrorCode(error), t, 'errors.goals.createFailed'));
         }
     };
 
