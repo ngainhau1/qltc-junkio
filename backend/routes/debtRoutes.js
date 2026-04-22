@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const debtController = require('../controllers/debtController');
 const auth = require('../middleware/authMiddleware');
-const { validateSettle, validateShareParam } = require('../validators/debtValidator');
+const { validateSettle } = require('../validators/debtValidator');
 
 /**
  * @swagger
@@ -12,124 +12,8 @@ const { validateSettle, validateShareParam } = require('../validators/debtValida
  *     Quản lý chia sẻ chi phí và nợ trong nhóm gia đình.
  *     Khi một thành viên gia đình tạo giao dịch chi tiêu chung,
  *     hệ thống tự động chia đều cho các thành viên và tạo khoản nợ.
- *     Mỗi thành viên có thể chấp nhận/từ chối khoản chia, và tất toán nợ.
+ *     Mỗi thành viên có thể tất toán khoản nợ của chính mình.
  */
-
-/**
- * @swagger
- * /api/debts/pending:
- *   get:
- *     summary: Lấy danh sách khoản chia tiền đang chờ xử lý
- *     description: |
- *       Trả về các khoản chia tiền mà người dùng hiện tại chưa xử lý
- *       (trạng thái PENDING). Đây là các khoản mà người khác đã tạo
- *       và chia phần cho bạn, cần bạn chấp nhận hoặc từ chối.
- *     tags: [Debts]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Danh sách khoản chia chờ xử lý
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: string
- *                   amount:
- *                     type: number
- *                   approval_status:
- *                     type: string
- *                     enum: [PENDING, APPROVED, REJECTED]
- *             example:
- *               - id: "s1a2b3c4-..."
- *                 amount: 250000
- *                 approval_status: PENDING
- *                 from_user: "Nguyễn Văn A"
- *                 description: "Chia tiền ăn tối"
- *                 created_at: "2026-03-30T08:00:00.000Z"
- *               - id: "s2b3c4d5-..."
- *                 amount: 150000
- *                 approval_status: PENDING
- *                 from_user: "Trần Thị B"
- *                 description: "Chia tiền taxi"
- *                 created_at: "2026-03-29T20:00:00.000Z"
- */
-router.get('/pending', auth, debtController.getPendingDebts);
-
-/**
- * @swagger
- * /api/debts/{shareId}/approve:
- *   put:
- *     summary: Chấp nhận khoản chia tiền
- *     description: |
- *       Xác nhận rằng bạn đồng ý với khoản chia tiền này.
- *       Sau khi chấp nhận, khoản nợ sẽ được ghi nhận chính thức.
- *
- *       **Lưu ý:** Chỉ có thể duyệt khoản chia thuộc về chính mình.
- *     tags: [Debts]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: shareId
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *         description: UUID của khoản chia tiền
- *     responses:
- *       200:
- *         description: Đã chấp nhận khoản chia
- *         content:
- *           application/json:
- *             example:
- *               status: success
- *               message: Đã chấp nhận khoản chia
- *       403:
- *         description: Không có quyền duyệt khoản chia này
- *       404:
- *         description: Không tìm thấy khoản chia (SHARE_NOT_FOUND)
- */
-router.put('/:shareId/approve', auth, validateShareParam, debtController.approveShare);
-
-/**
- * @swagger
- * /api/debts/{shareId}/reject:
- *   put:
- *     summary: Từ chối khoản chia tiền
- *     description: |
- *       Từ chối khoản chia tiền. Khoản nợ sẽ không được ghi nhận.
- *
- *       **Lưu ý:** Chỉ có thể từ chối khoản chia thuộc về chính mình.
- *     tags: [Debts]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: shareId
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *         description: UUID của khoản chia tiền
- *     responses:
- *       200:
- *         description: Đã từ chối khoản chia
- *         content:
- *           application/json:
- *             example:
- *               status: success
- *               message: Đã từ chối khoản chia
- *       403:
- *         description: Không có quyền từ chối khoản chia này
- *       404:
- *         description: Không tìm thấy khoản chia (SHARE_NOT_FOUND)
- */
-router.put('/:shareId/reject', auth, validateShareParam, debtController.rejectShare);
 
 /**
  * @swagger
@@ -142,7 +26,8 @@ router.put('/:shareId/reject', auth, validateShareParam, debtController.rejectSh
  *
  *       **Yêu cầu:**
  *       - Ví nguồn (`from_wallet_id`) phải có đủ số dư
- *       - Ví đích (`to_wallet_id`) phải thuộc người nhận thanh toán
+ *       - Với settle ngoài family, ví đích (`to_wallet_id`) phải thuộc người nhận thanh toán
+ *       - Với settle trong family, backend tự suy ra ví nhận từ các share còn mở
  *     tags: [Debts]
  *     security:
  *       - bearerAuth: []
@@ -152,7 +37,7 @@ router.put('/:shareId/reject', auth, validateShareParam, debtController.rejectSh
  *         application/json:
  *           schema:
  *             type: object
- *             required: [to_user_id, amount, from_wallet_id, to_wallet_id]
+ *             required: [to_user_id, amount, from_wallet_id]
  *             properties:
  *               to_user_id:
  *                 type: string
@@ -173,7 +58,7 @@ router.put('/:shareId/reject', auth, validateShareParam, debtController.rejectSh
  *               to_wallet_id:
  *                 type: string
  *                 format: uuid
- *                 description: UUID ví người nhận
+ *                 description: UUID ví người nhận. Chỉ bắt buộc ngoài family mode
  *               family_id:
  *                 type: string
  *                 format: uuid

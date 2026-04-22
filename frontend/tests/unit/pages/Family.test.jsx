@@ -176,7 +176,7 @@ describe('Family shared expense settlement flow', () => {
                                 user_id: 'u1',
                                 amount: 50000,
                                 status: 'UNPAID',
-                                approval_status: 'PENDING'
+                                approval_status: 'APPROVED'
                             }
                         ]
                     }
@@ -185,14 +185,7 @@ describe('Family shared expense settlement flow', () => {
         })
     })
 
-    it('does not render pending debt actions', () => {
-        render(<Family />)
-
-        expect(screen.queryByText('family.pendingDebts.btnApprove')).toBeNull()
-        expect(screen.queryByText('family.pendingDebts.btnReject')).toBeNull()
-    })
-
-    it('uses backend Shares alias and lets every member optimize legacy pending shares to the payer', async () => {
+    it('uses backend Shares alias and lets every member optimize approved shares to the payer', async () => {
         mockState.transactions.transactions = [
             {
                 id: 'tx-shares-alias',
@@ -208,7 +201,7 @@ describe('Family shared expense settlement flow', () => {
                         user_id: 'u1',
                         amount: 50000,
                         status: 'UNPAID',
-                        approval_status: 'PENDING'
+                        approval_status: 'APPROVED'
                     }
                 ]
             }
@@ -296,9 +289,9 @@ describe('Family shared expense settlement flow', () => {
                 to_user_id: 'u2',
                 amount: 50000,
                 from_wallet_id: 'wallet-u1-personal',
-                to_wallet_id: 'wallet-u2-personal',
                 family_id: 'fam1'
             }))
+            expect(mockSettleDebts.mock.calls[0][0]).not.toHaveProperty('to_wallet_id')
             expect(mockSettleDebts.mock.calls[0][0]).not.toHaveProperty('from_user_id')
             expect(mockFetchTransactions).toHaveBeenCalled()
             expect(mockFetchWallets).toHaveBeenCalled()

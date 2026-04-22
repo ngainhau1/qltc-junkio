@@ -211,7 +211,8 @@
             "addFamilyTitle": "Add family wallet",
             "editPersonalTitle": "Edit personal wallet",
             "editFamilyTitle": "Edit family wallet",
-            "scopeLabel": "Create for"
+            "scopeLabel": "Create for",
+            "scopeButton": "Scope"
         }
     },
     "transactions": {
@@ -311,7 +312,10 @@
             "shareAmount": "Amount",
             "status": "Status",
             "paid": "Paid",
-            "unpaid": "Unpaid"
+            "unpaid": "Unpaid",
+            "emptyTitle": "Transaction details unavailable",
+            "emptyDesc": "No transaction data was found.",
+            "loadFailed": "Could not load transaction details. Please try again."
         },
         "import": {
             "title": "Bulk import transactions",
@@ -410,16 +414,7 @@
         "toasts": {
             "paymentRecorded": "Payment recorded: {{amount}}",
             "optimizationEmpty": "No expenses to optimize at the moment.",
-            "optimizationZero": "Great! Current members have no outstanding debts.",
-            "debtApproved": "Debt approved successfully!",
-            "debtRejected": "Debt rejected successfully!"
-        },
-        "pendingDebts": {
-            "title": "Pending Debts ({{count}})",
-            "desc": "Other members assigned you shared expenses. Confirm to join the settlement pool.",
-            "paidByText": "paid • You contribute:",
-            "btnReject": "Reject",
-            "btnApprove": "Approve"
+            "optimizationZero": "Great! Current members have no outstanding debts."
         },
         "emptySelection": "Please select a Family above to see the Debt Management feature."
     },

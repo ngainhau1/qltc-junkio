@@ -42,7 +42,6 @@ const buildFamilyDebts = (transactions, activeFamilyId) => (
             id: t.id,
             type: t.type,
             paidBy: t.user_id,
-            paidWalletId: t.wallet_id,
             splitAmong: shares.map(s => s.user_id),
             shares,
             amount: parseFloat(t.amount),
@@ -53,55 +52,6 @@ const buildFamilyDebts = (transactions, activeFamilyId) => (
 
 const isFullyPaidExpense = (expense) =>
     expense.shares.length > 0 && expense.shares.every((share) => share.status === 'PAID')
-
-const splitSettlementsByReceiverWallet = (settlements, expenses) => {
-    const capacitiesByCreditor = new Map()
-
-    expenses.forEach((expense) => {
-        const capacities = capacitiesByCreditor.get(expense.paidBy) || []
-        const amount = expense.shares
-            .filter((share) => share.status !== 'PAID' && share.approval_status !== 'REJECTED')
-            .reduce((sum, share) => sum + Number(share.amount || 0), 0)
-
-        if (amount > 0.01) {
-            capacities.push({
-                walletId: expense.paidWalletId,
-                amount
-            })
-            capacitiesByCreditor.set(expense.paidBy, capacities)
-        }
-    })
-
-    const remainingCapacitiesByCreditor = new Map(
-        Array.from(capacitiesByCreditor.entries()).map(([creditorId, capacities]) => [
-            creditorId,
-            capacities.map((capacity) => ({ ...capacity }))
-        ])
-    )
-
-    return settlements.flatMap((settlement) => {
-        const capacities = remainingCapacitiesByCreditor.get(settlement.to) || []
-        let remainingAmount = Number(settlement.amount || 0)
-        const splitSettlements = []
-
-        for (const capacity of capacities) {
-            if (remainingAmount <= 0.01) break
-
-            const amount = Math.min(remainingAmount, capacity.amount)
-            if (amount <= 0.01) continue
-
-            splitSettlements.push({
-                ...settlement,
-                amount,
-                toWalletId: capacity.walletId
-            })
-            remainingAmount -= amount
-            capacity.amount -= amount
-        }
-
-        return splitSettlements
-    })
-}
 
 export function Family() {
     const { t } = useTranslation();
@@ -184,7 +134,7 @@ export function Family() {
             toast.info(t('family.toasts.optimizationEmpty'));
             return;
         }
-        const results = splitSettlementsByReceiverWallet(simplifyDebts(openFamilyDebts), openFamilyDebts)
+        const results = simplifyDebts(openFamilyDebts)
         if (results.length === 0) {
             toast.success(t('family.toasts.optimizationZero'));
         }
@@ -215,7 +165,7 @@ export function Family() {
     const confirmSettle = async () => {
         if (!selectedSettlement) return;
 
-        const { from, to, amount, toWalletId } = selectedSettlement;
+        const { from, to, amount } = selectedSettlement;
 
         if (from !== user?.id) return;
 
@@ -224,17 +174,11 @@ export function Family() {
             return;
         }
 
-        if (!toWalletId) {
-            toast.error(t('errors.transactions.transferFailed'));
-            return;
-        }
-
         try {
             await dispatch(settleDebts({
                 to_user_id: to,
                 amount: amount,
                 from_wallet_id: selectedPaymentWalletId,
-                to_wallet_id: toWalletId,
                 family_id: activeFamilyId
             })).unwrap();
 
@@ -248,7 +192,7 @@ export function Family() {
                 latestTransactionsResponse?.transactions ?? [],
                 activeFamilyId
             ).filter(tx => !isFullyPaidExpense(tx));
-            setSettlements(splitSettlementsByReceiverWallet(simplifyDebts(latestFamilyDebts), latestFamilyDebts));
+            setSettlements(simplifyDebts(latestFamilyDebts));
             setSettleModalOpen(false);
         } catch (error) {
             console.error('Settlement error:', error);

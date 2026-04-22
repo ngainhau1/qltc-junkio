@@ -27,13 +27,9 @@ describe('transactionSlice reducers', () => {
     expect(next.error).toBeNull();
   });
 
-  it('approveDebt.fulfilled updates share status', () => {
-    const state = {
-      ...baseState,
-      transactions: [{ id: 'tx', shares: [{ id: 's1', approval_status: 'PENDING' }] }]
-    };
-    const action = { type: 'transactions/approveDebt/fulfilled', payload: { shareId: 's1' } };
-    const next = reducer(state, action);
-    expect(next.transactions[0].shares[0].approval_status).toBe('APPROVED');
+  it('settleDebts.rejected stores the backend error code', () => {
+    const action = { type: 'transactions/settleDebts/rejected', payload: 'NO_PAYABLE_DEBT_FOUND' };
+    const next = reducer(baseState, action);
+    expect(next.error).toBe('NO_PAYABLE_DEBT_FOUND');
   });
 });

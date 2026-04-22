@@ -47,7 +47,7 @@ const mockTransactionShare = mockSequelize.define('TransactionShare', {
     user_id: { type: DataTypes.UUID },
     amount: { type: DataTypes.DECIMAL(15, 2) },
     status: { type: DataTypes.STRING, defaultValue: 'UNPAID' },
-    approval_status: { type: DataTypes.STRING, defaultValue: 'PENDING' }
+    approval_status: { type: DataTypes.STRING, defaultValue: 'APPROVED' }
 });
 
 const mockNotification = mockSequelize.define('Notification', {
@@ -109,7 +109,7 @@ app.use(express.json());
 app.use('/api/debts', debtRoutes);
 
 describe('Debt API Endpoints', () => {
-    let creditorId, debtorId, familyId, walletCreditorId, walletDebtorId, pendingShareId, txId;
+    let creditorId, debtorId, familyId, walletCreditorId, walletDebtorId, primaryShareId;
 
     beforeAll(async () => {
         await mockSequelize.sync({ force: true });
@@ -144,17 +144,15 @@ describe('Debt API Endpoints', () => {
             description: 'Lunch',
             family_id: familyId
         });
-        txId = tx.id;
-
-        // Debtor owes 1000, pending
+        // Debtor owes 1000
         const share1 = await mockTransactionShare.create({
             transaction_id: tx.id,
             user_id: debtorId,
             amount: 1000,
             status: 'UNPAID',
-            approval_status: 'PENDING'
+            approval_status: 'APPROVED'
         });
-        pendingShareId = share1.id;
+        primaryShareId = share1.id;
 
         // Debtor owes 500, approved
         await mockTransactionShare.create({
@@ -187,52 +185,10 @@ describe('Debt API Endpoints', () => {
         await mockSequelize.close();
     });
 
-    describe('GET /api/debts/pending', () => {
-        it('should get pending debts for the debtor', async () => {
-            mockUserId = debtorId;
-            const res = await request(app).get('/api/debts/pending');
-            expect(res.statusCode).toEqual(200);
-            expect(res.body.data.length).toBe(1);
-            expect(res.body.data[0].id).toBe(pendingShareId);
-        });
-    });
-
-    describe('PUT /api/debts/:shareId/approve & reject', () => {
-        it('should return 403 if approving someone else debt', async () => {
-            mockUserId = creditorId; // Creditor tries to approve debtor's debt
-            const res = await request(app).put(`/api/debts/${pendingShareId}/approve`);
-            expect(res.statusCode).toEqual(403);
-            expect(res.body.message).toMatch(/Không có quyền duyệt/);
-        });
-
-        it('should approve share successfully', async () => {
-            mockUserId = debtorId;
-            const res = await request(app).put(`/api/debts/${pendingShareId}/approve`);
-            expect(res.statusCode).toEqual(200);
-            expect(res.body.data.approval_status).toBe('APPROVED');
-        });
-
-        it('should reject share successfully', async () => {
-            mockUserId = debtorId;
-            const tempShare = await mockTransactionShare.create({
-                transaction_id: txId, // valid tx id
-                user_id: debtorId,
-                amount: 100,
-                status: 'UNPAID',
-                approval_status: 'PENDING'
-            });
-
-            const res = await request(app).put(`/api/debts/${tempShare.id}/reject`);
-            expect(res.statusCode).toEqual(200);
-            expect(res.body.data.approval_status).toBe('REJECTED');
-        });
-    });
-
     describe('GET /api/debts/simplified/:familyId', () => {
         it('should return simplified debts for the family', async () => {
             mockUserId = creditorId;
             
-            // Right now, debtor owes creditor (1000 + 500 = 1500) both APPROVED
             const res = await request(app).get(`/api/debts/simplified/${familyId}`);
             
             expect(res.statusCode).toEqual(200);
@@ -329,51 +285,50 @@ describe('Debt API Endpoints', () => {
             expect(res.body.data.suggestions[0].amount).toBe(500);
         });
 
-        it('includes legacy pending shares unless they were rejected', async () => {
+        it('does not include unapproved shares in settlement suggestions', async () => {
             const crypto = require('crypto');
-            const legacyFamilyId = crypto.randomUUID();
-            const legacyCreditorId = crypto.randomUUID();
-            const legacyDebtorId = crypto.randomUUID();
+            const unapprovedFamilyId = crypto.randomUUID();
+            const unapprovedCreditorId = crypto.randomUUID();
+            const unapprovedDebtorId = crypto.randomUUID();
 
             await mockUser.bulkCreate([
-                { id: legacyCreditorId, name: 'Legacy Creditor' },
-                { id: legacyDebtorId, name: 'Legacy Debtor' }
+                { id: unapprovedCreditorId, name: 'Unapproved Creditor' },
+                { id: unapprovedDebtorId, name: 'Unapproved Debtor' }
             ]);
-            await mockFamily.create({ id: legacyFamilyId, name: 'Legacy Family', owner_id: legacyCreditorId });
+            await mockFamily.create({ id: unapprovedFamilyId, name: 'Unapproved Family', owner_id: unapprovedCreditorId });
             await mockFamilyMember.bulkCreate([
-                { family_id: legacyFamilyId, user_id: legacyCreditorId },
-                { family_id: legacyFamilyId, user_id: legacyDebtorId }
+                { family_id: unapprovedFamilyId, user_id: unapprovedCreditorId },
+                { family_id: unapprovedFamilyId, user_id: unapprovedDebtorId }
             ]);
-            mockUserId = legacyCreditorId;
+            mockUserId = unapprovedCreditorId;
 
-            const legacyWallet = await mockWallet.create({
-                name: 'Legacy Wallet',
-                user_id: legacyCreditorId,
+            const unapprovedWallet = await mockWallet.create({
+                name: 'Unapproved Wallet',
+                user_id: unapprovedCreditorId,
                 balance: 1000
             });
-            const legacyTx = await mockTransaction.create({
-                user_id: legacyCreditorId,
-                wallet_id: legacyWallet.id,
+            const unapprovedTx = await mockTransaction.create({
+                user_id: unapprovedCreditorId,
+                wallet_id: unapprovedWallet.id,
                 amount: 200,
                 type: 'EXPENSE',
-                description: 'Legacy pending dinner',
-                family_id: legacyFamilyId
+                description: 'Unapproved dinner',
+                family_id: unapprovedFamilyId
             });
 
             await mockTransactionShare.create({
-                transaction_id: legacyTx.id,
-                user_id: legacyDebtorId,
+                transaction_id: unapprovedTx.id,
+                user_id: unapprovedDebtorId,
                 amount: 200,
                 status: 'UNPAID',
-                approval_status: 'PENDING'
+                approval_status: 'REJECTED'
             });
 
-            const res = await request(app).get(`/api/debts/simplified/${legacyFamilyId}`);
+            const res = await request(app).get(`/api/debts/simplified/${unapprovedFamilyId}`);
 
             expect(res.statusCode).toEqual(200);
-            expect(res.body.data.originalTransactions).toBe(1);
-            expect(res.body.data.suggestions[0].from.id).toBe(legacyDebtorId);
-            expect(res.body.data.suggestions[0].to.id).toBe(legacyCreditorId);
+            expect(res.body.data.originalTransactions).toBe(0);
+            expect(res.body.data.simplifiedTransactions).toBe(0);
         });
     });
 
@@ -398,7 +353,7 @@ describe('Debt API Endpoints', () => {
 
             // Verify shares
             // share1 was 1000, now should be 400 (if it iterated first)
-            const share1 = await mockTransactionShare.findByPk(pendingShareId);
+            const share1 = await mockTransactionShare.findByPk(primaryShareId);
             expect(Number(share1.amount)).toBe(400); 
 
             // Verify transactions generated
@@ -536,9 +491,116 @@ describe('Debt API Endpoints', () => {
             const createdTransactions = await mockTransaction.findAll({
                 where: { family_id: memberFamilyId }
             });
-            expect(createdTransactions.some((tx) => tx.type === 'TRANSFER_OUT')).toBe(true);
-            expect(createdTransactions.some((tx) => tx.type === 'TRANSFER_IN')).toBe(true);
+            const transferOut = createdTransactions.find((tx) => tx.type === 'TRANSFER_OUT');
+            const transferIn = createdTransactions.find((tx) => tx.type === 'TRANSFER_IN');
+            expect(transferOut).toBeTruthy();
+            expect(transferIn).toBeTruthy();
+            expect(transferOut.description).toBe('Trả nợ cho Original Payer');
+            expect(transferIn.description).toBe('Nhận tiền trả nợ từ Member Debtor');
             expect(createdTransactions.some((tx) => tx.type === 'INCOME')).toBe(false);
+        });
+
+        it('should infer recipient wallets from open family shares when to_wallet_id is omitted', async () => {
+            const crypto = require('crypto');
+            const inferredFamilyId = crypto.randomUUID();
+            const inferredPayerId = crypto.randomUUID();
+            const inferredDebtorId = crypto.randomUUID();
+
+            await mockUser.bulkCreate([
+                { id: inferredPayerId, name: 'Inferred Payer' },
+                { id: inferredDebtorId, name: 'Inferred Debtor' }
+            ]);
+            await mockFamily.create({ id: inferredFamilyId, name: 'Inferred Family', owner_id: inferredPayerId });
+            await mockFamilyMember.bulkCreate([
+                { family_id: inferredFamilyId, user_id: inferredPayerId },
+                { family_id: inferredFamilyId, user_id: inferredDebtorId }
+            ]);
+
+            const payerWalletA = await mockWallet.create({
+                name: 'Inferred Wallet A',
+                user_id: inferredPayerId,
+                balance: 1000
+            });
+            const payerWalletB = await mockWallet.create({
+                name: 'Inferred Wallet B',
+                user_id: inferredPayerId,
+                balance: 2000
+            });
+            const debtorWallet = await mockWallet.create({
+                name: 'Inferred Debtor Wallet',
+                user_id: inferredDebtorId,
+                balance: 1000
+            });
+
+            const expenseA = await mockTransaction.create({
+                user_id: inferredPayerId,
+                wallet_id: payerWalletA.id,
+                family_id: inferredFamilyId,
+                amount: 100,
+                type: 'EXPENSE',
+                description: 'Expense A'
+            });
+            const expenseB = await mockTransaction.create({
+                user_id: inferredPayerId,
+                wallet_id: payerWalletB.id,
+                family_id: inferredFamilyId,
+                amount: 200,
+                type: 'EXPENSE',
+                description: 'Expense B'
+            });
+
+            const shareA = await mockTransactionShare.create({
+                transaction_id: expenseA.id,
+                user_id: inferredDebtorId,
+                amount: 100,
+                status: 'UNPAID',
+                approval_status: 'APPROVED'
+            });
+            const shareB = await mockTransactionShare.create({
+                transaction_id: expenseB.id,
+                user_id: inferredDebtorId,
+                amount: 200,
+                status: 'UNPAID',
+                approval_status: 'APPROVED'
+            });
+
+            mockUserId = inferredDebtorId;
+            const transactionCountBefore = await mockTransaction.count();
+            const res = await request(app).post('/api/debts/settle').send({
+                to_user_id: inferredPayerId,
+                amount: 300,
+                from_wallet_id: debtorWallet.id,
+                family_id: inferredFamilyId
+            });
+
+            expect(res.statusCode).toEqual(200);
+
+            const updatedDebtorWallet = await mockWallet.findByPk(debtorWallet.id);
+            const updatedPayerWalletA = await mockWallet.findByPk(payerWalletA.id);
+            const updatedPayerWalletB = await mockWallet.findByPk(payerWalletB.id);
+            expect(Number(updatedDebtorWallet.balance)).toBe(700);
+            expect(Number(updatedPayerWalletA.balance)).toBe(1100);
+            expect(Number(updatedPayerWalletB.balance)).toBe(2200);
+
+            const updatedShareA = await mockTransactionShare.findByPk(shareA.id);
+            const updatedShareB = await mockTransactionShare.findByPk(shareB.id);
+            expect(updatedShareA.status).toBe('PAID');
+            expect(updatedShareB.status).toBe('PAID');
+
+            const createdTransactions = await mockTransaction.findAll({
+                where: { family_id: inferredFamilyId }
+            });
+            const transferOutTransactions = createdTransactions.filter((tx) => tx.type === 'TRANSFER_OUT');
+            const transferInTransactions = createdTransactions.filter((tx) => tx.type === 'TRANSFER_IN');
+
+            expect(await mockTransaction.count()).toBe(transactionCountBefore + 3);
+            expect(transferOutTransactions).toHaveLength(1);
+            expect(transferInTransactions).toHaveLength(2);
+            expect(transferInTransactions.map((tx) => tx.wallet_id).sort()).toEqual([
+                payerWalletA.id,
+                payerWalletB.id
+            ].sort());
+            expect(transferInTransactions.reduce((sum, tx) => sum + Number(tx.amount), 0)).toBe(300);
         });
 
         it('should reject duplicate family member settlement without creating another transaction', async () => {

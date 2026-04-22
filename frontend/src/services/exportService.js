@@ -144,7 +144,7 @@ export const exportRowsToPDF = async (
     doc.text(title || i18n.t('export.titleDefault'), 14, 32);
     doc.setFontSize(10);
     doc.text(`${i18n.t('export.exportDate')} ${formatDateString(new Date())}`, 14, 40);
-    doc.text(`${i18n.t('common.total', 'Tổng')}: ${normalizedRows.length} ${i18n.t('export.records', 'bản ghi')}`, 14, 46);
+    doc.text(`${i18n.t('common.total')}: ${normalizedRows.length} ${i18n.t('export.records')}`, 14, 46);
 
     // Format data for display
     const amountKey = i18n.t('export.amount');
@@ -185,7 +185,7 @@ export const exportRowsToPDF = async (
             doc.setFontSize(8);
             doc.setTextColor(150);
             doc.text(
-                `${i18n.t('common.page', 'Trang')} ${data.pageNumber} / ${pageCount}`,
+                `${i18n.t('common.page')} ${data.pageNumber} / ${pageCount}`,
                 doc.internal.pageSize.getWidth() - 40,
                 doc.internal.pageSize.getHeight() - 10
             );
@@ -214,12 +214,12 @@ export const exportRowsToPDF = async (
         if (summaryY < doc.internal.pageSize.getHeight() - 30) {
             doc.setFontSize(11);
             doc.setTextColor(0);
-            doc.text(`${i18n.t('export.totalIncome', 'Tổng thu')}: ${formatCurrency(totalIncome)}`, 14, summaryY);
-            doc.text(`${i18n.t('export.totalExpense', 'Tổng chi')}: ${formatCurrency(totalExpense)}`, 14, summaryY + 7);
+            doc.text(`${i18n.t('export.totalIncome')}: ${formatCurrency(totalIncome)}`, 14, summaryY);
+            doc.text(`${i18n.t('export.totalExpense')}: ${formatCurrency(totalExpense)}`, 14, summaryY + 7);
             doc.setFontSize(12);
             const net = totalIncome - totalExpense;
             doc.setTextColor(net >= 0 ? 22 : 220, net >= 0 ? 163 : 38, net >= 0 ? 74 : 38);
-            doc.text(`${i18n.t('export.net', 'Số dư')}: ${formatCurrency(net)}`, 14, summaryY + 16);
+            doc.text(`${i18n.t('export.net')}: ${formatCurrency(net)}`, 14, summaryY + 16);
         }
     }
 
@@ -259,7 +259,7 @@ export const exportTransactionRowsToExcel = (transactions) =>
     exportRowsToExcel(
         transactions.map(transactionToRow),
         `transactions_${getTodaySuffix()}.xlsx`,
-        i18n.t('export.sheetTransactions', 'Giao dịch')
+        i18n.t('export.sheetTransactions')
     );
 
 export const exportTransactionRowsToPDF = (transactions, title = '') =>
@@ -276,7 +276,7 @@ export const exportReportRowsToExcel = (reportData) =>
     exportRowsToExcel(
         reportDataToRows(reportData),
         `report_${getTodaySuffix()}.xlsx`,
-        i18n.t('export.sheetReport', 'Báo cáo')
+        i18n.t('export.sheetReport')
     );
 
 export const exportReportRowsToPDF = (reportData, title = '') =>
@@ -284,8 +284,3 @@ export const exportReportRowsToPDF = (reportData, title = '') =>
         title,
         filename: `report_${getTodaySuffix()}.pdf`,
     });
-
-// Legacy aliases
-export const exportToCSV = exportTransactionRowsToCSV;
-export const exportToExcel = exportTransactionRowsToExcel;
-export const exportToPDF = exportTransactionRowsToPDF;

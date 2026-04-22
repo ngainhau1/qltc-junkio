@@ -54,12 +54,14 @@ beforeAll(async () => {
     await mockSequelize.sync({ force: true });
 
     const authRoutes = require('../routes/authRoutes');
+    const userRoutes = require('../routes/userRoutes');
     const responseMiddleware = require('../middleware/responseMiddleware');
     app = express();
     app.use(express.json());
     app.use(cookieParser());
     app.use(responseMiddleware);
     app.use('/api/auth', authRoutes);
+    app.use('/api/users', userRoutes);
 });
 
 afterAll(async () => {
@@ -122,7 +124,7 @@ describe('Auth API Endpoints', () => {
         expect(res.body.message).toEqual('INVALID_CREDENTIALS');
     });
 
-    it('supports /auth/me as compatibility alias', async () => {
+    it('returns current user profile from /users/me', async () => {
         const loginRes = await request(app)
             .post('/api/auth/login')
             .send({
@@ -131,7 +133,7 @@ describe('Auth API Endpoints', () => {
             });
 
         const profileRes = await request(app)
-            .get('/api/auth/me')
+            .get('/api/users/me')
             .set('Authorization', `Bearer ${loginRes.body.data.token}`);
 
         expect(profileRes.statusCode).toEqual(200);

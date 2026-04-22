@@ -3,7 +3,12 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { formatCurrency, formatDateString } from '@/lib/utils';
+import {
+    formatCurrency,
+    formatDateString,
+    getTransactionAmountMeta,
+    getTransactionTypeLabel
+} from '@/lib/utils';
 import { clearSelectedTransaction, deleteTransaction } from '@/features/transactions/transactionSlice';
 import { refreshFinanceData } from '@/features/finance/refreshFinanceData';
 import { Calendar, Tag, Trash2, Users, Wallet } from 'lucide-react';
@@ -13,20 +18,31 @@ import { TableSwitch } from '@/components/ui/table-switch';
 export function TransactionDetailModal({ isOpen, onClose }) {
     const { t } = useTranslation();
     const dispatch = useDispatch();
-    const { selectedTransaction: tx, isDetailLoading } = useSelector((state) => state.transactions);
+    const { selectedTransaction: tx, isDetailLoading, error } = useSelector((state) => state.transactions);
+    const { families } = useSelector((state) => state.families);
     const isTransfer = tx?.type === 'TRANSFER_IN' || tx?.type === 'TRANSFER_OUT';
-    const isIncome = tx?.type === 'INCOME' || tx?.type === 'TRANSFER_IN';
-    const amountTone = isTransfer ? 'text-sky-600' : isIncome ? 'text-green-600' : 'text-red-600';
+    const isIncome = tx?.type === 'INCOME';
+    const amountMeta = getTransactionAmountMeta(tx?.type);
     const badgeTone = isTransfer
         ? 'border-sky-200 bg-sky-100 text-sky-700'
         : isIncome
             ? 'border-green-200 bg-green-100 text-green-700'
             : 'border-red-200 bg-red-100 text-red-700';
-    const badgeLabel = isTransfer
-        ? t('transactionForm.tabs.transfer')
-        : isIncome
-            ? t('transactions.type.income')
-            : t('transactions.type.expense');
+    const badgeLabel = getTransactionTypeLabel(tx?.type, t);
+    const shares = tx?.Shares ?? tx?.shares ?? [];
+    const transactionFamily = tx?.family_id
+        ? families.find((family) => family.id === tx.family_id)
+        : null;
+    const familyMembers = Array.isArray(transactionFamily?.members) ? transactionFamily.members : [];
+    const displayDescription = tx?.description || '';
+
+    const getShareMember = (share) => {
+        const fallbackMember = familyMembers.find((member) => member.id === share.user_id);
+        return {
+            name: share.User?.name || fallbackMember?.name || t('common.unknown'),
+            email: share.User?.email || fallbackMember?.email || ''
+        };
+    };
 
     useEffect(() => {
         if (!isOpen) {
@@ -56,17 +72,32 @@ export function TransactionDetailModal({ isOpen, onClose }) {
                 </div>
             )}
 
+            {!isDetailLoading && !tx && (
+                <div className="space-y-6">
+                    <div className="rounded-lg border border-dashed p-6 text-center">
+                        <p className="font-medium">{t('transactions.detail.emptyTitle')}</p>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                            {error ? t('transactions.detail.loadFailed') : t('transactions.detail.emptyDesc')}
+                        </p>
+                    </div>
+
+                    <Button variant="outline" className="w-full" onClick={onClose}>
+                        {t('common.close')}
+                    </Button>
+                </div>
+            )}
+
             {!isDetailLoading && tx && (
                 <div className="space-y-6">
                     <div className="flex flex-col items-center gap-2 py-4">
-                        <span className={`text-4xl font-bold ${amountTone}`}>
-                            {isIncome ? '+' : '-'}
+                        <span className={`text-4xl font-bold ${amountMeta.amountClassName}`}>
+                            {amountMeta.sign}
                             {formatCurrency(tx.amount)}
                         </span>
                         <Badge className={badgeTone}>
                             {badgeLabel}
                         </Badge>
-                        {tx.description && <p className="mt-1 text-center text-sm text-muted-foreground">{tx.description}</p>}
+                        {displayDescription && <p className="mt-1 text-center text-sm text-muted-foreground">{displayDescription}</p>}
                     </div>
 
                     <div className="space-y-3 rounded-lg border bg-muted/30 p-4">
@@ -99,7 +130,7 @@ export function TransactionDetailModal({ isOpen, onClose }) {
                         )}
                     </div>
 
-                    {tx.Shares && tx.Shares.length > 0 && (
+                    {shares.length > 0 && (
                         <div className="space-y-2">
                             <p className="flex items-center gap-2 text-sm font-semibold">
                                 <Users className="h-4 w-4" />
@@ -108,18 +139,22 @@ export function TransactionDetailModal({ isOpen, onClose }) {
                             <TableSwitch
                                 mobile={
                                     <div className="space-y-3">
-                                        {tx.Shares.map((share) => (
-                                            <div key={share.id} className="rounded-lg border p-3">
-                                                <p className="font-medium">{share.User?.name || '?'}</p>
-                                                <p className="text-xs text-muted-foreground">{share.User?.email}</p>
-                                                <div className="mt-3 flex items-center justify-between gap-2">
-                                                    <span className="text-sm font-medium">{formatCurrency(share.amount)}</span>
-                                                    <Badge className={share.status === 'PAID' ? 'border-green-200 bg-green-100 text-xs text-green-700' : 'border-yellow-200 bg-yellow-100 text-xs text-yellow-700'}>
-                                                        {share.status === 'PAID' ? t('transactions.detail.paid') : t('transactions.detail.unpaid')}
-                                                    </Badge>
+                                        {shares.map((share) => {
+                                            const member = getShareMember(share);
+
+                                            return (
+                                                <div key={share.id} className="rounded-lg border p-3">
+                                                    <p className="font-medium">{member.name}</p>
+                                                    {member.email && <p className="text-xs text-muted-foreground">{member.email}</p>}
+                                                    <div className="mt-3 flex items-center justify-between gap-2">
+                                                        <span className="text-sm font-medium">{formatCurrency(share.amount)}</span>
+                                                        <Badge className={share.status === 'PAID' ? 'border-green-200 bg-green-100 text-xs text-green-700' : 'border-yellow-200 bg-yellow-100 text-xs text-yellow-700'}>
+                                                            {share.status === 'PAID' ? t('transactions.detail.paid') : t('transactions.detail.unpaid')}
+                                                        </Badge>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 }
                                 desktop={
@@ -133,20 +168,24 @@ export function TransactionDetailModal({ isOpen, onClose }) {
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {tx.Shares.map((share) => (
-                                                    <tr key={share.id} className="border-t">
-                                                        <td className="px-3 py-2">
-                                                            <p className="font-medium">{share.User?.name || '?'}</p>
-                                                            <p className="text-xs text-muted-foreground">{share.User?.email}</p>
-                                                        </td>
-                                                        <td className="px-3 py-2 text-right font-medium">{formatCurrency(share.amount)}</td>
-                                                        <td className="px-3 py-2 text-right">
-                                                            <Badge className={share.status === 'PAID' ? 'border-green-200 bg-green-100 text-xs text-green-700' : 'border-yellow-200 bg-yellow-100 text-xs text-yellow-700'}>
-                                                                {share.status === 'PAID' ? t('transactions.detail.paid') : t('transactions.detail.unpaid')}
-                                                            </Badge>
-                                                        </td>
-                                                    </tr>
-                                                ))}
+                                                {shares.map((share) => {
+                                                    const member = getShareMember(share);
+
+                                                    return (
+                                                        <tr key={share.id} className="border-t">
+                                                            <td className="px-3 py-2">
+                                                                <p className="font-medium">{member.name}</p>
+                                                                {member.email && <p className="text-xs text-muted-foreground">{member.email}</p>}
+                                                            </td>
+                                                            <td className="px-3 py-2 text-right font-medium">{formatCurrency(share.amount)}</td>
+                                                            <td className="px-3 py-2 text-right">
+                                                                <Badge className={share.status === 'PAID' ? 'border-green-200 bg-green-100 text-xs text-green-700' : 'border-yellow-200 bg-yellow-100 text-xs text-yellow-700'}>
+                                                                    {share.status === 'PAID' ? t('transactions.detail.paid') : t('transactions.detail.unpaid')}
+                                                                </Badge>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
                                             </tbody>
                                         </table>
                                     </div>

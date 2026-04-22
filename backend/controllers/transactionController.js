@@ -81,15 +81,30 @@ const rollbackWalletForDeletedTransaction = (wallet, transaction) => {
 exports.getTransactionById = async (req, res) => {
     try {
         const { id } = req.params;
-        const { walletIds } = await getAccessibleWalletIds({ userId: req.user.id });
+        const { context, family_id } = req.query;
+        const { walletIds, familyIds, normalizedContext } = await getAccessibleWalletIds({
+            userId: req.user.id,
+            context,
+            familyId: family_id
+        });
+
+        const familyTransactionIds = normalizedContext === 'family'
+            ? (family_id ? familyIds.filter((familyId) => familyId === family_id) : familyIds)
+            : [];
+        const accessConditions = [{ wallet_id: { [Op.in]: walletIds } }];
+
+        if (familyTransactionIds.length > 0) {
+            accessConditions.push({ family_id: { [Op.in]: familyTransactionIds } });
+        }
 
         const transaction = await Transaction.findOne({
             where: {
                 id,
-                wallet_id: { [Op.in]: walletIds }
+                [Op.or]: accessConditions
             },
             include: [
                 { model: Wallet, attributes: ['id', 'name'] },
+                { model: User, attributes: ['id', 'name', 'email'] },
                 { model: Category, attributes: ['id', 'name'] },
                 {
                     model: sequelize.models.TransactionShare,
@@ -412,7 +427,7 @@ exports.createTransfer = async (req, res) => {
                 user_id: req.user.id,
                 amount: parsedAmount,
                 date: date || new Date(),
-                description: description || `Chuyen tien toi vi ${toWallet.name}`,
+                description: description || `Chuyển tiền tới ví ${toWallet.name}`,
                 type: 'TRANSFER_OUT',
                 wallet_id: from_wallet_id,
                 family_id: fromWallet.family_id || null,
@@ -423,7 +438,7 @@ exports.createTransfer = async (req, res) => {
                 user_id: req.user.id,
                 amount: parsedAmount,
                 date: date || new Date(),
-                description: description || `Nhan tien tu vi ${fromWallet.name}`,
+                description: description || `Nhận tiền từ ví ${fromWallet.name}`,
                 type: 'TRANSFER_IN',
                 wallet_id: to_wallet_id,
                 family_id: toWallet.family_id || null,

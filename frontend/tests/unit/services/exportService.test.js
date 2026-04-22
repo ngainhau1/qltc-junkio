@@ -1,6 +1,9 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi } from 'vitest';
-import { exportToCSV, exportToPDF } from '@/services/exportService';
+import {
+    exportTransactionRowsToCSV,
+    exportTransactionRowsToPDF
+} from '@/services/exportService';
 
 vi.mock('@/services/pdfFont', () => ({
     loadRobotoBase64: vi.fn().mockResolvedValue(null),
@@ -23,7 +26,7 @@ describe('exportService', () => {
             { date: '2024-01-01', description: 'Test', amount: 100, type: 'EXPENSE' }
         ];
 
-        exportToCSV(transactions);
+        exportTransactionRowsToCSV(transactions);
 
         expect(document.createElement).toHaveBeenCalledWith('a');
         expect(URL.createObjectURL).toHaveBeenCalled();
@@ -36,6 +39,6 @@ describe('exportService', () => {
             { date: '2024-01-01', description: 'Test PDF', amount: 200, type: 'INCOME' }
         ];
 
-        await expect(exportToPDF(transactions)).resolves.toBeUndefined();
+        await expect(exportTransactionRowsToPDF(transactions)).resolves.toBeUndefined();
     });
 });

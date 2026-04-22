@@ -27,7 +27,6 @@ router.use(authMiddleware);
  *       bao gồm tên, email, role, và đường dẫn avatar.
  *
  *       Đây là **canonical endpoint** (endpoint chính).
- *       Alias tương thích: `/api/auth/me`
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
@@ -82,7 +81,6 @@ router.get('/me', userController.getProfile);
  *     description: |
  *       Upload hoặc thay thế ảnh đại diện của người dùng hiện tại.
  *       Đây là **canonical endpoint** (endpoint chính).
- *       Alias tương thích: `/api/auth/avatar`
  *
  *       **Yêu cầu file:**
  *       - Định dạng hỗ trợ: JPEG, JPG, PNG, GIF

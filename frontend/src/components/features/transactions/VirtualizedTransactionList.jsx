@@ -2,7 +2,12 @@ import { memo, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowDownLeft, ArrowRightLeft, ArrowUpRight, ChevronRight } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
-import { formatCurrency, formatDateString } from '@/lib/utils';
+import {
+    formatCurrency,
+    formatDateString,
+    getTransactionAmountMeta,
+    getTransactionTypeLabel
+} from '@/lib/utils';
 
 const TransactionRow = memo(({ item, onRowClick }) => {
     const { t } = useTranslation();
@@ -18,19 +23,11 @@ const TransactionRow = memo(({ item, onRowClick }) => {
     const transaction = item.transaction;
     const isTransfer = transaction.type === 'TRANSFER_IN' || transaction.type === 'TRANSFER_OUT';
     const isIncome = transaction.type === 'INCOME' || transaction.type === 'TRANSFER_IN';
-    const toneClasses = isTransfer
-        ? 'border-sky-200 bg-sky-100'
-        : isIncome
-            ? 'border-green-200 bg-green-100'
-            : 'border-red-200 bg-red-100';
-    const amountClasses = isTransfer
-        ? 'text-sky-600'
-        : isIncome
-            ? 'text-green-600'
-            : 'text-red-600';
+    const amountMeta = getTransactionAmountMeta(transaction.type);
     const secondaryText = isTransfer
-        ? t('transactionForm.tabs.transfer')
+        ? getTransactionTypeLabel(transaction.type, t)
         : transaction.Category?.name || transaction.category_id || '-';
+    const displayDescription = transaction.description || '';
     const transactionDate = transaction.date || transaction.transaction_date;
 
     return (
@@ -44,17 +41,17 @@ const TransactionRow = memo(({ item, onRowClick }) => {
                 aria-label={`View details: ${transaction.description || 'Transaction'}`}
             >
                 <div className="flex min-w-0 items-start gap-3 sm:items-center">
-                    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border ${toneClasses}`}>
+                    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border ${amountMeta.iconToneClassName}`}>
                         {isTransfer ? (
-                            <ArrowRightLeft className="h-5 w-5 text-sky-600" />
+                            <ArrowRightLeft className={`h-5 w-5 ${amountMeta.iconClassName}`} />
                         ) : isIncome ? (
-                            <ArrowDownLeft className="h-5 w-5 text-green-600" />
+                            <ArrowDownLeft className={`h-5 w-5 ${amountMeta.iconClassName}`} />
                         ) : (
-                            <ArrowUpRight className="h-5 w-5 text-red-600" />
+                            <ArrowUpRight className={`h-5 w-5 ${amountMeta.iconClassName}`} />
                         )}
                     </div>
                     <div className="min-w-0 flex-1">
-                        <p className="truncate font-medium">{transaction.description || '-'}</p>
+                        <p className="truncate font-medium">{displayDescription || '-'}</p>
                         <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
                             <span className="capitalize">{secondaryText}</span>
                             <span className="hidden sm:inline">•</span>
@@ -63,8 +60,8 @@ const TransactionRow = memo(({ item, onRowClick }) => {
                     </div>
                 </div>
                 <div className="flex items-center justify-between gap-2 sm:justify-end">
-                    <span className={`font-semibold ${amountClasses}`}>
-                        {isIncome ? '+' : '-'}
+                    <span className={`font-semibold ${amountMeta.amountClassName}`}>
+                        {amountMeta.sign}
                         {formatCurrency(transaction.amount)}
                     </span>
                     <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/50 transition-colors group-hover:text-muted-foreground" />

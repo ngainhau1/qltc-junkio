@@ -164,6 +164,29 @@ describe('Market API', () => {
         expect(response.body.message).toBe('GOLD_PRICE_FETCH_FAILED');
     });
 
+    it('returns a 502 error when the upstream payload has no supported SJC record', async () => {
+        global.fetch.mockResolvedValue(
+            buildFetchResponse({
+                success: true,
+                latestDate: '13:52 16/04/2026',
+                data: [
+                    {
+                        BranchName: 'Miá»n Báº¯c',
+                        TypeName: 'Nháº«n 24K',
+                        BuyValue: 100,
+                        SellValue: 120,
+                    },
+                ],
+            })
+        );
+
+        const response = await request(app).get('/api/market/gold');
+
+        expect(response.statusCode).toBe(502);
+        expect(response.body.status).toBe('error');
+        expect(response.body.message).toBe('GOLD_PRICE_FETCH_FAILED');
+    });
+
     it('returns gold history for a valid range', async () => {
         getGoldPriceHistory.mockResolvedValue({
             range: '24H',

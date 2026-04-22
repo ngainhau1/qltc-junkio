@@ -127,13 +127,5 @@ export function resolveError(errorCode, t, fallbackKey = 'common.error') {
     const i18nKey = ERROR_MAP[errorCode];
     if (i18nKey) return t(i18nKey);
 
-    // If it looks like a human-readable message (no underscores), pass through
-    if (typeof errorCode === 'string' && !errorCode.includes('_')) {
-        return errorCode;
-    }
-
     return t(fallbackKey);
 }
-
-// Keep backward compatibility alias
-export const resolveAuthError = resolveError;

@@ -58,7 +58,7 @@ const mockTransactionShare = mockSequelize.define('TransactionShare', {
     user_id: { type: DataTypes.UUID },
     amount: { type: DataTypes.DECIMAL },
     status: { type: DataTypes.STRING, defaultValue: 'UNPAID' },
-    approval_status: { type: DataTypes.STRING, defaultValue: 'PENDING' }
+    approval_status: { type: DataTypes.STRING, defaultValue: 'APPROVED' }
 });
 
 const mockUser = mockSequelize.define('User', {
@@ -75,9 +75,10 @@ const mockFamilyMember = mockSequelize.define('FamilyMember', {
 
 mockTransaction.hasMany(mockTransactionShare, { foreignKey: 'transaction_id', as: 'Shares' });
 mockTransactionShare.belongsTo(mockTransaction, { foreignKey: 'transaction_id' });
-mockTransactionShare.belongsTo(mockUser, { foreignKey: 'user_id', as: 'User' });
+mockTransactionShare.belongsTo(mockUser, { foreignKey: 'user_id', as: 'User', constraints: false });
 mockTransaction.belongsTo(mockWallet, { foreignKey: 'wallet_id' });
 mockTransaction.belongsTo(mockCategory, { foreignKey: 'category_id' });
+mockTransaction.belongsTo(mockUser, { foreignKey: 'user_id', constraints: false });
 
 jest.mock('../models', () => ({
     Transaction: mockTransaction,
@@ -180,6 +181,70 @@ describe('Transaction API GET /:id', () => {
             .get('/api/transactions/00000000-0000-0000-0000-000000000000');
 
         expect([404, 500]).toContain(res.statusCode);
+    });
+
+    it('returns family transaction details for member even when another member owns the wallet', async () => {
+        const familyId = '44444444-4444-4444-8444-444444444444';
+        await mockFamilyMember.create({ user_id: TEST_USER_ID, family_id: familyId });
+        await mockUser.findOrCreate({
+            where: { id: SECOND_USER_ID },
+            defaults: { name: 'Bob', email: 'bob@example.com' }
+        });
+
+        const otherMemberWallet = await mockWallet.create({
+            name: 'Bob Wallet',
+            balance: 500000,
+            user_id: SECOND_USER_ID
+        });
+        const familyTransaction = await mockTransaction.create({
+            amount: 100000,
+            type: 'EXPENSE',
+            description: 'Shared lunch',
+            date: new Date('2026-04-22'),
+            wallet_id: otherMemberWallet.id,
+            user_id: SECOND_USER_ID,
+            family_id: familyId
+        });
+        await mockTransactionShare.create({
+            transaction_id: familyTransaction.id,
+            user_id: TEST_USER_ID,
+            amount: 50000,
+            status: 'UNPAID',
+            approval_status: 'APPROVED'
+        });
+
+        const res = await request(app)
+            .get(`/api/transactions/${familyTransaction.id}`)
+            .query({ context: 'family', family_id: familyId });
+
+        expect(res.statusCode).toEqual(200);
+        expect(res.body.data.id).toBe(familyTransaction.id);
+        expect(res.body.data.Shares).toHaveLength(1);
+        expect(res.body.data.Wallet.name).toBe('Bob Wallet');
+    });
+
+    it('does not return family transaction details for non-members', async () => {
+        const familyId = '55555555-5555-4555-8555-555555555555';
+        const otherMemberWallet = await mockWallet.create({
+            name: 'Private Family Wallet',
+            balance: 500000,
+            user_id: SECOND_USER_ID
+        });
+        const familyTransaction = await mockTransaction.create({
+            amount: 100000,
+            type: 'EXPENSE',
+            description: 'Hidden family lunch',
+            date: new Date('2026-04-22'),
+            wallet_id: otherMemberWallet.id,
+            user_id: SECOND_USER_ID,
+            family_id: familyId
+        });
+
+        const res = await request(app)
+            .get(`/api/transactions/${familyTransaction.id}`)
+            .query({ context: 'family', family_id: familyId });
+
+        expect(res.statusCode).toEqual(404);
     });
 });
 
@@ -318,6 +383,38 @@ describe('Transaction API transfer flow', () => {
         const updatedToWallet = await mockWallet.findByPk(toWallet.id);
         expect(Number(updatedFromWallet.balance)).toBe(400000);
         expect(Number(updatedToWallet.balance)).toBe(300000);
+    });
+
+    it('uses Vietnamese default descriptions for transfer transactions', async () => {
+        const fromWallet = await mockWallet.create({
+            name: 'Default Source',
+            balance: 600000,
+            user_id: TEST_USER_ID
+        });
+        const toWallet = await mockWallet.create({
+            name: 'Default Destination',
+            balance: 100000,
+            user_id: TEST_USER_ID
+        });
+
+        const res = await request(app)
+            .post('/api/transactions/transfer')
+            .send({
+                from_wallet_id: fromWallet.id,
+                to_wallet_id: toWallet.id,
+                amount: 100000
+            });
+
+        expect(res.statusCode).toEqual(201);
+
+        const createdTransactions = await mockTransaction.findAll({
+            where: { transfer_group_id: res.body.data.transfer_group_id }
+        });
+        const transferOut = createdTransactions.find((tx) => tx.type === 'TRANSFER_OUT');
+        const transferIn = createdTransactions.find((tx) => tx.type === 'TRANSFER_IN');
+
+        expect(transferOut.description).toBe('Chuyển tiền tới ví Default Destination');
+        expect(transferIn.description).toBe('Nhận tiền từ ví Default Source');
     });
 
     it('keeps balances consistent when concurrent transfers target the same source wallet', async () => {

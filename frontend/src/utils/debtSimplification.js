@@ -1,45 +1,31 @@
-/**
- * Cải tiến thuật toán Đơn giản hóa nợ.
- * Thay vì Greedy cơ bản luôn bốc thằng nợ nhiều nhất trả cho thằng cho vay nhiều nhất (dễ sinh ra giao dịch chéo vô cớ),
- * thuật toán cải tiến này ưu tiên "Exact Matches" (khớp lệnh chính xác) trước, sau đó mới đến Greedy.
- * 
- * @param {Array} transactions - List of expenses { paidBy: userId, splitAmong: [userIds], amount: number }
- * @returns {Array} - Optimized transactions { from: userId, to: userId, amount: number }
- */
 export function simplifyDebts(transactions) {
     const balances = {};
 
-    // 1. Calculate Net Balances
-    transactions.forEach(t => {
-        const payer = String(t.paidBy);
-        const amount = parseFloat(t.amount) || 0;
+    transactions.forEach((transaction) => {
+        const payer = String(transaction.paidBy);
+        const amount = parseFloat(transaction.amount) || 0;
 
         balances[payer] = (balances[payer] || 0) + amount;
 
-        if (t.shares && t.shares.length > 0) {
-            t.shares.forEach(share => {
+        if (transaction.shares && transaction.shares.length > 0) {
+            transaction.shares.forEach((share) => {
                 const shareAmount = parseFloat(share.amount) || 0;
-                // Nếu khoản chia sẻ đã được PAID thì không còn là nợ nữa
+
                 if (share.status === 'PAID') {
-                    // Payer already got this back, reduce their credit
                     balances[payer] = (balances[payer] || 0) - shareAmount;
                     return;
                 }
 
-                // Backward compatibility: legacy PENDING shares still count unless explicitly rejected.
-                if (share.approval_status !== 'REJECTED') {
-                    // Nếu đã APPROVED, người bị gán nợ phải gánh
+                if (share.approval_status === 'APPROVED') {
                     balances[String(share.user_id)] = (balances[String(share.user_id)] || 0) - shareAmount;
                 } else {
-                    // Nếu PENDING hoặc REJECTED, người chi tiền (Payer) phải chịu thiệt thòi giữ khoản nợ này
                     balances[payer] = (balances[payer] || 0) - shareAmount;
                 }
             });
-        } else if (t.splitAmong && t.splitAmong.length > 0) {
-            const splitCount = t.splitAmong.length;
-            const splitAmount = amount / splitCount;
+        } else if (transaction.splitAmong && transaction.splitAmong.length > 0) {
+            const splitAmount = amount / transaction.splitAmong.length;
 
-            t.splitAmong.forEach(memberId => {
+            transaction.splitAmong.forEach((memberId) => {
                 balances[String(memberId)] = (balances[String(memberId)] || 0) - splitAmount;
             });
         }
@@ -48,7 +34,7 @@ export function simplifyDebts(transactions) {
     const debtors = [];
     const creditors = [];
 
-    Object.keys(balances).forEach(person => {
+    Object.keys(balances).forEach((person) => {
         const balance = balances[person];
         if (Math.abs(balance) < 0.01) return;
 
@@ -61,17 +47,17 @@ export function simplifyDebts(transactions) {
 
     const settlements = [];
 
-    // Bước 2: Ưu tiên Khớp Lệnh Chính Xác (Exact Match)
-    // Nếu A nợ đúng 50k, và B được nhận đúng 50k -> Bắt cặp luôn để loại bỏ khoir mảng
     for (let i = 0; i < debtors.length; i++) {
         for (let j = 0; j < creditors.length; j++) {
-            if (debtors[i].amount > 0 && creditors[j].amount > 0 &&
-                Math.abs(debtors[i].amount - creditors[j].amount) < 0.01) {
-
+            if (
+                debtors[i].amount > 0 &&
+                creditors[j].amount > 0 &&
+                Math.abs(debtors[i].amount - creditors[j].amount) < 0.01
+            ) {
                 settlements.push({
                     from: debtors[i].person,
                     to: creditors[j].person,
-                    amount: Number(debtors[i].amount.toFixed(2))
+                    amount: Number(debtors[i].amount.toFixed(2)),
                 });
 
                 debtors[i].amount = 0;
@@ -80,12 +66,9 @@ export function simplifyDebts(transactions) {
         }
     }
 
-    // Lọc lại mảng bỏ những người đã được thanh toán
-    const activeDebtors = debtors.filter(d => d.amount > 0.01);
-    const activeCreditors = creditors.filter(c => c.amount > 0.01);
+    const activeDebtors = debtors.filter((debtor) => debtor.amount > 0.01);
+    const activeCreditors = creditors.filter((creditor) => creditor.amount > 0.01);
 
-    // Bước 3: Thuật toán tham lam (Greedy) có nắn chỉnh
-    // Ưu tiên sắp xếp để thanh toán các khoản lớn nhất với nhau
     activeDebtors.sort((a, b) => b.amount - a.amount);
     activeCreditors.sort((a, b) => b.amount - a.amount);
 
@@ -95,13 +78,12 @@ export function simplifyDebts(transactions) {
     while (i < activeDebtors.length && j < activeCreditors.length) {
         const debtor = activeDebtors[i];
         const creditor = activeCreditors[j];
-
         const amount = Math.min(debtor.amount, creditor.amount);
 
         settlements.push({
             from: debtor.person,
             to: creditor.person,
-            amount: Number(amount.toFixed(2))
+            amount: Number(amount.toFixed(2)),
         });
 
         debtor.amount -= amount;
@@ -115,5 +97,5 @@ export function simplifyDebts(transactions) {
 }
 
 export function calculateTotalFlow(settlements) {
-    return settlements.reduce((acc, s) => acc + s.amount, 0);
+    return settlements.reduce((acc, settlement) => acc + settlement.amount, 0);
 }

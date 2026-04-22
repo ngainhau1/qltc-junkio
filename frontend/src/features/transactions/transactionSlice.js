@@ -42,9 +42,11 @@ export const fetchTransactions = createAsyncThunk(
 
 export const fetchTransactionById = createAsyncThunk(
     'transactions/fetchTransactionById',
-    async (id, { rejectWithValue }) => {
+    async (id, { getState, rejectWithValue }) => {
         try {
-            const response = await api.get(`/transactions/${id}`);
+            const response = await api.get(`/transactions/${id}`, {
+                params: buildTransactionQueryFromState(getState(), { page: undefined, limit: undefined }),
+            });
             return response.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || 'TRANSACTION_LOAD_FAILED');
@@ -84,30 +86,6 @@ export const deleteTransaction = createAsyncThunk(
             return id;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || 'TRANSACTION_DELETE_FAILED');
-        }
-    }
-);
-
-export const approveDebt = createAsyncThunk(
-    'transactions/approveDebt',
-    async (shareId, { rejectWithValue }) => {
-        try {
-            const response = await api.put(`/debts/${shareId}/approve`);
-            return { shareId, data: response.data };
-        } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'APPROVE_DEBT_FAILED');
-        }
-    }
-);
-
-export const rejectDebt = createAsyncThunk(
-    'transactions/rejectDebt',
-    async (shareId, { rejectWithValue }) => {
-        try {
-            const response = await api.put(`/debts/${shareId}/reject`);
-            return { shareId, data: response.data };
-        } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'REJECT_DEBT_FAILED');
         }
     }
 );
@@ -201,26 +179,6 @@ const transactionSlice = createSlice({
             })
             .addCase(deleteTransaction.rejected, (state, action) => {
                 state.error = action.payload;
-            })
-            .addCase(approveDebt.fulfilled, (state, action) => {
-                const { shareId } = action.payload;
-                state.transactions.forEach((transaction) => {
-                    const shares = transaction.Shares || transaction.shares;
-                    if (shares) {
-                        const share = shares.find((item) => item.id === shareId);
-                        if (share) share.approval_status = 'APPROVED';
-                    }
-                });
-            })
-            .addCase(rejectDebt.fulfilled, (state, action) => {
-                const { shareId } = action.payload;
-                state.transactions.forEach((transaction) => {
-                    const shares = transaction.Shares || transaction.shares;
-                    if (shares) {
-                        const share = shares.find((item) => item.id === shareId);
-                        if (share) share.approval_status = 'REJECTED';
-                    }
-                });
             })
             .addCase(settleDebts.rejected, (state, action) => {
                 state.error = action.payload;

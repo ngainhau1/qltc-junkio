@@ -211,7 +211,8 @@
             "addFamilyTitle": "Thêm ví gia đình",
             "editPersonalTitle": "Sửa ví cá nhân",
             "editFamilyTitle": "Sửa ví gia đình",
-            "scopeLabel": "Tạo cho"
+            "scopeLabel": "Tạo cho",
+            "scopeButton": "Phạm vi"
         }
     },
     "transactions": {
@@ -311,7 +312,10 @@
             "shareAmount": "Số tiền",
             "status": "Trạng thái",
             "paid": "Đã trả",
-            "unpaid": "Chưa trả"
+            "unpaid": "Chưa trả",
+            "emptyTitle": "Không thể hiển thị chi tiết",
+            "emptyDesc": "Không tìm thấy dữ liệu giao dịch.",
+            "loadFailed": "Không thể tải chi tiết giao dịch. Vui lòng thử lại."
         },
         "import": {
             "title": "Nhập giao dịch hàng loạt",
@@ -410,16 +414,7 @@
         "toasts": {
             "paymentRecorded": "Đã ghi nhận thanh toán {{amount}}",
             "optimizationEmpty": "Tạm thời không có chi phí nào để tính toán.",
-            "optimizationZero": "Tuyệt vời! Hiện tại các thành viên không nợ khoản nào.",
-            "debtApproved": "Đã duyệt khoản nợ thành công!",
-            "debtRejected": "Đã từ chối khoản nợ thành công!"
-        },
-        "pendingDebts": {
-            "title": "Khoản nợ chờ bạn xác nhận ({{count}})",
-            "desc": "Các thành viên khác đã chỉ định bạn chia sẻ các khoản chi phí. Xác nhận để tham gia phân bổ công nợ.",
-            "paidByText": "đã chi trả • Bạn cần đóng góp:",
-            "btnReject": "Từ chối",
-            "btnApprove": "Duyệt nợ"
+            "optimizationZero": "Tuyệt vời! Hiện tại các thành viên không nợ khoản nào."
         },
         "emptySelection": "Vui lòng chọn một Gia Đình ở trên để xem tính năng Quản Lý Nợ."
     },
