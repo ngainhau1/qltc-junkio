@@ -330,14 +330,19 @@ exports.getFinancialOverview = async (req, res) => {
         sixMonthsAgo.setDate(1);
         sixMonthsAgo.setHours(0, 0, 0, 0);
 
+        const isSqlite = sequelize?.getDialect && sequelize.getDialect() === 'sqlite';
+        const dateTruncFn = isSqlite 
+            ? 'strftime(\'%Y-%m-01T00:00:00.000Z\', "date")' 
+            : 'DATE_TRUNC(\'month\', "date")';
+
         const revenueTrendsRaw = await sequelize.query(`
             SELECT
-                DATE_TRUNC('month', "date") AS month,
+                ${dateTruncFn} AS month,
                 type,
                 SUM("amount") AS total
             FROM "Transactions"
             WHERE "date" >= :sixMonthsAgo AND "type" IN ('INCOME', 'EXPENSE')
-            GROUP BY DATE_TRUNC('month', "date"), type
+            GROUP BY ${dateTruncFn}, type
             ORDER BY month ASC
         `, {
             replacements: { sixMonthsAgo },

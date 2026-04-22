@@ -200,7 +200,7 @@ describe('Debt API Endpoints', () => {
         });
 
         it('rejects simplified debt lookup for non-members', async () => {
-            const outsiderId = crypto.randomUUID();
+            const outsiderId = require('crypto').randomUUID();
             await mockUser.create({ id: outsiderId, name: 'Outsider' });
             mockUserId = outsiderId;
 
