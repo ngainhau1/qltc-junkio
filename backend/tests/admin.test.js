@@ -62,6 +62,7 @@ const mockCategory = mockSequelize.define('Category', {
     id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
     name: { type: DataTypes.STRING, allowNull: false },
     type: { type: DataTypes.ENUM('income', 'expense'), allowNull: false },
+    icon: { type: DataTypes.STRING, defaultValue: 'icon' }
 });
 
 const mockGoal = mockSequelize.define('Goal', {
@@ -80,6 +81,7 @@ const mockBudget = mockSequelize.define('Budget', {
 mockUser.hasMany(mockWallet, { foreignKey: 'user_id' });
 mockUser.hasMany(mockTransaction, { foreignKey: 'user_id' });
 mockUser.belongsToMany(mockFamily, { through: 'FamilyMembers', foreignKey: 'user_id' });
+mockTransaction.belongsTo(mockCategory, { foreignKey: 'category_id' });
 
 jest.mock('../models', () => ({
     User: mockUser, Wallet: mockWallet, Family: mockFamily, Transaction: mockTransaction, Category: mockCategory, Budget: mockBudget, Goal: mockGoal,

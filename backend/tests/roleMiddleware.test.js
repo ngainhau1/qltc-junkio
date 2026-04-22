@@ -14,6 +14,11 @@ describe('roleMiddleware', () => {
         const req = {};
         roleMiddleware('admin')(req, res, next);
         expect(res.status).toHaveBeenCalledWith(403);
+        expect(res.json).toHaveBeenCalledWith({
+            status: 'error',
+            message: 'FORBIDDEN',
+            data: null,
+        });
         expect(next).not.toHaveBeenCalled();
     });
 
@@ -21,6 +26,11 @@ describe('roleMiddleware', () => {
         const req = { user: { role: 'member' } };
         roleMiddleware('admin')(req, res, next);
         expect(res.status).toHaveBeenCalledWith(403);
+        expect(res.json).toHaveBeenCalledWith({
+            status: 'error',
+            message: 'FORBIDDEN',
+            data: null,
+        });
         expect(next).not.toHaveBeenCalled();
     });
 

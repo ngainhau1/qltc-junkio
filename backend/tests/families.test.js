@@ -143,7 +143,7 @@ describe('Family API Endpoints', () => {
 
         expect(res.statusCode).toEqual(200);
         expect(res.body.data.name).toBe('Test Family');
-        const members = res.body.data.Members || res.body.data.FamilyMembers || [];
+        const members = res.body.data.Members || res.body.data.FamilyMembers || res.body.data.members || [];
         const wallets = res.body.data.Wallets || res.body.data.wallets || [];
         expect(Array.isArray(members)).toBe(true);
         expect(Array.isArray(wallets)).toBe(true);

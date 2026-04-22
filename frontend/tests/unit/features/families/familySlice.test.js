@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import reducer, { setActiveFamily } from './familySlice';
+import reducer, { setActiveFamily } from '@/features/families/familySlice';
 
 const baseState = {
   activeFamilyId: null,

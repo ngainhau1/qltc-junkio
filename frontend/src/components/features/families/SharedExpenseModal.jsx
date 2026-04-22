@@ -11,29 +11,32 @@ import { refreshFinanceData } from "@/features/finance/refreshFinanceData"
 import { toast } from "sonner"
 import { useTranslation } from "react-i18next"
 import { formatCurrency, generateId } from "@/lib/utils"
+import { resolveError } from "@/utils/authErrors"
 
-export function SharedExpenseModal({ isOpen, onClose, family, familyWalletId }) {
+export function SharedExpenseModal({ isOpen, onClose, family }) {
     const { t } = useTranslation()
     const dispatch = useDispatch()
     const { user } = useSelector(state => state.auth)
+    const { wallets } = useSelector(state => state.wallets)
+    const personalWallets = wallets.filter((wallet) => wallet.user_id === user?.id && !wallet.family_id)
 
     const validationSchema = Yup.object().shape({
         description: Yup.string().required(t('sharedExpense.errDesc')),
         amount: Yup.number().positive(t('sharedExpense.errAmount')).required(t('sharedExpense.errAmount')),
-        paidBy: Yup.string().required()
+        walletId: Yup.string().required(t('sharedExpense.errNoPersonalWallet'))
     })
 
     const formik = useFormik({
         initialValues: {
             description: "",
             amount: "",
-            paidBy: user ? String(user.id) : ""
+            walletId: personalWallets[0]?.id || ""
         },
         validationSchema,
         enableReinitialize: true,
         onSubmit: async (values) => {
-            if (!familyWalletId) {
-                toast.error(t('sharedExpense.errNoWallet'));
+            if (!values.walletId) {
+                toast.error(t('sharedExpense.errNoPersonalWallet'));
                 return;
             }
 
@@ -41,22 +44,26 @@ export function SharedExpenseModal({ isOpen, onClose, family, familyWalletId }) 
             const memberCount = family?.members.length || 1;
             const splitAmount = totalAmount / memberCount;
 
-            const shares = family.members.map(m => ({
-                id: generateId('s'),
-                user_id: m.id,
-                amount: splitAmount,
-                status: m.id === values.paidBy ? 'PAID' : 'UNPAID',
-                approval_status: m.id === values.paidBy ? 'APPROVED' : 'PENDING'
-            }));
+            const shares = family.members.map(m => {
+                const isPayer = m.id === user?.id;
+
+                return {
+                    id: generateId('s'),
+                    user_id: m.id,
+                    amount: splitAmount,
+                    status: isPayer ? 'PAID' : 'UNPAID',
+                    approval_status: 'APPROVED'
+                };
+            });
 
             const newTx = {
                 amount: totalAmount,
                 date: new Date().toISOString(),
                 description: values.description,
                 type: 'EXPENSE',
-                wallet_id: familyWalletId,
+                wallet_id: values.walletId,
                 category_id: null,
-                user_id: values.paidBy,
+                user_id: user?.id,
                 family_id: family.id,
                 shares: shares
             };
@@ -70,7 +77,7 @@ export function SharedExpenseModal({ isOpen, onClose, family, familyWalletId }) 
                 onClose();
             } catch (error) {
                 console.error("Lỗi tạo chi tiêu chung:", error);
-                toast.error(error);
+                toast.error(resolveError(error, t, 'errors.transactions.createFailed'));
             }
         }
     });
@@ -114,22 +121,25 @@ export function SharedExpenseModal({ isOpen, onClose, family, familyWalletId }) 
                 </div>
 
                 <div className="space-y-2">
-                    <Label>{t('sharedExpense.paidByLabel')}</Label>
+                    <Label>{t('sharedExpense.walletLabel')}</Label>
                     <Select
-                        value={String(formik.values.paidBy)}
-                        onValueChange={(val) => formik.setFieldValue('paidBy', val)}
+                        value={formik.values.walletId}
+                        onValueChange={(value) => formik.setFieldValue('walletId', value)}
                     >
                         <SelectTrigger className="w-full">
-                            <SelectValue placeholder={t('sharedExpense.selectMember')} />
+                            <SelectValue placeholder={t('sharedExpense.selectWallet')} />
                         </SelectTrigger>
                         <SelectContent>
-                            {family?.members.map(m => (
-                                <SelectItem key={m.id} value={String(m.id)}>
-                                    {m.name} {m.id === user?.id ? t('family.list.you') : ""}
+                            {personalWallets.map((wallet) => (
+                                <SelectItem key={wallet.id} value={wallet.id}>
+                                    {wallet.name}
                                 </SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
+                    {formik.touched.walletId && formik.errors.walletId && (
+                        <p className="text-xs text-red-500">{formik.errors.walletId}</p>
+                    )}
                 </div>
 
                 {currentAmount > 0 && (

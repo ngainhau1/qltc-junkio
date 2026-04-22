@@ -1,91 +1,189 @@
-const { body, query, param, validationResult, matchedData } = require('express-validator');
-
-const handleValidation = (locations = ['body']) => (req, res, next) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        const details = errors.array();
-        return res.status(422).json({
-            message: details[0]?.msg || 'Validation error',
-            errors: details
-        });
-    }
-
-    if (locations.includes('body')) {
-        req.body = matchedData(req, { locations: ['body'], includeOptionals: true });
-    }
-    if (locations.includes('query')) {
-        req.query = matchedData(req, { locations: ['query'], includeOptionals: true });
-    }
-    if (locations.includes('params')) {
-        req.params = matchedData(req, { locations: ['params'], includeOptionals: true });
-    }
-
-    next();
-};
+const { body, query, param } = require('express-validator');
+const { buildValidationHandler, createValidationCode } = require('./validationHelper');
 
 exports.validateTransactionCreate = [
-    body('wallet_id').isUUID().withMessage('wallet_id phai la UUID'),
-    body('amount').isFloat({ gt: 0 }).withMessage('amount phai > 0').toFloat(),
-    body('type').isIn(['INCOME', 'EXPENSE']).withMessage('type khong hop le'),
-    body('category_id').optional({ nullable: true }).isUUID().withMessage('category_id phai la UUID'),
-    body('family_id').optional({ nullable: true }).isUUID().withMessage('family_id phai la UUID'),
-    body('shares').optional({ nullable: true }).isArray().withMessage('shares phai la mang'),
-    body('shares.*.user_id').optional().isUUID().withMessage('shares.user_id phai la UUID'),
-    body('shares.*.amount').optional().isFloat({ gt: 0 }).withMessage('shares.amount phai > 0').toFloat(),
-    body('shares.*.status').optional().isIn(['PAID', 'UNPAID']).withMessage('shares.status khong hop le'),
-    body('shares.*.approval_status').optional().isIn(['APPROVED', 'PENDING', 'REJECTED']).withMessage('shares.approval_status khong hop le'),
-    body('date').optional().isISO8601().toDate().withMessage('date phai la ISO-8601'),
-    body('description').optional().trim().escape().isLength({ max: 255 }).withMessage('description qua dai'),
-    handleValidation(['body'])
+    body('wallet_id')
+        .isUUID()
+        .withMessage(createValidationCode('wallet_id', 'INVALID_UUID')),
+    body('amount')
+        .isFloat({ gt: 0 })
+        .withMessage(createValidationCode('amount', 'MUST_BE_POSITIVE'))
+        .toFloat(),
+    body('type')
+        .isIn(['INCOME', 'EXPENSE'])
+        .withMessage(createValidationCode('type', 'INVALID_ENUM')),
+    body('category_id')
+        .optional({ nullable: true })
+        .isUUID()
+        .withMessage(createValidationCode('category_id', 'INVALID_UUID')),
+    body('family_id')
+        .optional({ nullable: true })
+        .isUUID()
+        .withMessage(createValidationCode('family_id', 'INVALID_UUID')),
+    body('shares')
+        .optional({ nullable: true })
+        .isArray()
+        .withMessage(createValidationCode('shares', 'INVALID_ARRAY')),
+    body('shares.*.user_id')
+        .optional()
+        .isUUID()
+        .withMessage(createValidationCode('shares.*.user_id', 'INVALID_UUID')),
+    body('shares.*.amount')
+        .optional()
+        .isFloat({ gt: 0 })
+        .withMessage(createValidationCode('shares.*.amount', 'MUST_BE_POSITIVE'))
+        .toFloat(),
+    body('shares.*.status')
+        .optional()
+        .isIn(['PAID', 'UNPAID'])
+        .withMessage(createValidationCode('shares.*.status', 'INVALID_ENUM')),
+    body('shares.*.approval_status')
+        .optional()
+        .isIn(['APPROVED'])
+        .withMessage(createValidationCode('shares.*.approval_status', 'INVALID_ENUM')),
+    body('date')
+        .optional()
+        .isISO8601()
+        .withMessage(createValidationCode('date', 'INVALID_ISO8601'))
+        .bail()
+        .toDate(),
+    body('description')
+        .optional()
+        .trim()
+        .escape()
+        .isLength({ max: 255 })
+        .withMessage(createValidationCode('description', 'MAX_LENGTH_EXCEEDED')),
+    buildValidationHandler(['body']),
 ];
 
 exports.validateTransactionTransfer = [
-    body('from_wallet_id').isUUID().withMessage('from_wallet_id phai la UUID'),
+    body('from_wallet_id')
+        .isUUID()
+        .withMessage(createValidationCode('from_wallet_id', 'INVALID_UUID')),
     body('to_wallet_id')
         .isUUID()
-        .withMessage('to_wallet_id phai la UUID')
+        .withMessage(createValidationCode('to_wallet_id', 'INVALID_UUID'))
         .bail()
         .custom((toWalletId, { req }) => {
             if (toWalletId === req.body.from_wallet_id) {
-                throw new Error('to_wallet_id phai khac from_wallet_id');
+                throw new Error(
+                    createValidationCode('to_wallet_id', 'MUST_DIFFER_FROM_FROM_WALLET_ID')
+                );
             }
             return true;
         }),
-    body('amount').isFloat({ gt: 0 }).withMessage('amount phai > 0').toFloat(),
-    body('description').optional().trim().escape().isLength({ max: 255 }),
-    body('date').optional().isISO8601().toDate(),
-    handleValidation(['body'])
+    body('amount')
+        .isFloat({ gt: 0 })
+        .withMessage(createValidationCode('amount', 'MUST_BE_POSITIVE'))
+        .toFloat(),
+    body('description')
+        .optional()
+        .trim()
+        .escape()
+        .isLength({ max: 255 })
+        .withMessage(createValidationCode('description', 'MAX_LENGTH_EXCEEDED')),
+    body('date')
+        .optional()
+        .isISO8601()
+        .withMessage(createValidationCode('date', 'INVALID_ISO8601'))
+        .bail()
+        .toDate(),
+    buildValidationHandler(['body']),
 ];
 
 exports.validateTransactionImport = [
-    body('transactions').isArray({ min: 1 }).withMessage('transactions phai la mang va khong rong'),
-    body('transactions.*.wallet_id').isUUID().withMessage('wallet_id phai la UUID'),
-    body('transactions.*.type').isIn(['INCOME', 'EXPENSE']).withMessage('type phai la INCOME hoac EXPENSE'),
-    body('transactions.*.amount').isFloat({ gt: 0 }).withMessage('amount phai > 0').toFloat(),
-    body('transactions.*.category_id').optional({ nullable: true }).isUUID().withMessage('category_id phai la UUID'),
-    body('transactions.*.description').optional().trim().escape().isLength({ max: 255 }),
-    body('transactions.*.date').optional().isISO8601().toDate(),
-    handleValidation(['body'])
+    body('transactions')
+        .isArray({ min: 1 })
+        .withMessage(createValidationCode('transactions', 'INVALID_ARRAY')),
+    body('transactions.*.wallet_id')
+        .isUUID()
+        .withMessage(createValidationCode('transactions.*.wallet_id', 'INVALID_UUID')),
+    body('transactions.*.type')
+        .isIn(['INCOME', 'EXPENSE'])
+        .withMessage(createValidationCode('transactions.*.type', 'INVALID_ENUM')),
+    body('transactions.*.amount')
+        .isFloat({ gt: 0 })
+        .withMessage(createValidationCode('transactions.*.amount', 'MUST_BE_POSITIVE'))
+        .toFloat(),
+    body('transactions.*.category_id')
+        .optional({ nullable: true })
+        .isUUID()
+        .withMessage(createValidationCode('transactions.*.category_id', 'INVALID_UUID')),
+    body('transactions.*.description')
+        .optional()
+        .trim()
+        .escape()
+        .isLength({ max: 255 })
+        .withMessage(createValidationCode('transactions.*.description', 'MAX_LENGTH_EXCEEDED')),
+    body('transactions.*.date')
+        .optional()
+        .isISO8601()
+        .withMessage(createValidationCode('transactions.*.date', 'INVALID_ISO8601'))
+        .bail()
+        .toDate(),
+    buildValidationHandler(['body']),
 ];
 
 exports.validateTransactionParams = [
-    param('id').isUUID().withMessage('id phai la UUID'),
-    handleValidation(['params'])
+    param('id').isUUID().withMessage(createValidationCode('id', 'INVALID_UUID')),
+    buildValidationHandler(['params']),
 ];
 
 exports.validateTransactionQuery = [
-    query('page').optional().isInt({ min: 1 }).toInt(),
-    query('limit').optional().isInt({ min: 1, max: 1000 }).toInt(),
-    query('type').optional().isIn(['INCOME', 'EXPENSE', 'TRANSFER_OUT', 'TRANSFER_IN']),
-    query('startDate').optional().isISO8601().toDate(),
-    query('endDate').optional().isISO8601().toDate(),
-    query('context').optional().isIn(['personal', 'family']),
-    query('family_id').optional().isUUID(),
-    query('wallet_id').optional().isUUID(),
-    query('category_id').optional().isUUID(),
-    query('format').optional().isIn(['csv', 'pdf']),
+    query('page')
+        .optional()
+        .isInt({ min: 1 })
+        .withMessage(createValidationCode('page', 'INVALID_RANGE'))
+        .toInt(),
+    query('limit')
+        .optional()
+        .isInt({ min: 1, max: 1000 })
+        .withMessage(createValidationCode('limit', 'INVALID_RANGE'))
+        .toInt(),
+    query('type')
+        .optional()
+        .isIn(['INCOME', 'EXPENSE', 'TRANSFER_OUT', 'TRANSFER_IN'])
+        .withMessage(createValidationCode('type', 'INVALID_ENUM')),
+    query('startDate')
+        .optional()
+        .isISO8601()
+        .withMessage(createValidationCode('startDate', 'INVALID_ISO8601'))
+        .bail()
+        .toDate(),
+    query('endDate')
+        .optional()
+        .isISO8601()
+        .withMessage(createValidationCode('endDate', 'INVALID_ISO8601'))
+        .bail()
+        .toDate(),
+    query('context')
+        .optional()
+        .isIn(['personal', 'family'])
+        .withMessage(createValidationCode('context', 'INVALID_ENUM')),
+    query('family_id')
+        .optional()
+        .isUUID()
+        .withMessage(createValidationCode('family_id', 'INVALID_UUID')),
+    query('wallet_id')
+        .optional()
+        .isUUID()
+        .withMessage(createValidationCode('wallet_id', 'INVALID_UUID')),
+    query('category_id')
+        .optional()
+        .isUUID()
+        .withMessage(createValidationCode('category_id', 'INVALID_UUID')),
+    query('format')
+        .optional()
+        .isIn(['csv', 'pdf'])
+        .withMessage(createValidationCode('format', 'INVALID_ENUM')),
     query('search').optional().trim().escape(),
-    query('sortBy').optional().isIn(['date', 'amount', 'type', 'created_at']),
-    query('sortOrder').optional().isIn(['ASC', 'DESC']),
-    handleValidation(['query'])
+    query('sortBy')
+        .optional()
+        .isIn(['date', 'amount', 'type', 'created_at'])
+        .withMessage(createValidationCode('sortBy', 'INVALID_ENUM')),
+    query('sortOrder')
+        .optional()
+        .isIn(['ASC', 'DESC'])
+        .withMessage(createValidationCode('sortOrder', 'INVALID_ENUM')),
+    buildValidationHandler(['query']),
 ];

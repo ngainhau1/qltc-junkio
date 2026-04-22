@@ -1,5 +1,5 @@
-const { Transaction, Wallet, Category } = require('../models');
 const { Op } = require('sequelize');
+const { Transaction, Wallet, Category } = require('../models');
 const { success, serverError } = require('../utils/responseHelper');
 const { getAccessibleWallets, getAccessibleWalletIds } = require('../utils/accessScope');
 
@@ -29,7 +29,7 @@ const buildCashflowSeries = (transactions) => {
             accumulator[sortKey] = {
                 date: sortKey,
                 income: 0,
-                expense: 0
+                expense: 0,
             };
         }
 
@@ -64,7 +64,6 @@ const buildExpenseByCategory = (transactions) => {
     return Object.values(grouped).sort((a, b) => b.value - a.value);
 };
 
-// GET /api/analytics/dashboard
 exports.getDashboardStats = async (req, res) => {
     try {
         const { context, family_id, startDate, endDate } = req.query;
@@ -73,8 +72,9 @@ exports.getDashboardStats = async (req, res) => {
         const { wallets } = await getAccessibleWallets({
             userId,
             context,
-            familyId: family_id
+            familyId: family_id,
         });
+
         const walletIds = wallets.map((wallet) => wallet.id);
         const totalAssets = wallets.reduce((sum, wallet) => sum + toNumber(wallet.balance), 0);
 
@@ -83,8 +83,8 @@ exports.getDashboardStats = async (req, res) => {
         const currentMonthTransactions = await Transaction.findAll({
             where: {
                 wallet_id: { [Op.in]: walletIds },
-                date: { [Op.gte]: startOfMonth }
-            }
+                date: { [Op.gte]: startOfMonth },
+            },
         });
 
         const totalIncome = currentMonthTransactions
@@ -101,48 +101,51 @@ exports.getDashboardStats = async (req, res) => {
             limit: 5,
             include: [
                 { model: Category, attributes: ['name', 'icon'] },
-                { model: Wallet, attributes: ['id', 'name'] }
-            ]
+                { model: Wallet, attributes: ['id', 'name'] },
+            ],
         });
 
         const cashflowTransactions = await Transaction.findAll({
             where: {
                 wallet_id: { [Op.in]: walletIds },
-                ...buildDateWhere(startDate, endDate)
+                ...buildDateWhere(startDate, endDate),
             },
-            order: [['date', 'ASC']]
+            order: [['date', 'ASC']],
         });
 
-        success(res, {
-            stats: {
-                totalAssets,
-                totalIncome,
-                totalExpense,
-                activeWalletsCount: wallets.length,
-                transactionsThisMonthCount: currentMonthTransactions.length
+        return success(
+            res,
+            {
+                stats: {
+                    totalAssets,
+                    totalIncome,
+                    totalExpense,
+                    activeWalletsCount: wallets.length,
+                    transactionsThisMonthCount: currentMonthTransactions.length,
+                },
+                recentTransactions,
+                cashflowSeries: buildCashflowSeries(cashflowTransactions),
             },
-            recentTransactions,
-            cashflowSeries: buildCashflowSeries(cashflowTransactions)
-        }, 'Lay du lieu analytics thanh cong');
+            'ANALYTICS_OVERVIEW_LOADED'
+        );
     } catch (error) {
         console.error('Error fetching dashboard analytics:', error);
-        serverError(res, 'Server error');
+        return serverError(res, 'ANALYTICS_OVERVIEW_FAILED');
     }
 };
 
-// GET /api/analytics/reports
 exports.getReports = async (req, res) => {
     try {
         const { context, family_id, startDate, endDate, type, wallet_id, category_id } = req.query;
         const { walletIds } = await getAccessibleWalletIds({
             userId: req.user.id,
             context,
-            familyId: family_id
+            familyId: family_id,
         });
 
         const where = {
             wallet_id: { [Op.in]: walletIds },
-            ...buildDateWhere(startDate, endDate)
+            ...buildDateWhere(startDate, endDate),
         };
 
         if (type) where.type = type;
@@ -153,9 +156,9 @@ exports.getReports = async (req, res) => {
             where,
             include: [
                 { model: Category, attributes: ['name', 'icon'] },
-                { model: Wallet, attributes: ['id', 'name'] }
+                { model: Wallet, attributes: ['id', 'name'] },
             ],
-            order: [['date', 'ASC']]
+            order: [['date', 'ASC']],
         });
 
         const summary = {
@@ -165,17 +168,21 @@ exports.getReports = async (req, res) => {
             totalExpense: transactions
                 .filter((transaction) => transaction.type === 'EXPENSE' || transaction.type === 'TRANSFER_OUT')
                 .reduce((sum, transaction) => sum + toNumber(transaction.amount), 0),
-            transactionCount: transactions.length
+            transactionCount: transactions.length,
         };
         summary.net = summary.totalIncome - summary.totalExpense;
 
-        success(res, {
-            summary,
-            expenseByCategory: buildExpenseByCategory(transactions),
-            cashflowSeries: buildCashflowSeries(transactions)
-        }, 'Lay du lieu reports thanh cong');
+        return success(
+            res,
+            {
+                summary,
+                expenseByCategory: buildExpenseByCategory(transactions),
+                cashflowSeries: buildCashflowSeries(transactions),
+            },
+            'ANALYTICS_REPORT_LOADED'
+        );
     } catch (error) {
         console.error('Error fetching reports:', error);
-        serverError(res, 'Server error');
+        return serverError(res, 'ANALYTICS_REPORT_FAILED');
     }
 };

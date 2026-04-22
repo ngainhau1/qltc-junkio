@@ -8,7 +8,7 @@ export const fetchCategories = createAsyncThunk(
             const res = await api.get('/categories');
             return res.data;
         } catch (err) {
-            return rejectWithValue(err.response?.data || 'CATEGORY_LOAD_FAILED');
+            return rejectWithValue(err.response?.data?.message || 'CATEGORY_LOAD_FAILED');
         }
     }
 );

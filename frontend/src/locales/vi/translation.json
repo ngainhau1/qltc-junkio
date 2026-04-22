@@ -211,12 +211,13 @@
             "addFamilyTitle": "Thêm ví gia đình",
             "editPersonalTitle": "Sửa ví cá nhân",
             "editFamilyTitle": "Sửa ví gia đình",
-            "scopeLabel": "Tạo cho"
+            "scopeLabel": "Tạo cho",
+            "scopeButton": "Phạm vi"
         }
     },
     "transactions": {
         "title": "Giao Dịch",
-        "desc": "Quản lý chi tiêu \u0026 lập lịch định kỳ.",
+        "desc": "Quản lý chi tiêu & lập lịch định kỳ.",
         "empty": "Không có dữ liệu",
         "exportData": "Xuất Dữ Liệu",
         "exportPDF": "Xuất PDF",
@@ -311,7 +312,10 @@
             "shareAmount": "Số tiền",
             "status": "Trạng thái",
             "paid": "Đã trả",
-            "unpaid": "Chưa trả"
+            "unpaid": "Chưa trả",
+            "emptyTitle": "Không thể hiển thị chi tiết",
+            "emptyDesc": "Không tìm thấy dữ liệu giao dịch.",
+            "loadFailed": "Không thể tải chi tiết giao dịch. Vui lòng thử lại."
         },
         "import": {
             "title": "Nhập giao dịch hàng loạt",
@@ -357,25 +361,29 @@
         },
         "expenses": {
             "title": "Chi Tiêu Chung ({{count}})",
-            "desc": "Danh sách các giao dịch từ Quỹ Gia Đình.",
+            "desc": "Danh sách các khoản chi tiêu chung trong gia đình.",
             "emptyTitle": "Chưa có giao dịch",
             "emptyDesc": "Chưa có khoản chi tiêu chung nào được ghi nhận.",
             "paidBy": "{{name}} đã trả {{amount}}",
+            "familyFundPaid": "Quỹ gia đình đã chi {{amount}}",
             "settleUp": "(Settle Up)",
             "splitMembers": "(Chia cho {{count}} người)",
             "splitEven": "(Chia đều cho {{count}} người)",
-            "optimizeBtn": "Tối Ưu Hóa Nợ (Thuật Toán Splitwise)"
+            "optimizeBtn": "Tối Ưu Chi Tiêu Chung"
         },
         "settlement": {
-            "title": "Thanh Toán Tối Ưu",
+            "title": "Tối Ưu Chi Tiêu Chung",
             "desc": "Ai cần phải trả cho ai để cân bằng.",
             "emptyTitle": "Không có nợ",
             "emptyDescZero": "Cần có giao dịch để chia tiền.",
             "emptyDescHasTx": "Các khoản nợ đã được cân bằng.",
             "debtor": "Người nợ",
             "creditor": "Chủ nợ",
-            "payBtn": "Trả Nợ",
-            "algorithmNote": "Giao dịch được giảm thiểu bằng Thuật Toán Tham Lam (Greedy)."
+            "fundTarget": "Hoàn về",
+            "familyFund": "Quỹ gia đình",
+            "payBtn": "Trả",
+            "reimburseBtn": "Đã hoàn quỹ",
+            "algorithmNote": "Giao dịch được tối ưu để giảm số lần chuyển tiền giữa các thành viên."
         },
         "modals": {
             "invite": {
@@ -396,7 +404,9 @@
             "settle": {
                 "title": "Xác Nhận Thanh Toán",
                 "payTo": "Chuyển Trả",
-                "note": "Hành động này sẽ tạo một giao dịch thanh toán trong hệ thống để tự động cấn trừ khoản nợ này. Bạn cần đảm bảo việc chuyển tiền thực tế đã được thực hiện.",
+                "note": "Hành động này sẽ tạo giao dịch chuyển tiền từ ví cá nhân của bạn sang ví của người đã ứng tiền và tự động cấn trừ phần nợ tương ứng.",
+                "fromWallet": "Ví trả tiền",
+                "selectWallet": "Chọn ví trả tiền",
                 "cancel": "Hủy",
                 "submit": "Xác nhận Đã Trả"
             }
@@ -404,16 +414,7 @@
         "toasts": {
             "paymentRecorded": "Đã ghi nhận thanh toán {{amount}}",
             "optimizationEmpty": "Tạm thời không có chi phí nào để tính toán.",
-            "optimizationZero": "Tuyệt vời! Hiện tại các thành viên không nợ khoản nào.",
-            "debtApproved": "Đã duyệt khoản nợ thành công!",
-            "debtRejected": "Đã từ chối khoản nợ thành công!"
-        },
-        "pendingDebts": {
-            "title": "Khoản nợ chờ bạn xác nhận ({{count}})",
-            "desc": "Các thành viên khác đã chỉ định bạn chia sẻ các khoản chi phí. Xác nhận để tham gia phân bổ công nợ.",
-            "paidByText": "đã chi trả • Bạn cần đóng góp:",
-            "btnReject": "Từ chối",
-            "btnApprove": "Duyệt nợ"
+            "optimizationZero": "Tuyệt vời! Hiện tại các thành viên không nợ khoản nào."
         },
         "emptySelection": "Vui lòng chọn một Gia Đình ở trên để xem tính năng Quản Lý Nợ."
     },
@@ -421,20 +422,20 @@
         "title": "Cài Đặt",
         "subtitle": "Quản lý giao diện, hiển thị, hệ thống và tài khoản của bạn.",
         "tabs": {
-            "appearance": "Giao Diện \u0026 Ký Hiệu",
+            "appearance": "Giao Diện & Ký Hiệu",
             "notifications": "Thông Báo",
             "data": "Dữ Liệu Hệ Thống",
-            "account": "Tài Khoản \u0026 Bảo Mật",
-            "support": "Hỗ Trợ \u0026 Thông Tin"
+            "account": "Tài Khoản & Bảo Mật",
+            "support": "Hỗ Trợ & Thông Tin"
         },
         "appearance": {
-            "title": "Hiển thị \u0026 Giao diện",
+            "title": "Hiển thị & Giao diện",
             "desc": "Cá nhân hóa trải nghiệm sử dụng ứng dụng.",
             "themeTitle": "Chủ Màu (Theme)",
             "themeLight": "Giao diện Sáng",
             "themeDark": "Giao diện Tối",
             "themeSystem": "Tự động (Hệ thống)",
-            "currencyTitle": "Tiền tệ \u0026 Ký hiệu",
+            "currencyTitle": "Tiền tệ & Ký hiệu",
             "currencyDesc": "Tất cả giao dịch sẽ hiển thị với ký hiệu này.",
             "currencyPlaceholder": "Chọn tiền tệ",
             "langTitle": "Ngôn ngữ Ưu tiên",
@@ -448,7 +449,7 @@
         "notifications": {
             "title": "Cài Đặt Thông Báo",
             "desc": "Quản lý các sự kiện nào sẽ gửi cảnh báo đến bạn.",
-            "debtTitle": "Nhắc Nhở Nợ \u0026 Thanh Toán",
+            "debtTitle": "Nhắc Nhở Nợ & Thanh Toán",
             "debtDesc": "Nhận thông báo khi tới hạn chót thanh toán hóa đơn hoặc trả nợ.",
             "budgetTitle": "Cảnh Báo Vượt Ngân Sách",
             "budgetDesc": "Báo động đỏ khi bạn tiêu quá số tiền đã hoạch định cho một hạng mục.",
@@ -456,12 +457,12 @@
             "weeklyDesc": "Gửi bản tóm tắt tình hình tài chính vào Chủ Nhật hàng tuần qua email."
         },
         "data": {
-            "title": "Lưu Trữ \u0026 Khôi Phục",
+            "title": "Lưu Trữ & Khôi Phục",
             "desc": "Kiểm soát toàn bộ kho dữ liệu cục bộ của ứng dụng.",
             "backupTitle": "Xuất Phục Hồi (Backup Data)",
             "backupDesc": "Tải xuống toàn bộ tài sản, giao dịch dưới định dạng tệp .json an toàn.",
             "backupBtn": "Sao Lưu Ngay",
-            "backupSuccess": "Đã phân loại \u0026 tải xuống tệp dữ liệu backup.",
+            "backupSuccess": "Đã phân loại & tải xuống tệp dữ liệu backup.",
             "importTitle": "Nhập Dữ Liệu Cũ (Import)",
             "importDesc": "Khôi phục dữ liệu từ file backup (.json) đã xuất trước đó.",
             "importBtn": "Chọn File",
@@ -486,7 +487,7 @@
             "resetModalConfirm": "Xác nhận Xóa"
         },
         "account": {
-            "title": "Tài Khoản \u0026 Phiên Đăng Nhập",
+            "title": "Tài Khoản & Phiên Đăng Nhập",
             "desc": "Thông tin trạng thái bảo mật của phiên",
             "logoutTitle": "Đăng Xuất Phiên Hiện Tại",
             "logoutDesc": "Hành động này sẽ xóa Identity Token hiện tại, bạn cần phải nhập lại Email/Mật khẩu khi truy cập tiếp.",
@@ -527,7 +528,7 @@
             "deleteModalTitle": "Xác Nhận Xóa Tài Khoản",
             "deleteModalQ": "Hành động này không thể hoàn tác. Toàn bộ dữ liệu sẽ bị xóa vĩnh viễn.",
             "deletePasswordLabel": "Nhập mật khẩu để xác thực",
-            "deleteTypeConfirm": "Gõ \u0027XÓA\u0027 để xác nhận",
+            "deleteTypeConfirm": "Gõ 'XÓA' để xác nhận",
             "deleteTypeHint": "XÓA",
             "deleteConfirmWord": "XÓA",
             "deleteConfirmBtn": "Xóa vĩnh viễn",
@@ -535,7 +536,7 @@
             "deleteFailed": "Xóa tài khoản thất bại."
         },
         "support": {
-            "title": "Hỗ Trợ \u0026 Thông Tin",
+            "title": "Hỗ Trợ & Thông Tin",
             "desc": "Thông tin về ứng dụng, liên hệ nhóm phát triển và các chính sách.",
             "appInfoTitle": "Thông tin Ứng dụng",
             "appName": "Junkio Expense Tracker",
@@ -544,12 +545,12 @@
             "appAuthorLabel": "Phát triển bởi",
             "appAuthor": "Nhóm Junkio — Đồ án Tốt nghiệp",
             "techStackTitle": "Công nghệ Sử dụng",
-            "legalTitle": "Chính sách \u0026 Điều khoản",
+            "legalTitle": "Chính sách & Điều khoản",
             "termsTitle": "Điều khoản Sử dụng",
             "termsDesc": "Bằng việc sử dụng ứng dụng này, bạn đồng ý với các điều khoản dịch vụ của chúng tôi.",
             "privacyTitle": "Chính sách Bảo mật",
             "privacyDesc": "Dữ liệu tài chính của bạn được mã hóa và bảo vệ theo tiêu chuẩn bảo mật cao nhất.",
-            "feedbackTitle": "Góp ý \u0026 Phản hồi",
+            "feedbackTitle": "Góp ý & Phản hồi",
             "feedbackDesc": "Có ý tưởng cải thiện? Hãy gửi góp ý cho nhóm phát triển.",
             "feedbackBtn": "Gửi Email Góp Ý",
             "sourceCodeTitle": "Mã nguồn",
@@ -608,7 +609,7 @@
         }
     },
     "reports": {
-        "title": "Báo Cáo \u0026 Thống Kê",
+        "title": "Báo Cáo & Thống Kê",
         "desc": "Hiểu rõ hơn về thói quen chi tiêu của bạn.",
         "btnPdf": "PDF",
         "btnCsv": "CSV",
@@ -656,7 +657,7 @@
             "food": "Ăn Uống",
             "transport": "Di Chuyển",
             "shopping": "Mua Sắm",
-            "utilities": "Hóa Đơn \u0026 Tiện Ích",
+            "utilities": "Hóa Đơn & Tiện Ích",
             "entertainment": "Giải Trí",
             "health": "Sức Khỏe",
             "income": "Lương / Thu Nhập"
@@ -703,10 +704,11 @@
     "sharedExpense": {
         "addBtn": "Thêm Chi Tiêu Chung",
         "title": "Thêm Chi Tiêu Chung",
-        "desc": "Tạo giao dịch nhóm, dự chi từ quỹ gia đình và tự động chia đều nợ cho các thành viên.",
+        "desc": "Tạo giao dịch nhóm từ ví cá nhân của bạn và tự động chia đều nợ cho các thành viên.",
         "descriptionLabel": "Mô tả khoản chi",
         "descriptionPlaceholder": "vd: Tiền ăn lẩu tối thứ 7",
         "amountLabel": "Tổng số tiền",
+        "walletLabel": "Ví ứng tiền",
         "paidByLabel": "Người ứng tiền / Trả tiền",
         "splitEqually": "Chia đều cho {{count}} người (mỗi người {{amount}})",
         "previewLabel": "Bản xem trước phân bổ nợ:",
@@ -715,8 +717,10 @@
         "errDesc": "Vui lòng nhập mô tả",
         "errAmount": "Vui lòng nhập số tiền hợp lệ lớn hơn 0",
         "errNoWallet": "Gia đình này chưa có quỹ hoặc ví chung nào để ghi nhận giao dịch.",
+        "errNoPersonalWallet": "Bạn cần có ví cá nhân để ứng tiền hoặc trả nợ.",
         "successMsg": "Đã thêm chi tiêu chung thành công!",
-        "selectMember": "Chọn thành viên"
+        "selectMember": "Chọn thành viên",
+        "selectWallet": "Chọn ví cá nhân"
     },
     "admin": {
         "title": "Quản trị Hệ thống",
@@ -850,6 +854,7 @@
             "transferFailed": "Lỗi giao dịch chuyển tiền.",
             "invalidAmount": "Số tiền phải lớn hơn 0.",
             "insufficientBalance": "Số dư ví không đủ.",
+            "settlementAmountExceedsDebt": "Số tiền trả nợ lớn hơn khoản nợ còn mở.",
             "invalidList": "Danh sách giao dịch không hợp lệ.",
             "importFailed": "Lỗi khi nhập dữ liệu.",
             "exportUnsupported": "Định dạng xuất không được hỗ trợ.",
@@ -876,20 +881,34 @@
             "createFailed": "Lỗi khi tạo gia đình.",
             "detailFailed": "Lỗi khi tải chi tiết gia đình.",
             "inviteFailed": "Lỗi khi mời thành viên.",
-            "removeFailed": "Lỗi khi xóa thành viên."
+            "removeFailed": "Lỗi khi xóa thành viên.",
+            "deleteFailed": "Kh?ng th? x?a gia ??nh.",
+            "notFound": "Kh?ng t?m th?y gia ??nh.",
+            "adminRequired": "Ch? qu?n tr? vi?n gia ??nh m?i ???c th?c hi?n thao t?c n?y.",
+            "memberExists": "Ng??i d?ng ?? l? th?nh vi?n c?a gia ??nh n?y.",
+            "ownerCannotBeRemoved": "Kh?ng th? x?a ch? gia ??nh kh?i gia ??nh.",
+            "ownerRequired": "Ch? ch? gia ??nh m?i ???c th?c hi?n thao t?c n?y."
         },
         "recurring": {
             "loadFailed": "Lỗi khi tải giao dịch định kỳ.",
             "createFailed": "Lỗi khi tạo giao dịch định kỳ.",
             "updateFailed": "Lỗi khi cập nhật giao dịch định kỳ.",
-            "deleteFailed": "Lỗi khi xóa giao dịch định kỳ."
+            "deleteFailed": "Lỗi khi xóa giao dịch định kỳ.",
+            "notFound": "Kh?ng t?m th?y giao d?ch ??nh k?.",
+            "triggerFailed": "Kh?ng th? ch?y giao d?ch ??nh k?."
         },
         "notifications": {
             "loadFailed": "Lỗi khi tải thông báo.",
-            "updateFailed": "Lỗi khi cập nhật thông báo."
+            "updateFailed": "Lỗi khi cập nhật thông báo.",
+            "notFound": "Kh?ng t?m th?y th?ng b?o.",
+            "broadcastFailed": "Kh?ng th? g?i th?ng b?o h? th?ng."
         },
         "categories": {
-            "loadFailed": "Lỗi khi tải danh mục."
+            "loadFailed": "Lỗi khi tải danh mục.",
+            "createFailed": "Kh?ng th? t?o danh m?c.",
+            "updateFailed": "Kh?ng th? c?p nh?t danh m?c.",
+            "deleteFailed": "Kh?ng th? x?a danh m?c.",
+            "notFound": "Kh?ng t?m th?y danh m?c."
         },
         "analytics": {
             "overviewFailed": "Lỗi khi tải tổng quan.",
@@ -909,6 +928,86 @@
             "cannotDeleteSelf": "Không được xóa chính mình.",
             "cannotLockSelf": "Không được khóa chính mình.",
             "cannotChangeOwnRole": "Không được đổi vai trò của chính mình."
+        },
+        "forbidden": "B?n kh?ng c? quy?n truy c?p.",
+        "profileLoadFailed": "Kh?ng th? t?i h? s? ng??i d?ng.",
+        "passwordChangeFailed": "Kh?ng th? ??i m?t kh?u.",
+        "currentPasswordIncorrect": "M?t kh?u hi?n t?i kh?ng ??ng.",
+        "accountDeleteFailed": "Kh?ng th? x?a t?i kho?n.",
+        "uploadFileRequired": "Vui l?ng ch?n t?p ?? t?i l?n.",
+        "import": {
+            "wallet_name_not_found": "T?n v? trong file kh?ng t?n t?i trong h? th?ng.",
+            "no_valid_transactions": "Kh?ng c? giao d?ch h?p l? ?? nh?p.",
+            "csv_read_failed": "Kh?ng th? ??c file CSV.",
+            "empty_sheet": "File Excel kh?ng c? d? li?u.",
+            "upload_failed": "Kh?ng th? nh?p d? li?u t? file."
+        },
+        "validation": {
+            "failed": "D? li?u g?i l?n kh?ng h?p l?.",
+            "id_invalid_uuid": "id ph?i l? UUID h?p l?.",
+            "role_invalid_enum": "role kh?ng h?p l?.",
+            "name_required": "name l? b?t bu?c.",
+            "name_min_length_not_met": "name ch?a ??t ?? d?i t?i thi?u.",
+            "email_invalid_email": "email ph?i l? email h?p l?.",
+            "password_min_length_not_met": "password ch?a ??t ?? d?i t?i thi?u.",
+            "password_required": "password l? b?t bu?c.",
+            "family_id_invalid_nullable_uuid": "family id ph?i l? UUID h?p l? ho?c null.",
+            "end_date_must_be_after_or_equal_start_date": "end date ph?i sau ho?c b?ng start date.",
+            "category_id_invalid_uuid": "category id ph?i l? UUID h?p l?.",
+            "amount_limit_must_be_positive": "amount limit ph?i l?n h?n 0.",
+            "start_date_invalid_iso8601": "start date ph?i l? ng?y h?p l?.",
+            "end_date_invalid_iso8601": "end date ph?i l? ng?y h?p l?.",
+            "name_max_length_exceeded": "name v??t qu? ?? d?i cho ph?p.",
+            "type_invalid_enum": "type kh?ng h?p l?.",
+            "parent_id_invalid_uuid": "parent id ph?i l? UUID h?p l?.",
+            "icon_max_length_exceeded": "icon v??t qu? ?? d?i cho ph?p.",
+            "to_user_id_invalid_uuid": "to user id ph?i l? UUID h?p l?.",
+            "amount_must_be_positive": "amount ph?i l?n h?n 0.",
+            "from_wallet_id_invalid_uuid": "from wallet id ph?i l? UUID h?p l?.",
+            "to_wallet_id_invalid_uuid": "to wallet id ph?i l? UUID h?p l?.",
+            "from_user_id_invalid_uuid": "from user id ph?i l? UUID h?p l?.",
+            "family_id_invalid_uuid": "family id ph?i l? UUID h?p l?.",
+            "user_id_to_remove_invalid_uuid": "user id to remove ph?i l? UUID h?p l?.",
+            "months_invalid_range": "months n?m ngo?i kho?ng cho ph?p.",
+            "target_amount_must_be_positive": "target amount ph?i l?n h?n 0.",
+            "current_amount_invalid_range": "current amount n?m ngo?i kho?ng cho ph?p.",
+            "deadline_invalid_iso8601": "deadline ph?i l? ng?y h?p l?.",
+            "color_code_max_length_exceeded": "color code v??t qu? ?? d?i cho ph?p.",
+            "image_url_max_length_exceeded": "image url v??t qu? ?? d?i cho ph?p.",
+            "wallet_id_invalid_uuid": "wallet id ph?i l? UUID h?p l?.",
+            "title_max_length_exceeded": "title v??t qu? ?? d?i cho ph?p.",
+            "message_required": "message l? b?t bu?c.",
+            "message_max_length_exceeded": "message v??t qu? ?? d?i cho ph?p.",
+            "type_max_length_exceeded": "type v??t qu? ?? d?i cho ph?p.",
+            "description_max_length_exceeded": "description v??t qu? ?? d?i cho ph?p.",
+            "frequency_invalid_enum": "frequency kh?ng h?p l?.",
+            "next_run_date_invalid_iso8601": "next run date ph?i l? ng?y h?p l?.",
+            "is_active_invalid_boolean": "is active ph?i l? true ho?c false.",
+            "shares_invalid_array": "shares ph?i l? m?t danh s?ch h?p l?.",
+            "shares_user_id_invalid_uuid": "shares user id ph?i l? UUID h?p l?.",
+            "shares_amount_must_be_positive": "shares amount ph?i l?n h?n 0.",
+            "shares_status_invalid_enum": "shares status kh?ng h?p l?.",
+            "shares_approval_status_invalid_enum": "shares approval status kh?ng h?p l?.",
+            "date_invalid_iso8601": "date ph?i l? ng?y h?p l?.",
+            "to_wallet_id_must_differ_from_from_wallet_id": "to wallet id ph?i kh?c from wallet id.",
+            "transactions_invalid_array": "transactions ph?i l? m?t danh s?ch h?p l?.",
+            "transactions_wallet_id_invalid_uuid": "transactions wallet id ph?i l? UUID h?p l?.",
+            "transactions_type_invalid_enum": "transactions type kh?ng h?p l?.",
+            "transactions_amount_must_be_positive": "transactions amount ph?i l?n h?n 0.",
+            "transactions_category_id_invalid_uuid": "transactions category id ph?i l? UUID h?p l?.",
+            "transactions_description_max_length_exceeded": "transactions description v??t qu? ?? d?i cho ph?p.",
+            "transactions_date_invalid_iso8601": "transactions date ph?i l? ng?y h?p l?.",
+            "page_invalid_range": "page n?m ngo?i kho?ng cho ph?p.",
+            "limit_invalid_range": "limit n?m ngo?i kho?ng cho ph?p.",
+            "context_invalid_enum": "context kh?ng h?p l?.",
+            "format_invalid_enum": "format kh?ng h?p l?.",
+            "sort_by_invalid_enum": "sort by kh?ng h?p l?.",
+            "sort_order_invalid_enum": "sort order kh?ng h?p l?.",
+            "current_password_required": "current password l? b?t bu?c.",
+            "new_password_min_length_not_met": "new password ch?a ??t ?? d?i t?i thi?u.",
+            "balance_invalid_range": "balance n?m ngo?i kho?ng cho ph?p.",
+            "currency_min_length_not_met": "currency ch?a ??t ?? d?i t?i thi?u.",
+            "currency_max_length_exceeded": "currency v??t qu? ?? d?i cho ph?p."
         }
     }
 }

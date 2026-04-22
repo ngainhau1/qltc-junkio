@@ -16,6 +16,12 @@ const buildSearchWhere = (search) => {
     };
 };
 
+/**
+ * Lấy dữ liệu tổng quan cho trang Dashboard của Admin.
+ * - Thống kê tổng số User, Giao dịch, Gia đình.
+ * - Danh sách người dùng mới đăng ký gần nhất.
+ * - Gọi các hàm analytics và tài chính để lấy dữ liệu biểu đồ.
+ */
 exports.getDashboard = async (req, res) => {
     try {
         const [totalUsers, totalTransactions, totalFamilies] = await Promise.all([
@@ -60,6 +66,12 @@ exports.getDashboard = async (req, res) => {
     }
 };
 
+/**
+ * Lấy dữ liệu phân tích hệ thống (Analytics).
+ * - Tăng trưởng người dùng theo tháng.
+ * - Top các danh mục chi tiêu nhiều nhất toàn hệ thống.
+ * - Thống kê hoạt động hàng tuần.
+ */
 exports.getAnalytics = async (req, res) => {
     try {
         const [totalWallets, totalGoals, totalBudgets] = await Promise.all([
@@ -146,6 +158,11 @@ exports.getAnalytics = async (req, res) => {
     }
 };
 
+/**
+ * Danh sách người dùng toàn hệ thống có phân trang và bộ lọc.
+ * - Hỗ trợ tìm kiếm theo tên/email.
+ * - Lọc theo vai trò (Role) và trạng thái tài khoản.
+ */
 exports.listUsers = async (req, res) => {
     try {
         const { page = 1, limit = 20, search, role, status } = req.query;
@@ -179,6 +196,10 @@ exports.listUsers = async (req, res) => {
     }
 };
 
+/**
+ * Xem chi tiết thông tin một người dùng cụ thể.
+ * - Bao gồm danh sách các Ví và các Gia đình mà user tham gia.
+ */
 exports.getUserDetail = async (req, res) => {
     try {
         const user = await User.findByPk(req.params.id, {
@@ -215,6 +236,10 @@ exports.deleteUser = async (req, res) => {
     }
 };
 
+/**
+ * Khóa hoặc Mở khóa tài khoản người dùng.
+ * - Ngăn chặn người dùng đăng nhập hệ thống nếu bị khóa.
+ */
 exports.toggleLock = async (req, res) => {
     try {
         const user = await User.findByPk(req.params.id, {
@@ -232,6 +257,9 @@ exports.toggleLock = async (req, res) => {
     }
 };
 
+/**
+ * Thay đổi vai trò người dùng (Admin, Staff, Member).
+ */
 exports.changeRole = async (req, res) => {
     try {
         const { role } = req.body;
@@ -254,6 +282,10 @@ exports.changeRole = async (req, res) => {
     }
 };
 
+/**
+ * Lấy nhật ký hệ thống (Audit Logs).
+ * - Cho phép Admin theo dõi mọi hành động nhạy cảm xảy ra trên hệ thống.
+ */
 exports.getLogs = async (req, res) => {
     const { AuditLog } = require('../models');
     try {
@@ -283,6 +315,12 @@ exports.getLogs = async (req, res) => {
     }
 };
 
+/**
+ * Tổng quan tình hình tài chính trên hệ bệ thống.
+ * - Tổng số dư hiện có trong tất cả các ví.
+ * - Xu hướng Thu/Chi 6 tháng gần nhất.
+ * - Top người dùng chi tiêu nhiều nhất.
+ */
 exports.getFinancialOverview = async (req, res) => {
     try {
         const systemBalance = parseFloat(await Wallet.sum('balance')) || 0;
@@ -292,14 +330,19 @@ exports.getFinancialOverview = async (req, res) => {
         sixMonthsAgo.setDate(1);
         sixMonthsAgo.setHours(0, 0, 0, 0);
 
+        const isSqlite = sequelize?.getDialect && sequelize.getDialect() === 'sqlite';
+        const dateTruncFn = isSqlite 
+            ? 'strftime(\'%Y-%m-01T00:00:00.000Z\', "date")' 
+            : 'DATE_TRUNC(\'month\', "date")';
+
         const revenueTrendsRaw = await sequelize.query(`
             SELECT
-                DATE_TRUNC('month', "date") AS month,
+                ${dateTruncFn} AS month,
                 type,
                 SUM("amount") AS total
             FROM "Transactions"
             WHERE "date" >= :sixMonthsAgo AND "type" IN ('INCOME', 'EXPENSE')
-            GROUP BY DATE_TRUNC('month', "date"), type
+            GROUP BY ${dateTruncFn}, type
             ORDER BY month ASC
         `, {
             replacements: { sixMonthsAgo },

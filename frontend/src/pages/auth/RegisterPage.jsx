@@ -12,7 +12,7 @@ import { FcGoogle } from "react-icons/fc"
 import { FaFacebook } from "react-icons/fa"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
-import { resolveAuthError } from "@/utils/authErrors"
+import { resolveError } from "@/utils/authErrors"
 
 export function RegisterPage() {
     const { t } = useTranslation()
@@ -53,7 +53,7 @@ export function RegisterPage() {
                 toast.success(t('auth.registerSuccess'));
                 navigate("/");
             } catch (error) {
-                toast.error(resolveAuthError(error, t, 'auth.registerFailed'));
+                toast.error(resolveError(error, t, 'auth.registerFailed'));
             } finally {
                 setIsLoading(false);
             }

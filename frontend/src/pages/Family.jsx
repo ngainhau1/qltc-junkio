@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { useSelector, useDispatch } from "react-redux"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -12,9 +12,11 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { createFamily, fetchFamilies, setActiveFamily, removeMemberFromFamily } from "@/features/families/familySlice"
-import { approveDebt, rejectDebt, settleDebts, fetchTransactions } from "@/features/transactions/transactionSlice"
-import { Users, Plus, ArrowRight, MoreHorizontal, Shield, ShieldAlert, LogOut, Check, Copy, Receipt, Target, CheckCircle2, XCircle } from "lucide-react"
+import { settleDebts, fetchTransactions } from "@/features/transactions/transactionSlice"
+import { fetchWallets } from "@/features/wallets/walletSlice"
+import { Users, Plus, ArrowRight, MoreHorizontal, LogOut, Check, Copy, Receipt, Target } from "lucide-react"
 import { simplifyDebts } from "@/utils/debtSimplification"
 import { toast } from "sonner"
 import { EmptyState } from "@/components/ui/empty-state"
@@ -22,6 +24,34 @@ import { useTranslation } from "react-i18next"
 import { SharedExpenseModal } from "@/components/features/families/SharedExpenseModal"
 import { formatCurrency } from "@/lib/utils"
 import { PageHeader } from "@/components/layout/PageHeader"
+import { resolveError } from "@/utils/authErrors"
+
+const getTransactionShares = (transaction) => {
+    const shares = transaction?.Shares ?? transaction?.shares
+    return Array.isArray(shares) ? shares : []
+}
+
+const buildFamilyDebts = (transactions, activeFamilyId) => (
+    transactions.flatMap(t => {
+        const shares = getTransactionShares(t)
+        if (t.family_id !== activeFamilyId || t.type !== 'EXPENSE' || shares.length === 0) {
+            return []
+        }
+
+        return [{
+            id: t.id,
+            type: t.type,
+            paidBy: t.user_id,
+            splitAmong: shares.map(s => s.user_id),
+            shares,
+            amount: parseFloat(t.amount),
+            desc: t.description
+        }]
+    })
+)
+
+const isFullyPaidExpense = (expense) =>
+    expense.shares.length > 0 && expense.shares.every((share) => share.status === 'PAID')
 
 export function Family() {
     const { t } = useTranslation();
@@ -35,64 +65,27 @@ export function Family() {
 
     // --- Redux Connected Logic ---
     const activeFamily = families.find(f => f.id === activeFamilyId)
-    const activeFamilyMembers = Array.isArray(activeFamily?.members) ? activeFamily.members : []
+    const activeFamilyMembers = useMemo(() => (
+        Array.isArray(activeFamily?.members) ? activeFamily.members : []
+    ), [activeFamily])
 
-    // 1. Get Family Wallets
-    const familyWalletIds = wallets
-        .filter(w => w.family_id === activeFamilyId)
-        .map(w => w.id)
+    const personalWallets = useMemo(() => (
+        wallets.filter((wallet) => wallet.user_id === user?.id && !wallet.family_id)
+    ), [user?.id, wallets])
 
-    // 2. Get Family Expenses for debts
-    // Include both EXPENSE and our magical SETTLEMENT transfers for the math to balance out perfectly
-    const familyDebtTransactions = transactions.filter(t =>
-        familyWalletIds.includes(t.wallet_id) &&
-        (t.type === 'EXPENSE' || (t.type === 'TRANSFER' && t.category_id === 'cat-settlement'))
-    )
+    const allFamilyDebts = useMemo(() => (
+        buildFamilyDebts(transactions, activeFamilyId)
+    ), [activeFamilyId, transactions])
 
-    // 3. Transform for Algorithm (NO SLICING here to ensure exact mathematical net zero)
-    const allFamilyDebts = familyDebtTransactions.map(t => {
-        let splitAmongIds = [];
-        if (t.shares && t.shares.length > 0) {
-            splitAmongIds = t.shares.map(s => s.user_id);
-        } else {
-            splitAmongIds = activeFamilyMembers.map((member) => member.id);
-        }
-
-        return {
-            id: t.id,
-            type: t.type,
-            paidBy: t.user_id, // Pass ID to algo
-            splitAmong: splitAmongIds,
-            shares: t.shares,
-            amount: parseFloat(t.amount),
-            desc: t.description
-        }
-    })
+    const openFamilyDebts = useMemo(() => (
+        allFamilyDebts.filter(t => !isFullyPaidExpense(t))
+    ), [allFamilyDebts])
 
     // UI purely for displaying the expense list (Limit to 50 items and hide settlements)
-    const displayExpenses = allFamilyDebts.filter(t => {
+    const displayExpenses = useMemo(() => openFamilyDebts.filter(t => {
         if (t.type === 'TRANSFER') return false;
-        if (t.shares && t.shares.length > 0) {
-            const isFullyPaid = t.shares.every(s => s.status === 'PAID');
-            if (isFullyPaid) return false;
-        }
         return true;
-    }).slice(0, 50);
-
-    const pendingDebts = allFamilyDebts.flatMap(tx => {
-        if (!tx.shares) return [];
-        const myPendingShare = tx.shares.find(s => s.user_id === user?.id && s.approval_status === 'PENDING');
-        if (myPendingShare) {
-            return [{
-                transactionId: tx.id,
-                shareId: myPendingShare.id,
-                amount: myPendingShare.amount,
-                desc: tx.desc,
-                paidBy: tx.paidBy
-            }];
-        }
-        return [];
-    });
+    }).slice(0, 50), [openFamilyDebts]);
 
     const getMemberName = (id) => {
         const member = activeFamilyMembers.find((item) => item.id === id)
@@ -114,6 +107,7 @@ export function Family() {
     // Settle Modal State
     const [settleModalOpen, setSettleModalOpen] = useState(false)
     const [selectedSettlement, setSelectedSettlement] = useState(null)
+    const [selectedPaymentWalletId, setSelectedPaymentWalletId] = useState("")
 
     // Shared Expense Modal State
     const [sharedExpenseModalOpen, setSharedExpenseModalOpen] = useState(false)
@@ -131,36 +125,20 @@ export function Family() {
             toast.success(t('family.modals.create.success'));
         } catch (error) {
             console.error('Create family error:', error);
-            toast.error(error);
+            toast.error(resolveError(error, t, 'errors.families.createFailed'));
         }
     }
 
     const runSimplification = () => {
-        if (allFamilyDebts.length === 0) {
+        if (openFamilyDebts.length === 0) {
             toast.info(t('family.toasts.optimizationEmpty'));
             return;
         }
-        const results = simplifyDebts(allFamilyDebts)
+        const results = simplifyDebts(openFamilyDebts)
         if (results.length === 0) {
             toast.success(t('family.toasts.optimizationZero'));
         }
         setSettlements(results)
-    }
-
-    const handleShareAction = async (shareId, newStatus) => {
-        try {
-            if (newStatus === 'APPROVED') {
-                await dispatch(approveDebt(shareId)).unwrap();
-            } else {
-                await dispatch(rejectDebt(shareId)).unwrap();
-            }
-            toast.success(newStatus === 'APPROVED' ? t('family.toasts.debtApproved') : t('family.toasts.debtRejected'));
-            // Recalculate settlements automatically so UI feels alive
-            setTimeout(() => runSimplification(), 300);
-        } catch (error) {
-            console.error('Debt approval error:', error);
-            toast.error(error);
-        }
     }
 
     const handleOpenInvite = (family) => {
@@ -180,35 +158,45 @@ export function Family() {
 
     const handleSettleClick = (settlement) => {
         setSelectedSettlement(settlement)
+        setSelectedPaymentWalletId(personalWallets[0]?.id || "")
         setSettleModalOpen(true)
     }
 
     const confirmSettle = async () => {
-        if (!selectedSettlement || familyWalletIds.length === 0) return;
+        if (!selectedSettlement) return;
 
         const { from, to, amount } = selectedSettlement;
 
+        if (from !== user?.id) return;
+
+        if (!selectedPaymentWalletId) {
+            toast.error(t('sharedExpense.errNoPersonalWallet'));
+            return;
+        }
+
         try {
             await dispatch(settleDebts({
-                from_user_id: from,
                 to_user_id: to,
                 amount: amount,
-                from_wallet_id: familyWalletIds[0],
-                to_wallet_id: familyWalletIds[0]
+                from_wallet_id: selectedPaymentWalletId,
+                family_id: activeFamilyId
             })).unwrap();
 
             toast.success(t('family.toasts.paymentRecorded', { amount: formatCurrency(amount) }));
-            
-            // Reload transactions so the debts recalculate over the wire
-            await dispatch(fetchTransactions()).unwrap();
+
+            const [latestTransactionsResponse] = await Promise.all([
+                dispatch(fetchTransactions()).unwrap(),
+                dispatch(fetchWallets()).unwrap()
+            ]);
+            const latestFamilyDebts = buildFamilyDebts(
+                latestTransactionsResponse?.transactions ?? [],
+                activeFamilyId
+            ).filter(tx => !isFullyPaidExpense(tx));
+            setSettlements(simplifyDebts(latestFamilyDebts));
             setSettleModalOpen(false);
-            
-            // Allow Redux to update component state, then remove this specific debt from active view
-            // to mimic immediate feedback
-            setSettlements(prev => prev.filter(s => !(s.from === from && s.to === to && s.amount === amount)));
         } catch (error) {
             console.error('Settlement error:', error);
-            toast.error(error);
+            toast.error(resolveError(error, t, 'errors.transactions.transferFailed'));
         }
     }
 
@@ -275,7 +263,8 @@ export function Family() {
                                                         variant={activeFamilyId === family.id ? "default" : "outline"}
                                                         size="sm"
                                                         className="w-full sm:w-auto"
-                                                        onClick={() => dispatch(setActiveFamily(activeFamilyId === family.id ? null : family.id))}
+                                                        aria-pressed={activeFamilyId === family.id}
+                                                        onClick={() => dispatch(setActiveFamily(family.id))}
                                                     >
                                                         {activeFamilyId === family.id ? t('family.list.active') : t('family.list.switch')}
                                                     </Button>
@@ -341,50 +330,6 @@ export function Family() {
                 </Card>
             </div>
 
-            {/* Pending Debts Section */}
-            {activeFamilyId && pendingDebts.length > 0 && (
-                <Card className="border-orange-200 bg-orange-50/50 dark:border-orange-900/50 dark:bg-orange-900/10">
-                    <CardHeader className="pb-3">
-                        <CardTitle className="text-orange-800 dark:text-orange-400 flex items-center gap-2">
-                            <ShieldAlert className="h-5 w-5" />
-                            {t('family.pendingDebts.title', { count: pendingDebts.length })}
-                        </CardTitle>
-                        <CardDescription>
-                            {t('family.pendingDebts.desc')}
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                        {pendingDebts.map((debt, idx) => (
-                            <div key={idx} className="flex flex-col sm:flex-row items-center justify-between gap-4 p-3 bg-white dark:bg-background rounded-lg border shadow-sm">
-                                <div>
-                                    <p className="font-medium text-sm">{debt.desc}</p>
-                                    <p className="text-xs text-muted-foreground mt-0.5">
-                                        <span className="font-semibold text-foreground">{getMemberName(debt.paidBy)}</span> {t('family.pendingDebts.paidByText')} <span className="font-semibold text-orange-600 dark:text-orange-400">{formatCurrency(debt.amount)}</span>
-                                    </p>
-                                </div>
-                                <div className="flex items-center gap-2 w-full sm:w-auto">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="w-full sm:w-auto border-red-200 text-red-600 hover:bg-red-50 dark:border-red-900 dark:hover:bg-red-900/20"
-                                        onClick={() => handleShareAction(debt.shareId, 'REJECTED')}
-                                    >
-                                        <XCircle className="h-4 w-4 mr-1.5" /> {t('family.pendingDebts.btnReject')}
-                                    </Button>
-                                    <Button
-                                        size="sm"
-                                        className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white"
-                                        onClick={() => handleShareAction(debt.shareId, 'APPROVED')}
-                                    >
-                                        <CheckCircle2 className="h-4 w-4 mr-1.5" /> {t('family.pendingDebts.btnApprove')}
-                                    </Button>
-                                </div>
-                            </div>
-                        ))}
-                    </CardContent>
-                </Card>
-            )}
-
             {/* Debt Demo Section */}
             {activeFamilyId ? (
                 <div className="grid gap-6 xl:grid-cols-2">
@@ -414,18 +359,15 @@ export function Family() {
                                             <p className="font-medium">{tx.desc}</p>
                                             <p className="text-muted-foreground">
                                                 {t('family.expenses.paidBy', { name: getMemberName(tx.paidBy), amount: formatCurrency(tx.amount) })}
-                                                {tx.shares && tx.shares.length > 0 && tx.shares[0].status === 'PAID'
-                                                    ? ` ${t('family.expenses.settleUp')}`
-                                                    : (tx.shares && tx.shares.length > 0
-                                                        ? ` ${t('family.expenses.splitMembers', { count: tx.shares.length })}`
-                                                        : ` ${t('family.expenses.splitEven', { count: tx.splitAmong.length })}`
-                                                    )
+                                                {tx.shares && tx.shares.length > 0
+                                                    ? ` ${t('family.expenses.splitMembers', { count: tx.shares.length })}`
+                                                    : ` ${t('family.expenses.splitEven', { count: tx.splitAmong.length })}`
                                                 }
                                             </p>
                                         </div>
                                     ))
                                 )}
-                                <Button onClick={runSimplification} className="w-full mt-4" disabled={allFamilyDebts.length === 0}>
+                                <Button onClick={runSimplification} className="w-full mt-4" disabled={openFamilyDebts.length === 0}>
                                     {t('family.expenses.optimizeBtn')}
                                 </Button>
                             </div>
@@ -443,7 +385,7 @@ export function Family() {
                                     <EmptyState
                                         icon={Target}
                                         title={t('family.settlement.emptyTitle')}
-                                        description={allFamilyDebts.length > 0 ? t('family.settlement.emptyDescHasTx') : t('family.settlement.emptyDescZero')}
+                                        description={openFamilyDebts.length > 0 ? t('family.settlement.emptyDescHasTx') : t('family.settlement.emptyDescZero')}
                                     />
                                 </div>
                             ) : (
@@ -463,9 +405,11 @@ export function Family() {
                                             </div>
                                             <div className="flex flex-col gap-1 sm:items-end">
                                                 <div className="font-bold">{formatCurrency(s.amount)}</div>
-                                                <Button size="sm" onClick={() => handleSettleClick(s)} className="h-6 text-[10px] px-2 bg-green-600 hover:bg-green-700 text-white shadow-sm">
-                                                    {t('family.settlement.payBtn')}
-                                                </Button>
+                                                {s.from === user?.id && (
+                                                    <Button size="sm" onClick={() => handleSettleClick(s)} className="h-6 text-[10px] px-2 bg-green-600 hover:bg-green-700 text-white shadow-sm">
+                                                        {t('family.settlement.payBtn')}
+                                                    </Button>
+                                                )}
                                             </div>
                                         </div>
                                     ))}
@@ -553,6 +497,21 @@ export function Family() {
                                 {t('family.modals.settle.note')}
                             </p>
                         </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">{t('family.modals.settle.fromWallet')}</label>
+                            <Select value={selectedPaymentWalletId} onValueChange={setSelectedPaymentWalletId}>
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder={t('family.modals.settle.selectWallet')} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {personalWallets.map((wallet) => (
+                                        <SelectItem key={wallet.id} value={wallet.id}>
+                                            {wallet.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
                         <div className="flex flex-col-reverse gap-3 border-t pt-2 sm:flex-row sm:justify-end">
                             <Button type="button" variant="ghost" onClick={() => setSettleModalOpen(false)} className="w-full sm:w-auto">{t('family.modals.settle.cancel')}</Button>
                             <Button onClick={confirmSettle} className="w-full bg-green-600 text-white hover:bg-green-700 sm:w-auto">{t('family.modals.settle.submit')}</Button>
@@ -566,7 +525,6 @@ export function Family() {
                 isOpen={sharedExpenseModalOpen}
                 onClose={() => setSharedExpenseModalOpen(false)}
                 family={activeFamily}
-                familyWalletId={familyWalletIds.length > 0 ? familyWalletIds[0] : null}
             />
 
         </div>

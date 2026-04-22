@@ -106,7 +106,7 @@ describe('Notification API Endpoints', () => {
             const crypto = require('crypto');
             const res = await request(app).put(`/api/notifications/${crypto.randomUUID()}/read`);
             expect(res.statusCode).toEqual(404);
-            expect(res.body.message).toMatch(/Khong tim thay thong bao/);
+            expect(res.body.message).toBe('NOTIFICATION_NOT_FOUND');
         });
 
         it('should mark single notification as read', async () => {
@@ -137,7 +137,7 @@ describe('Notification API Endpoints', () => {
                 message: 'Broadcast message'
             });
             expect(res.statusCode).toEqual(403);
-            expect(res.body.message).toMatch(/Truy cap bi tu choi/);
+            expect(res.body.message).toBe('FORBIDDEN');
         });
 
         it('should broadcast successfully when admin', async () => {
@@ -148,7 +148,7 @@ describe('Notification API Endpoints', () => {
                 message: 'Broadcast message'
             });
             expect(res.statusCode).toEqual(200);
-            expect(res.body.message).toMatch(/Da gui thong bao toi 2/);
+            expect(res.body.message).toBe('NOTIFICATION_BROADCAST_SUCCESS');
             
             // Verify notifications inserted into db
             const count = await mockNotification.count({ where: { message: '[Hello] Broadcast message' } });

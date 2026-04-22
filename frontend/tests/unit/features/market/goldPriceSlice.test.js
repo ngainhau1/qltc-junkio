@@ -5,7 +5,7 @@ import reducer, {
     fetchGoldPrice,
     fetchGoldPriceHistory,
     setGoldHistoryRange,
-} from './goldPriceSlice';
+} from '@/features/market/goldPriceSlice';
 
 vi.mock('@/lib/api', () => ({
     default: {

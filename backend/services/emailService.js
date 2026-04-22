@@ -5,7 +5,7 @@ const sendEmail = async (options) => {
     const hasSmtpEnv = process.env.EMAIL_HOST && process.env.EMAIL_USER && process.env.EMAIL_PASS;
 
     if (isProd && !hasSmtpEnv) {
-        throw new Error('EMAIL_HOST/EMAIL_USER/EMAIL_PASS must be configured in production.');
+        throw new Error('EMAIL_SMTP_CONFIG_MISSING');
     }
 
     let transporter;

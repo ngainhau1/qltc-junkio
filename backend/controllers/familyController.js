@@ -83,24 +83,24 @@ async function loadFamilySummary(familyId, userId, transaction) {
 
 exports.getUserFamilies = async (req, res) => {
     try {
-        const userId = req.user.id;
-
         const memberships = await FamilyMember.findAll({
-            where: { user_id: userId },
-            include: [{
-                model: Family,
-                include: familyListInclude,
-            }],
+            where: { user_id: req.user.id },
+            include: [
+                {
+                    model: Family,
+                    include: familyListInclude,
+                },
+            ],
         });
 
         const families = memberships.map((membership) =>
             normalizeFamilyRecord(membership.Family, membership.role)
         );
 
-        success(res, families, 'L?y danh s?ch gia ??nh th?nh c?ng');
-    } catch (err) {
-        console.error('Error fetching families:', err);
-        serverError(res, 'Kh?ng th? l?y danh s?ch gia ??nh');
+        return success(res, families, 'FAMILY_LIST_FETCH_SUCCESS');
+    } catch (error) {
+        console.error('Error fetching families:', error);
+        return serverError(res, 'FAMILY_LOAD_FAILED');
     }
 };
 
@@ -109,48 +109,54 @@ exports.createFamily = async (req, res) => {
         const userId = req.user.id;
         const { name } = req.body;
 
-        if (!name) {
-            return sendError(res, 'Vui l?ng nh?p t?n gia ??nh', 400);
-        }
-
         const result = await sequelize.transaction(async (transaction) => {
-            const family = await Family.create({
-                name,
-                owner_id: userId,
-            }, { transaction });
+            const family = await Family.create(
+                {
+                    name,
+                    owner_id: userId,
+                },
+                { transaction }
+            );
 
-            await FamilyMember.create({
-                family_id: family.id,
-                user_id: userId,
-                role: 'ADMIN',
-                joined_at: new Date(),
-            }, { transaction });
+            await FamilyMember.create(
+                {
+                    family_id: family.id,
+                    user_id: userId,
+                    role: 'ADMIN',
+                    joined_at: new Date(),
+                },
+                { transaction }
+            );
 
-            await Wallet.create({
-                name: 'Qu? chung gia ??nh',
-                balance: 0,
-                currency: 'VND',
-                family_id: family.id,
-            }, { transaction });
+            await Wallet.create(
+                {
+                    name: 'Quỹ chung gia đình',
+                    balance: 0,
+                    currency: 'VND',
+                    family_id: family.id,
+                },
+                { transaction }
+            );
 
             return loadFamilySummary(family.id, userId, transaction);
         });
 
-        created(res, result, 'T?o gia ??nh th?nh c?ng');
-    } catch (err) {
-        console.error('Error creating family:', err);
-        serverError(res, 'Kh?ng th? t?o gia ??nh');
+        return created(res, result, 'FAMILY_CREATE_SUCCESS');
+    } catch (error) {
+        console.error('Error creating family:', error);
+        return serverError(res, 'FAMILY_CREATE_FAILED');
     }
 };
 
 exports.getFamilyDetails = async (req, res) => {
     try {
         const { id } = req.params;
-        const userId = req.user.id;
+        const memberCheck = await FamilyMember.findOne({
+            where: { family_id: id, user_id: req.user.id },
+        });
 
-        const memberCheck = await FamilyMember.findOne({ where: { family_id: id, user_id: userId } });
         if (!memberCheck) {
-            return sendError(res, 'B?n kh?ng ph?i l? th?nh vi?n c?a gia ??nh n?y', 403);
+            return sendError(res, 'FAMILY_FORBIDDEN', 403);
         }
 
         const family = await Family.findByPk(id, {
@@ -158,13 +164,17 @@ exports.getFamilyDetails = async (req, res) => {
         });
 
         if (!family) {
-            return notFound(res, 'Gia ??nh kh?ng t?n t?i');
+            return notFound(res, 'FAMILY_NOT_FOUND');
         }
 
-        success(res, normalizeFamilyRecord(family, memberCheck.role), 'L?y th?ng tin gia ??nh th?nh c?ng');
-    } catch (err) {
-        console.error('Error fetching family details:', err);
-        serverError(res, 'Kh?ng th? l?y th?ng tin gia ??nh');
+        return success(
+            res,
+            normalizeFamilyRecord(family, memberCheck.role),
+            'FAMILY_DETAIL_FETCH_SUCCESS'
+        );
+    } catch (error) {
+        console.error('Error fetching family details:', error);
+        return serverError(res, 'FAMILY_DETAIL_FAILED');
     }
 };
 
@@ -172,21 +182,26 @@ exports.addMember = async (req, res) => {
     try {
         const { id } = req.params;
         const { email, role } = req.body;
-        const userId = req.user.id;
 
-        const caller = await FamilyMember.findOne({ where: { family_id: id, user_id: userId } });
+        const caller = await FamilyMember.findOne({
+            where: { family_id: id, user_id: req.user.id },
+        });
+
         if (!caller || caller.role !== 'ADMIN') {
-            return sendError(res, 'Ch? Admin m?i c? th? th?m th?nh vi?n', 403);
+            return sendError(res, 'FAMILY_ADMIN_REQUIRED', 403);
         }
 
         const userToAdd = await User.findOne({ where: { email } });
         if (!userToAdd) {
-            return notFound(res, 'Kh?ng t?m th?y ng??i d?ng v?i email n?y');
+            return notFound(res, 'USER_NOT_FOUND');
         }
 
-        const existingMember = await FamilyMember.findOne({ where: { family_id: id, user_id: userToAdd.id } });
+        const existingMember = await FamilyMember.findOne({
+            where: { family_id: id, user_id: userToAdd.id },
+        });
+
         if (existingMember) {
-            return sendError(res, 'Ng??i d?ng ?? l? th?nh vi?n', 400);
+            return sendError(res, 'FAMILY_MEMBER_ALREADY_EXISTS', 400);
         }
 
         const newMember = await FamilyMember.create({
@@ -196,57 +211,57 @@ exports.addMember = async (req, res) => {
             joined_at: new Date(),
         });
 
-        created(res, newMember, 'Th?m th?nh vi?n th?nh c?ng');
-    } catch (err) {
-        console.error('Error adding member:', err);
-        serverError(res, 'Kh?ng th? th?m th?nh vi?n');
+        return created(res, newMember, 'FAMILY_MEMBER_ADD_SUCCESS');
+    } catch (error) {
+        console.error('Error adding member:', error);
+        return serverError(res, 'FAMILY_INVITE_FAILED');
     }
 };
 
 exports.removeMember = async (req, res) => {
     try {
         const { id, userIdToRemove } = req.params;
-        const callerId = req.user.id;
+        const caller = await FamilyMember.findOne({
+            where: { family_id: id, user_id: req.user.id },
+        });
 
-        const caller = await FamilyMember.findOne({ where: { family_id: id, user_id: callerId } });
         if (!caller) {
-            return sendError(res, 'B?n kh?ng ph?i l? th?nh vi?n c?a gia ??nh n?y', 403);
+            return sendError(res, 'FAMILY_FORBIDDEN', 403);
         }
 
         if (String(caller.user_id) !== String(userIdToRemove) && caller.role !== 'ADMIN') {
-            return sendError(res, 'Kh?ng c? quy?n x?a th?nh vi?n n?y', 403);
+            return sendError(res, 'FAMILY_FORBIDDEN', 403);
         }
 
         const family = await Family.findByPk(id);
         if (!family) {
-            return notFound(res, 'Gia ??nh kh?ng t?n t?i');
+            return notFound(res, 'FAMILY_NOT_FOUND');
         }
 
         if (String(family.owner_id) === String(userIdToRemove)) {
-            return sendError(res, 'Kh?ng th? x?a ch? gia ??nh', 400);
+            return sendError(res, 'FAMILY_OWNER_CANNOT_BE_REMOVED', 400);
         }
 
         await FamilyMember.destroy({ where: { family_id: id, user_id: userIdToRemove } });
 
-        success(res, null, '?? x?a th?nh vi?n th?nh c?ng');
-    } catch (err) {
-        console.error('Error removing member:', err);
-        serverError(res, 'Kh?ng th? x?a th?nh vi?n');
+        return success(res, null, 'FAMILY_MEMBER_REMOVE_SUCCESS');
+    } catch (error) {
+        console.error('Error removing member:', error);
+        return serverError(res, 'FAMILY_REMOVE_FAILED');
     }
 };
 
 exports.deleteFamily = async (req, res) => {
     try {
         const { id } = req.params;
-        const callerId = req.user.id;
-
         const family = await Family.findByPk(id);
+
         if (!family) {
-            return notFound(res, 'Gia ??nh kh?ng t?n t?i');
+            return notFound(res, 'FAMILY_NOT_FOUND');
         }
 
-        if (String(family.owner_id) !== String(callerId)) {
-            return sendError(res, 'Ch? ch? gia ??nh m?i ???c quy?n x?a', 403);
+        if (String(family.owner_id) !== String(req.user.id)) {
+            return sendError(res, 'FAMILY_OWNER_REQUIRED', 403);
         }
 
         await sequelize.transaction(async (transaction) => {
@@ -255,9 +270,9 @@ exports.deleteFamily = async (req, res) => {
             await family.destroy({ transaction });
         });
 
-        success(res, null, 'X?a gia ??nh th?nh c?ng');
-    } catch (err) {
-        console.error('Error deleting family:', err);
-        serverError(res, 'Kh?ng th? x?a gia ??nh');
+        return success(res, null, 'FAMILY_DELETE_SUCCESS');
+    } catch (error) {
+        console.error('Error deleting family:', error);
+        return serverError(res, 'FAMILY_DELETE_FAILED');
     }
 };

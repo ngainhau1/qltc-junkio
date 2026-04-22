@@ -1,14 +1,16 @@
 import { useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import { formatCurrency } from "@/lib/utils"
-import { Wallet, MoreVertical, Edit2, Trash2 } from "lucide-react"
+import { Wallet, MoreVertical, Edit2, Trash2, ChevronDown } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Modal } from "@/components/ui/modal"
 import { WalletForm } from "@/components/features/wallets/WalletForm"
 import { EmptyState } from "@/components/ui/empty-state"
 import { useTranslation } from "react-i18next"
 import { removeWallet } from "@/features/wallets/walletSlice"
+import { setActiveFamily } from "@/features/families/familySlice"
 import { getFinanceScopeLabels } from "@/features/finance/context"
 import { toast } from "sonner"
 import { PageHeader } from "@/components/layout/PageHeader"
@@ -69,12 +71,28 @@ export function Wallets() {
                 title={pageTitle}
                 description={pageDescription}
                 actions={
-                    <span
-                        className="inline-flex w-fit items-center rounded-full border px-3 py-1 text-xs font-medium text-muted-foreground"
-                        data-testid="wallets-scope"
-                    >
-                        {t('common.scope')}: {currentScope.scopeTargetLabel}
-                    </span>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button
+                                variant="outline"
+                                className="w-full justify-between sm:w-auto"
+                                data-testid="wallets-scope"
+                            >
+                                <span>{t('wallets.context.scopeButton')}: {currentScope.scopeTargetLabel}</span>
+                                <ChevronDown className="ml-2 h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-64">
+                            <DropdownMenuItem onClick={() => dispatch(setActiveFamily(null))}>
+                                {t('common.personal')}
+                            </DropdownMenuItem>
+                            {families.map((family) => (
+                                <DropdownMenuItem key={family.id} onClick={() => dispatch(setActiveFamily(family.id))}>
+                                    {t('common.familyNamed', { name: family.name })}
+                                </DropdownMenuItem>
+                            ))}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 }
             />
 

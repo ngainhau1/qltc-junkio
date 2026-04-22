@@ -1,10 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
-const userController = require('../controllers/userController');
 const audit = require('../middleware/auditMiddleware');
-const authMiddleware = require('../middleware/authMiddleware');
-const { uploadAvatar } = require('../middleware/uploadMiddleware');
 const authValidator = require('../validators/authValidator');
 
 /**
@@ -15,7 +12,6 @@ const authValidator = require('../validators/authValidator');
  *     Xác thực người dùng và quản lý phiên đăng nhập.
  *     Nhóm API này bao gồm đăng ký, đăng nhập, làm mới token, đăng xuất
  *     và các chức năng khôi phục mật khẩu. Hầu hết các endpoint **không yêu cầu token**
- *     (ngoại trừ /me và /avatar).
  */
 
 /**
@@ -250,83 +246,6 @@ router.post('/refresh-token', authController.refreshToken);
  *               message: Đăng xuất thành công
  */
 router.post('/logout', authController.logout);
-
-/**
- * @swagger
- * /api/auth/me:
- *   get:
- *     summary: Lấy thông tin người dùng hiện tại
- *     description: |
- *       Endpoint tương thích (alias) cho `/api/users/me`.
- *       Trả về thông tin profile của user đang đăng nhập dựa trên Bearer token.
- *
- *       Canonical endpoint: `/api/users/me`
- *     tags: [Auth]
- *     security: [ { bearerAuth: [] } ]
- *     responses:
- *       200:
- *         description: Thông tin người dùng hiện tại
- *         content:
- *           application/json:
- *             example:
- *               status: success
- *               message: Lấy profile thành công
- *               data:
- *                 id: "b2df0d5d-1234-4abc-9def-bbbd02910001"
- *                 name: "Demo User"
- *                 email: "demo@junkio.com"
- *                 role: member
- *                 avatar_url: "/uploads/avatars/demo-avatar.jpg"
- *       401:
- *         description: Chưa đăng nhập hoặc token hết hạn
- */
-router.get('/me', authMiddleware, userController.getProfile);
-
-/**
- * @swagger
- * /api/auth/avatar:
- *   post:
- *     summary: Tải lên ảnh đại diện (avatar)
- *     description: |
- *       Upload hoặc thay đổi ảnh đại diện của người dùng hiện tại.
- *       Endpoint tương thích (alias) cho `/api/users/me/avatar`.
- *
- *       **Yêu cầu file:**
- *       - Định dạng: JPEG, JPG, PNG
- *       - Dung lượng tối đa: **5MB**
- *       - Tên field trong form: `avatar`
- *
- *       **Lưu ý:** Ảnh cũ sẽ bị thay thế bởi ảnh mới sau khi upload thành công.
- *     tags: [Auth]
- *     security: [ { bearerAuth: [] } ]
- *     requestBody:
- *       required: true
- *       content:
- *         multipart/form-data:
- *           schema:
- *             type: object
- *             required: [avatar]
- *             properties:
- *               avatar:
- *                 type: string
- *                 format: binary
- *                 description: File ảnh đại diện (JPEG/PNG, max 5MB)
- *     responses:
- *       200:
- *         description: Cập nhật avatar thành công
- *         content:
- *           application/json:
- *             example:
- *               status: success
- *               message: Cập nhật avatar thành công
- *               data:
- *                 avatar_url: "/uploads/avatars/b2df0d5d-avatar-1711792000.jpg"
- *       400:
- *         description: File không hợp lệ (sai định dạng hoặc vượt quá 5MB)
- *       401:
- *         description: Chưa đăng nhập
- */
-router.post('/avatar', authMiddleware, uploadAvatar.single('avatar'), userController.updateAvatar);
 
 /**
  * @swagger

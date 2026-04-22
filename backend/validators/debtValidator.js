@@ -1,28 +1,34 @@
-const { body, param, validationResult, matchedData } = require('express-validator');
-
-const handleValidation = (locations = ['body']) => (req, res, next) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(422).json({ errors: errors.array() });
-    }
-    if (locations.includes('body')) {
-        req.body = matchedData(req, { locations: ['body'], includeOptionals: true });
-    }
-    if (locations.includes('params')) {
-        req.params = matchedData(req, { locations: ['params'], includeOptionals: true });
-    }
-    next();
-};
+const { body } = require('express-validator');
+const { buildValidationHandler, createValidationCode } = require('./validationHelper');
 
 exports.validateSettle = [
-    body('to_user_id').isUUID().withMessage('to_user_id phải là UUID'),
-    body('amount').isFloat({ gt: 0 }).withMessage('Số tiền phải > 0').toFloat(),
-    body('from_wallet_id').isUUID().withMessage('from_wallet_id phải là UUID'),
-    body('to_wallet_id').isUUID().withMessage('to_wallet_id phải là UUID'),
-    handleValidation(['body'])
-];
-
-exports.validateShareParam = [
-    param('shareId').isUUID().withMessage('shareId phải là UUID'),
-    handleValidation(['params'])
+    body('to_user_id')
+        .isUUID()
+        .withMessage(createValidationCode('to_user_id', 'INVALID_UUID')),
+    body('amount')
+        .isFloat({ gt: 0 })
+        .withMessage(createValidationCode('amount', 'MUST_BE_POSITIVE'))
+        .toFloat(),
+    body('from_wallet_id')
+        .isUUID()
+        .withMessage(createValidationCode('from_wallet_id', 'INVALID_UUID')),
+    body('to_wallet_id')
+        .optional({ nullable: true })
+        .isUUID()
+        .withMessage(createValidationCode('to_wallet_id', 'INVALID_UUID')),
+    body('to_wallet_id').custom((value, { req }) => {
+        if (!req.body.family_id && !value) {
+            throw new Error(createValidationCode('to_wallet_id', 'INVALID_UUID'));
+        }
+        return true;
+    }),
+    body('from_user_id')
+        .optional({ nullable: true })
+        .isUUID()
+        .withMessage(createValidationCode('from_user_id', 'INVALID_UUID')),
+    body('family_id')
+        .optional({ nullable: true })
+        .isUUID()
+        .withMessage(createValidationCode('family_id', 'INVALID_UUID')),
+    buildValidationHandler(['body']),
 ];

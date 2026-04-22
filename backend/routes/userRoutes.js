@@ -3,7 +3,11 @@ const router = express.Router();
 const userController = require('../controllers/userController');
 const authMiddleware = require('../middleware/authMiddleware');
 const { uploadAvatar } = require('../middleware/uploadMiddleware');
-const { validateUpdateProfile, validateChangePassword } = require('../validators/userValidator');
+const {
+    validateUpdateProfile,
+    validateChangePassword,
+    validateDeleteAccount,
+} = require('../validators/userValidator');
 
 router.use(authMiddleware);
 
@@ -27,7 +31,6 @@ router.use(authMiddleware);
  *       bao gồm tên, email, role, và đường dẫn avatar.
  *
  *       Đây là **canonical endpoint** (endpoint chính).
- *       Alias tương thích: `/api/auth/me`
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
@@ -82,7 +85,6 @@ router.get('/me', userController.getProfile);
  *     description: |
  *       Upload hoặc thay thế ảnh đại diện của người dùng hiện tại.
  *       Đây là **canonical endpoint** (endpoint chính).
- *       Alias tương thích: `/api/auth/avatar`
  *
  *       **Yêu cầu file:**
  *       - Định dạng hỗ trợ: JPEG, JPG, PNG, GIF
@@ -253,6 +255,6 @@ router.put('/me/password', validateChangePassword, userController.changePassword
  *       400:
  *         description: Mật khẩu không đúng (WRONG_PASSWORD)
  */
-router.delete('/me', userController.deleteAccount);
+router.delete('/me', validateDeleteAccount, userController.deleteAccount);
 
 module.exports = router;

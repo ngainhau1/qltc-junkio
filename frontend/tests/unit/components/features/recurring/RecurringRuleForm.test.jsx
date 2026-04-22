@@ -4,7 +4,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
-import { RecurringRuleForm } from './RecurringRuleForm';
+import { RecurringRuleForm } from '@/components/features/recurring/RecurringRuleForm';
 import recurringReducer, { createRecurring } from '@/features/recurring/recurringSlice';
 import walletReducer from '@/features/wallets/walletSlice';
 import familyReducer from '@/features/families/familySlice';

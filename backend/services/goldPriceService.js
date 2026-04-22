@@ -9,6 +9,12 @@ const TARGET_PRODUCT = 'Vàng SJC 1L, 10L, 1KG';
 const TARGET_CURRENCY = 'VND';
 const TARGET_UNIT = 'VND_PER_LUONG';
 
+const createGoldPriceError = (code) => {
+    const error = new Error(code);
+    error.code = code;
+    return error;
+};
+
 const parseSjcLatestDate = (value) => {
     if (typeof value !== 'string') {
         return null;
@@ -38,13 +44,13 @@ const selectGoldRecord = (records = []) => {
 
 const normalizeSjcResponse = (payload) => {
     if (!payload || payload.success !== true || !Array.isArray(payload.data)) {
-        throw new Error('Invalid SJC price payload');
+        throw createGoldPriceError('GOLD_PRICE_PAYLOAD_INVALID');
     }
 
     const selectedRecord = selectGoldRecord(payload.data);
 
     if (!selectedRecord) {
-        throw new Error('No compatible SJC gold price record found');
+        throw createGoldPriceError('GOLD_PRICE_RECORD_NOT_FOUND');
     }
 
     const updatedLabel = payload.latestDate || null;
@@ -62,6 +68,9 @@ const normalizeSjcResponse = (payload) => {
     };
 };
 
+/**
+ * Truy vấn dữ liệu giá vàng thực tế từ API chính thức của SJC.
+ */
 const fetchSjcGoldPrice = async () => {
     const response = await fetch(SJC_PRICE_SERVICE_URL, {
         method: 'POST',
@@ -73,7 +82,7 @@ const fetchSjcGoldPrice = async () => {
     });
 
     if (!response.ok) {
-        throw new Error(`SJC request failed with status ${response.status}`);
+        throw createGoldPriceError('GOLD_PRICE_UPSTREAM_REQUEST_FAILED');
     }
 
     const rawText = await response.text();
@@ -82,6 +91,12 @@ const fetchSjcGoldPrice = async () => {
     return normalizeSjcResponse(payload);
 };
 
+/**
+ * Lấy giá vàng hiện tại.
+ * - Ưu tiên đọc dữ liệu từ Redis Cache để tối ưu hiệu năng.
+ * - Nếu Cache không có hoặc hết hạn, thực hiện fetch mới từ SJC và lưu lại vào Cache.
+ * - Tự động lưu bản ghi lịch sử (snapshot) vào DB.
+ */
 const getGoldPrice = async () => {
     try {
         const cachedValue = await client.get(CACHE_KEY);
