@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi } from 'vitest';
-import { exportToCSV, exportToPDF } from './exportService';
+import { exportToCSV, exportToPDF } from '@/services/exportService';
 
-vi.mock('./pdfFont', () => ({
+vi.mock('@/services/pdfFont', () => ({
     loadRobotoBase64: vi.fn().mockResolvedValue(null),
 }));
 

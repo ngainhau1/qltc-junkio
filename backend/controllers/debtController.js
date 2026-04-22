@@ -71,6 +71,26 @@ const buildPathSettlementPlan = (shares, fromUserId, toUserId, amount) => {
     return reductions;
 };
 
+const buildShareSettlementPlan = (shares, amount) => {
+    const reductions = new Map();
+    let remainingAmount = toMoney(amount);
+
+    for (const share of shares) {
+        if (remainingAmount <= SETTLEMENT_EPSILON) break;
+
+        const shareAmount = toMoney(share.amount);
+        const settledAmount = Math.min(shareAmount, remainingAmount);
+        reductions.set(share.id, settledAmount);
+        remainingAmount = toMoney(remainingAmount - settledAmount);
+    }
+
+    return reductions;
+};
+
+const sumOpenShareAmount = (shares) => (
+    shares.reduce((total, share) => toMoney(total + toMoney(share.amount)), 0)
+);
+
 const applyShareReductions = async (shares, reductions, transaction) => {
     for (const share of shares) {
         const paidAmount = reductions.get(share.id) || 0;
@@ -142,7 +162,8 @@ exports.rejectShare = async (req, res) => {
 };
 
 // POST /api/debts/settle
-// Body: { to_user_id, amount, from_wallet_id, to_wallet_id, family_id?, from_user_id? }
+// Direct mode: { to_user_id, amount, from_wallet_id, to_wallet_id }
+// Family fund mode: { family_id, from_user_id, amount, from_wallet_id, to_wallet_id }
 exports.settleDebt = async (req, res) => {
     const { to_user_id, amount, from_wallet_id, to_wallet_id, family_id } = req.body;
     const from_user_id = family_id ? req.body.from_user_id : req.user.id;
@@ -152,7 +173,7 @@ exports.settleDebt = async (req, res) => {
         return sendError(res, 'INVALID_AMOUNT', 400);
     }
 
-    if (from_user_id === to_user_id) {
+    if (!from_user_id || (!family_id && (!to_user_id || from_user_id === to_user_id))) {
         return sendError(res, 'INVALID_SETTLEMENT_USERS', 400);
     }
 
@@ -168,11 +189,6 @@ exports.settleDebt = async (req, res) => {
             return sendError(res, 'WALLET_NOT_FOUND', 404);
         }
 
-        if (from_wallet_id !== to_wallet_id && parseFloat(fromWallet.balance) < parsedAmount) {
-            await t.rollback();
-            return sendError(res, 'INSUFFICIENT_BALANCE', 400);
-        }
-
         if (family_id) {
             const family = await Family.findByPk(family_id, { transaction: t });
 
@@ -185,33 +201,86 @@ exports.settleDebt = async (req, res) => {
                 await t.rollback();
                 return sendError(res, 'FORBIDDEN_FAMILY_SETTLEMENT', 403);
             }
+
+            if (toWallet.family_id !== family_id) {
+                await t.rollback();
+                return sendError(res, 'WALLET_NOT_FOUND', 404);
+            }
+
+            const unpaidShares = await TransactionShare.findAll({
+                where: {
+                    user_id: from_user_id,
+                    status: 'UNPAID',
+                    approval_status: { [Op.ne]: 'REJECTED' }
+                },
+                include: [{
+                    model: Transaction,
+                    as: 'Transaction',
+                    required: true,
+                    include: [{
+                        model: Wallet,
+                        required: true,
+                        where: { family_id }
+                    }]
+                }],
+                transaction: t
+            });
+
+            const totalPayableDebt = sumOpenShareAmount(unpaidShares);
+            if (totalPayableDebt <= SETTLEMENT_EPSILON) {
+                await t.rollback();
+                return sendError(res, 'NO_PAYABLE_DEBT_FOUND', 409);
+            }
+
+            if (parsedAmount > toMoney(totalPayableDebt + SETTLEMENT_EPSILON)) {
+                await t.rollback();
+                return sendError(res, 'SETTLEMENT_AMOUNT_EXCEEDS_DEBT', 400);
+            }
+
+            const reductions = buildShareSettlementPlan(unpaidShares, parsedAmount);
+            if (reductions.size === 0) {
+                await t.rollback();
+                return sendError(res, 'NO_PAYABLE_DEBT_FOUND', 409);
+            }
+
+            toWallet.balance = toMoney(parseFloat(toWallet.balance) + parsedAmount);
+            await toWallet.save({ transaction: t });
+
+            await Transaction.create({
+                amount: parsedAmount,
+                date: new Date(),
+                description: `Hoan quy gia dinh tu user ${from_user_id}`,
+                type: 'INCOME',
+                wallet_id: to_wallet_id,
+                user_id: from_user_id,
+                family_id
+            }, { transaction: t });
+
+            await applyShareReductions(unpaidShares, reductions, t);
+            await t.commit();
+            return success(res, null, 'DEBT_SETTLED');
         }
 
-        const shareQuery = {
+        if (parseFloat(fromWallet.balance) < parsedAmount) {
+            await t.rollback();
+            return sendError(res, 'INSUFFICIENT_BALANCE', 400);
+        }
+
+        const unpaidShares = await TransactionShare.findAll({
             where: {
+                user_id: from_user_id,
                 status: 'UNPAID',
                 approval_status: { [Op.ne]: 'REJECTED' }
             },
             include: [{
                 model: Transaction,
                 as: 'Transaction',
-                required: true
+                required: true,
+                where: { user_id: to_user_id }
             }],
             transaction: t
-        };
+        });
 
-        if (family_id) {
-            shareQuery.include[0].include = [{
-                model: Wallet,
-                required: true,
-                where: { family_id }
-            }];
-        } else {
-            shareQuery.where.user_id = from_user_id;
-            shareQuery.include[0].where = { user_id: to_user_id };
-        }
-
-        const unpaidShares = await TransactionShare.findAll(shareQuery);
         const reductions = buildPathSettlementPlan(
             unpaidShares,
             from_user_id,
@@ -224,13 +293,11 @@ exports.settleDebt = async (req, res) => {
             return sendError(res, 'NO_PAYABLE_DEBT_FOUND', 409);
         }
 
-        if (from_wallet_id !== to_wallet_id) {
-            fromWallet.balance = toMoney(parseFloat(fromWallet.balance) - parsedAmount);
-            toWallet.balance = toMoney(parseFloat(toWallet.balance) + parsedAmount);
+        fromWallet.balance = toMoney(parseFloat(fromWallet.balance) - parsedAmount);
+        toWallet.balance = toMoney(parseFloat(toWallet.balance) + parsedAmount);
 
-            await fromWallet.save({ transaction: t });
-            await toWallet.save({ transaction: t });
-        }
+        await fromWallet.save({ transaction: t });
+        await toWallet.save({ transaction: t });
 
         await Transaction.create({
             amount: parsedAmount,
@@ -239,7 +306,7 @@ exports.settleDebt = async (req, res) => {
             type: 'TRANSFER_OUT',
             wallet_id: from_wallet_id,
             user_id: from_user_id,
-            family_id: family_id || fromWallet.family_id || null
+            family_id: fromWallet.family_id || null
         }, { transaction: t });
 
         await Transaction.create({
@@ -249,7 +316,7 @@ exports.settleDebt = async (req, res) => {
             type: 'TRANSFER_IN',
             wallet_id: to_wallet_id,
             user_id: to_user_id,
-            family_id: family_id || toWallet.family_id || null
+            family_id: toWallet.family_id || null
         }, { transaction: t });
 
         await applyShareReductions(unpaidShares, reductions, t);
@@ -279,14 +346,14 @@ exports.settleDebt = async (req, res) => {
             console.error('Socket emit error:', err);
         }
 
-        success(res, null, 'DEBT_SETTLED');
+        return success(res, null, 'DEBT_SETTLED');
 
     } catch (err) {
         if (!t.finished) {
             await t.rollback();
         }
         console.error(err);
-        serverError(res, 'SETTLE_DEBT_FAILED');
+        return serverError(res, 'SETTLE_DEBT_FAILED');
     }
 };
 

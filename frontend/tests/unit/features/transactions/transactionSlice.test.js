@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import reducer, { setFilter } from './transactionSlice';
+import reducer, { setFilter } from '@/features/transactions/transactionSlice';
 
 const baseState = {
   transactions: [],

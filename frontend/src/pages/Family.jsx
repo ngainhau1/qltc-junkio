@@ -14,8 +14,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { createFamily, fetchFamilies, setActiveFamily, removeMemberFromFamily } from "@/features/families/familySlice"
 import { settleDebts, fetchTransactions } from "@/features/transactions/transactionSlice"
+import { fetchWallets } from "@/features/wallets/walletSlice"
 import { Users, Plus, ArrowRight, MoreHorizontal, LogOut, Check, Copy, Receipt, Target } from "lucide-react"
-import { simplifyDebts } from "@/utils/debtSimplification"
 import { toast } from "sonner"
 import { EmptyState } from "@/components/ui/empty-state"
 import { useTranslation } from "react-i18next"
@@ -23,6 +23,8 @@ import { SharedExpenseModal } from "@/components/features/families/SharedExpense
 import { formatCurrency } from "@/lib/utils"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { resolveError } from "@/utils/authErrors"
+
+const FAMILY_FUND_ID = '__family_fund__'
 
 const getTransactionShares = (transaction) => {
     const shares = transaction?.Shares ?? transaction?.shares
@@ -35,7 +37,7 @@ const buildFamilyDebts = (transactions, familyWalletIds, activeFamilyMembers) =>
     return transactions
         .filter(t =>
             familyWalletIdSet.has(t.wallet_id) &&
-            (t.type === 'EXPENSE' || (t.type === 'TRANSFER' && t.category_id === 'cat-settlement'))
+            t.type === 'EXPENSE'
         )
         .map(t => {
             const shares = getTransactionShares(t)
@@ -57,6 +59,27 @@ const buildFamilyDebts = (transactions, familyWalletIds, activeFamilyMembers) =>
 
 const isFullyPaidExpense = (expense) =>
     expense.shares.length > 0 && expense.shares.every((share) => share.status === 'PAID')
+
+const buildFamilyFundSettlements = (expenses) => {
+    const totalsByMember = new Map()
+
+    expenses.forEach((expense) => {
+        expense.shares
+            .filter((share) => share.status !== 'PAID' && share.approval_status !== 'REJECTED')
+            .forEach((share) => {
+                const currentAmount = totalsByMember.get(share.user_id) || 0
+                totalsByMember.set(share.user_id, currentAmount + Number(share.amount || 0))
+            })
+    })
+
+    return Array.from(totalsByMember.entries())
+        .map(([from, amount]) => ({
+            from,
+            to: FAMILY_FUND_ID,
+            amount
+        }))
+        .filter((settlement) => settlement.amount > 0.01)
+}
 
 export function Family() {
     const { t } = useTranslation();
@@ -97,6 +120,10 @@ export function Family() {
     }).slice(0, 50), [openFamilyDebts]);
 
     const getMemberName = (id) => {
+        if (id === FAMILY_FUND_ID) {
+            return t('family.settlement.familyFund')
+        }
+
         const member = activeFamilyMembers.find((item) => item.id === id)
         return member ? member.name : t('common.unknown')
     }
@@ -142,7 +169,7 @@ export function Family() {
             toast.info(t('family.toasts.optimizationEmpty'));
             return;
         }
-        const results = simplifyDebts(openFamilyDebts)
+        const results = buildFamilyFundSettlements(openFamilyDebts)
         if (results.length === 0) {
             toast.success(t('family.toasts.optimizationZero'));
         }
@@ -172,12 +199,11 @@ export function Family() {
     const confirmSettle = async () => {
         if (!selectedSettlement || familyWalletIds.length === 0) return;
 
-        const { from, to, amount } = selectedSettlement;
+        const { from, amount } = selectedSettlement;
 
         try {
             await dispatch(settleDebts({
                 from_user_id: from,
-                to_user_id: to,
                 amount: amount,
                 from_wallet_id: familyWalletIds[0],
                 to_wallet_id: familyWalletIds[0],
@@ -186,13 +212,16 @@ export function Family() {
 
             toast.success(t('family.toasts.paymentRecorded', { amount: formatCurrency(amount) }));
 
-            const latestTransactionsResponse = await dispatch(fetchTransactions()).unwrap();
+            const [latestTransactionsResponse] = await Promise.all([
+                dispatch(fetchTransactions()).unwrap(),
+                dispatch(fetchWallets()).unwrap()
+            ]);
             const latestFamilyDebts = buildFamilyDebts(
                 latestTransactionsResponse?.transactions ?? [],
                 familyWalletIds,
                 activeFamilyMembers
             ).filter(tx => !isFullyPaidExpense(tx));
-            setSettlements(simplifyDebts(latestFamilyDebts));
+            setSettlements(buildFamilyFundSettlements(latestFamilyDebts));
             setSettleModalOpen(false);
         } catch (error) {
             console.error('Settlement error:', error);
@@ -357,13 +386,10 @@ export function Family() {
                                         <div key={tx.id} className="text-sm border-b pb-2">
                                             <p className="font-medium">{tx.desc}</p>
                                             <p className="text-muted-foreground">
-                                                {t('family.expenses.paidBy', { name: getMemberName(tx.paidBy), amount: formatCurrency(tx.amount) })}
-                                                {tx.shares && tx.shares.length > 0 && tx.shares[0].status === 'PAID'
-                                                    ? ` ${t('family.expenses.settleUp')}`
-                                                    : (tx.shares && tx.shares.length > 0
-                                                        ? ` ${t('family.expenses.splitMembers', { count: tx.shares.length })}`
-                                                        : ` ${t('family.expenses.splitEven', { count: tx.splitAmong.length })}`
-                                                    )
+                                                {t('family.expenses.familyFundPaid', { amount: formatCurrency(tx.amount) })}
+                                                {tx.shares && tx.shares.length > 0
+                                                    ? ` ${t('family.expenses.splitMembers', { count: tx.shares.length })}`
+                                                    : ` ${t('family.expenses.splitEven', { count: tx.splitAmong.length })}`
                                                 }
                                             </p>
                                         </div>
@@ -401,7 +427,7 @@ export function Family() {
                                                 </div>
                                                 <ArrowRight className="h-4 w-4 text-green-600 dark:text-green-500 shrink-0" />
                                                 <div className="flex flex-col">
-                                                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">{t('family.settlement.creditor')}</span>
+                                                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">{t('family.settlement.fundTarget')}</span>
                                                     <span className="text-sm font-semibold text-foreground truncate max-w-[80px] md:max-w-full">{getMemberName(s.to)}</span>
                                                 </div>
                                             </div>
@@ -409,7 +435,7 @@ export function Family() {
                                                 <div className="font-bold">{formatCurrency(s.amount)}</div>
                                                 {isFamilyOwner && (
                                                     <Button size="sm" onClick={() => handleSettleClick(s)} className="h-6 text-[10px] px-2 bg-green-600 hover:bg-green-700 text-white shadow-sm">
-                                                        {t('family.settlement.payBtn')}
+                                                        {t('family.settlement.reimburseBtn')}
                                                     </Button>
                                                 )}
                                             </div>

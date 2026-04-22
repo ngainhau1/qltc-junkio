@@ -8,8 +8,8 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest run src",
-    "test:ui": "vitest --ui src",
+    "test": "vitest run tests/unit",
+    "test:ui": "vitest --ui tests/unit",
     "test:e2e": "playwright test",
     "test:i18n": "node ./scripts/check-i18n.mjs",
     "test:qa": "npm run lint && npm run test && npm run build && npm run test:i18n && npm --prefix ../backend run test:smoke && npm --prefix ../backend run check:admin && npm run test:e2e"

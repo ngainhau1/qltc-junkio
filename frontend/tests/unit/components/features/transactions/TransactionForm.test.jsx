@@ -3,13 +3,13 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeAll } from 'vitest'
 import { Provider } from 'react-redux'
 import { configureStore } from '@reduxjs/toolkit'
-import { TransactionForm } from './TransactionForm'
+import { TransactionForm } from '@/components/features/transactions/TransactionForm'
 import walletReducer from '@/features/wallets/walletSlice'
 import transactionReducer from '@/features/transactions/transactionSlice'
 import familyReducer from '@/features/families/familySlice'
 
 // Mock Tabs to avoid Radix UI issues in JSDOM
-vi.mock('../../ui/tabs', () => ({
+vi.mock('@/components/ui/tabs', () => ({
     Tabs: ({ onValueChange, children }) => {
         return (
             <div>

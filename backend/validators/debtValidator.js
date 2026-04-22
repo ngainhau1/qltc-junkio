@@ -15,10 +15,10 @@ const handleValidation = (locations = ['body']) => (req, res, next) => {
 };
 
 exports.validateSettle = [
-    body('to_user_id').isUUID().withMessage('to_user_id phải là UUID'),
-    body('amount').isFloat({ gt: 0 }).withMessage('Số tiền phải > 0').toFloat(),
-    body('from_wallet_id').isUUID().withMessage('from_wallet_id phải là UUID'),
-    body('to_wallet_id').isUUID().withMessage('to_wallet_id phải là UUID'),
+    body('to_user_id').optional({ nullable: true }).isUUID().withMessage('to_user_id phai la UUID'),
+    body('amount').isFloat({ gt: 0 }).withMessage('amount phai > 0').toFloat(),
+    body('from_wallet_id').isUUID().withMessage('from_wallet_id phai la UUID'),
+    body('to_wallet_id').isUUID().withMessage('to_wallet_id phai la UUID'),
     body('from_user_id')
         .if(body('family_id').exists({ checkFalsy: true }))
         .isUUID()
@@ -28,6 +28,6 @@ exports.validateSettle = [
 ];
 
 exports.validateShareParam = [
-    param('shareId').isUUID().withMessage('shareId phải là UUID'),
+    param('shareId').isUUID().withMessage('shareId phai la UUID'),
     handleValidation(['params'])
 ];

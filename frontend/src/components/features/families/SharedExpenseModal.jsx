@@ -5,7 +5,6 @@ import { Modal } from "@/components/ui/modal"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { createTransaction } from "@/features/transactions/transactionSlice"
 import { refreshFinanceData } from "@/features/finance/refreshFinanceData"
 import { toast } from "sonner"
@@ -20,15 +19,13 @@ export function SharedExpenseModal({ isOpen, onClose, family, familyWalletId }) 
 
     const validationSchema = Yup.object().shape({
         description: Yup.string().required(t('sharedExpense.errDesc')),
-        amount: Yup.number().positive(t('sharedExpense.errAmount')).required(t('sharedExpense.errAmount')),
-        paidBy: Yup.string().required()
+        amount: Yup.number().positive(t('sharedExpense.errAmount')).required(t('sharedExpense.errAmount'))
     })
 
     const formik = useFormik({
         initialValues: {
             description: "",
-            amount: "",
-            paidBy: user ? String(user.id) : ""
+            amount: ""
         },
         validationSchema,
         enableReinitialize: true,
@@ -42,17 +39,13 @@ export function SharedExpenseModal({ isOpen, onClose, family, familyWalletId }) 
             const memberCount = family?.members.length || 1;
             const splitAmount = totalAmount / memberCount;
 
-            const shares = family.members.map(m => {
-                const isPayer = String(m.id) === String(values.paidBy);
-
-                return {
-                    id: generateId('s'),
-                    user_id: m.id,
-                    amount: splitAmount,
-                    status: isPayer ? 'PAID' : 'UNPAID',
-                    approval_status: 'APPROVED'
-                };
-            });
+            const shares = family.members.map(m => ({
+                id: generateId('s'),
+                user_id: m.id,
+                amount: splitAmount,
+                status: 'UNPAID',
+                approval_status: 'APPROVED'
+            }));
 
             const newTx = {
                 amount: totalAmount,
@@ -61,7 +54,7 @@ export function SharedExpenseModal({ isOpen, onClose, family, familyWalletId }) 
                 type: 'EXPENSE',
                 wallet_id: familyWalletId,
                 category_id: null,
-                user_id: values.paidBy,
+                user_id: user?.id,
                 family_id: family.id,
                 shares: shares
             };
@@ -116,25 +109,6 @@ export function SharedExpenseModal({ isOpen, onClose, family, familyWalletId }) 
                     {formik.touched.amount && formik.errors.amount && (
                         <p className="text-xs text-red-500">{formik.errors.amount}</p>
                     )}
-                </div>
-
-                <div className="space-y-2">
-                    <Label>{t('sharedExpense.paidByLabel')}</Label>
-                    <Select
-                        value={String(formik.values.paidBy)}
-                        onValueChange={(val) => formik.setFieldValue('paidBy', val)}
-                    >
-                        <SelectTrigger className="w-full">
-                            <SelectValue placeholder={t('sharedExpense.selectMember')} />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {family?.members.map(m => (
-                                <SelectItem key={m.id} value={String(m.id)}>
-                                    {m.name} {m.id === user?.id ? t('family.list.you') : ""}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
                 </div>
 
                 {currentAmount > 0 && (

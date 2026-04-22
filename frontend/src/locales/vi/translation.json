@@ -361,6 +361,7 @@
             "emptyTitle": "Chưa có giao dịch",
             "emptyDesc": "Chưa có khoản chi tiêu chung nào được ghi nhận.",
             "paidBy": "{{name}} đã trả {{amount}}",
+            "familyFundPaid": "Quỹ gia đình đã chi {{amount}}",
             "settleUp": "(Settle Up)",
             "splitMembers": "(Chia cho {{count}} người)",
             "splitEven": "(Chia đều cho {{count}} người)",
@@ -374,8 +375,11 @@
             "emptyDescHasTx": "Các khoản nợ đã được cân bằng.",
             "debtor": "Người nợ",
             "creditor": "Chủ nợ",
+            "fundTarget": "Hoàn về",
+            "familyFund": "Quỹ gia đình",
             "payBtn": "Trả",
-            "algorithmNote": "Giao dịch được giảm thiểu bằng Thuật Toán Tham Lam (Greedy)."
+            "reimburseBtn": "Đã hoàn quỹ",
+            "algorithmNote": "Tổng hợp theo số tiền mỗi thành viên cần hoàn lại Quỹ gia đình."
         },
         "modals": {
             "invite": {
@@ -396,7 +400,7 @@
             "settle": {
                 "title": "Xác Nhận Thanh Toán",
                 "payTo": "Chuyển Trả",
-                "note": "Hành động này sẽ tạo một giao dịch thanh toán trong hệ thống để tự động cấn trừ khoản nợ này. Bạn cần đảm bảo việc chuyển tiền thực tế đã được thực hiện.",
+                "note": "Hành động này sẽ ghi nhận thành viên đã hoàn tiền vào ví gia đình và tự động cấn trừ phần nợ tương ứng.",
                 "cancel": "Hủy",
                 "submit": "Xác nhận Đã Trả"
             }
@@ -850,6 +854,7 @@
             "transferFailed": "Lỗi giao dịch chuyển tiền.",
             "invalidAmount": "Số tiền phải lớn hơn 0.",
             "insufficientBalance": "Số dư ví không đủ.",
+            "settlementAmountExceedsDebt": "Số tiền hoàn quỹ lớn hơn khoản nợ còn mở.",
             "invalidList": "Danh sách giao dịch không hợp lệ.",
             "importFailed": "Lỗi khi nhập dữ liệu.",
             "exportUnsupported": "Định dạng xuất không được hỗ trợ.",

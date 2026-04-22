@@ -361,6 +361,7 @@
             "emptyTitle": "No transactions",
             "emptyDesc": "No shared expenses have been recorded yet.",
             "paidBy": "{{name}} paid {{amount}}",
+            "familyFundPaid": "Family fund paid {{amount}}",
             "settleUp": "(Settle Up)",
             "splitMembers": "(Split among {{count}} people)",
             "splitEven": "(Split evenly among {{count}} people)",
@@ -374,8 +375,11 @@
             "emptyDescHasTx": "Debts are balanced. No settlement needed.",
             "debtor": "Debtor",
             "creditor": "Creditor",
+            "fundTarget": "Repay to",
+            "familyFund": "Family fund",
             "payBtn": "Pay",
-            "algorithmNote": "Transactions are minimized using the Greedy Algorithm."
+            "reimburseBtn": "Repaid fund",
+            "algorithmNote": "Grouped by the amount each member needs to reimburse to the family fund."
         },
         "modals": {
             "invite": {
@@ -396,7 +400,7 @@
             "settle": {
                 "title": "Confirm Payment",
                 "payTo": "Transfer to",
-                "note": "This action will create a payment transaction in the system to automatically offset this debt. Ensure the actual money transfer has been completed.",
+                "note": "This action records that the member reimbursed the family wallet and offsets the matching shared expense debt.",
                 "cancel": "Cancel",
                 "submit": "Confirm Paid"
             }
@@ -850,6 +854,7 @@
             "transferFailed": "Transfer transaction failed.",
             "invalidAmount": "Amount must be greater than 0.",
             "insufficientBalance": "Insufficient wallet balance.",
+            "settlementAmountExceedsDebt": "The reimbursement amount is greater than the remaining open debt.",
             "invalidList": "Invalid transaction list.",
             "importFailed": "Failed to import data.",
             "exportUnsupported": "Export format not supported.",

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getFinanceScopeLabels, resolveFinanceScope } from './context';
+import { getFinanceScopeLabels, resolveFinanceScope } from '@/features/finance/context';
 
 describe('finance context helpers', () => {
     it('resolves personal scope when there is no active family', () => {

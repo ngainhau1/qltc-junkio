@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import api from '@/lib/api';
 import goldPriceReducer from '@/features/market/goldPriceSlice';
-import { GoldPriceCard } from './GoldPriceCard';
+import { GoldPriceCard } from '@/components/dashboard/GoldPriceCard';
 
 vi.mock('@/lib/api', () => ({
     default: {
@@ -14,7 +14,7 @@ vi.mock('@/lib/api', () => ({
     },
 }));
 
-vi.mock('./GoldPriceMiniChart', () => ({
+vi.mock('@/components/dashboard/GoldPriceMiniChart', () => ({
     GoldPriceMiniChart: ({ range, points }) => (
         <div data-testid="gold-mini-chart">{`chart-${range}-${points.length}`}</div>
     ),

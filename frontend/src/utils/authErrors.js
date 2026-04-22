@@ -77,6 +77,7 @@ const ERROR_MAP = {
     FAMILY_NOT_FOUND: 'errors.families.detailFailed',
     FORBIDDEN_FAMILY_SETTLEMENT: 'errors.families.forbidden',
     NO_PAYABLE_DEBT_FOUND: 'family.toasts.optimizationZero',
+    SETTLEMENT_AMOUNT_EXCEEDS_DEBT: 'errors.transactions.settlementAmountExceedsDebt',
     SETTLE_DEBT_FAILED: 'errors.transactions.transferFailed',
 
     // ── Recurring ──

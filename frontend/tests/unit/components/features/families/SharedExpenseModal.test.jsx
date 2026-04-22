@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { SharedExpenseModal } from './SharedExpenseModal';
+import { SharedExpenseModal } from '@/components/features/families/SharedExpenseModal';
 import { configureStore } from '@reduxjs/toolkit';
 import { Provider } from 'react-redux';
 import authReducer from '@/features/auth/authSlice';
@@ -46,16 +46,6 @@ vi.mock('@/components/ui/input', () => ({
 vi.mock('@/components/ui/label', () => ({
   Label: (props) => <label {...props} />,
 }));
-vi.mock('@/components/ui/select', () => ({
-  Select: ({ children, onValueChange, value }) => (
-    <select value={value} onChange={(e) => onValueChange(e.target.value)} data-testid="select">{children}</select>
-  ),
-  SelectContent: ({ children }) => <>{children}</>,
-  SelectTrigger: ({ children }) => <>{children}</>,
-  SelectValue: () => null,
-  SelectItem: ({ value, children }) => <option value={value}>{children}</option>,
-}));
-
 // Mock translation
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (k, opts) => (opts?.amount ? String(opts.amount) : k), i18n: { language: 'vi', changeLanguage: () => {} } }),
@@ -107,7 +97,14 @@ describe('SharedExpenseModal', () => {
     await waitFor(() => expect(screen.getByText(/500/)).toBeTruthy());
   });
 
-  it('creates approved shares for non-payers', async () => {
+  it('does not ask for a payer because the family fund pays the shared expense', () => {
+    const store = buildStore();
+    render(<Provider store={store}><SharedExpenseModal {...baseProps} /></Provider>);
+
+    expect(screen.queryByText('sharedExpense.paidByLabel')).toBeNull();
+  });
+
+  it('creates unpaid approved shares for every family member', async () => {
     const store = buildStore();
     render(<Provider store={store}><SharedExpenseModal {...baseProps} /></Provider>);
 
@@ -120,7 +117,7 @@ describe('SharedExpenseModal', () => {
         shares: [
           expect.objectContaining({
             user_id: 'u1',
-            status: 'PAID',
+            status: 'UNPAID',
             approval_status: 'APPROVED',
           }),
           expect.objectContaining({
