@@ -46,6 +46,17 @@ vi.mock('@/components/ui/input', () => ({
 vi.mock('@/components/ui/label', () => ({
   Label: (props) => <label {...props} />,
 }));
+vi.mock('@/components/ui/select', () => ({
+  Select: ({ children, value, onValueChange }) => (
+    <select value={value} onChange={(event) => onValueChange(event.target.value)} data-testid="wallet-select">
+      {children}
+    </select>
+  ),
+  SelectContent: ({ children }) => <>{children}</>,
+  SelectTrigger: ({ children }) => <>{children}</>,
+  SelectValue: () => null,
+  SelectItem: ({ value, children }) => <option value={value}>{children}</option>,
+}));
 // Mock translation
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (k, opts) => (opts?.amount ? String(opts.amount) : k), i18n: { language: 'vi', changeLanguage: () => {} } }),
@@ -63,7 +74,12 @@ const buildStore = () => {
     preloadedState: {
       auth: { user: { id: 'u1', name: 'Alice' } },
       families: { activeFamilyId: 'fam1', families: [] },
-      wallets: { wallets: [] },
+      wallets: {
+        wallets: [
+          { id: 'personal-wallet-1', user_id: 'u1', family_id: null, name: 'Alice Wallet' },
+          { id: 'family-wallet-1', user_id: null, family_id: 'fam1', name: 'Family Fund' },
+        ],
+      },
     },
   });
 };
@@ -77,7 +93,6 @@ const baseProps = {
   isOpen: true,
   onClose: () => {},
   family: { id: 'fam1', members },
-  familyWalletId: 'w1',
   onSubmit: () => {},
 };
 
@@ -97,14 +112,14 @@ describe('SharedExpenseModal', () => {
     await waitFor(() => expect(screen.getByText(/500/)).toBeTruthy());
   });
 
-  it('does not ask for a payer because the family fund pays the shared expense', () => {
+  it('asks for a personal wallet because the current member pays first', () => {
     const store = buildStore();
     render(<Provider store={store}><SharedExpenseModal {...baseProps} /></Provider>);
 
-    expect(screen.queryByText('sharedExpense.paidByLabel')).toBeNull();
+    expect(screen.getByText('sharedExpense.walletLabel')).toBeTruthy();
   });
 
-  it('creates unpaid approved shares for every family member', async () => {
+  it('creates a personal-wallet expense with paid payer share and unpaid approved member shares', async () => {
     const store = buildStore();
     render(<Provider store={store}><SharedExpenseModal {...baseProps} /></Provider>);
 
@@ -114,10 +129,12 @@ describe('SharedExpenseModal', () => {
 
     await waitFor(() => {
       expect(mockApiPost).toHaveBeenCalledWith('/transactions', expect.objectContaining({
+        wallet_id: 'personal-wallet-1',
+        family_id: 'fam1',
         shares: [
           expect.objectContaining({
             user_id: 'u1',
-            status: 'UNPAID',
+            status: 'PAID',
             approval_status: 'APPROVED',
           }),
           expect.objectContaining({

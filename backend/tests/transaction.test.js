@@ -215,16 +215,16 @@ describe('Transaction API create transaction', () => {
             family_id: familyId
         });
 
-        const familyWallet = await mockWallet.create({
-            name: 'Family Fund',
+        const personalWallet = await mockWallet.create({
+            name: 'Alice Shared Expense Wallet',
             balance: 500000,
-            family_id: familyId
+            user_id: TEST_USER_ID
         });
 
         const res = await request(app)
             .post('/api/transactions')
             .send({
-                wallet_id: familyWallet.id,
+                wallet_id: personalWallet.id,
                 family_id: familyId,
                 amount: 120000,
                 type: 'EXPENSE',
@@ -240,7 +240,7 @@ describe('Transaction API create transaction', () => {
                         user_id: SECOND_USER_ID,
                         amount: 60000,
                         status: 'UNPAID',
-                        approval_status: 'PENDING'
+                        approval_status: 'APPROVED'
                     }
                 ]
             });
@@ -255,10 +255,17 @@ describe('Transaction API create transaction', () => {
         expect(persistedShares).toHaveLength(2);
         expect(persistedShares.map((share) => share.user_id)).toEqual([TEST_USER_ID, SECOND_USER_ID]);
         expect(persistedShares.map((share) => share.status)).toEqual(['PAID', 'UNPAID']);
-        expect(persistedShares.map((share) => share.approval_status)).toEqual(['APPROVED', 'PENDING']);
+        expect(persistedShares.map((share) => share.approval_status)).toEqual(['APPROVED', 'APPROVED']);
 
-        const updatedFamilyWallet = await mockWallet.findByPk(familyWallet.id);
-        expect(Number(updatedFamilyWallet.balance)).toBe(380000);
+        const updatedPersonalWallet = await mockWallet.findByPk(personalWallet.id);
+        expect(Number(updatedPersonalWallet.balance)).toBe(380000);
+
+        const familyTransactionsRes = await request(app)
+            .get('/api/transactions')
+            .query({ context: 'family', family_id: familyId });
+
+        expect(familyTransactionsRes.statusCode).toEqual(200);
+        expect(familyTransactionsRes.body.data.transactions.some((tx) => tx.id === res.body.data.id)).toBe(true);
     });
 });
 

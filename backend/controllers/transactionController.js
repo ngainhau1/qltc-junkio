@@ -31,10 +31,20 @@ const withTransferLock = async (walletId, task) => {
     }
 };
 
-const buildTransactionWhere = ({ walletIds, filters }) => {
-    const whereClause = {
-        wallet_id: { [Op.in]: walletIds }
-    };
+const buildTransactionWhere = ({ walletIds, familyIds = [], filters, includeFamilyTransactions = false }) => {
+    const accessConditions = [];
+
+    if (walletIds.length > 0) {
+        accessConditions.push({ wallet_id: { [Op.in]: walletIds } });
+    }
+
+    if (includeFamilyTransactions && familyIds.length > 0) {
+        accessConditions.push({ family_id: { [Op.in]: familyIds } });
+    }
+
+    const whereClause = accessConditions.length > 1
+        ? { [Op.or]: accessConditions }
+        : accessConditions[0] || { wallet_id: { [Op.in]: [] } };
 
     if (filters.startDate && filters.endDate) {
         const end = new Date(filters.endDate);
@@ -118,13 +128,26 @@ exports.getTransactions = async (req, res) => {
             sortOrder = 'DESC'
         } = req.query;
 
-        const { walletIds } = await getAccessibleWalletIds({
+        const { walletIds, familyIds, normalizedContext } = await getAccessibleWalletIds({
             userId: req.user.id,
             context,
             familyId: family_id
         });
 
-        if (wallet_id && !walletIds.includes(wallet_id)) {
+        const familyTransactionIds = normalizedContext === 'family'
+            ? (family_id ? familyIds.filter((id) => id === family_id) : familyIds)
+            : [];
+
+        if (normalizedContext === 'family' && family_id && familyTransactionIds.length === 0) {
+            return success(res, {
+                transactions: [],
+                totalItems: 0,
+                totalPages: 0,
+                currentPage: Number(page)
+            }, 'TRANSACTIONS_LOADED');
+        }
+
+        if (wallet_id && normalizedContext !== 'family' && !walletIds.includes(wallet_id)) {
             return success(res, {
                 transactions: [],
                 totalItems: 0,
@@ -135,7 +158,9 @@ exports.getTransactions = async (req, res) => {
 
         const whereClause = buildTransactionWhere({
             walletIds,
-            filters: { startDate, endDate, type, search, wallet_id, category_id }
+            familyIds: familyTransactionIds,
+            filters: { startDate, endDate, type, search, wallet_id, category_id },
+            includeFamilyTransactions: normalizedContext === 'family'
         });
 
         const pageNum = Number(page);
@@ -177,7 +202,7 @@ exports.createTransaction = async (req, res) => {
 
     const t = await sequelize.transaction();
     try {
-        const { wallets } = await getAccessibleWallets({
+        const { wallets, familyIds } = await getAccessibleWallets({
             userId: req.user.id,
             transaction: t
         });
@@ -191,6 +216,11 @@ exports.createTransaction = async (req, res) => {
         if (!wallet) {
             await t.rollback();
             return sendError(res, 'WALLET_NOT_FOUND', 404);
+        }
+
+        if (family_id && !familyIds.includes(family_id)) {
+            await t.rollback();
+            return sendError(res, 'FAMILY_FORBIDDEN', 403);
         }
 
         const parsedAmount = parseFloat(amount);

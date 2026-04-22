@@ -357,7 +357,7 @@
         },
         "expenses": {
             "title": "Chi Tiêu Chung ({{count}})",
-            "desc": "Danh sách các giao dịch từ Quỹ Gia Đình.",
+            "desc": "Danh sách các khoản chi tiêu chung trong gia đình.",
             "emptyTitle": "Chưa có giao dịch",
             "emptyDesc": "Chưa có khoản chi tiêu chung nào được ghi nhận.",
             "paidBy": "{{name}} đã trả {{amount}}",
@@ -379,7 +379,7 @@
             "familyFund": "Quỹ gia đình",
             "payBtn": "Trả",
             "reimburseBtn": "Đã hoàn quỹ",
-            "algorithmNote": "Tổng hợp theo số tiền mỗi thành viên cần hoàn lại Quỹ gia đình."
+            "algorithmNote": "Giao dịch được tối ưu để giảm số lần chuyển tiền giữa các thành viên."
         },
         "modals": {
             "invite": {
@@ -400,7 +400,9 @@
             "settle": {
                 "title": "Xác Nhận Thanh Toán",
                 "payTo": "Chuyển Trả",
-                "note": "Hành động này sẽ ghi nhận thành viên đã hoàn tiền vào ví gia đình và tự động cấn trừ phần nợ tương ứng.",
+                "note": "Hành động này sẽ tạo giao dịch chuyển tiền từ ví cá nhân của bạn sang ví của người đã ứng tiền và tự động cấn trừ phần nợ tương ứng.",
+                "fromWallet": "Ví trả tiền",
+                "selectWallet": "Chọn ví trả tiền",
                 "cancel": "Hủy",
                 "submit": "Xác nhận Đã Trả"
             }
@@ -707,10 +709,11 @@
     "sharedExpense": {
         "addBtn": "Thêm Chi Tiêu Chung",
         "title": "Thêm Chi Tiêu Chung",
-        "desc": "Tạo giao dịch nhóm, dự chi từ quỹ gia đình và tự động chia đều nợ cho các thành viên.",
+        "desc": "Tạo giao dịch nhóm từ ví cá nhân của bạn và tự động chia đều nợ cho các thành viên.",
         "descriptionLabel": "Mô tả khoản chi",
         "descriptionPlaceholder": "vd: Tiền ăn lẩu tối thứ 7",
         "amountLabel": "Tổng số tiền",
+        "walletLabel": "Ví ứng tiền",
         "paidByLabel": "Người ứng tiền / Trả tiền",
         "splitEqually": "Chia đều cho {{count}} người (mỗi người {{amount}})",
         "previewLabel": "Bản xem trước phân bổ nợ:",
@@ -719,8 +722,10 @@
         "errDesc": "Vui lòng nhập mô tả",
         "errAmount": "Vui lòng nhập số tiền hợp lệ lớn hơn 0",
         "errNoWallet": "Gia đình này chưa có quỹ hoặc ví chung nào để ghi nhận giao dịch.",
+        "errNoPersonalWallet": "Bạn cần có ví cá nhân để ứng tiền hoặc trả nợ.",
         "successMsg": "Đã thêm chi tiêu chung thành công!",
-        "selectMember": "Chọn thành viên"
+        "selectMember": "Chọn thành viên",
+        "selectWallet": "Chọn ví cá nhân"
     },
     "admin": {
         "title": "Quản trị Hệ thống",
@@ -854,7 +859,7 @@
             "transferFailed": "Lỗi giao dịch chuyển tiền.",
             "invalidAmount": "Số tiền phải lớn hơn 0.",
             "insufficientBalance": "Số dư ví không đủ.",
-            "settlementAmountExceedsDebt": "Số tiền hoàn quỹ lớn hơn khoản nợ còn mở.",
+            "settlementAmountExceedsDebt": "Số tiền trả nợ lớn hơn khoản nợ còn mở.",
             "invalidList": "Danh sách giao dịch không hợp lệ.",
             "importFailed": "Lỗi khi nhập dữ liệu.",
             "exportUnsupported": "Định dạng xuất không được hỗ trợ.",

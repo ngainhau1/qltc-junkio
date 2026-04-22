@@ -357,7 +357,7 @@
         },
         "expenses": {
             "title": "Shared Expenses ({{count}})",
-            "desc": "List of transactions from the Family Fund.",
+            "desc": "List of shared expenses in this family.",
             "emptyTitle": "No transactions",
             "emptyDesc": "No shared expenses have been recorded yet.",
             "paidBy": "{{name}} paid {{amount}}",
@@ -379,7 +379,7 @@
             "familyFund": "Family fund",
             "payBtn": "Pay",
             "reimburseBtn": "Repaid fund",
-            "algorithmNote": "Grouped by the amount each member needs to reimburse to the family fund."
+            "algorithmNote": "Payments are optimized to reduce the number of transfers between members."
         },
         "modals": {
             "invite": {
@@ -400,7 +400,9 @@
             "settle": {
                 "title": "Confirm Payment",
                 "payTo": "Transfer to",
-                "note": "This action records that the member reimbursed the family wallet and offsets the matching shared expense debt.",
+                "note": "This action creates a transfer from your personal wallet to the wallet used by the member who paid first, then offsets the matching debt.",
+                "fromWallet": "Payment wallet",
+                "selectWallet": "Select payment wallet",
                 "cancel": "Cancel",
                 "submit": "Confirm Paid"
             }
@@ -707,10 +709,11 @@
     "sharedExpense": {
         "addBtn": "Add Shared Expense",
         "title": "Add Shared Expense",
-        "desc": "Create a group transaction from the family fund and split the debt equally.",
+        "desc": "Create a group transaction from your personal wallet and split the debt equally.",
         "descriptionLabel": "Expense Description",
         "descriptionPlaceholder": "ex: Saturday night hotpot",
         "amountLabel": "Total Amount",
+        "walletLabel": "Paying wallet",
         "paidByLabel": "Paid By",
         "splitEqually": "Split equally among {{count}} people ({{amount}} each)",
         "previewLabel": "Debt Allocation Preview:",
@@ -719,8 +722,10 @@
         "errDesc": "Please enter a description",
         "errAmount": "Please enter a valid amount greater than 0",
         "errNoWallet": "This family does not have a shared wallet/fund to record transactions.",
+        "errNoPersonalWallet": "You need a personal wallet to pay shared expenses or debts.",
         "successMsg": "Shared expense added successfully!",
-        "selectMember": "Select member"
+        "selectMember": "Select member",
+        "selectWallet": "Select personal wallet"
     },
     "admin": {
         "title": "System Administration",
@@ -854,7 +859,7 @@
             "transferFailed": "Transfer transaction failed.",
             "invalidAmount": "Amount must be greater than 0.",
             "insufficientBalance": "Insufficient wallet balance.",
-            "settlementAmountExceedsDebt": "The reimbursement amount is greater than the remaining open debt.",
+            "settlementAmountExceedsDebt": "The debt payment amount is greater than the remaining open debt.",
             "invalidList": "Invalid transaction list.",
             "importFailed": "Failed to import data.",
             "exportUnsupported": "Export format not supported.",

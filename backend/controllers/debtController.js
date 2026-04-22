@@ -1,5 +1,14 @@
 const { Op } = require('sequelize');
-const { TransactionShare, Transaction, Wallet, User, Family, sequelize, Notification } = require('../models');
+const {
+    TransactionShare,
+    Transaction,
+    Wallet,
+    User,
+    Family,
+    FamilyMember,
+    sequelize,
+    Notification
+} = require('../models');
 const { success, error: sendError, notFound, serverError } = require('../utils/responseHelper');
 const { serializeNotification } = require('../utils/notificationPresenter');
 
@@ -11,10 +20,11 @@ const getShareDebt = (share) => ({
     share,
     debtor: share.user_id,
     creditor: share.Transaction.user_id,
+    creditorWalletId: share.Transaction.wallet_id,
     amount: toMoney(share.amount)
 });
 
-const findSettlementPath = (debts, fromUserId, toUserId) => {
+const findSettlementPath = (debts, fromUserId, toUserId, toWalletId = null) => {
     const queue = [{ userId: fromUserId, path: [] }];
     const visited = new Set([fromUserId]);
 
@@ -28,7 +38,7 @@ const findSettlementPath = (debts, fromUserId, toUserId) => {
         for (const debt of outgoing) {
             const path = [...current.path, debt];
 
-            if (debt.creditor === toUserId) {
+            if (debt.creditor === toUserId && (!toWalletId || debt.creditorWalletId === toWalletId)) {
                 return path;
             }
 
@@ -42,16 +52,19 @@ const findSettlementPath = (debts, fromUserId, toUserId) => {
     return null;
 };
 
-const buildPathSettlementPlan = (shares, fromUserId, toUserId, amount) => {
+const buildPathSettlementPlan = (shares, fromUserId, toUserId, amount, toWalletId = null) => {
     const debts = shares.map(getShareDebt);
     const reductions = new Map();
     let remainingAmount = toMoney(amount);
 
     while (remainingAmount > SETTLEMENT_EPSILON) {
-        const path = findSettlementPath(debts, fromUserId, toUserId);
+        const path = findSettlementPath(debts, fromUserId, toUserId, toWalletId);
 
         if (!path) {
-            return null;
+            return {
+                reductions,
+                exceeded: reductions.size > 0
+            };
         }
 
         const pathCapacity = Math.min(...path.map((debt) => debt.amount));
@@ -68,28 +81,11 @@ const buildPathSettlementPlan = (shares, fromUserId, toUserId, amount) => {
         remainingAmount = toMoney(remainingAmount - settledAmount);
     }
 
-    return reductions;
+    return {
+        reductions,
+        exceeded: false
+    };
 };
-
-const buildShareSettlementPlan = (shares, amount) => {
-    const reductions = new Map();
-    let remainingAmount = toMoney(amount);
-
-    for (const share of shares) {
-        if (remainingAmount <= SETTLEMENT_EPSILON) break;
-
-        const shareAmount = toMoney(share.amount);
-        const settledAmount = Math.min(shareAmount, remainingAmount);
-        reductions.set(share.id, settledAmount);
-        remainingAmount = toMoney(remainingAmount - settledAmount);
-    }
-
-    return reductions;
-};
-
-const sumOpenShareAmount = (shares) => (
-    shares.reduce((total, share) => toMoney(total + toMoney(share.amount)), 0)
-);
 
 const applyShareReductions = async (shares, reductions, transaction) => {
     for (const share of shares) {
@@ -162,18 +158,21 @@ exports.rejectShare = async (req, res) => {
 };
 
 // POST /api/debts/settle
-// Direct mode: { to_user_id, amount, from_wallet_id, to_wallet_id }
-// Family fund mode: { family_id, from_user_id, amount, from_wallet_id, to_wallet_id }
+// Body: { to_user_id, amount, from_wallet_id, to_wallet_id, family_id? }
 exports.settleDebt = async (req, res) => {
-    const { to_user_id, amount, from_wallet_id, to_wallet_id, family_id } = req.body;
-    const from_user_id = family_id ? req.body.from_user_id : req.user.id;
+    const { to_user_id, amount, from_wallet_id, to_wallet_id, family_id, from_user_id } = req.body;
+    const payerUserId = req.user.id;
     const parsedAmount = toMoney(amount);
+
+    if (from_user_id && from_user_id !== payerUserId) {
+        return sendError(res, 'INVALID_SETTLEMENT_USERS', 400);
+    }
 
     if (!parsedAmount || parsedAmount <= 0) {
         return sendError(res, 'INVALID_AMOUNT', 400);
     }
 
-    if (!from_user_id || (!family_id && (!to_user_id || from_user_id === to_user_id))) {
+    if (!to_user_id || payerUserId === to_user_id) {
         return sendError(res, 'INVALID_SETTLEMENT_USERS', 400);
     }
 
@@ -191,74 +190,39 @@ exports.settleDebt = async (req, res) => {
 
         if (family_id) {
             const family = await Family.findByPk(family_id, { transaction: t });
-
             if (!family) {
                 await t.rollback();
                 return sendError(res, 'FAMILY_NOT_FOUND', 404);
             }
 
-            if (family.owner_id !== req.user.id) {
+            const membership = FamilyMember
+                ? await FamilyMember.findOne({
+                    where: { family_id, user_id: payerUserId },
+                    transaction: t
+                })
+                : null;
+            if (family.owner_id !== payerUserId && !membership) {
                 await t.rollback();
                 return sendError(res, 'FORBIDDEN_FAMILY_SETTLEMENT', 403);
             }
 
-            if (toWallet.family_id !== family_id) {
+            if (fromWallet.user_id !== payerUserId || fromWallet.family_id) {
                 await t.rollback();
                 return sendError(res, 'WALLET_NOT_FOUND', 404);
             }
 
-            const unpaidShares = await TransactionShare.findAll({
-                where: {
-                    user_id: from_user_id,
-                    status: 'UNPAID',
-                    approval_status: { [Op.ne]: 'REJECTED' }
-                },
-                include: [{
-                    model: Transaction,
-                    as: 'Transaction',
-                    required: true,
-                    include: [{
-                        model: Wallet,
-                        required: true,
-                        where: { family_id }
-                    }]
-                }],
-                transaction: t
-            });
-
-            const totalPayableDebt = sumOpenShareAmount(unpaidShares);
-            if (totalPayableDebt <= SETTLEMENT_EPSILON) {
+            if (toWallet.user_id !== to_user_id || toWallet.family_id) {
                 await t.rollback();
-                return sendError(res, 'NO_PAYABLE_DEBT_FOUND', 409);
+                return sendError(res, 'WALLET_NOT_FOUND', 404);
             }
-
-            if (parsedAmount > toMoney(totalPayableDebt + SETTLEMENT_EPSILON)) {
-                await t.rollback();
-                return sendError(res, 'SETTLEMENT_AMOUNT_EXCEEDS_DEBT', 400);
-            }
-
-            const reductions = buildShareSettlementPlan(unpaidShares, parsedAmount);
-            if (reductions.size === 0) {
-                await t.rollback();
-                return sendError(res, 'NO_PAYABLE_DEBT_FOUND', 409);
-            }
-
-            toWallet.balance = toMoney(parseFloat(toWallet.balance) + parsedAmount);
-            await toWallet.save({ transaction: t });
-
-            await Transaction.create({
-                amount: parsedAmount,
-                date: new Date(),
-                description: `Hoan quy gia dinh tu user ${from_user_id}`,
-                type: 'INCOME',
-                wallet_id: to_wallet_id,
-                user_id: from_user_id,
-                family_id
-            }, { transaction: t });
-
-            await applyShareReductions(unpaidShares, reductions, t);
-            await t.commit();
-            return success(res, null, 'DEBT_SETTLED');
+        } else if (
+            fromWallet.user_id !== payerUserId ||
+            toWallet.user_id !== to_user_id ||
+            fromWallet.family_id ||
+            toWallet.family_id
+        ) {
+            await t.rollback();
+            return sendError(res, 'WALLET_NOT_FOUND', 404);
         }
 
         if (parseFloat(fromWallet.balance) < parsedAmount) {
@@ -266,9 +230,12 @@ exports.settleDebt = async (req, res) => {
             return sendError(res, 'INSUFFICIENT_BALANCE', 400);
         }
 
+        const transactionWhere = family_id
+            ? { family_id }
+            : { user_id: to_user_id };
+
         const unpaidShares = await TransactionShare.findAll({
             where: {
-                user_id: from_user_id,
                 status: 'UNPAID',
                 approval_status: { [Op.ne]: 'REJECTED' }
             },
@@ -276,21 +243,27 @@ exports.settleDebt = async (req, res) => {
                 model: Transaction,
                 as: 'Transaction',
                 required: true,
-                where: { user_id: to_user_id }
+                where: transactionWhere
             }],
             transaction: t
         });
 
-        const reductions = buildPathSettlementPlan(
+        const plan = buildPathSettlementPlan(
             unpaidShares,
-            from_user_id,
+            payerUserId,
             to_user_id,
-            parsedAmount
+            parsedAmount,
+            to_wallet_id
         );
 
-        if (!reductions || reductions.size === 0) {
+        if (!plan || plan.reductions.size === 0) {
             await t.rollback();
             return sendError(res, 'NO_PAYABLE_DEBT_FOUND', 409);
+        }
+
+        if (plan.exceeded) {
+            await t.rollback();
+            return sendError(res, 'SETTLEMENT_AMOUNT_EXCEEDS_DEBT', 400);
         }
 
         fromWallet.balance = toMoney(parseFloat(fromWallet.balance) - parsedAmount);
@@ -305,27 +278,27 @@ exports.settleDebt = async (req, res) => {
             description: `Tra no cho user ${to_user_id}`,
             type: 'TRANSFER_OUT',
             wallet_id: from_wallet_id,
-            user_id: from_user_id,
-            family_id: fromWallet.family_id || null
+            user_id: payerUserId,
+            family_id: family_id || fromWallet.family_id || null
         }, { transaction: t });
 
         await Transaction.create({
             amount: parsedAmount,
             date: new Date(),
-            description: `Nhan tien tra no tu ${from_user_id}`,
+            description: `Nhan tien tra no tu ${payerUserId}`,
             type: 'TRANSFER_IN',
             wallet_id: to_wallet_id,
             user_id: to_user_id,
-            family_id: toWallet.family_id || null
+            family_id: family_id || toWallet.family_id || null
         }, { transaction: t });
 
-        await applyShareReductions(unpaidShares, reductions, t);
+        await applyShareReductions(unpaidShares, plan.reductions, t);
 
         await t.commit();
 
         try {
             if (Notification) {
-                const fromUser = await User.findByPk(from_user_id);
+                const fromUser = await User.findByPk(payerUserId);
                 const fromUserName = fromUser ? fromUser.name : 'Nguoi dung khong xac dinh';
 
                 const payload = JSON.stringify({
@@ -363,6 +336,18 @@ exports.getSimplifiedDebts = async (req, res) => {
     try {
         const { familyId } = req.params;
 
+        const family = await Family.findByPk(familyId);
+        if (!family) {
+            return sendError(res, 'FAMILY_NOT_FOUND', 404);
+        }
+
+        const membership = await FamilyMember.findOne({
+            where: { family_id: familyId, user_id: req.user.id }
+        });
+        if (family.owner_id !== req.user.id && !membership) {
+            return sendError(res, 'FORBIDDEN_FAMILY_SETTLEMENT', 403);
+        }
+
         // 1. Lấy tất cả TransactionShare UNPAID + APPROVED trong family
         const shares = await TransactionShare.findAll({
             where: {
@@ -373,11 +358,7 @@ exports.getSimplifiedDebts = async (req, res) => {
                 model: Transaction,
                 as: 'Transaction',
                 required: true,
-                include: [{
-                    model: Wallet,
-                    required: true,
-                    where: { family_id: familyId }
-                }]
+                where: { family_id: familyId }
             }]
         });
 
@@ -410,9 +391,9 @@ exports.getSimplifiedDebts = async (req, res) => {
             originalTransactions: shares.length,
             simplifiedTransactions: result.length,
             suggestions: result
-        }, 'Tối ưu hóa nợ thành công');
+        }, 'DEBTS_SIMPLIFIED');
     } catch (err) {
         console.error('Debt simplification error:', err);
-        serverError(res, 'Lỗi Server');
+        serverError(res, 'DEBT_SIMPLIFICATION_FAILED');
     }
 };

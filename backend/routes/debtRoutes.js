@@ -152,7 +152,7 @@ router.put('/:shareId/reject', auth, validateShareParam, debtController.rejectSh
  *         application/json:
  *           schema:
  *             type: object
- *             required: [amount, from_wallet_id, to_wallet_id]
+ *             required: [to_user_id, amount, from_wallet_id, to_wallet_id]
  *             properties:
  *               to_user_id:
  *                 type: string
@@ -161,7 +161,7 @@ router.put('/:shareId/reject', auth, validateShareParam, debtController.rejectSh
  *               from_user_id:
  *                 type: string
  *                 format: uuid
- *                 description: Required with family_id; member reimbursing the family fund
+ *                 description: Deprecated in family mode; debtor is derived from the authenticated user
  *               amount:
  *                 type: number
  *                 example: 250000
@@ -177,10 +177,9 @@ router.put('/:shareId/reject', auth, validateShareParam, debtController.rejectSh
  *               family_id:
  *                 type: string
  *                 format: uuid
- *                 description: Family id for owner-managed family fund reimbursements
+ *                 description: Family id for member-to-member shared expense settlement
  *           example:
  *             to_user_id: "u-receiver-1234-..."
- *             from_user_id: "u-debtor-1234-..."
  *             amount: 250000
  *             from_wallet_id: "w-my-wallet-..."
  *             to_wallet_id: "w-their-wallet-..."

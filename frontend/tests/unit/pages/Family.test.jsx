@@ -45,6 +45,18 @@ vi.mock('@/components/ui/dropdown-menu', () => ({
     DropdownMenuTrigger: ({ children }) => <div>{children}</div>
 }))
 
+vi.mock('@/components/ui/select', () => ({
+    Select: ({ children, value, onValueChange }) => (
+        <select value={value} onChange={(event) => onValueChange(event.target.value)}>
+            {children}
+        </select>
+    ),
+    SelectContent: ({ children }) => <>{children}</>,
+    SelectItem: ({ children, value }) => <option value={value}>{children}</option>,
+    SelectTrigger: ({ children }) => <>{children}</>,
+    SelectValue: () => null
+}))
+
 vi.mock('@/components/ui/empty-state', () => ({
     EmptyState: ({ title, description }) => (
         <div>
@@ -136,19 +148,29 @@ describe('Family shared expense settlement flow', () => {
             },
             wallets: {
                 wallets: [
-                    { id: 'wallet-family-1', family_id: 'fam1' }
+                    { id: 'wallet-u1-personal', user_id: 'u1', family_id: null, name: 'Alice Wallet' },
+                    { id: 'wallet-u2-personal', user_id: 'u2', family_id: null, name: 'Bob Wallet' },
+                    { id: 'wallet-family-1', family_id: 'fam1', name: 'Family Fund' }
                 ]
             },
             transactions: {
                 transactions: [
                     {
                         id: 'tx1',
-                        wallet_id: 'wallet-family-1',
+                        wallet_id: 'wallet-u2-personal',
+                        family_id: 'fam1',
                         type: 'EXPENSE',
                         user_id: 'u2',
                         amount: '100000',
                         description: 'Hotpot',
                         shares: [
+                            {
+                                id: 'share-payer-1',
+                                user_id: 'u2',
+                                amount: 50000,
+                                status: 'PAID',
+                                approval_status: 'APPROVED'
+                            },
                             {
                                 id: 'share-approve-1',
                                 user_id: 'u1',
@@ -170,11 +192,12 @@ describe('Family shared expense settlement flow', () => {
         expect(screen.queryByText('family.pendingDebts.btnReject')).toBeNull()
     })
 
-    it('uses backend Shares alias and lets every member optimize legacy pending shares to the family fund', async () => {
+    it('uses backend Shares alias and lets every member optimize legacy pending shares to the payer', async () => {
         mockState.transactions.transactions = [
             {
                 id: 'tx-shares-alias',
-                wallet_id: 'wallet-family-1',
+                wallet_id: 'wallet-u2-personal',
+                family_id: 'fam1',
                 type: 'EXPENSE',
                 user_id: 'u2',
                 amount: '100000',
@@ -195,14 +218,15 @@ describe('Family shared expense settlement flow', () => {
         fireEvent.click(screen.getByText('family.expenses.optimizeBtn'))
 
         expect(screen.getByText('family.settlement.debtor')).toBeTruthy()
-        expect(screen.getByText('family.settlement.familyFund')).toBeTruthy()
+        expect(screen.getAllByText('Bob').length).toBeGreaterThan(0)
     })
 
     it('hides shared expenses when all shares are paid', () => {
         mockState.transactions.transactions = [
             {
                 id: 'tx-paid',
-                wallet_id: 'wallet-family-1',
+                wallet_id: 'wallet-u2-personal',
+                family_id: 'fam1',
                 type: 'EXPENSE',
                 user_id: 'u2',
                 amount: '100000',
@@ -231,33 +255,51 @@ describe('Family shared expense settlement flow', () => {
         expect(screen.queryByText('Paid dinner')).toBeNull()
     })
 
-    it('shows optimized settlements to non-owners without the pay action', () => {
+    it('does not optimize family fund expenses without debt shares', () => {
+        mockState.transactions.transactions = [
+            {
+                id: 'tx-family-fund',
+                wallet_id: 'wallet-family-1',
+                family_id: 'fam1',
+                type: 'EXPENSE',
+                user_id: 'owner-id',
+                amount: '100000',
+                description: 'Family groceries'
+            }
+        ]
+
+        render(<Family />)
+
+        expect(screen.queryByText('Family groceries')).toBeNull()
+        expect(screen.getByText('family.expenses.optimizeBtn').disabled).toBe(true)
+    })
+
+    it('shows optimized settlements to owners without pay action when they are not the debtor', () => {
+        mockState.auth.user = { id: 'owner-id', name: 'Owner' }
         render(<Family />)
 
         fireEvent.click(screen.getByText('family.expenses.optimizeBtn'))
 
         expect(screen.getByText('family.settlement.debtor')).toBeTruthy()
-        expect(screen.queryByText('family.settlement.reimburseBtn')).toBeNull()
+        expect(screen.queryByText('family.settlement.payBtn')).toBeNull()
     })
 
-    it('lets the family owner record fund reimbursement and refresh transactions plus wallets', async () => {
-        mockState.families.families[0].owner_id = 'u1'
-
+    it('lets the debtor settle with personal wallet and refresh transactions plus wallets', async () => {
         render(<Family />)
 
         fireEvent.click(screen.getByText('family.expenses.optimizeBtn'))
-        fireEvent.click(screen.getByText('family.settlement.reimburseBtn'))
+        fireEvent.click(screen.getByText('family.settlement.payBtn'))
         fireEvent.click(screen.getByText('family.modals.settle.submit'))
 
         await waitFor(() => {
             expect(mockSettleDebts).toHaveBeenCalledWith(expect.objectContaining({
-                from_user_id: 'u1',
+                to_user_id: 'u2',
                 amount: 50000,
-                from_wallet_id: 'wallet-family-1',
-                to_wallet_id: 'wallet-family-1',
+                from_wallet_id: 'wallet-u1-personal',
+                to_wallet_id: 'wallet-u2-personal',
                 family_id: 'fam1'
             }))
-            expect(mockSettleDebts.mock.calls[0][0]).not.toHaveProperty('to_user_id')
+            expect(mockSettleDebts.mock.calls[0][0]).not.toHaveProperty('from_user_id')
             expect(mockFetchTransactions).toHaveBeenCalled()
             expect(mockFetchWallets).toHaveBeenCalled()
         })
