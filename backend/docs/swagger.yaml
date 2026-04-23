@@ -18,8 +18,8 @@ info:
     Nếu bạn là người mới sử dụng API này, hãy làm theo các bước sau để xác thực:
 
 
-    1. **Đăng nhập (Login):** Go to the `/api/auth/login` route và nhập Email &
-    Password.
+    1. **Đăng nhập (Login):** Mở route `/api/auth/login` và nhập email cùng mật
+    khẩu.
 
     2. **Lấy Token:** Copy chuỗi `token` trả về từ kết quả JSON (trong object
     `data`).
@@ -1620,8 +1620,8 @@ paths:
                   type: string
                   format: uuid
                   description: >-
-                    Deprecated in family mode; debtor is derived from the
-                    authenticated user
+                    Không còn khuyến nghị trong family mode; người trả nợ được
+                    suy ra từ người dùng đang đăng nhập
                 amount:
                   type: number
                   example: 250000
@@ -1637,7 +1637,9 @@ paths:
                 family_id:
                   type: string
                   format: uuid
-                  description: Family id for member-to-member shared expense settlement
+                  description: >-
+                    UUID gia đình dùng khi tất toán khoản chia sẻ chi phí giữa
+                    các thành viên
             example:
               to_user_id: u-receiver-1234-...
               amount: 250000
@@ -1953,10 +1955,10 @@ paths:
           description: Thành viên không tồn tại trong gia đình
   /api/forecast:
     get:
-      summary: Load the standard forecast dataset
+      summary: Lấy dữ liệu dự báo dòng tiền tiêu chuẩn
       description: >-
-        Returns historical monthly income/expense totals plus forward-looking
-        predictions.
+        Trả về tổng thu/chi theo tháng trong quá khứ cùng dữ liệu dự báo cho các
+        tháng tiếp theo.
       tags:
         - Forecast
       security:
@@ -1969,16 +1971,16 @@ paths:
             default: 3
             minimum: 1
             maximum: 12
-          description: Number of future months to forecast
+          description: Số tháng tương lai cần dự báo
       responses:
         '200':
-          description: Forecast loaded successfully
+          description: Lấy dữ liệu dự báo thành công
   /api/forecast/ml:
     get:
-      summary: Load the AI/ML forecast dataset
+      summary: Lấy dữ liệu dự báo AI/ML
       description: >-
-        Uses simple linear regression on the last 6 months of transaction
-        history.
+        Sử dụng hồi quy tuyến tính đơn giản trên lịch sử giao dịch 6 tháng gần
+        nhất.
       tags:
         - Forecast
       security:
@@ -1991,10 +1993,10 @@ paths:
             default: 3
             minimum: 1
             maximum: 12
-          description: Number of future months to forecast
+          description: Số tháng tương lai cần dự báo
       responses:
         '200':
-          description: ML forecast loaded successfully
+          description: Lấy dữ liệu dự báo ML thành công
           content:
             application/json:
               example:
@@ -2315,25 +2317,26 @@ paths:
           description: Mục tiêu không tồn tại (GOAL_NOT_FOUND)
   /api/market/gold:
     get:
-      summary: Load the latest live SJC gold price for the dashboard widget
+      summary: Lấy giá vàng SJC mới nhất cho dashboard
       description: >-
-        Proxies the live SJC price service, normalizes the selected Ho Chi Minh
-        City SJC record, and caches it in Redis for 60 seconds.
+        Gọi dịch vụ giá vàng SJC trực tiếp, chuẩn hóa bản ghi SJC khu vực TP. Hồ
+        Chí Minh và lưu cache Redis trong 60 giây.
       tags:
         - Market
       security:
         - bearerAuth: []
       responses:
         '200':
-          description: Gold price loaded successfully
+          description: Lấy giá vàng thành công
         '502':
-          description: Upstream gold price service failed
+          description: Dịch vụ giá vàng bên ngoài không phản hồi hoặc trả lỗi
   /api/market/gold/history:
     get:
-      summary: Load the cached SJC gold price history for the dashboard chart
+      summary: Lấy lịch sử giá vàng SJC cho biểu đồ dashboard
       description: >-
-        Returns the locally stored SJC history for the selected range. Live
-        snapshots take precedence over demo-seeded points at the same timestamp.
+        Trả về lịch sử giá vàng SJC đang lưu cục bộ theo khoảng thời gian đã
+        chọn. Dữ liệu trực tiếp được ưu tiên hơn dữ liệu demo nếu trùng thời
+        điểm.
       tags:
         - Market
       security:
@@ -2349,11 +2352,11 @@ paths:
               - 7D
       responses:
         '200':
-          description: Gold price history loaded successfully
+          description: Lấy lịch sử giá vàng thành công
         '400':
-          description: Invalid history range
+          description: Khoảng thời gian lịch sử không hợp lệ
         '500':
-          description: Gold price history failed to load
+          description: Không thể tải lịch sử giá vàng
   /api/notifications:
     get:
       summary: Lấy danh sách thông báo của tôi
@@ -3773,7 +3776,7 @@ tags:
 
       và phân chia nợ trong nhóm.
   - name: Forecast
-    description: Forecast cashflow trends from the user's historical transactions.
+    description: Dự báo xu hướng dòng tiền dựa trên lịch sử giao dịch của người dùng.
   - name: Goals
     description: >
       Quản lý mục tiêu tài chính (tiết kiệm).
@@ -3785,7 +3788,9 @@ tags:
 
       Người dùng có thể nạp tiền từ ví cá nhân vào mục tiêu.
   - name: Market
-    description: Market data widgets and integrations for the authenticated dashboard.
+    description: >-
+      Dữ liệu thị trường và các tiện ích tích hợp cho dashboard của người dùng
+      đã đăng nhập.
   - name: Notifications
     description: >
       Quản lý thông báo hệ thống.

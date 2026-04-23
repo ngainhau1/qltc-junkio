@@ -9,22 +9,22 @@ router.use(authMiddleware);
  * @swagger
  * tags:
  *   name: Market
- *   description: Market data widgets and integrations for the authenticated dashboard.
+ *   description: Dữ liệu thị trường và các tiện ích tích hợp cho dashboard của người dùng đã đăng nhập.
  */
 
 /**
  * @swagger
  * /api/market/gold:
  *   get:
- *     summary: Load the latest live SJC gold price for the dashboard widget
- *     description: Proxies the live SJC price service, normalizes the selected Ho Chi Minh City SJC record, and caches it in Redis for 60 seconds.
+ *     summary: Lấy giá vàng SJC mới nhất cho dashboard
+ *     description: Gọi dịch vụ giá vàng SJC trực tiếp, chuẩn hóa bản ghi SJC khu vực TP. Hồ Chí Minh và lưu cache Redis trong 60 giây.
  *     tags: [Market]
  *     security: [ { bearerAuth: [] } ]
  *     responses:
  *       200:
- *         description: Gold price loaded successfully
+ *         description: Lấy giá vàng thành công
  *       502:
- *         description: Upstream gold price service failed
+ *         description: Dịch vụ giá vàng bên ngoài không phản hồi hoặc trả lỗi
  */
 router.get('/gold', marketController.getGoldPrice);
 
@@ -32,8 +32,8 @@ router.get('/gold', marketController.getGoldPrice);
  * @swagger
  * /api/market/gold/history:
  *   get:
- *     summary: Load the cached SJC gold price history for the dashboard chart
- *     description: Returns the locally stored SJC history for the selected range. Live snapshots take precedence over demo-seeded points at the same timestamp.
+ *     summary: Lấy lịch sử giá vàng SJC cho biểu đồ dashboard
+ *     description: Trả về lịch sử giá vàng SJC đang lưu cục bộ theo khoảng thời gian đã chọn. Dữ liệu trực tiếp được ưu tiên hơn dữ liệu demo nếu trùng thời điểm.
  *     tags: [Market]
  *     security: [ { bearerAuth: [] } ]
  *     parameters:
@@ -45,11 +45,11 @@ router.get('/gold', marketController.getGoldPrice);
  *           enum: [24H, 7D]
  *     responses:
  *       200:
- *         description: Gold price history loaded successfully
+ *         description: Lấy lịch sử giá vàng thành công
  *       400:
- *         description: Invalid history range
+ *         description: Khoảng thời gian lịch sử không hợp lệ
  *       500:
- *         description: Gold price history failed to load
+ *         description: Không thể tải lịch sử giá vàng
  */
 router.get('/gold/history', marketController.getGoldPriceHistory);
 
