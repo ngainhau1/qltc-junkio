@@ -62,42 +62,6 @@ Bảo vệ cơ sở dữ liệu `postgres` khỏi bão Tsunami (DDoS/High traffi
 Hệ thống tiền tệ tuyệt đối không được phép sinh ra "rác" nếu đứt kết nối mạng giữa chừng. Toàn bộ Endpoint liên quan đến `Transfer` (chuyển đổi ví/trả nợ) chạy trong một `Connection Transaction`.
 - **Logic:** `await sequelize.transaction()` đảm bảo hoặc là cả 2 ví được update số dư, hoặc Không có bất kỳ thay đổi nào được thực thi (Rollback hoàn toàn).
 
----
-
-## ⚙️ Cấu hình Môi trường (Environment Setup)
-
-Để project hoạt động, bạn cần cấu hình các biến môi trường cho Backend. 
-Tạo một tệp `.env` bên trong thư mục `backend/` dựa trên mẫu `.env.example`:
-
-```env
-# Cấu hình Database & Redis
-DB_HOST=localhost       # Đổi thành 'db' nếu chạy bằng Docker Compose
-DB_PORT=5432
-DB_NAME=expense_tracker_db
-DB_USER=admin
-DB_PASS=password123
-REDIS_HOST=localhost    # Đổi thành 'redis' nếu chạy bằng Docker Compose
-REDIS_PORT=6379
-
-# Cấu hình Máy chủ & Bảo mật
-PORT=5000
-JWT_SECRET=super-secret-key
-JWT_REFRESH_SECRET=super-refresh-key
-VITE_FRONTEND_URL=http://localhost:5173 # Nơi xử lý CORS Header cho Frontend Local
-
-# (Tùy chọn) Cấu hình Dịch vụ Email
-EMAIL_HOST=smtp.mailtrap.io
-EMAIL_PORT=587
-EMAIL_USER=your_user
-EMAIL_PASS=your_pass
-
-# (Tùy chọn) Tự động sinh dữ liệu ảo (Seed Data)
-AUTO_SEED=true
-```
-*(Tuyệt đối không lưu file .env mang mật khẩu production vào Git).*
-
----
-
 ## 🚀 Hướng dẫn Cài đặt & Sử dụng Dự án (Usage)
 
 Có **2 phương án** để bắt đầu phát triển hoặc chạy thử nghiệp dự án.
