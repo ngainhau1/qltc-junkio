@@ -65,7 +65,13 @@ _agent/
 _agents/
 .playwright-cli/
 .gemini/
-docx/
+docx/*
+!docx/07-tham-chieu/
+docx/07-tham-chieu/*
+!docx/07-tham-chieu/postman/
+docx/07-tham-chieu/postman/*
+!docx/07-tham-chieu/postman/Junkio.postman_collection.json
+!docx/07-tham-chieu/postman/Junkio.postman_environment.json
 # Ignore backend testing logs and outputs
 backend/*-log.txt
 backend/*_error.txt
@@ -83,3 +89,4 @@ backend/coverage/
 
 # Ignore additional frontend reports
 frontend/report_*.*
+.idea/

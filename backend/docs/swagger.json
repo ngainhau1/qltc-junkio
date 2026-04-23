@@ -3,7 +3,7 @@
   "info": {
     "title": "Junkio Expense Tracker API",
     "version": "1.0.0",
-    "description": "**Chào mừng đến với thư viện API của Junkio Expense Tracker!**  \n\nDưới đây là các tài liệu hướng dẫn sử dụng API chi tiết dành cho Lập trình viên, Tester và Admin hệ thống. Thiết kế tuân theo chuẩn RESTful.\n\n---\n###  Hướng dẫn dành cho Người Dùng Mới (Getting Started)\n\nNếu bạn là người mới sử dụng API này, hãy làm theo các bước sau để xác thực:\n\n1. **Đăng nhập (Login):** Go to the `/api/auth/login` route và nhập Email & Password.\n2. **Lấy Token:** Copy chuỗi `token` trả về từ kết quả JSON (trong object `data`).\n3. **Cấp quyền (Authorize):** Kéo lên trên cùng của trang web này, bấm vào nút **Authorize** màu xanh lá cây hoặc click vào biểu tượng 🔒 ở bất kỳ API nào, dán chuỗi token vừa copy vào ô **Value** và nhấn **Authorize**.\n4. **Bắt đầu gọi API:** Nhấn `Try it out` ở các endpoint có yêu cầu xác thực để thực hiện các yêu cầu (Requests). Server sẽ nhận diện được phiên làm việc của bạn.\n\n> ** Mẹo:** Swagger UI đã được cấu hình lưu lại Token kể cả khi bạn tải lại trang (Persist Authorization).\n\n---\n\n###  Mã Lỗi (Error Codes)\nJunkio API sử dụng hệ thống `Error Codes` chuẩn và thông báo lỗi đa ngôn ngữ (i18n). Thay vì đọc chuỗi ký tự thô, Frontend sẽ nhận được các mã như `WALLET_NOT_FOUND`, `INSUFFICIENT_BALANCE` và tự thông dịch thành văn bản. Bạn có thể xem chi tiết mô hình phản hồi (Response) ở từng route bên dưới."
+    "description": "**Chào mừng đến với thư viện API của Junkio Expense Tracker!**  \n\nDưới đây là các tài liệu hướng dẫn sử dụng API chi tiết dành cho Lập trình viên, Tester và Admin hệ thống. Thiết kế tuân theo chuẩn RESTful.\n\n---\n###  Hướng dẫn dành cho Người Dùng Mới (Getting Started)\n\nNếu bạn là người mới sử dụng API này, hãy làm theo các bước sau để xác thực:\n\n1. **Đăng nhập (Login):** Mở route `/api/auth/login` và nhập email cùng mật khẩu.\n2. **Lấy Token:** Copy chuỗi `token` trả về từ kết quả JSON (trong object `data`).\n3. **Cấp quyền (Authorize):** Kéo lên trên cùng của trang web này, bấm vào nút **Authorize** màu xanh lá cây hoặc click vào biểu tượng 🔒 ở bất kỳ API nào, dán chuỗi token vừa copy vào ô **Value** và nhấn **Authorize**.\n4. **Bắt đầu gọi API:** Nhấn `Try it out` ở các endpoint có yêu cầu xác thực để thực hiện các yêu cầu (Requests). Server sẽ nhận diện được phiên làm việc của bạn.\n\n> ** Mẹo:** Swagger UI đã được cấu hình lưu lại Token kể cả khi bạn tải lại trang (Persist Authorization).\n\n---\n\n###  Mã Lỗi (Error Codes)\nJunkio API sử dụng hệ thống `Error Codes` chuẩn và thông báo lỗi đa ngôn ngữ (i18n). Thay vì đọc chuỗi ký tự thô, Frontend sẽ nhận được các mã như `WALLET_NOT_FOUND`, `INSUFFICIENT_BALANCE` và tự thông dịch thành văn bản. Bạn có thể xem chi tiết mô hình phản hồi (Response) ở từng route bên dưới."
   },
   "servers": [
     {
@@ -1978,7 +1978,7 @@
                   "from_user_id": {
                     "type": "string",
                     "format": "uuid",
-                    "description": "Deprecated in family mode; debtor is derived from the authenticated user"
+                    "description": "Không còn khuyến nghị trong family mode; người trả nợ được suy ra từ người dùng đang đăng nhập"
                   },
                   "amount": {
                     "type": "number",
@@ -1998,7 +1998,7 @@
                   "family_id": {
                     "type": "string",
                     "format": "uuid",
-                    "description": "Family id for member-to-member shared expense settlement"
+                    "description": "UUID gia đình dùng khi tất toán khoản chia sẻ chi phí giữa các thành viên"
                   }
                 }
               },
@@ -2426,8 +2426,8 @@
     },
     "/api/forecast": {
       "get": {
-        "summary": "Load the standard forecast dataset",
-        "description": "Returns historical monthly income/expense totals plus forward-looking predictions.",
+        "summary": "Lấy dữ liệu dự báo dòng tiền tiêu chuẩn",
+        "description": "Trả về tổng thu/chi theo tháng trong quá khứ cùng dữ liệu dự báo cho các tháng tiếp theo.",
         "tags": [
           "Forecast"
         ],
@@ -2446,20 +2446,20 @@
               "minimum": 1,
               "maximum": 12
             },
-            "description": "Number of future months to forecast"
+            "description": "Số tháng tương lai cần dự báo"
           }
         ],
         "responses": {
           "200": {
-            "description": "Forecast loaded successfully"
+            "description": "Lấy dữ liệu dự báo thành công"
           }
         }
       }
     },
     "/api/forecast/ml": {
       "get": {
-        "summary": "Load the AI/ML forecast dataset",
-        "description": "Uses simple linear regression on the last 6 months of transaction history.",
+        "summary": "Lấy dữ liệu dự báo AI/ML",
+        "description": "Sử dụng hồi quy tuyến tính đơn giản trên lịch sử giao dịch 6 tháng gần nhất.",
         "tags": [
           "Forecast"
         ],
@@ -2478,12 +2478,12 @@
               "minimum": 1,
               "maximum": 12
             },
-            "description": "Number of future months to forecast"
+            "description": "Số tháng tương lai cần dự báo"
           }
         ],
         "responses": {
           "200": {
-            "description": "ML forecast loaded successfully",
+            "description": "Lấy dữ liệu dự báo ML thành công",
             "content": {
               "application/json": {
                 "example": {
@@ -2897,8 +2897,8 @@
     },
     "/api/market/gold": {
       "get": {
-        "summary": "Load the latest live SJC gold price for the dashboard widget",
-        "description": "Proxies the live SJC price service, normalizes the selected Ho Chi Minh City SJC record, and caches it in Redis for 60 seconds.",
+        "summary": "Lấy giá vàng SJC mới nhất cho dashboard",
+        "description": "Gọi dịch vụ giá vàng SJC trực tiếp, chuẩn hóa bản ghi SJC khu vực TP. Hồ Chí Minh và lưu cache Redis trong 60 giây.",
         "tags": [
           "Market"
         ],
@@ -2909,18 +2909,18 @@
         ],
         "responses": {
           "200": {
-            "description": "Gold price loaded successfully"
+            "description": "Lấy giá vàng thành công"
           },
           "502": {
-            "description": "Upstream gold price service failed"
+            "description": "Dịch vụ giá vàng bên ngoài không phản hồi hoặc trả lỗi"
           }
         }
       }
     },
     "/api/market/gold/history": {
       "get": {
-        "summary": "Load the cached SJC gold price history for the dashboard chart",
-        "description": "Returns the locally stored SJC history for the selected range. Live snapshots take precedence over demo-seeded points at the same timestamp.",
+        "summary": "Lấy lịch sử giá vàng SJC cho biểu đồ dashboard",
+        "description": "Trả về lịch sử giá vàng SJC đang lưu cục bộ theo khoảng thời gian đã chọn. Dữ liệu trực tiếp được ưu tiên hơn dữ liệu demo nếu trùng thời điểm.",
         "tags": [
           "Market"
         ],
@@ -2945,13 +2945,13 @@
         ],
         "responses": {
           "200": {
-            "description": "Gold price history loaded successfully"
+            "description": "Lấy lịch sử giá vàng thành công"
           },
           "400": {
-            "description": "Invalid history range"
+            "description": "Khoảng thời gian lịch sử không hợp lệ"
           },
           "500": {
-            "description": "Gold price history failed to load"
+            "description": "Không thể tải lịch sử giá vàng"
           }
         }
       }
@@ -4780,7 +4780,7 @@
     },
     {
       "name": "Forecast",
-      "description": "Forecast cashflow trends from the user's historical transactions."
+      "description": "Dự báo xu hướng dòng tiền dựa trên lịch sử giao dịch của người dùng."
     },
     {
       "name": "Goals",
@@ -4788,7 +4788,7 @@
     },
     {
       "name": "Market",
-      "description": "Market data widgets and integrations for the authenticated dashboard."
+      "description": "Dữ liệu thị trường và các tiện ích tích hợp cho dashboard của người dùng đã đăng nhập."
     },
     {
       "name": "Notifications",

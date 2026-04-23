@@ -46,7 +46,7 @@ const { validateSettle } = require('../validators/debtValidator');
  *               from_user_id:
  *                 type: string
  *                 format: uuid
- *                 description: Deprecated in family mode; debtor is derived from the authenticated user
+ *                 description: Không còn khuyến nghị trong family mode; người trả nợ được suy ra từ người dùng đang đăng nhập
  *               amount:
  *                 type: number
  *                 example: 250000
@@ -62,7 +62,7 @@ const { validateSettle } = require('../validators/debtValidator');
  *               family_id:
  *                 type: string
  *                 format: uuid
- *                 description: Family id for member-to-member shared expense settlement
+ *                 description: UUID gia đình dùng khi tất toán khoản chia sẻ chi phí giữa các thành viên
  *           example:
  *             to_user_id: "u-receiver-1234-..."
  *             amount: 250000
