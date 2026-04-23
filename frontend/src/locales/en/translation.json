@@ -142,7 +142,7 @@
         "unavailable": "Unable to load the gold price right now.",
         "unavailableDesc": "The SJC feed is temporarily unavailable. The widget will retry automatically.",
         "refreshing": "Refreshing",
-        "autoRefresh": "Auto-refresh every 60 seconds",
+        "autoRefresh": "Auto-refresh every 5 minutes",
         "sourceLabel": "Source: {{value}}",
         "product": "Product",
         "branchLabel": "Branch: {{value}}",

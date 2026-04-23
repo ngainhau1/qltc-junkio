@@ -142,7 +142,7 @@
         "unavailable": "Không thể tải giá vàng lúc này.",
         "unavailableDesc": "Dữ liệu từ SJC đang tạm thời không phản hồi. Widget sẽ tự thử lại sau.",
         "refreshing": "Đang cập nhật",
-        "autoRefresh": "Tự làm mới mỗi 60 giây",
+        "autoRefresh": "Tự làm mới mỗi 5 phút",
         "sourceLabel": "Nguồn: {{value}}",
         "product": "Sản phẩm",
         "branchLabel": "Chi nhánh: {{value}}",
