@@ -4,6 +4,9 @@ const categoryController = require('../controllers/categoryController');
 const authMiddleware = require('../middleware/authMiddleware');
 const { validateCreateCategory, validateUpdateCategory, validateDeleteCategory } = require('../validators/categoryValidator');
 
+// GHI CHÚ HỌC TẬP - Phần danh mục của Thành Đạt:
+// Các route danh mục yêu cầu đăng nhập vì danh mục phục vụ trực tiếp cho giao dịch của người dùng.
+// Validator kiểm tra dữ liệu trước khi categoryController thao tác với cơ sở dữ liệu.
 router.use(authMiddleware);
 
 /**
@@ -70,6 +73,7 @@ router.use(authMiddleware);
  *                 icon: "Banknote"
  *                 parent_id: null
  */
+// Lấy toàn bộ danh mục thu/chi để frontend hiển thị khi tạo giao dịch hoặc lọc báo cáo.
 router.get('/', categoryController.getCategories);
 
 /**
@@ -145,6 +149,7 @@ router.get('/', categoryController.getCategories);
  *       400:
  *         description: Dữ liệu không hợp lệ (thiếu name hoặc type)
  */
+// Tạo danh mục mới, có thể là danh mục gốc hoặc danh mục con qua parent_id.
 router.post('/', validateCreateCategory, categoryController.createCategory);
 
 /**
@@ -199,6 +204,7 @@ router.post('/', validateCreateCategory, categoryController.createCategory);
  *       404:
  *         description: Không tìm thấy danh mục (CATEGORY_NOT_FOUND)
  */
+// Cập nhật danh mục theo id; chỉ gửi field cần thay đổi.
 router.put('/:id', validateUpdateCategory, categoryController.updateCategory);
 
 /**
@@ -233,6 +239,7 @@ router.put('/:id', validateUpdateCategory, categoryController.updateCategory);
  *       404:
  *         description: Không tìm thấy danh mục (CATEGORY_NOT_FOUND)
  */
+// Xóa danh mục theo id; validator đảm bảo id đúng định dạng UUID.
 router.delete('/:id', validateDeleteCategory, categoryController.deleteCategory);
 
 module.exports = router;

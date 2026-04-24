@@ -22,6 +22,10 @@ import {
 } from '@/features/market/goldPriceSlice';
 import { GoldPriceMiniChart } from './GoldPriceMiniChart';
 
+// GHI CHÚ HỌC TẬP - Phần giá vàng SJC của Thành Đạt:
+// Component này là thẻ hiển thị giá vàng trên dashboard. Nó tự tải giá hiện tại mỗi 60 giây,
+// tải lịch sử mỗi 5 phút và đổi màu trend theo mức tăng/giảm giá bán.
+
 const CURRENT_REFRESH_INTERVAL_MS = 60_000;
 const HISTORY_REFRESH_INTERVAL_MS = 5 * 60_000;
 
@@ -36,6 +40,7 @@ const formatSignedPrice = (value) => `${Number(value || 0) >= 0 ? '+' : '-'}${fo
 const formatSignedPercent = (value) => `${Number(value || 0) >= 0 ? '+' : '-'}${Math.abs(Number(value || 0)).toFixed(2)}%`;
 
 const getTrendConfig = (changeValue) => {
+    // changeValue dương/âm/0 quyết định màu sắc và biểu tượng trend trên thẻ.
     if (changeValue > 0) {
         return {
             color: '#059669',
@@ -83,6 +88,7 @@ export function GoldPriceCard() {
     const TrendIcon = trendConfig.icon;
 
     useEffect(() => {
+        // Tải ngay khi thẻ xuất hiện, sau đó tự làm mới giá hiện tại mỗi 60 giây.
         dispatch(fetchGoldPrice());
 
         const intervalId = window.setInterval(() => {
@@ -90,11 +96,13 @@ export function GoldPriceCard() {
         }, CURRENT_REFRESH_INTERVAL_MS);
 
         return () => {
+            // Cleanup interval khi rời dashboard để tránh gọi API ngầm.
             window.clearInterval(intervalId);
         };
     }, [dispatch]);
 
     useEffect(() => {
+        // Lịch sử phụ thuộc selectedRange; đổi 24H/7D thì tải lại đúng khoảng đang chọn.
         dispatch(fetchGoldPriceHistory({ range: selectedRange }));
 
         const intervalId = window.setInterval(() => {
@@ -102,11 +110,13 @@ export function GoldPriceCard() {
         }, HISTORY_REFRESH_INTERVAL_MS);
 
         return () => {
+            // Cleanup interval lịch sử để tránh memory leak.
             window.clearInterval(intervalId);
         };
     }, [dispatch, selectedRange]);
 
     if (!data && loading) {
+        // Trạng thái lần đầu tải: chưa có dữ liệu để hiển thị.
         return (
             <Card className="border-amber-200/70 bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-100 shadow-md dark:border-amber-900/40 dark:from-amber-950/40 dark:via-orange-950/20 dark:to-background">
                 <CardContent className="flex min-h-[220px] flex-col items-center justify-center gap-3 p-6 text-center">
@@ -120,6 +130,7 @@ export function GoldPriceCard() {
     }
 
     if (!data || error) {
+        // Khi nguồn SJC hoặc backend lỗi, hiển thị thông báo thay vì render giá 0 gây hiểu nhầm.
         return (
             <Card className="border-amber-200/70 bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-100 shadow-md dark:border-amber-900/40 dark:from-amber-950/40 dark:via-orange-950/20 dark:to-background">
                 <CardHeader className="pb-3">
@@ -247,8 +258,8 @@ export function GoldPriceCard() {
                         </div>
 
                         <div className="inline-flex w-fit rounded-lg bg-amber-500/10 p-1">
-                            {GOLD_HISTORY_RANGE_OPTIONS.map((range) => (
-                                <button
+                        {GOLD_HISTORY_RANGE_OPTIONS.map((range) => (
+                            <button
                                     key={range}
                                     type="button"
                                     className={cn(
@@ -258,6 +269,7 @@ export function GoldPriceCard() {
                                             : 'text-amber-700 hover:bg-white/60 dark:text-amber-200 dark:hover:bg-background/70'
                                     )}
                                     onClick={() => {
+                                        // startTransition giúp đổi tab lịch sử là cập nhật không khẩn cấp.
                                         startTransition(() => {
                                             dispatch(setGoldHistoryRange(range));
                                         });

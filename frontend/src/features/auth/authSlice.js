@@ -1,6 +1,10 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '@/lib/api';
 
+// GHI CHÚ HỌC TẬP - Phần xác thực của Thành Đạt:
+// Slice này lưu trạng thái đăng nhập ở frontend. Nó không tự kiểm mật khẩu,
+// mà gọi API backend rồi lưu token/user để các màn hình khác biết người dùng là ai.
+
 const initialState = {
     user: null,
     isAuthenticated: false,
@@ -117,6 +121,7 @@ const authSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
+            // loginUser: pending bật loading, fulfilled lưu token/user, rejected lưu mã lỗi từ backend.
             .addCase(loginUser.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -128,6 +133,7 @@ const authSlice = createSlice({
                 state.token = token || null;
                 state.user = user ? {
                     ...user,
+                    // Nếu người dùng chưa tải avatar, giao diện dùng avatar sinh theo tên để tránh ô trống.
                     avatarUrl: user.avatar || `https://api.dicebear.com/7.x/notionists/svg?seed=${user.name}`
                 } : null;
                 if (token) localStorage.setItem('auth_token', token);
@@ -142,6 +148,7 @@ const authSlice = createSlice({
             })
             .addCase(registerUser.fulfilled, (state, action) => {
                 state.loading = false;
+                // Sau đăng ký thành công, backend trả token giống đăng nhập nên frontend vào thẳng trạng thái đã đăng nhập.
                 const { token, user } = action.payload || {};
                 state.isAuthenticated = Boolean(token && user);
                 state.token = token || null;
@@ -161,6 +168,7 @@ const authSlice = createSlice({
             .addCase(fetchCurrentUser.fulfilled, (state, action) => {
                 state.loading = false;
                 if (!action.payload) {
+                    // Không có user nghĩa là phiên hiện tại không còn dùng được.
                     state.isAuthenticated = false;
                     state.user = null;
                     state.token = null;
@@ -176,6 +184,7 @@ const authSlice = createSlice({
             })
             .addCase(fetchCurrentUser.rejected, (state) => {
                 state.loading = false;
+                // Khi /users/me thất bại, xóa token để giao diện quay về màn đăng nhập.
                 state.isAuthenticated = false;
                 state.token = null;
                 state.user = null;
