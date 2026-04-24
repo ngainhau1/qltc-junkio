@@ -10,6 +10,7 @@
 
 const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcrypt');
+const { seedGoldHistoryDemo } = require('./lib/seed-gold-history-demo');
 const {
     sequelize,
     User,
@@ -304,6 +305,9 @@ async function main() {
         { id: uuidv4(), amount_limit: 1500000, start_date: firstDay, end_date: lastDay, category_id: catMap['Di chuyển'], family_id: null },
     ]);
     console.log('  4 budgets da tao.');
+
+    console.log('\n=== BUOC 9: Seed lich su gia vang demo ===');
+    await seedGoldHistoryDemo();
 
     // ── Done ─────────────────────────────────────────────────────────────────
     console.log('\n============================================');

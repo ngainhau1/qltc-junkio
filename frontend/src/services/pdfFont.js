@@ -9,7 +9,7 @@ export const loadRobotoBase64 = async () => {
         robotoBase64Promise = fetch(robotoFontPath)
             .then(async (response) => {
                 if (!response.ok) {
-                    throw new Error(`Unable to load PDF font asset: ${response.status}`);
+                    throw new Error('PDF_FONT_LOAD_FAILED');
                 }
 
                 return response.text();

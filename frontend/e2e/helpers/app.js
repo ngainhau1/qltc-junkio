@@ -1,4 +1,4 @@
-﻿import { expect } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 export const users = {
     admin: { email: "admin@junkio.com", password: "admin123" },
@@ -144,7 +144,7 @@ export async function assertNoRuntimeArtifacts(page, label) {
     const mojibakePattern = /(?:Ã.|Â.|Ä.|Æ.|á»|â(?:‚¬|€¢|€¦|€œ|€˜|€™|€“|€”))/;
 
     for (let attempt = 0; attempt < 3; attempt += 1) {
-        await page.waitForLoadState("networkidle").catch(() => {});
+        await page.waitForLoadState("networkidle").catch(() => { });
 
         const text = await page.locator("body").innerText();
         const issues = [];

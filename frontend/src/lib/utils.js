@@ -75,3 +75,46 @@ export function formatDateString(dateString, options = {}) {
     const localeStr = i18n.language?.startsWith('vi') ? 'vi-VN' : 'en-US';
     return new Intl.DateTimeFormat(localeStr, options).format(date);
 }
+
+export const isMoneyInTransaction = (type) => type === 'INCOME' || type === 'TRANSFER_IN';
+
+export const isMoneyOutTransaction = (type) => type === 'EXPENSE' || type === 'TRANSFER_OUT';
+
+export const getTransactionAmountMeta = (type) => {
+    if (isMoneyInTransaction(type)) {
+        return {
+            sign: '+',
+            amountClassName: 'text-green-600',
+            iconToneClassName: 'border-green-200 bg-green-100',
+            iconClassName: 'text-green-600',
+        };
+    }
+
+    if (isMoneyOutTransaction(type)) {
+        return {
+            sign: '-',
+            amountClassName: 'text-red-600',
+            iconToneClassName: 'border-red-200 bg-red-100',
+            iconClassName: 'text-red-600',
+        };
+    }
+
+    return {
+        sign: '',
+        amountClassName: 'text-sky-600',
+        iconToneClassName: 'border-sky-200 bg-sky-100',
+        iconClassName: 'text-sky-600',
+    };
+};
+
+export const getTransactionTypeLabel = (type, t) => {
+    if (type === 'TRANSFER_IN' || type === 'TRANSFER_OUT') {
+        return t('transactionForm.tabs.transfer');
+    }
+
+    if (type === 'INCOME') {
+        return t('transactions.type.income');
+    }
+
+    return t('transactions.type.expense');
+};

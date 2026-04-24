@@ -4,7 +4,7 @@ import { describe, expect, it, beforeEach, vi } from 'vitest';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import notificationsReducer from '@/features/notifications/notificationsSlice';
-import { useSocket } from './useSocket';
+import { useSocket } from '@/hooks/useSocket';
 
 const { handlers, mockSocket, mockIo, toastMocks } = vi.hoisted(() => {
     const registeredHandlers = {};

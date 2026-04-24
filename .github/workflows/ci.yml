@@ -1,5 +1,9 @@
 name: Junkio CI/CD Pipeline
 
+# GHI CHÚ HỌC TẬP - Phần hạ tầng của Thành Đạt:
+# Quy trình này tự kiểm tra code khi có push hoặc pull request vào main/dev.
+# Luồng chính: cài thư viện -> lint -> test -> build frontend.
+
 on:
   push:
     branches: [ "main", "dev" ]
@@ -11,6 +15,7 @@ jobs:
     runs-on: ubuntu-latest
 
     strategy:
+      # Chạy trên 2 phiên bản Node để phát hiện lỗi phụ thuộc môi trường sớm hơn.
       matrix:
         node-version: [18.x, 20.x]
 
@@ -32,11 +37,13 @@ jobs:
         npm install --no-package-lock
 
     - name: Run Backend Lint
+      # Kiểm tra cú pháp và quy ước code backend trước khi chạy test.
       run: |
         cd backend
         npm run lint
 
     - name: Run Backend Tests
+      # Chạy kiểm thử backend để phát hiện lỗi nghiệp vụ sớm.
       run: |
         cd backend
         npm run test
@@ -47,16 +54,19 @@ jobs:
         npm install --no-package-lock
 
     - name: Run Frontend Lint
+      # Kiểm tra code React, hooks và các lỗi JavaScript phổ biến.
       run: |
         cd frontend
         npm run lint
 
     - name: Run Frontend Tests
+      # Chạy kiểm thử giao diện ở mức đơn vị.
       run: |
         cd frontend
         npm run test
 
     - name: Build Frontend
+      # Build là bước xác nhận giao diện có thể đóng gói để triển khai.
       run: |
         cd frontend
         npm run build

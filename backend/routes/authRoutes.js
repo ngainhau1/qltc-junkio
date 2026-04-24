@@ -1,11 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
-const userController = require('../controllers/userController');
 const audit = require('../middleware/auditMiddleware');
-const authMiddleware = require('../middleware/authMiddleware');
-const { uploadAvatar } = require('../middleware/uploadMiddleware');
 const authValidator = require('../validators/authValidator');
+
+// GHI CHÚ HỌC TẬP - Phần xác thực của Thành Đạt:
+// File route này nối URL bên ngoài với controller xử lý thật.
+// Thứ tự thường gặp: validator kiểm dữ liệu -> audit ghi log nếu cần -> controller xử lý nghiệp vụ.
 
 /**
  * @swagger
@@ -15,7 +16,6 @@ const authValidator = require('../validators/authValidator');
  *     Xác thực người dùng và quản lý phiên đăng nhập.
  *     Nhóm API này bao gồm đăng ký, đăng nhập, làm mới token, đăng xuất
  *     và các chức năng khôi phục mật khẩu. Hầu hết các endpoint **không yêu cầu token**
- *     (ngoại trừ /me và /avatar).
  */
 
 /**
@@ -72,6 +72,7 @@ const authValidator = require('../validators/authValidator');
  *       422:
  *         description: Dữ liệu gửi lên không hợp lệ (thiếu field, sai format)
  */
+// Đăng ký cần validate dữ liệu và ghi log USER_REGISTER khi tạo tài khoản thành công.
 router.post('/register', authValidator.validateRegister, audit('USER_REGISTER', 'USER'), authController.register);
 
 /**
@@ -163,6 +164,7 @@ router.post('/register', authValidator.validateRegister, audit('USER_REGISTER', 
  *       423:
  *         description: Tài khoản đã bị khóa bởi admin (ACCOUNT_LOCKED)
  */
+// Đăng nhập cần validate email/password và ghi log USER_LOGIN khi đăng nhập thành công.
 router.post('/login', authValidator.validateLogin, audit('USER_LOGIN', 'USER'), authController.login);
 
 /**
@@ -226,6 +228,7 @@ router.post('/login', authValidator.validateLogin, audit('USER_LOGIN', 'USER'), 
  *       403:
  *         description: Refresh token hết hạn hoặc không hợp lệ (REFRESH_TOKEN_EXPIRED)
  */
+// Refresh token đọc cookie httpOnly, không cần body và không cần access token còn hạn.
 router.post('/refresh-token', authController.refreshToken);
 
 /**
@@ -249,84 +252,8 @@ router.post('/refresh-token', authController.refreshToken);
  *               status: success
  *               message: Đăng xuất thành công
  */
+// Logout xóa refresh token ở cookie; frontend cũng cần xóa access token trong localStorage.
 router.post('/logout', authController.logout);
-
-/**
- * @swagger
- * /api/auth/me:
- *   get:
- *     summary: Lấy thông tin người dùng hiện tại
- *     description: |
- *       Endpoint tương thích (alias) cho `/api/users/me`.
- *       Trả về thông tin profile của user đang đăng nhập dựa trên Bearer token.
- *
- *       Canonical endpoint: `/api/users/me`
- *     tags: [Auth]
- *     security: [ { bearerAuth: [] } ]
- *     responses:
- *       200:
- *         description: Thông tin người dùng hiện tại
- *         content:
- *           application/json:
- *             example:
- *               status: success
- *               message: Lấy profile thành công
- *               data:
- *                 id: "b2df0d5d-1234-4abc-9def-bbbd02910001"
- *                 name: "Demo User"
- *                 email: "demo@junkio.com"
- *                 role: member
- *                 avatar_url: "/uploads/avatars/demo-avatar.jpg"
- *       401:
- *         description: Chưa đăng nhập hoặc token hết hạn
- */
-router.get('/me', authMiddleware, userController.getProfile);
-
-/**
- * @swagger
- * /api/auth/avatar:
- *   post:
- *     summary: Tải lên ảnh đại diện (avatar)
- *     description: |
- *       Upload hoặc thay đổi ảnh đại diện của người dùng hiện tại.
- *       Endpoint tương thích (alias) cho `/api/users/me/avatar`.
- *
- *       **Yêu cầu file:**
- *       - Định dạng: JPEG, JPG, PNG
- *       - Dung lượng tối đa: **5MB**
- *       - Tên field trong form: `avatar`
- *
- *       **Lưu ý:** Ảnh cũ sẽ bị thay thế bởi ảnh mới sau khi upload thành công.
- *     tags: [Auth]
- *     security: [ { bearerAuth: [] } ]
- *     requestBody:
- *       required: true
- *       content:
- *         multipart/form-data:
- *           schema:
- *             type: object
- *             required: [avatar]
- *             properties:
- *               avatar:
- *                 type: string
- *                 format: binary
- *                 description: File ảnh đại diện (JPEG/PNG, max 5MB)
- *     responses:
- *       200:
- *         description: Cập nhật avatar thành công
- *         content:
- *           application/json:
- *             example:
- *               status: success
- *               message: Cập nhật avatar thành công
- *               data:
- *                 avatar_url: "/uploads/avatars/b2df0d5d-avatar-1711792000.jpg"
- *       400:
- *         description: File không hợp lệ (sai định dạng hoặc vượt quá 5MB)
- *       401:
- *         description: Chưa đăng nhập
- */
-router.post('/avatar', authMiddleware, uploadAvatar.single('avatar'), userController.updateAvatar);
 
 /**
  * @swagger
@@ -372,6 +299,7 @@ router.post('/avatar', authMiddleware, uploadAvatar.single('avatar'), userContro
  *       404:
  *         description: Email không tồn tại trên hệ thống (EMAIL_NOT_FOUND)
  */
+// Quên mật khẩu chỉ cần email hợp lệ để gửi đường dẫn đặt lại mật khẩu.
 router.post('/forgot-password', authValidator.validateForgotPassword, authController.forgotPassword);
 
 /**
@@ -423,6 +351,7 @@ router.post('/forgot-password', authValidator.validateForgotPassword, authContro
  *       400:
  *         description: Token không hợp lệ hoặc đã hết hạn (INVALID_RESET_TOKEN)
  */
+// Đặt lại mật khẩu cần token trên URL và mật khẩu mới trong body.
 router.post('/reset-password/:token', authValidator.validateResetPassword, authController.resetPassword);
 
 module.exports = router;

@@ -2,8 +2,6 @@
 node_modules/
 /backend/node_modules/
 /frontend/node_modules/
-package-lock.json
-*package-lock.json
 
 
 # Ignore database state
@@ -67,7 +65,13 @@ _agent/
 _agents/
 .playwright-cli/
 .gemini/
-
+docx/*
+!docx/07-tham-chieu/
+docx/07-tham-chieu/*
+!docx/07-tham-chieu/postman/
+docx/07-tham-chieu/postman/*
+!docx/07-tham-chieu/postman/Junkio.postman_collection.json
+!docx/07-tham-chieu/postman/Junkio.postman_environment.json
 # Ignore backend testing logs and outputs
 backend/*-log.txt
 backend/*_error.txt
@@ -85,5 +89,9 @@ backend/coverage/
 
 # Ignore additional frontend reports
 frontend/report_*.*
+<<<<<<< HEAD
 .idea/
 /docx/
+=======
+.idea/
+>>>>>>> 3f0ba3e0fc10750002d7069171e3da43aad42d8f

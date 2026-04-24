@@ -1,33 +1,54 @@
-const { check, validationResult } = require('express-validator');
+const { body } = require('express-validator');
+const { buildValidationHandler, createValidationCode } = require('./validationHelper');
 
-// Middleware xử lý kết quả validation chung
-const validate = (req, res, next) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(422).json({ errors: errors.array() });
-    }
-    next();
-};
+// GHI CHÚ HỌC TẬP - Phần xác thực của Thành Đạt:
+// Validator chặn dữ liệu sai trước khi vào controller. Nhờ vậy controller chỉ tập trung vào nghiệp vụ.
+// createValidationCode tạo mã lỗi thống nhất để frontend dịch ra thông báo dễ hiểu.
 
+// Đăng ký yêu cầu tên, email đúng dạng và mật khẩu tối thiểu 6 ký tự.
 exports.validateRegister = [
-    check('name', 'Họ tên là bắt buộc và phải từ 2 ký tự trở lên').trim().isLength({ min: 2 }),
-    check('email', 'Vui lòng cung cấp email hợp lệ').isEmail().normalizeEmail(),
-    check('password', 'Mật khẩu phải có ít nhất 6 ký tự').isLength({ min: 6 }),
-    validate
+    body('name')
+        .trim()
+        .notEmpty()
+        .withMessage(createValidationCode('name', 'REQUIRED'))
+        .bail()
+        .isLength({ min: 2 })
+        .withMessage(createValidationCode('name', 'MIN_LENGTH_NOT_MET')),
+    body('email')
+        .isEmail()
+        .withMessage(createValidationCode('email', 'INVALID_EMAIL'))
+        .normalizeEmail(),
+    body('password')
+        .isLength({ min: 6 })
+        .withMessage(createValidationCode('password', 'MIN_LENGTH_NOT_MET')),
+    buildValidationHandler(['body']),
 ];
 
+// Đăng nhập chỉ cần email đúng dạng và có mật khẩu.
 exports.validateLogin = [
-    check('email', 'Vui lòng cung cấp email hợp lệ').isEmail().normalizeEmail(),
-    check('password', 'Mật khẩu là bắt buộc').exists(),
-    validate
+    body('email')
+        .isEmail()
+        .withMessage(createValidationCode('email', 'INVALID_EMAIL'))
+        .normalizeEmail(),
+    body('password')
+        .exists()
+        .withMessage(createValidationCode('password', 'REQUIRED')),
+    buildValidationHandler(['body']),
 ];
 
+// Quên mật khẩu chỉ cần email hợp lệ để hệ thống gửi link khôi phục.
 exports.validateForgotPassword = [
-    check('email', 'Vui lòng cung cấp email hợp lệ').isEmail().normalizeEmail(),
-    validate
+    body('email')
+        .isEmail()
+        .withMessage(createValidationCode('email', 'INVALID_EMAIL'))
+        .normalizeEmail(),
+    buildValidationHandler(['body']),
 ];
 
+// Đặt lại mật khẩu chỉ kiểm tra mật khẩu mới; token được lấy từ params trong route.
 exports.validateResetPassword = [
-    check('password', 'Mật khẩu mới phải có ít nhất 6 ký tự').isLength({ min: 6 }),
-    validate
+    body('password')
+        .isLength({ min: 6 })
+        .withMessage(createValidationCode('password', 'MIN_LENGTH_NOT_MET')),
+    buildValidationHandler(['body']),
 ];

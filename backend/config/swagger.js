@@ -15,7 +15,7 @@ Dưới đây là các tài liệu hướng dẫn sử dụng API chi tiết dà
 
 Nếu bạn là người mới sử dụng API này, hãy làm theo các bước sau để xác thực:
 
-1. **Đăng nhập (Login):** Go to the \`/api/auth/login\` route và nhập Email & Password.
+1. **Đăng nhập (Login):** Mở route \`/api/auth/login\` và nhập email cùng mật khẩu.
 2. **Lấy Token:** Copy chuỗi \`token\` trả về từ kết quả JSON (trong object \`data\`).
 3. **Cấp quyền (Authorize):** Kéo lên trên cùng của trang web này, bấm vào nút **Authorize** màu xanh lá cây hoặc click vào biểu tượng 🔒 ở bất kỳ API nào, dán chuỗi token vừa copy vào ô **Value** và nhấn **Authorize**.
 4. **Bắt đầu gọi API:** Nhấn \`Try it out\` ở các endpoint có yêu cầu xác thực để thực hiện các yêu cầu (Requests). Server sẽ nhận diện được phiên làm việc của bạn.

@@ -7,7 +7,7 @@ import { toast } from "sonner"
 import { Loader2, Mail, ArrowLeft } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import api from "@/lib/api"
-import { resolveAuthError } from "@/utils/authErrors"
+import { resolveError } from "@/utils/authErrors"
 
 export function ForgotPasswordPage() {
     const { t } = useTranslation()
@@ -26,7 +26,7 @@ export function ForgotPasswordPage() {
             toast.success(t('auth.forgotPasswordSuccess'))
         } catch (error) {
             const errorCode = error.response?.data?.message
-            toast.error(resolveAuthError(errorCode, t, 'auth.forgotPasswordFailed'))
+            toast.error(resolveError(errorCode, t, 'auth.forgotPasswordFailed'))
         } finally {
             setIsLoading(false)
         }
@@ -37,11 +37,11 @@ export function ForgotPasswordPage() {
             <div className="mb-8 text-center sm:text-left">
                 <Link to="/login" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground mb-4">
                     <ArrowLeft className="mr-2 h-4 w-4" />
-                    {t('auth.backToLogin', 'Quay lại đăng nhập')}
+                    {t('auth.backToLogin')}
                 </Link>
                 <h2 className="text-3xl font-bold tracking-tight">{t('auth.forgotPassword')}</h2>
                 <p className="text-muted-foreground mt-2">
-                    {t('auth.forgotPasswordDesc', 'Nhập email của bạn và chúng tôi sẽ gửi liên kết để đặt lại mật khẩu.')}
+                    {t('auth.forgotPasswordDesc')}
                 </p>
             </div>
 
@@ -64,7 +64,7 @@ export function ForgotPasswordPage() {
 
                 <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700" disabled={isLoading}>
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {t('auth.sendResetLink', 'Gửi liên kết')}
+                    {t('auth.sendResetLink')}
                 </Button>
             </form>
         </div>

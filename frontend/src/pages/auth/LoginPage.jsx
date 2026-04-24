@@ -12,7 +12,7 @@ import { FcGoogle } from "react-icons/fc"
 import { FaFacebook } from "react-icons/fa"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
-import { resolveAuthError } from "@/utils/authErrors"
+import { resolveError } from "@/utils/authErrors"
 
 export function LoginPage() {
     const { t } = useTranslation();
@@ -41,7 +41,7 @@ export function LoginPage() {
                 toast.success(t('auth.loginSuccess'));
                 navigate("/");
             } catch (error) {
-                toast.error(resolveAuthError(error, t, 'auth.loginFailed'));
+                toast.error(resolveError(error, t, 'auth.loginFailed'));
             } finally {
                 setIsLoading(false);
             }

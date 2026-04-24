@@ -9,7 +9,7 @@
 Dự án được xây dựng dựa trên các công nghệ và bộ thư viện hiện đại để tối ưu hóa hiệu suất và trải nghiệm người dùng:
 
 ### 1. Frontend (Giao diện người dùng)
-- **Core Framework**: React 19, Vite (Trình đóng gói siêu tốc).
+- **Core Framework**: React, Vite (Trình đóng gói siêu tốc).
 - **Styling**: Tailwind CSS v3 (Utility-first CSS) chuyên trị độ co giãn trên nhiều thiết bị.
 - **UI Components & UX**:
   - **Radix UI**: Xây dựng các khối component cốt lõi có độ tương tác và tính truy cập (Accessible) cao.
@@ -46,103 +46,118 @@ Dự án được xây dựng dựa trên các công nghệ và bộ thư viện
 
 ---
 
-## 🧠 Chuyên Sâu Kỹ Thuật (Technical Engineering)
+## 🚀 Hướng dẫn Cài đặt & Khởi chạy (Getting Started)
 
-### 1. Thuật Toán Tối Giản Nợ (Bipartite Greedy Matching)
-Junkio giải quyết bài toán phức tạp trong việc chia sẻ chi phí gia đình/nhóm bằng cách áp dụng phiên bản tùy chỉnh của thuật toán dòng chảy mạng (Network Flow / Greedy Matching). 
-- **Đầu vào:** Một mảng lịch sử nợ chéo (A nợ B, B nợ C).
-- **Quy trình:** Tính toán (Net Balance) để phân tách chủ nợ và con nợ. Thực hiện Greedy Matching giảm 10+ giao dịch rườm rà xuống chỉ còn 2-3 giao dịch bắt buộc.
-- **Complexity:** `O(N log N)` do thuật toán dựa trên phép Timsort.
+Dưới đây là hướng dẫn chi tiết từng bước để một Node Developer thiết lập, cấu hình và khởi chạy toàn bộ hệ thống dự án hoàn toàn từ con số 0.
 
-### 2. Bộ Nhớ Đệm Tốc Độ Cao (Redis Caching Layer)
-Bảo vệ cơ sở dữ liệu `postgres` khỏi bão Tsunami (DDoS/High traffic) bằng cách tích hợp trực tiếp Redis middleware vào kiến trúc.
-- **Cơ chế:** Các API nặng như `/api/analytics/dashboard` được bọc bởi `redisCache.js`. Trả về Memory Cache nhanh hơn **~90%** so với query SQL truyền thống.
+### Bước 1: Yêu cầu cấu hình hệ thống (Prerequisites)
+Bạn cần đảm bảo máy tính đã cài đặt sẵn các nền tảng sau:
+- **Node.js** (Phiên bản v18.x trở lên)
+- **npm** (Phiên bản đi kèm với Node.js)
+- **Git** (Dùng để clone mã nguồn dự án)
+- **PostgreSQL** (Hệ quản trị cơ sở dữ liệu Relation, phiên bản 13 trở lên)
+- **Redis Server** (Máy chủ Cache)
+  - _Lưu ý về Redis ở Windows_: Redis không còn hỗ trợ phiên bản chạy Native trên Windows 10/11. Bạn hãy cài đặt **Memurai** (một phiên bản phân tách 100% tương thích API của Redis) hoặc chạy thông qua Windows Subsystem for Linux (WSL). Memurai sau khi cài mặc định sẽ mở port 6379 để sử dụng.
 
-### 3. Nguyên Tắc ACID (Sequelize Managed Transactions)
-Hệ thống tiền tệ tuyệt đối không được phép sinh ra "rác" nếu đứt kết nối mạng giữa chừng. Toàn bộ Endpoint liên quan đến `Transfer` (chuyển đổi ví/trả nợ) chạy trong một `Connection Transaction`.
-- **Logic:** `await sequelize.transaction()` đảm bảo hoặc là cả 2 ví được update số dư, hoặc Không có bất kỳ thay đổi nào được thực thi (Rollback hoàn toàn).
-
----
-
-## ⚙️ Cấu hình Môi trường (Environment Setup)
-
-Để project hoạt động, bạn cần cấu hình các biến môi trường cho Backend. 
-Tạo một tệp `.env` bên trong thư mục `backend/` dựa trên mẫu `.env.example`:
-
-```env
-# Cấu hình Database & Redis
-DB_HOST=localhost       # Đổi thành 'db' nếu chạy bằng Docker Compose
-DB_PORT=5432
-DB_NAME=expense_tracker_db
-DB_USER=admin
-DB_PASS=password123
-REDIS_HOST=localhost    # Đổi thành 'redis' nếu chạy bằng Docker Compose
-REDIS_PORT=6379
-
-# Cấu hình Máy chủ & Bảo mật
-PORT=5000
-JWT_SECRET=super-secret-key
-JWT_REFRESH_SECRET=super-refresh-key
-VITE_FRONTEND_URL=http://localhost:5173 # Nơi xử lý CORS Header cho Frontend Local
-
-# (Tùy chọn) Cấu hình Dịch vụ Email
-EMAIL_HOST=smtp.mailtrap.io
-EMAIL_PORT=587
-EMAIL_USER=your_user
-EMAIL_PASS=your_pass
-
-# (Tùy chọn) Tự động sinh dữ liệu ảo (Seed Data)
-AUTO_SEED=true
-```
-*(Tuyệt đối không lưu file .env mang mật khẩu production vào Git).*
-
----
-
-## 🚀 Hướng dẫn Cài đặt & Sử dụng Dự án (Usage)
-
-Có **2 phương án** để bắt đầu phát triển hoặc chạy thử nghiệp dự án.
-
-### Phương án 1: Chạy với Docker Compose (Tối ưu nhất)
-Phương pháp này giúp dựng cùng lúc 4 cụm máy chủ ảo (Frontend, Backend, DB PostgreSQL, Redis Cache) mà không bắt bạn cài cắm rườm rà. Yêu cầu duy nhất: Cài **Docker Desktop**.
-
+### Bước 2: Checkout / Clone mã nguồn
+Tải mã nguồn toàn bộ dự án về máy tính của bạn:
 ```bash
-# Đứng từ cây thư mục gốc chứa file docker-compose.yml 
-docker compose up -d
-
-# Xem log và các tiến trình xem đã xanh mượt chưa
-docker compose ps
+git clone <đường_dẫn_git_repo_của_bạn>
+cd Junkio-Expense-Tracker
 ```
-Lúc này bạn trải nghiệm dự án qua các cổng:
-- **Trang chủ Website**: Truy cập `http://localhost`
-- **Máy chủ API Backend**: `http://localhost:5000`
-- **Tài liệu API Swagger**: `http://localhost:5000/api-docs`
-*(Lưu ý: API Container đã được lập trình sẵn để tự động chạy database migration và cấy dữ liệu mẫu nếu có flag `AUTO_SEED=true`).*
 
-### Phương án 2: Chạy Thủ Công Từng Nền Tảng (Cho Local Development)
+### Bước 3: Chuẩn bị Storage & Caching
+Mở công cụ quản trị PostgreSQL (ví dụ pgAdmin hoặc dbeaver) trên máy tính và thao tác tạo một cơ sở dữ liệu mới tinh.
 
-**Bước 1: Chuẩn bị Storage & DB**
-Đảm bảo bạn đã cài đặt và cấu hình PostgreSQL & Redis hoạt động trên máy với cổng mặc định `5432` và `6379`. Đảm bảo file `backend/.env` đã trỏ đúng Host.
+1. **Khởi tạo Database PostgreSQL**:
+   - Tạo DB tên là `expense_tracker_db` (hoặc tên tuỳ ý do bạn muốn).
+   - Kiểm tra xem username/password của tài khoản đăng nhập Postgres máy tính bạn là gì (thường user mặc định là `postgres`).
+2. **Khởi chạy máy chủ Redis**: Đảm bảo service Redis đang chạy và lắng nghe ở port `6379` ở localhost.
 
-**Bước 2: Khởi động Backend API**
+### Bước 4: Cài đặt và cấu hình Backend
+Chúng ta sẽ thiết lập môi trường Backend trước tiên.
+
+Đi vào thư mục backend và cài đặt thư viện:
 ```bash
 cd backend
 npm install
-npm run dev
 ```
 
-**Bước 3: Khởi động Frontend Web**
-Mở thêm một cửa sổ terminal mới:
+Thiết lập biến môi trường chuẩn (`.env`). Bạn cần sao chép/đổi tên file mẫu được cấp sẵn là `.env.example` thành file tên `.env`. Sau đó mở tệp `.env` lên bằng trình soạn thảo và **tự cá nhân hóa các chuỗi biến** theo môi trường máy bạn:
+
+```bash
+# File: backend/.env
+
+# Cấu hình Cổng backend
+PORT=5000
+
+# Cấu hình kết nối DB mà bạn vừa thiết lập ở Bước 3
+DB_HOST=localhost
+DB_USER=postgres            # ĐIỀU CHỈNH: tên người dùng PostgreSQL trên máy tính của bạn
+DB_PASS=123456              # ĐIỀU CHỈNH: mật khẩu đăng nhập DB của máy bạn
+DB_NAME=expense_tracker_db  # Tên Database
+
+# Cấu hình bảo mật (Vô cùng quan trọng)
+# HÃY ĐIỀU CHỈNH: Đừng dùng text thông thường, hãy tự khởi tạo mật khẩu băm UUID ngẫu nhiên để an toàn tối đa.
+JWT_SECRET=THAY_BANG_CHUOI_BIMAT_BATKY_TU_TAO_RADA
+JWT_REFRESH_SECRET=THAY_BANG_CHUOI_REFRESH_BIMAT_KHACH_RADA
+
+# Cấu hình Redis
+REDIS_HOST=localhost
+REDIS_PORT=6379
+
+SEQUELIZE_LOG=false
+VITE_FRONTEND_URL=http://localhost:5173
+
+# Cấu hình Mail Server (Bắt buộc nếu muốn dùng tính năng Quên Mật Khẩu, Lời Mời Nhóm, Báo Cáo...)
+# GỢI Ý: Lên Google hoặc Gmail tạo một "mật khẩu ứng dụng" SMTP.
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USER=your-email@gmail.com
+EMAIL_PASS=mat_khau_ung_dung_cua_ban
+
+# Tùy chỉnh chế độ Mẫu dữ liệu ban đầu
+# Đổi AUTO_SEED=true nếu bạn muốn chạy migration sau đó tự động chèn vào dữ liệu người dùng ảo rác để check nhanh UI.
+AUTO_SEED=true
+```
+
+_Sau khi đã lưu file `.env`_, hãy khởi động lệnh `npm start` hoặc `npm run dev` trong thư mục backend. Các script của hệ thống sẽ tự động bắt lấy cơ sở dữ liệu rỗng của bạn, tạo mọi cấu trúc bảng (Table migration) lên PostreSQL. Màn hình console xuất hiện dòng chữ "Database connected... Listening on Port 5000" cho thấy máy chủ đã sống.
+
+### Bước 5: Cài đặt và cấu hình Frontend (Giao diện)
+Cửa sổ Backend hãy để nó chạy nguyên. Mở một cửa sổ Terminal/Command Prompt thứ hai và trỏ vào:
 ```bash
 cd frontend
 npm install
+```
+
+Frontend của dự án sử dụng `Vite proxy` để nối nối vòng sang backend. Vì thế đối với Frontend, bạn không cần phải setup file `.env` rườm rà (tất cả các requests gọi `/api` sẽ được chuyển tiếp qua cổng `localhost:5000`).
+
+Sau khi cài xong package Frontend, bạn gọi lện:
+```bash
 npm run dev
 ```
-Truy cập `http://localhost:5173` để thấy giao diện chính ứng dụng.
+
+Kiểm tra terminal sẽ thấy đường Link của trang Web (chúng mặc định được gắn trên `http://localhost:5173`). Dùng trình duyệt bất kỳ truy cập vào đường link đó để chiêm ngưỡng nền tảng!
+
+---
+
+### Tự chọn: Triển khai thông qua Docker Compose 🐳
+Trường hợp bạn có Docker Desktop mà không muốn phải cài đặt lằng nhằng PostgreSQL, Redis, Node... bạn có thể nhảy thẳng vào Docker, dựng 4 trạm máy chủ trong vòng "một nút bấm":
+
+Cũng **bắt buộc** phải lập trước một file `backend/.env` đầy đủ các biến quan trọng như hướng dẫn ở Bước 4 (ví dụ cấu hình SMTP Gmail mật khẩu các kiểu vào file env).
+
+Ngồi ở thư mục chứa thư mục gốc, gõ:
+```bash
+docker compose up -d
+```
+Tận hưởng thành quả truy cập qua đường mạng:
+- **Cổng trang Website**: `http://localhost`
+- **Cổng Backend API**: `http://localhost:5000`
 
 ---
 
 ## 🔐 Dữ liệu Trải nghiệm mẫu (Demo Data)
-Hệ thống tự động phát sinh các account (tài khoản) mẫu sau để bạn đỡ tốn thời gian đăng ký (yêu cầu bật `AUTO_SEED`):
+Nếu ở Bước 4 biến môi trường `AUTO_SEED=true`, các accounts rác mồi khởi tạo dưới đây đã có sẵn để thẩm định tính năng:
 
 | Cấp Quyền | Tên Đăng Nhập | Mật Khẩu |
 |---|---|---|
@@ -154,24 +169,24 @@ Hệ thống tự động phát sinh các account (tài khoản) mẫu sau để
 
 ## 🧪 Tài liệu API & Test Automation
 
-### Nguồn Tài liệu API
-- **Swagger Interactive UI**: Hỗ trợ gọi API sống tại `http://localhost:5000/api-docs`
-- **Postman Data**: Collection và Environment sẵn sàng import nằm trong `docx/07-tham-chieu/postman/` ở thư mục Root.
+### Hệ Thống Tài liệu API
+- **Swagger Interactive UI**: Hỗ trợ gọi API sống, theo dõi param / error body tại endpoint `http://localhost:5000/api-docs` (sau khi backend chạy).
+- **Postman Workspace**: Collection và các bộ Environment giả lập sẵn sàng nằm trong `docx/07-tham-chieu/postman/` ở thư mục Root.
 
 ### Quy trình chạy Test tự động hóa (QA)
-Toàn bộ dự án đi kèm hệ thống kiểm thử tự động, bạn có thể dễ dàng chạy các bộ công cụ phát hiện lỗi cú pháp và regression testing bằng NPM:
+Toàn bộ dự án đi kèm hệ thống kiểm thử tự động Automation 100%, bạn có thể dễ dàng chạy các bộ công cụ rà soát lỗi cú pháp và regression testing bằng NPM:
 
-**Kiểm thử Hồi quy Backend:**
+**Kiểm thử máy chủ Backend:**
 ```bash
 npm --prefix backend run test:smoke   # Unit/Integration test lõi (Auth, Transaction)
 npm --prefix backend run test:newman  # Kiểm thử tự động trên diện rộng bộ Postman API
-npm --prefix backend run check:admin  # Kiểm tra tính đồng bộ phân quyền
+npm --prefix backend run check:admin  # Kiểm tra tính đồng bộ phân quyền logic
 ```
 
-**Kiểm thử Hồi quy Frontend:**
+**Kiểm thử giao diện Frontend:**
 ```bash
-npm --prefix frontend run lint        # Quét ESLint kiểm tra lỗi cú pháp code
-npm --prefix frontend test            # Chạy Vitest thử nghiệm các Logic Utils
-npm --prefix frontend run test:i18n   # Truy nguyên kiểm tra toàn vẹn bộ Dịch ngỗn ngữ
-npm --prefix frontend run test:e2e    # Chạy bộ khung Playwright automation test
+npm --prefix frontend run lint        # Quét ESLint kiểm duyệt code format
+npm --prefix frontend test            # Chạy Vitest test hàm Logic, hooks
+npm --prefix frontend run test:i18n   # Test toàn vẹn cấu trúc file dịch thuật JSON
+npm --prefix frontend run test:e2e    # Chạy bộ khung Playwright automation user UI test
 ```

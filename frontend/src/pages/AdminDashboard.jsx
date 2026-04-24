@@ -12,9 +12,17 @@ import { Users, ArrowRightLeft, Home as HomeIcon, Search, Lock, Unlock, Shield, 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, LineChart, Line } from "recharts"
 import api from "@/lib/api"
 
+/**
+ * GHI CHÚ HỌC TẬP - Phần quản trị của Thành Đạt:
+ * Trang chính dành cho Quản trị viên (Admin Dashboard).
+ * - Hiển thị biểu đồ tăng trưởng người dùng, hoạt động giao dịch và danh mục chi tiêu.
+ * - Quản lý danh sách người dùng (khóa, mở khóa, đổi role, xóa).
+ * - Theo dõi nhật ký hệ thống (Audit Logs).
+ */
 export function AdminDashboard() {
     const { t } = useTranslation()
     const { user } = useSelector(state => state.auth)
+    // Các state bên dưới tách theo từng vùng của trang: thống kê, tài chính, user, modal và audit log.
     const [analytics, setAnalytics] = useState(null)
     const [financial, setFinancial] = useState(null)
     const [users, setUsers] = useState([])
@@ -29,7 +37,7 @@ export function AdminDashboard() {
     const [userToDelete, setUserToDelete] = useState(null)
     const [loading, setLoading] = useState(true)
     
-    // Logs State
+    // Logs State: dùng riêng cho tab nhật ký hoạt động, có phân trang và lọc theo action.
     const [activeTab, setActiveTab] = useState('overview')
     const [logs, setLogs] = useState([])
     const [logPage, setLogPage] = useState(1)
@@ -65,25 +73,29 @@ export function AdminDashboard() {
     }
 
     useEffect(() => {
+        // Lần đầu mở trang: tải thống kê, tài chính và danh sách user.
         fetchAnalytics()
         fetchFinancialOverview()
         fetchUsers()
     }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
+        // Mỗi khi phân trang hoặc bộ lọc user đổi, tải lại danh sách user.
         fetchUsers()
     }, [page, search, roleFilter, statusFilter]) // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
+        // Chỉ tải audit log khi admin đang ở tab logs để tránh gọi API không cần thiết.
         if (activeTab === 'logs') {
             fetchLogs()
         }
     }, [activeTab, logPage, logAction]) // eslint-disable-line react-hooks/exhaustive-deps
 
-    const fetchLogs = async () => {
+    async function fetchLogs() {
         try {
             const { data } = await api.get(`/admin/logs?page=${logPage}&limit=20&action=${logAction}`)
             if (logPage === 1) {
+                // Trang đầu thay mới danh sách log; các trang sau nối thêm để phục vụ nút "tải thêm".
                 setLogs(data.logs)
             } else {
                 setLogs(prev => [...prev, ...data.logs])
@@ -94,7 +106,7 @@ export function AdminDashboard() {
         }
     }
 
-    const fetchAnalytics = async () => {
+    async function fetchAnalytics() {
         try {
             const { data } = await api.get("/admin/analytics")
             setAnalytics(data)
@@ -103,7 +115,7 @@ export function AdminDashboard() {
         }
     }
 
-    const fetchFinancialOverview = async () => {
+    async function fetchFinancialOverview() {
         try {
             const { data } = await api.get("/admin/financial-overview")
             setFinancial(data)
@@ -112,9 +124,10 @@ export function AdminDashboard() {
         }
     }
 
-    const fetchUsers = async () => {
+    async function fetchUsers() {
         try {
             setLoading(true)
+            // Query string phản ánh đúng các điều khiển trên giao diện: page, search, role, status.
             const { data } = await api.get(`/admin/users?page=${page}&limit=10&search=${search}&role=${roleFilter}&status=${statusFilter}`)
             setUsers(data.users)
             setTotal(data.total)
@@ -127,6 +140,7 @@ export function AdminDashboard() {
 
     const toggleLock = async (userId) => {
         try {
+            // Backend sẽ chặn trường hợp admin tự khóa chính mình.
             await api.put(`/admin/users/${userId}/toggle-lock`)
             fetchUsers()
         } catch (err) {
@@ -136,6 +150,7 @@ export function AdminDashboard() {
 
     const fetchUserDetail = async (userId) => {
         try {
+            // Chi tiết user dùng cho modal xem ví, gia đình và tổng số giao dịch.
             const { data } = await api.get(`/admin/users/${userId}`)
             setUserDetail(data)
             setSelectedUser(userId)
@@ -146,6 +161,7 @@ export function AdminDashboard() {
 
     const changeRole = async (userId, newRole) => {
         try {
+            // Backend validate role và chặn admin tự đổi quyền của chính mình.
             await api.put(`/admin/users/${userId}/role`, { role: newRole })
             fetchUsers()
         } catch (err) {
@@ -153,9 +169,13 @@ export function AdminDashboard() {
         }
     }
 
+    /**
+     * Xóa người dùng khỏi hệ thống.
+     */
     const deleteUser = async () => {
         if (!userToDelete) return;
         try {
+            // Xóa user chỉ chạy sau khi admin xác nhận trong hộp thoại.
             await api.delete(`/admin/users/${userToDelete}`)
             setIsDeleteDialogOpen(false)
             setUserToDelete(null)
@@ -166,6 +186,7 @@ export function AdminDashboard() {
     }
 
     if (user?.role !== "admin") {
+        // Chặn ở frontend để trải nghiệm rõ ràng; API admin vẫn có roleMiddleware bảo vệ phía server.
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
                 <Card className="p-8 text-center max-w-md">

@@ -3,7 +3,7 @@
   "info": {
     "title": "Junkio Expense Tracker API",
     "version": "1.0.0",
-    "description": "**Chào mừng đến với thư viện API của Junkio Expense Tracker!**  \n\nDưới đây là các tài liệu hướng dẫn sử dụng API chi tiết dành cho Lập trình viên, Tester và Admin hệ thống. Thiết kế tuân theo chuẩn RESTful.\n\n---\n###  Hướng dẫn dành cho Người Dùng Mới (Getting Started)\n\nNếu bạn là người mới sử dụng API này, hãy làm theo các bước sau để xác thực:\n\n1. **Đăng nhập (Login):** Go to the `/api/auth/login` route và nhập Email & Password.\n2. **Lấy Token:** Copy chuỗi `token` trả về từ kết quả JSON (trong object `data`).\n3. **Cấp quyền (Authorize):** Kéo lên trên cùng của trang web này, bấm vào nút **Authorize** màu xanh lá cây hoặc click vào biểu tượng 🔒 ở bất kỳ API nào, dán chuỗi token vừa copy vào ô **Value** và nhấn **Authorize**.\n4. **Bắt đầu gọi API:** Nhấn `Try it out` ở các endpoint có yêu cầu xác thực để thực hiện các yêu cầu (Requests). Server sẽ nhận diện được phiên làm việc của bạn.\n\n> ** Mẹo:** Swagger UI đã được cấu hình lưu lại Token kể cả khi bạn tải lại trang (Persist Authorization).\n\n---\n\n###  Mã Lỗi (Error Codes)\nJunkio API sử dụng hệ thống `Error Codes` chuẩn và thông báo lỗi đa ngôn ngữ (i18n). Thay vì đọc chuỗi ký tự thô, Frontend sẽ nhận được các mã như `WALLET_NOT_FOUND`, `INSUFFICIENT_BALANCE` và tự thông dịch thành văn bản. Bạn có thể xem chi tiết mô hình phản hồi (Response) ở từng route bên dưới."
+    "description": "**Chào mừng đến với thư viện API của Junkio Expense Tracker!**  \n\nDưới đây là các tài liệu hướng dẫn sử dụng API chi tiết dành cho Lập trình viên, Tester và Admin hệ thống. Thiết kế tuân theo chuẩn RESTful.\n\n---\n###  Hướng dẫn dành cho Người Dùng Mới (Getting Started)\n\nNếu bạn là người mới sử dụng API này, hãy làm theo các bước sau để xác thực:\n\n1. **Đăng nhập (Login):** Mở route `/api/auth/login` và nhập email cùng mật khẩu.\n2. **Lấy Token:** Copy chuỗi `token` trả về từ kết quả JSON (trong object `data`).\n3. **Cấp quyền (Authorize):** Kéo lên trên cùng của trang web này, bấm vào nút **Authorize** màu xanh lá cây hoặc click vào biểu tượng 🔒 ở bất kỳ API nào, dán chuỗi token vừa copy vào ô **Value** và nhấn **Authorize**.\n4. **Bắt đầu gọi API:** Nhấn `Try it out` ở các endpoint có yêu cầu xác thực để thực hiện các yêu cầu (Requests). Server sẽ nhận diện được phiên làm việc của bạn.\n\n> ** Mẹo:** Swagger UI đã được cấu hình lưu lại Token kể cả khi bạn tải lại trang (Persist Authorization).\n\n---\n\n###  Mã Lỗi (Error Codes)\nJunkio API sử dụng hệ thống `Error Codes` chuẩn và thông báo lỗi đa ngôn ngữ (i18n). Thay vì đọc chuỗi ký tự thô, Frontend sẽ nhận được các mã như `WALLET_NOT_FOUND`, `INSUFFICIENT_BALANCE` và tự thông dịch thành văn bản. Bạn có thể xem chi tiết mô hình phản hồi (Response) ở từng route bên dưới."
   },
   "servers": [
     {
@@ -1288,99 +1288,6 @@
         }
       }
     },
-    "/api/auth/me": {
-      "get": {
-        "summary": "Lấy thông tin người dùng hiện tại",
-        "description": "Endpoint tương thích (alias) cho `/api/users/me`.\nTrả về thông tin profile của user đang đăng nhập dựa trên Bearer token.\n\nCanonical endpoint: `/api/users/me`\n",
-        "tags": [
-          "Auth"
-        ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Thông tin người dùng hiện tại",
-            "content": {
-              "application/json": {
-                "example": {
-                  "status": "success",
-                  "message": "Lấy profile thành công",
-                  "data": {
-                    "id": "b2df0d5d-1234-4abc-9def-bbbd02910001",
-                    "name": "Demo User",
-                    "email": "demo@junkio.com",
-                    "role": "member",
-                    "avatar_url": "/uploads/avatars/demo-avatar.jpg"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Chưa đăng nhập hoặc token hết hạn"
-          }
-        }
-      }
-    },
-    "/api/auth/avatar": {
-      "post": {
-        "summary": "Tải lên ảnh đại diện (avatar)",
-        "description": "Upload hoặc thay đổi ảnh đại diện của người dùng hiện tại.\nEndpoint tương thích (alias) cho `/api/users/me/avatar`.\n\n**Yêu cầu file:**\n- Định dạng: JPEG, JPG, PNG\n- Dung lượng tối đa: **5MB**\n- Tên field trong form: `avatar`\n\n**Lưu ý:** Ảnh cũ sẽ bị thay thế bởi ảnh mới sau khi upload thành công.\n",
-        "tags": [
-          "Auth"
-        ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "avatar"
-                ],
-                "properties": {
-                  "avatar": {
-                    "type": "string",
-                    "format": "binary",
-                    "description": "File ảnh đại diện (JPEG/PNG, max 5MB)"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Cập nhật avatar thành công",
-            "content": {
-              "application/json": {
-                "example": {
-                  "status": "success",
-                  "message": "Cập nhật avatar thành công",
-                  "data": {
-                    "avatar_url": "/uploads/avatars/b2df0d5d-avatar-1711792000.jpg"
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "File không hợp lệ (sai định dạng hoặc vượt quá 5MB)"
-          },
-          "401": {
-            "description": "Chưa đăng nhập"
-          }
-        }
-      }
-    },
     "/api/auth/forgot-password": {
       "post": {
         "summary": "Gửi email khôi phục mật khẩu",
@@ -2039,163 +1946,10 @@
         }
       }
     },
-    "/api/debts/pending": {
-      "get": {
-        "summary": "Lấy danh sách khoản chia tiền đang chờ xử lý",
-        "description": "Trả về các khoản chia tiền mà người dùng hiện tại chưa xử lý\n(trạng thái PENDING). Đây là các khoản mà người khác đã tạo\nvà chia phần cho bạn, cần bạn chấp nhận hoặc từ chối.\n",
-        "tags": [
-          "Debts"
-        ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Danh sách khoản chia chờ xử lý",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "id": {
-                        "type": "string"
-                      },
-                      "amount": {
-                        "type": "number"
-                      },
-                      "approval_status": {
-                        "type": "string",
-                        "enum": [
-                          "PENDING",
-                          "APPROVED",
-                          "REJECTED"
-                        ]
-                      }
-                    }
-                  }
-                },
-                "example": [
-                  {
-                    "id": "s1a2b3c4-...",
-                    "amount": 250000,
-                    "approval_status": "PENDING",
-                    "from_user": "Nguyễn Văn A",
-                    "description": "Chia tiền ăn tối",
-                    "created_at": "2026-03-30T08:00:00.000Z"
-                  },
-                  {
-                    "id": "s2b3c4d5-...",
-                    "amount": 150000,
-                    "approval_status": "PENDING",
-                    "from_user": "Trần Thị B",
-                    "description": "Chia tiền taxi",
-                    "created_at": "2026-03-29T20:00:00.000Z"
-                  }
-                ]
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/debts/{shareId}/approve": {
-      "put": {
-        "summary": "Chấp nhận khoản chia tiền",
-        "description": "Xác nhận rằng bạn đồng ý với khoản chia tiền này.\nSau khi chấp nhận, khoản nợ sẽ được ghi nhận chính thức.\n\n**Lưu ý:** Chỉ có thể duyệt khoản chia thuộc về chính mình.\n",
-        "tags": [
-          "Debts"
-        ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "shareId",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "description": "UUID của khoản chia tiền"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Đã chấp nhận khoản chia",
-            "content": {
-              "application/json": {
-                "example": {
-                  "status": "success",
-                  "message": "Đã chấp nhận khoản chia"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Không có quyền duyệt khoản chia này"
-          },
-          "404": {
-            "description": "Không tìm thấy khoản chia (SHARE_NOT_FOUND)"
-          }
-        }
-      }
-    },
-    "/api/debts/{shareId}/reject": {
-      "put": {
-        "summary": "Từ chối khoản chia tiền",
-        "description": "Từ chối khoản chia tiền. Khoản nợ sẽ không được ghi nhận.\n\n**Lưu ý:** Chỉ có thể từ chối khoản chia thuộc về chính mình.\n",
-        "tags": [
-          "Debts"
-        ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "shareId",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "description": "UUID của khoản chia tiền"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Đã từ chối khoản chia",
-            "content": {
-              "application/json": {
-                "example": {
-                  "status": "success",
-                  "message": "Đã từ chối khoản chia"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Không có quyền từ chối khoản chia này"
-          },
-          "404": {
-            "description": "Không tìm thấy khoản chia (SHARE_NOT_FOUND)"
-          }
-        }
-      }
-    },
     "/api/debts/settle": {
       "post": {
         "summary": "Tất toán nợ qua chuyển khoản nội bộ",
-        "description": "Thanh toán khoản nợ bằng cách chuyển tiền trực tiếp giữa 2 ví trong hệ thống.\nHệ thống sẽ tạo 2 giao dịch (TRANSFER_OUT / TRANSFER_IN) và đánh dấu nợ đã thanh toán.\n\n**Yêu cầu:**\n- Ví nguồn (`from_wallet_id`) phải có đủ số dư\n- Ví đích (`to_wallet_id`) phải thuộc người nhận thanh toán\n",
+        "description": "Thanh toán khoản nợ bằng cách chuyển tiền trực tiếp giữa 2 ví trong hệ thống.\nHệ thống sẽ tạo 2 giao dịch (TRANSFER_OUT / TRANSFER_IN) và đánh dấu nợ đã thanh toán.\n\n**Yêu cầu:**\n- Ví nguồn (`from_wallet_id`) phải có đủ số dư\n- Với settle ngoài family, ví đích (`to_wallet_id`) phải thuộc người nhận thanh toán\n- Với settle trong family, backend tự suy ra ví nhận từ các share còn mở\n",
         "tags": [
           "Debts"
         ],
@@ -2213,14 +1967,18 @@
                 "required": [
                   "to_user_id",
                   "amount",
-                  "from_wallet_id",
-                  "to_wallet_id"
+                  "from_wallet_id"
                 ],
                 "properties": {
                   "to_user_id": {
                     "type": "string",
                     "format": "uuid",
                     "description": "UUID người nhận thanh toán"
+                  },
+                  "from_user_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Không còn khuyến nghị trong family mode; người trả nợ được suy ra từ người dùng đang đăng nhập"
                   },
                   "amount": {
                     "type": "number",
@@ -2235,7 +1993,12 @@
                   "to_wallet_id": {
                     "type": "string",
                     "format": "uuid",
-                    "description": "UUID ví người nhận"
+                    "description": "UUID ví người nhận. Chỉ bắt buộc ngoài family mode"
+                  },
+                  "family_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "UUID gia đình dùng khi tất toán khoản chia sẻ chi phí giữa các thành viên"
                   }
                 }
               },
@@ -2243,7 +2006,8 @@
                 "to_user_id": "u-receiver-1234-...",
                 "amount": 250000,
                 "from_wallet_id": "w-my-wallet-...",
-                "to_wallet_id": "w-their-wallet-..."
+                "to_wallet_id": "w-their-wallet-...",
+                "family_id": "family-1234-..."
               }
             }
           }
@@ -2662,8 +2426,8 @@
     },
     "/api/forecast": {
       "get": {
-        "summary": "Dự báo thu/chi trong tương lai",
-        "description": "Phân tích dữ liệu giao dịch lịch sử và dự đoán thu nhập / chi tiêu\ncho các tháng tiếp theo.\n\n**Cách hoạt động:**\n1. Hệ thống lấy dữ liệu giao dịch 6 tháng gần nhất\n2. Tính trung bình thu/chi theo tháng\n3. Áp dụng mô hình xu hướng tuyến tính để dự đoán\n\n**Tham số:**\n- `months`: Số tháng muốn dự báo (mặc định 3, tối đa 12)\n",
+        "summary": "Lấy dữ liệu dự báo dòng tiền tiêu chuẩn",
+        "description": "Trả về tổng thu/chi theo tháng trong quá khứ cùng dữ liệu dự báo cho các tháng tiếp theo.",
         "tags": [
           "Forecast"
         ],
@@ -2678,41 +2442,75 @@
             "name": "months",
             "schema": {
               "type": "integer",
-              "default": 3
+              "default": 3,
+              "minimum": 1,
+              "maximum": 12
             },
-            "description": "Số tháng muốn dự báo (1-12)"
+            "description": "Số tháng tương lai cần dự báo"
           }
         ],
         "responses": {
           "200": {
-            "description": "Kết quả dự báo thành công",
+            "description": "Lấy dữ liệu dự báo thành công"
+          }
+        }
+      }
+    },
+    "/api/forecast/ml": {
+      "get": {
+        "summary": "Lấy dữ liệu dự báo AI/ML",
+        "description": "Sử dụng hồi quy tuyến tính đơn giản trên lịch sử giao dịch 6 tháng gần nhất.",
+        "tags": [
+          "Forecast"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "months",
+            "schema": {
+              "type": "integer",
+              "default": 3,
+              "minimum": 1,
+              "maximum": 12
+            },
+            "description": "Số tháng tương lai cần dự báo"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lấy dữ liệu dự báo ML thành công",
             "content": {
               "application/json": {
                 "example": {
                   "status": "success",
-                  "message": "Dự báo dòng tiền thành công",
+                  "message": "FORECAST_ML_RETRIEVED",
                   "data": {
-                    "forecast": [
+                    "historical": [
                       {
-                        "month": "2026-04",
-                        "predictedIncome": 28000000,
-                        "predictedExpense": 18500000,
-                        "netFlow": 9500000
-                      },
-                      {
-                        "month": "2026-05",
-                        "predictedIncome": 28500000,
-                        "predictedExpense": 19000000,
-                        "netFlow": 9500000
-                      },
-                      {
-                        "month": "2026-06",
-                        "predictedIncome": 29000000,
-                        "predictedExpense": 19500000,
-                        "netFlow": 9500000
+                        "month": "2026-01",
+                        "income": 28000000,
+                        "expense": 18500000
                       }
                     ],
-                    "confidence": 0.82
+                    "forecast": [
+                      {
+                        "month": "2026-07",
+                        "predictedIncome": 29000000,
+                        "predictedExpense": 19500000,
+                        "predictedNet": 9500000
+                      }
+                    ],
+                    "warningMonth": null,
+                    "model": {
+                      "type": "SIMPLE_LINEAR_REGRESSION",
+                      "sourceMonths": 6,
+                      "forecastMonths": 3
+                    }
                   }
                 }
               }
@@ -3093,6 +2891,67 @@
           },
           "404": {
             "description": "Mục tiêu không tồn tại (GOAL_NOT_FOUND)"
+          }
+        }
+      }
+    },
+    "/api/market/gold": {
+      "get": {
+        "summary": "Lấy giá vàng SJC mới nhất cho dashboard",
+        "description": "Gọi dịch vụ giá vàng SJC trực tiếp, chuẩn hóa bản ghi SJC khu vực TP. Hồ Chí Minh và lưu cache Redis trong 60 giây.",
+        "tags": [
+          "Market"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lấy giá vàng thành công"
+          },
+          "502": {
+            "description": "Dịch vụ giá vàng bên ngoài không phản hồi hoặc trả lỗi"
+          }
+        }
+      }
+    },
+    "/api/market/gold/history": {
+      "get": {
+        "summary": "Lấy lịch sử giá vàng SJC cho biểu đồ dashboard",
+        "description": "Trả về lịch sử giá vàng SJC đang lưu cục bộ theo khoảng thời gian đã chọn. Dữ liệu trực tiếp được ưu tiên hơn dữ liệu demo nếu trùng thời điểm.",
+        "tags": [
+          "Market"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "range",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "24H",
+                "7D"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lấy lịch sử giá vàng thành công"
+          },
+          "400": {
+            "description": "Khoảng thời gian lịch sử không hợp lệ"
+          },
+          "500": {
+            "description": "Không thể tải lịch sử giá vàng"
           }
         }
       }
@@ -4363,7 +4222,7 @@
     "/api/users/me": {
       "get": {
         "summary": "Lấy thông tin hồ sơ cá nhân",
-        "description": "Trả về đầy đủ thông tin profile của người dùng đang đăng nhập,\nbao gồm tên, email, role, và đường dẫn avatar.\n\nĐây là **canonical endpoint** (endpoint chính).\nAlias tương thích: `/api/auth/me`\n",
+        "description": "Trả về đầy đủ thông tin profile của người dùng đang đăng nhập,\nbao gồm tên, email, role, và đường dẫn avatar.\n\nĐây là **canonical endpoint** (endpoint chính).\n",
         "tags": [
           "Users"
         ],
@@ -4543,7 +4402,7 @@
     "/api/users/me/avatar": {
       "post": {
         "summary": "Cập nhật ảnh đại diện (avatar)",
-        "description": "Upload hoặc thay thế ảnh đại diện của người dùng hiện tại.\nĐây là **canonical endpoint** (endpoint chính).\nAlias tương thích: `/api/auth/avatar`\n\n**Yêu cầu file:**\n- Định dạng hỗ trợ: JPEG, JPG, PNG, GIF\n- Dung lượng tối đa: **5MB**\n- Tên field trong form-data: `avatar`\n\nẢnh cũ sẽ tự động bị xóa khi upload ảnh mới.\n",
+        "description": "Upload hoặc thay thế ảnh đại diện của người dùng hiện tại.\nĐây là **canonical endpoint** (endpoint chính).\n\n**Yêu cầu file:**\n- Định dạng hỗ trợ: JPEG, JPG, PNG, GIF\n- Dung lượng tối đa: **5MB**\n- Tên field trong form-data: `avatar`\n\nẢnh cũ sẽ tự động bị xóa khi upload ảnh mới.\n",
         "tags": [
           "Users"
         ],
@@ -4901,7 +4760,7 @@
     },
     {
       "name": "Auth",
-      "description": "Xác thực người dùng và quản lý phiên đăng nhập.\nNhóm API này bao gồm đăng ký, đăng nhập, làm mới token, đăng xuất\nvà các chức năng khôi phục mật khẩu. Hầu hết các endpoint **không yêu cầu token**\n(ngoại trừ /me và /avatar).\n"
+      "description": "Xác thực người dùng và quản lý phiên đăng nhập.\nNhóm API này bao gồm đăng ký, đăng nhập, làm mới token, đăng xuất\nvà các chức năng khôi phục mật khẩu. Hầu hết các endpoint **không yêu cầu token**\n"
     },
     {
       "name": "Budgets",
@@ -4913,7 +4772,7 @@
     },
     {
       "name": "Debts",
-      "description": "Quản lý chia sẻ chi phí và nợ trong nhóm gia đình.\nKhi một thành viên gia đình tạo giao dịch chi tiêu chung,\nhệ thống tự động chia đều cho các thành viên và tạo khoản nợ.\nMỗi thành viên có thể chấp nhận/từ chối khoản chia, và tất toán nợ.\n"
+      "description": "Quản lý chia sẻ chi phí và nợ trong nhóm gia đình.\nKhi một thành viên gia đình tạo giao dịch chi tiêu chung,\nhệ thống tự động chia đều cho các thành viên và tạo khoản nợ.\nMỗi thành viên có thể tất toán khoản nợ của chính mình.\n"
     },
     {
       "name": "Families",
@@ -4921,11 +4780,15 @@
     },
     {
       "name": "Forecast",
-      "description": "Dự báo dòng tiền dựa trên dữ liệu lịch sử.\nSử dụng thuật toán phân tích xu hướng thu/chi trong quá khứ\nđể dự đoán tình hình tài chính trong các tháng tới.\n"
+      "description": "Dự báo xu hướng dòng tiền dựa trên lịch sử giao dịch của người dùng."
     },
     {
       "name": "Goals",
       "description": "Quản lý mục tiêu tài chính (tiết kiệm).\nMục tiêu giúp người dùng theo dõi tiến độ tiết kiệm cho một mục đích cụ thể\n(VD: mua laptop, du lịch, quỹ khẩn cấp...).\nNgười dùng có thể nạp tiền từ ví cá nhân vào mục tiêu.\n"
+    },
+    {
+      "name": "Market",
+      "description": "Dữ liệu thị trường và các tiện ích tích hợp cho dashboard của người dùng đã đăng nhập."
     },
     {
       "name": "Notifications",

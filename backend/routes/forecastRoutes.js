@@ -7,15 +7,15 @@ const { validateForecastQuery } = require('../validators/forecastValidator');
  * @swagger
  * tags:
  *   name: Forecast
- *   description: Forecast cashflow trends from the user's historical transactions.
+ *   description: Dự báo xu hướng dòng tiền dựa trên lịch sử giao dịch của người dùng.
  */
 
 /**
  * @swagger
  * /api/forecast:
  *   get:
- *     summary: Load the standard forecast dataset
- *     description: Returns historical monthly income/expense totals plus forward-looking predictions.
+ *     summary: Lấy dữ liệu dự báo dòng tiền tiêu chuẩn
+ *     description: Trả về tổng thu/chi theo tháng trong quá khứ cùng dữ liệu dự báo cho các tháng tiếp theo.
  *     tags: [Forecast]
  *     security: [ { bearerAuth: [] } ]
  *     parameters:
@@ -26,10 +26,10 @@ const { validateForecastQuery } = require('../validators/forecastValidator');
  *           default: 3
  *           minimum: 1
  *           maximum: 12
- *         description: Number of future months to forecast
+ *         description: Số tháng tương lai cần dự báo
  *     responses:
  *       200:
- *         description: Forecast loaded successfully
+ *         description: Lấy dữ liệu dự báo thành công
  */
 router.get('/', auth, validateForecastQuery, ctrl.getForecast);
 
@@ -37,8 +37,8 @@ router.get('/', auth, validateForecastQuery, ctrl.getForecast);
  * @swagger
  * /api/forecast/ml:
  *   get:
- *     summary: Load the AI/ML forecast dataset
- *     description: Uses simple linear regression on the last 6 months of transaction history.
+ *     summary: Lấy dữ liệu dự báo AI/ML
+ *     description: Sử dụng hồi quy tuyến tính đơn giản trên lịch sử giao dịch 6 tháng gần nhất.
  *     tags: [Forecast]
  *     security: [ { bearerAuth: [] } ]
  *     parameters:
@@ -49,10 +49,10 @@ router.get('/', auth, validateForecastQuery, ctrl.getForecast);
  *           default: 3
  *           minimum: 1
  *           maximum: 12
- *         description: Number of future months to forecast
+ *         description: Số tháng tương lai cần dự báo
  *     responses:
  *       200:
- *         description: ML forecast loaded successfully
+ *         description: Lấy dữ liệu dự báo ML thành công
  *         content:
  *           application/json:
  *             example:

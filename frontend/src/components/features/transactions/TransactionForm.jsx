@@ -10,6 +10,7 @@ import { fetchCategories } from '@/features/categories/categorySlice';
 import { getFinanceScopeLabels } from '@/features/finance/context';
 import { refreshFinanceData } from '@/features/finance/refreshFinanceData';
 import { formatCurrency } from '@/lib/utils';
+import { resolveError } from '@/utils/authErrors';
 import { ArrowRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -95,7 +96,7 @@ export function TransactionForm({ onSuccess }) {
                 await dispatch(refreshFinanceData());
                 if (onSuccess) onSuccess();
             } catch (error) {
-                setSubmitError(String(error || t('transactionForm.submitError')));
+                setSubmitError(resolveError(error, t, 'transactionForm.submitError'));
             }
         },
     });

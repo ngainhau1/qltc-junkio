@@ -363,10 +363,10 @@ export function Transactions() {
                                 <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
                             </div>
                         ) : (
-                            <VirtualizedTransactionList 
-                                transactions={transactions} 
+                            <VirtualizedTransactionList
+                                transactions={transactions}
                                 onRowClick={handleRowClick}
-                                groupByDate={filter.sortBy === 'date'} 
+                                groupByDate={filter.sortBy === 'date'}
                             />
                         )}
 

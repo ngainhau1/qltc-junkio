@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { toast } from "sonner";
 import { User, Mail, Phone, Calendar, Link as LinkIcon, Save } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { extractErrorCode, resolveError } from "@/utils/authErrors";
 
 export function Profile() {
     const { t } = useTranslation();
@@ -57,7 +58,7 @@ export function Profile() {
 
             toast.success(t('profile.successMsg'));
         } catch (error) {
-            toast.error(error || t('profile.saveFailed'));
+            toast.error(resolveError(extractErrorCode(error), t, 'profile.saveFailed'));
         }
     };
 
@@ -81,9 +82,9 @@ export function Profile() {
                 ...prev,
                 avatarUrl: result.avatarUrl
             }));
-            toast.success(result.msg || t('profile.uploadSuccess'));
+            toast.success(t('profile.uploadSuccess'));
         } catch (error) {
-            toast.error(error || t('profile.uploadFailed'));
+            toast.error(resolveError(extractErrorCode(error), t, 'profile.uploadFailed'));
         } finally {
             setIsUploading(false);
             if (fileInputRef.current) fileInputRef.current.value = '';

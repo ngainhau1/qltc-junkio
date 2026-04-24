@@ -17,6 +17,7 @@ import { updateCurrency, updateLanguage, toggleNotification, resetSettings } fro
 import api from "@/lib/api"
 import { Modal } from "@/components/ui/modal"
 import { useTranslation } from "react-i18next"
+import { extractErrorCode, resolveError } from "@/utils/authErrors"
 
 export function Settings() {
     const { t } = useTranslation();
@@ -431,16 +432,16 @@ function AccountSettings() {
         if (!broadcastMsg.trim()) return toast.error(t('settings.account.broadcastEmpty'));
         setIsSending(true);
         try {
-            const res = await api.post('/notifications/broadcast', {
+            await api.post('/notifications/broadcast', {
                 title: broadcastTitle,
                 message: broadcastMsg,
                 type: 'SYSTEM'
             });
-            toast.success(res.data.msg || t('settings.account.broadcastSuccess'));
+            toast.success(t('settings.account.broadcastSuccess'));
             setBroadcastTitle('');
             setBroadcastMsg('');
         } catch (error) {
-            toast.error(error.response?.data?.msg || t('settings.account.broadcastFailed'));
+            toast.error(resolveError(extractErrorCode(error), t, 'settings.account.broadcastFailed'));
         } finally {
             setIsSending(false);
         }
@@ -477,7 +478,7 @@ function AccountSettings() {
                             toast.success(t('settings.account.passwordUpdateSuccess'));
                             e.target.reset();
                         } catch (error) {
-                            toast.error(error.response?.data?.message || t('settings.account.passwordUpdateFailed'));
+                            toast.error(resolveError(extractErrorCode(error), t, 'settings.account.passwordUpdateFailed'));
                         }
                     }}>
                         <div className="space-y-2">
@@ -623,7 +624,7 @@ function AccountSettings() {
                                 localStorage.clear();
                                 window.location.href = '/login';
                             } catch (error) {
-                                toast.error(error.response?.data?.message || t('settings.account.deleteFailed'));
+                                toast.error(resolveError(extractErrorCode(error), t, 'settings.account.deleteFailed'));
                                 setIsDeleting(false);
                             }
                         }}
