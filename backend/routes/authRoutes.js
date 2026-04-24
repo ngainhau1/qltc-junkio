@@ -4,6 +4,10 @@ const authController = require('../controllers/authController');
 const audit = require('../middleware/auditMiddleware');
 const authValidator = require('../validators/authValidator');
 
+// GHI CHÚ HỌC TẬP - Phần xác thực của Thành Đạt:
+// File route này nối URL bên ngoài với controller xử lý thật.
+// Thứ tự thường gặp: validator kiểm dữ liệu -> audit ghi log nếu cần -> controller xử lý nghiệp vụ.
+
 /**
  * @swagger
  * tags:
@@ -68,6 +72,7 @@ const authValidator = require('../validators/authValidator');
  *       422:
  *         description: Dữ liệu gửi lên không hợp lệ (thiếu field, sai format)
  */
+// Đăng ký cần validate dữ liệu và ghi log USER_REGISTER khi tạo tài khoản thành công.
 router.post('/register', authValidator.validateRegister, audit('USER_REGISTER', 'USER'), authController.register);
 
 /**
@@ -159,6 +164,7 @@ router.post('/register', authValidator.validateRegister, audit('USER_REGISTER', 
  *       423:
  *         description: Tài khoản đã bị khóa bởi admin (ACCOUNT_LOCKED)
  */
+// Đăng nhập cần validate email/password và ghi log USER_LOGIN khi đăng nhập thành công.
 router.post('/login', authValidator.validateLogin, audit('USER_LOGIN', 'USER'), authController.login);
 
 /**
@@ -222,6 +228,7 @@ router.post('/login', authValidator.validateLogin, audit('USER_LOGIN', 'USER'), 
  *       403:
  *         description: Refresh token hết hạn hoặc không hợp lệ (REFRESH_TOKEN_EXPIRED)
  */
+// Refresh token đọc cookie httpOnly, không cần body và không cần access token còn hạn.
 router.post('/refresh-token', authController.refreshToken);
 
 /**
@@ -245,6 +252,7 @@ router.post('/refresh-token', authController.refreshToken);
  *               status: success
  *               message: Đăng xuất thành công
  */
+// Logout xóa refresh token ở cookie; frontend cũng cần xóa access token trong localStorage.
 router.post('/logout', authController.logout);
 
 /**
@@ -291,6 +299,7 @@ router.post('/logout', authController.logout);
  *       404:
  *         description: Email không tồn tại trên hệ thống (EMAIL_NOT_FOUND)
  */
+// Quên mật khẩu chỉ cần email hợp lệ để gửi đường dẫn đặt lại mật khẩu.
 router.post('/forgot-password', authValidator.validateForgotPassword, authController.forgotPassword);
 
 /**
@@ -342,6 +351,7 @@ router.post('/forgot-password', authValidator.validateForgotPassword, authContro
  *       400:
  *         description: Token không hợp lệ hoặc đã hết hạn (INVALID_RESET_TOKEN)
  */
+// Đặt lại mật khẩu cần token trên URL và mật khẩu mới trong body.
 router.post('/reset-password/:token', authValidator.validateResetPassword, authController.resetPassword);
 
 module.exports = router;

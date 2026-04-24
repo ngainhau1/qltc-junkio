@@ -3,6 +3,9 @@ const router = express.Router();
 const authMiddleware = require('../middleware/authMiddleware');
 const marketController = require('../controllers/marketController');
 
+// GHI CHÚ HỌC TẬP - Phần giá vàng SJC của Thành Đạt:
+// Các route market cung cấp dữ liệu giá vàng cho dashboard. Tất cả route đều cần đăng nhập
+// vì đây là tiện ích nằm trong ứng dụng sau khi user đã vào hệ thống.
 router.use(authMiddleware);
 
 /**
@@ -26,6 +29,7 @@ router.use(authMiddleware);
  *       502:
  *         description: Dịch vụ giá vàng bên ngoài không phản hồi hoặc trả lỗi
  */
+// Lấy giá vàng hiện tại: ưu tiên Redis cache, nếu hết cache thì backend gọi nguồn SJC.
 router.get('/gold', marketController.getGoldPrice);
 
 /**
@@ -51,6 +55,7 @@ router.get('/gold', marketController.getGoldPrice);
  *       500:
  *         description: Không thể tải lịch sử giá vàng
  */
+// Lấy lịch sử 24H hoặc 7D để frontend vẽ biểu đồ nhỏ trong GoldPriceCard.
 router.get('/gold/history', marketController.getGoldPriceHistory);
 
 module.exports = router;

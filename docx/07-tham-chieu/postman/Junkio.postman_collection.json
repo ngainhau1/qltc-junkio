@@ -1,7 +1,7 @@
 {
   "item": [
     {
-      "id": "b51f1b36-5e84-4b91-ac5a-cc85cd134f52",
+      "id": "76717357-9e83-4cd9-b1f3-ec1d220791b1",
       "name": "Admin",
       "description": {
         "content": "Quản trị hệ thống, chỉ dành cho tài khoản có role **admin**.\nTất cả các endpoint trong nhóm này yêu cầu Bearer Token của admin.\nNếu bạn chưa có quyền admin, hãy liên hệ quản trị viên hệ thống.\n",
@@ -9,7 +9,7 @@
       },
       "item": [
         {
-          "id": "989a9b26-a1fa-4899-ad5c-74a4f2d237d5",
+          "id": "11963666-06d8-46cb-9ade-a410db013ca3",
           "name": "Lấy tổng quan hệ thống (Platform Dashboard)",
           "request": {
             "name": "Lấy tổng quan hệ thống (Platform Dashboard)",
@@ -48,7 +48,7 @@
           },
           "response": [
             {
-              "id": "f39c6d30-c522-4cee-a4a9-9a1232be2b3b",
+              "id": "07a129e3-fd2f-4f4f-a5a9-36a9c6bbcecb",
               "name": "Dữ liệu dashboard admin thành công",
               "originalRequest": {
                 "url": {
@@ -93,7 +93,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "5e001a9c-6ffb-4333-aa96-49b4a5cf6ffa",
+              "id": "3aecf637-5d23-4d88-bf01-04bdcdc5ed39",
               "name": "Chưa đăng nhập hoặc token hết hạn",
               "originalRequest": {
                 "url": {
@@ -134,7 +134,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "69db1a6d-c0ab-428d-8a52-0853def12bb1",
+              "id": "aefe9dc3-0da5-4cf0-8995-ddf200d7f6c9",
               "name": "Không có quyền admin",
               "originalRequest": {
                 "url": {
@@ -181,7 +181,7 @@
           }
         },
         {
-          "id": "ecc5a039-91d1-420e-a1db-7e677653aa24",
+          "id": "56d5608f-0371-404e-abf1-acb6da73349c",
           "name": "Lấy phân tích dữ liệu toàn hệ thống (System Analytics)",
           "request": {
             "name": "Lấy phân tích dữ liệu toàn hệ thống (System Analytics)",
@@ -220,7 +220,7 @@
           },
           "response": [
             {
-              "id": "c8ad8a3c-cb29-4dea-9164-ba8de5ddb27f",
+              "id": "f21f1982-5aa1-423d-b9b7-fdc7a8ff12c3",
               "name": "Dữ liệu analytics thành công",
               "originalRequest": {
                 "url": {
@@ -265,7 +265,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "55b96b6a-8004-4164-aded-f29ad4612a97",
+              "id": "6dcbde1c-bcad-4828-bf59-d420f88e5008",
               "name": "Chưa đăng nhập hoặc token hết hạn",
               "originalRequest": {
                 "url": {
@@ -306,7 +306,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "f69eebf2-adbe-4a7b-8718-9bb6f87cd2aa",
+              "id": "1becb71b-ca5b-401e-bbaf-53111bdb33fc",
               "name": "Không có quyền admin",
               "originalRequest": {
                 "url": {
@@ -353,7 +353,7 @@
           }
         },
         {
-          "id": "479b854e-e1d7-406c-98e6-fa9e7cb21d41",
+          "id": "be01dda1-2782-4f3a-8acb-5b8cc881f04a",
           "name": "Lấy tổng quan tài chính toàn hệ thống (Financial Overview)",
           "request": {
             "name": "Lấy tổng quan tài chính toàn hệ thống (Financial Overview)",
@@ -392,7 +392,7 @@
           },
           "response": [
             {
-              "id": "7318a1dd-70bf-4ea6-abc2-3061b007df61",
+              "id": "0eb22a7b-0aae-486e-9dbf-f8ff1b91a1b3",
               "name": "Tổng quan tài chính thành công",
               "originalRequest": {
                 "url": {
@@ -437,7 +437,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "38f28650-3d3b-4067-bab1-22c1a7704a92",
+              "id": "75524015-3740-4e1a-a307-ed3847708003",
               "name": "Chưa đăng nhập hoặc token hết hạn",
               "originalRequest": {
                 "url": {
@@ -478,7 +478,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "c6305ae9-d464-4d16-8f0e-f8869a6aadf5",
+              "id": "5fd27b37-da44-4321-b272-ca72a1b89da5",
               "name": "Không có quyền admin",
               "originalRequest": {
                 "url": {
@@ -525,7 +525,7 @@
           }
         },
         {
-          "id": "8991c6c4-36ea-4e80-a638-3bc47ed0c43e",
+          "id": "34a51667-3842-4254-9c57-2a091624f220",
           "name": "Lấy danh sách người dùng toàn hệ thống",
           "request": {
             "name": "Lấy danh sách người dùng toàn hệ thống",
@@ -595,7 +595,7 @@
           },
           "response": [
             {
-              "id": "e91cb134-e3dd-49c2-a2db-338298e32b92",
+              "id": "e775f522-89ec-4fa8-9a82-7acd9a339028",
               "name": "Danh sách người dùng thành công",
               "originalRequest": {
                 "url": {
@@ -661,7 +661,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "fd7f88d6-7104-4c3d-8361-d6a136ca92c0",
+              "id": "83c84af2-18ca-4892-a81b-8f4af56ee11f",
               "name": "Chưa đăng nhập hoặc token hết hạn",
               "originalRequest": {
                 "url": {
@@ -723,7 +723,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "b407d352-e229-4ae8-8707-fa47e5bb60a5",
+              "id": "ef6dc885-e373-4f25-983c-9dc701c0c2a3",
               "name": "Không có quyền admin",
               "originalRequest": {
                 "url": {
@@ -791,7 +791,7 @@
           }
         },
         {
-          "id": "f22868d5-af35-4fb8-b80a-051e4ad1f2cf",
+          "id": "d73d194e-2ca5-47d6-99e4-0e7ad605cc08",
           "name": "Lấy chi tiết một người dùng",
           "request": {
             "name": "Lấy chi tiết một người dùng",
@@ -839,7 +839,7 @@
           },
           "response": [
             {
-              "id": "538665c7-7ded-4567-83e2-31454eb00db2",
+              "id": "677419e0-02fc-47df-bf5a-b981a0abb932",
               "name": "Chi tiết user thành công",
               "originalRequest": {
                 "url": {
@@ -893,7 +893,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "5857b507-1e0e-490d-8b31-18c17a30d523",
+              "id": "cd691505-c387-4d77-bb39-8d81f9006108",
               "name": "Không tìm thấy user (USER_NOT_FOUND)",
               "originalRequest": {
                 "url": {
@@ -949,7 +949,7 @@
           }
         },
         {
-          "id": "f888e1ef-973c-4391-bb39-ad6495ec7591",
+          "id": "4b289a77-443a-4f23-9feb-3299220b6855",
           "name": "Xóa vĩnh viễn một tài khoản người dùng",
           "request": {
             "name": "Xóa vĩnh viễn một tài khoản người dùng",
@@ -997,7 +997,7 @@
           },
           "response": [
             {
-              "id": "4d2590ae-e690-4f90-a500-e7c35bc71842",
+              "id": "b010822a-c7ca-4845-98e4-7d2278de468e",
               "name": "Xóa user thành công",
               "originalRequest": {
                 "url": {
@@ -1051,7 +1051,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "87b0a0fe-4502-4320-93fd-2fea71bf4f55",
+              "id": "0fd2d15c-0525-4fa8-80ee-2e2c6bd6aa16",
               "name": "Không được xóa chính mình (CANNOT_DELETE_SELF)",
               "originalRequest": {
                 "url": {
@@ -1101,7 +1101,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "7d99ca58-6be0-4980-a873-16dce1db1df5",
+              "id": "c660cf96-aedf-4bed-9ab3-ed30ba1f44de",
               "name": "Không tìm thấy user (USER_NOT_FOUND)",
               "originalRequest": {
                 "url": {
@@ -1157,7 +1157,7 @@
           }
         },
         {
-          "id": "7ab8209a-489b-4a9b-a5d4-13167cb6810c",
+          "id": "8085f416-40d0-40fd-990b-24cd93ee0d4f",
           "name": "Khóa hoặc mở khóa tài khoản người dùng",
           "request": {
             "name": "Khóa hoặc mở khóa tài khoản người dùng",
@@ -1206,7 +1206,7 @@
           },
           "response": [
             {
-              "id": "942c8fa5-e05d-40ce-95bf-4d33287e5fc4",
+              "id": "4d1cfa75-4779-4d5c-b767-68641f02e233",
               "name": "Thay đổi trạng thái khóa thành công",
               "originalRequest": {
                 "url": {
@@ -1261,7 +1261,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "f8c20df0-d8e6-45c2-8975-fc4be59f1341",
+              "id": "a4ea2949-8d80-4993-9db3-1273ec96de7a",
               "name": "Không được khóa chính mình (CANNOT_LOCK_SELF)",
               "originalRequest": {
                 "url": {
@@ -1318,7 +1318,7 @@
           }
         },
         {
-          "id": "6450fbdf-9b47-41d2-b0f6-e6b6aac28e65",
+          "id": "cca73f30-8751-4239-9545-0f9b57c1d245",
           "name": "Thay đổi vai trò (role) của người dùng",
           "request": {
             "name": "Thay đổi vai trò (role) của người dùng",
@@ -1380,7 +1380,7 @@
           },
           "response": [
             {
-              "id": "de7e22b1-ad6d-4677-9abf-68104a69cae4",
+              "id": "74b53fcf-539a-4362-9c4d-e3f6546c6d47",
               "name": "Đổi role thành công",
               "originalRequest": {
                 "url": {
@@ -1443,7 +1443,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "459d94b9-16fa-4649-816c-2a3e2fc582a0",
+              "id": "39c95170-e4a1-4e5d-b647-c536c33c37b5",
               "name": "Role không hợp lệ hoặc đang tự đổi role (INVALID_ROLE / CANNOT_CHANGE_OWN_ROLE)",
               "originalRequest": {
                 "url": {
@@ -1508,7 +1508,7 @@
           }
         },
         {
-          "id": "5c89237f-6864-4ea6-98d1-f5a5a6181ec2",
+          "id": "9eabda21-b7a8-437f-9eb1-e1e0dd4edf27",
           "name": "Lấy nhật ký hệ thống (Audit Logs)",
           "request": {
             "name": "Lấy nhật ký hệ thống (Audit Logs)",
@@ -1566,7 +1566,7 @@
           },
           "response": [
             {
-              "id": "9741e9b4-e14d-4b4c-bb55-dee86c120214",
+              "id": "f537bff5-f37a-4cca-9309-9f46ebdbb9bb",
               "name": "Danh sách audit logs thành công",
               "originalRequest": {
                 "url": {
@@ -1624,7 +1624,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "319b9d6e-ff52-417c-aca5-1fe765d14ca1",
+              "id": "82aec674-4cf3-4c02-b8bb-6a55624b7477",
               "name": "Chưa đăng nhập hoặc token hết hạn",
               "originalRequest": {
                 "url": {
@@ -1678,7 +1678,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "f71c62f4-34ce-4534-98ab-6e20097fedab",
+              "id": "34ce24a8-f951-4108-8b2b-1016c9c36f92",
               "name": "Không có quyền admin",
               "originalRequest": {
                 "url": {
@@ -1741,7 +1741,7 @@
       "event": []
     },
     {
-      "id": "194631ed-eba8-4cb5-89db-8ae3829343fe",
+      "id": "79bd0a5b-097d-4f7c-ba5c-2db5ce9e60b9",
       "name": "Analytics",
       "description": {
         "content": "Báo cáo và thống kê tài chính cá nhân.\nCung cấp dữ liệu tổng quan (dashboard) và báo cáo chi tiết\ntheo tháng/năm để người dùng theo dõi tình hình tài chính.\n",
@@ -1749,7 +1749,7 @@
       },
       "item": [
         {
-          "id": "4743da20-3282-47a9-89a6-88f59f6704c7",
+          "id": "67988851-39cb-4f8e-992d-4934fa400b99",
           "name": "Lấy số liệu tổng quan tài chính cá nhân",
           "request": {
             "name": "Lấy số liệu tổng quan tài chính cá nhân",
@@ -1788,7 +1788,7 @@
           },
           "response": [
             {
-              "id": "efb9b6f4-eaec-48ff-a605-a244709f2a47",
+              "id": "4f87a389-4138-438f-b1cc-bdcf1a129ded",
               "name": "Thống kê dashboard thành công",
               "originalRequest": {
                 "url": {
@@ -1839,7 +1839,7 @@
           }
         },
         {
-          "id": "bab93fd9-5809-485d-84f1-2c7beb965c18",
+          "id": "01ea7839-6394-4fd3-bb65-7d5ec1869127",
           "name": "Lấy dữ liệu báo cáo tài chính theo tháng/năm",
           "request": {
             "name": "Lấy dữ liệu báo cáo tài chính theo tháng/năm",
@@ -1891,7 +1891,7 @@
           },
           "response": [
             {
-              "id": "2a00d0fd-d3ab-4212-aa14-39129abc72c5",
+              "id": "c59fe938-021d-4325-8237-b24cf441bc78",
               "name": "Dữ liệu báo cáo thành công",
               "originalRequest": {
                 "url": {
@@ -1954,7 +1954,7 @@
       "event": []
     },
     {
-      "id": "c7822fee-23be-429b-83c7-ab8d75809a16",
+      "id": "a7a59dc3-b14f-4fec-84d9-9262a40c9945",
       "name": "Auth",
       "description": {
         "content": "Xác thực người dùng và quản lý phiên đăng nhập.\nNhóm API này bao gồm đăng ký, đăng nhập, làm mới token, đăng xuất\nvà các chức năng khôi phục mật khẩu. Hầu hết các endpoint **không yêu cầu token**\n",
@@ -1962,7 +1962,7 @@
       },
       "item": [
         {
-          "id": "bec06a80-f126-40d2-9054-c281685fff48",
+          "id": "c65dbe51-421f-4215-9629-820c7aa2a406",
           "name": "Đăng ký tài khoản mới",
           "request": {
             "name": "Đăng ký tài khoản mới",
@@ -2006,7 +2006,7 @@
           },
           "response": [
             {
-              "id": "066b3883-515c-4102-b05d-3065e36469d7",
+              "id": "85708942-a724-45a3-9e26-bdca1dc88ec9",
               "name": "Đăng ký thành công",
               "originalRequest": {
                 "url": {
@@ -2059,7 +2059,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "70947487-4164-4e8e-bb67-c744d317a00e",
+              "id": "9514abbc-e291-4291-8acb-e0df76318418",
               "name": "Email đã tồn tại trên hệ thống (EMAIL_EXISTS)",
               "originalRequest": {
                 "url": {
@@ -2108,7 +2108,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "0dd6874d-c4c1-420d-b301-e7d745c05dbb",
+              "id": "d0f3f8c8-8050-4077-ae60-1cdc2761743c",
               "name": "Dữ liệu gửi lên không hợp lệ (thiếu field, sai format)",
               "originalRequest": {
                 "url": {
@@ -2163,7 +2163,7 @@
           }
         },
         {
-          "id": "a86ea1dc-53ff-445b-b04d-9a499fb72fb7",
+          "id": "8045b121-b8ba-4ffb-a824-b4b69bcd06b3",
           "name": "Đăng nhập và nhận JWT access token",
           "request": {
             "name": "Đăng nhập và nhận JWT access token",
@@ -2207,7 +2207,7 @@
           },
           "response": [
             {
-              "id": "a1d1cefb-efb8-4a98-929d-b4a368bace84",
+              "id": "b140ec37-0fee-42be-be90-3d96253081bd",
               "name": "Đăng nhập thành công, trả về token và thông tin user",
               "originalRequest": {
                 "url": {
@@ -2260,7 +2260,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "235ee596-7d12-4b4d-918c-a7b977833f90",
+              "id": "4a0f9794-41b7-4c0b-8bdf-6348e8861e49",
               "name": "Email hoặc mật khẩu không đúng (INVALID_CREDENTIALS)",
               "originalRequest": {
                 "url": {
@@ -2309,7 +2309,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "2b83a7bf-b327-4b80-b075-1e3c2b38fbae",
+              "id": "e2a7b308-92d5-41fb-86b1-8dad78bd5b68",
               "name": "Tài khoản đã bị khóa bởi admin (ACCOUNT_LOCKED)",
               "originalRequest": {
                 "url": {
@@ -2364,7 +2364,7 @@
           }
         },
         {
-          "id": "b43be362-f4c9-44ea-93ab-d19d386316ef",
+          "id": "9ea15e7a-4efe-4fd2-afb9-e47b650e4cd9",
           "name": "Làm mới access token từ refresh token cookie",
           "request": {
             "name": "Làm mới access token từ refresh token cookie",
@@ -2395,7 +2395,7 @@
           },
           "response": [
             {
-              "id": "64c2e9a8-e7b1-4cbb-891d-ac192d5a65be",
+              "id": "c3d7861b-b165-4472-9e48-268066d8e4a1",
               "name": "Làm mới token thành công",
               "originalRequest": {
                 "url": {
@@ -2440,7 +2440,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "57952f0c-d50b-4768-b7e1-46da3a81d92a",
+              "id": "a895b34f-0308-4412-8ad9-79b74105db78",
               "name": "Không có refresh token trong cookie (REFRESH_TOKEN_MISSING)",
               "originalRequest": {
                 "url": {
@@ -2481,7 +2481,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "996b3fd6-c305-473b-b341-a5c79cf4ab9f",
+              "id": "61be9aa3-9e95-4f54-917d-1b4620a0c1f5",
               "name": "Refresh token hết hạn hoặc không hợp lệ (REFRESH_TOKEN_EXPIRED)",
               "originalRequest": {
                 "url": {
@@ -2528,7 +2528,7 @@
           }
         },
         {
-          "id": "dfba615c-9105-4755-87a8-140059a46235",
+          "id": "e3b844ca-833a-48d6-a280-3ab3c8937689",
           "name": "Đăng xuất và xóa refresh token",
           "request": {
             "name": "Đăng xuất và xóa refresh token",
@@ -2559,7 +2559,7 @@
           },
           "response": [
             {
-              "id": "b5f57075-f1d2-4872-9259-afd9bfe85588",
+              "id": "2892daeb-0462-4a79-97d8-1f634410cdc2",
               "name": "Đăng xuất thành công",
               "originalRequest": {
                 "url": {
@@ -2610,7 +2610,7 @@
           }
         },
         {
-          "id": "5f870edc-92cb-4aa3-a338-5d3ba3c4fe5e",
+          "id": "5b91d181-f9c3-45eb-9e52-a5e985770e54",
           "name": "Gửi email khôi phục mật khẩu",
           "request": {
             "name": "Gửi email khôi phục mật khẩu",
@@ -2654,7 +2654,7 @@
           },
           "response": [
             {
-              "id": "e669544f-c9df-4683-be9e-39a6b7ded692",
+              "id": "678d9c5a-dbcc-4714-95fc-e363dcf90bb9",
               "name": "Email khôi phục đã được gửi",
               "originalRequest": {
                 "url": {
@@ -2707,7 +2707,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "e524312f-8430-4f07-89eb-663e29a34481",
+              "id": "d8bd4867-3bd8-4e2a-bbda-3176050363fc",
               "name": "Email không tồn tại trên hệ thống (EMAIL_NOT_FOUND)",
               "originalRequest": {
                 "url": {
@@ -2762,7 +2762,7 @@
           }
         },
         {
-          "id": "948a9660-5052-4573-8254-eeb1055877e1",
+          "id": "1dc9df07-c05f-4df1-acad-7d90e82ed701",
           "name": "Đặt lại mật khẩu bằng token khôi phục",
           "request": {
             "name": "Đặt lại mật khẩu bằng token khôi phục",
@@ -2815,7 +2815,7 @@
           },
           "response": [
             {
-              "id": "0e2e86fa-18cc-401c-9a99-5722824ff60b",
+              "id": "ea9ad4ba-f131-447e-ab65-058b4b3f1e3f",
               "name": "Mật khẩu đã được đặt lại thành công",
               "originalRequest": {
                 "url": {
@@ -2877,7 +2877,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "1a3ecf14-ccee-4d6c-b59f-a02540a63218",
+              "id": "321ce83f-30a0-4771-9b9e-de51596837a5",
               "name": "Token không hợp lệ hoặc đã hết hạn (INVALID_RESET_TOKEN)",
               "originalRequest": {
                 "url": {
@@ -2944,7 +2944,7 @@
       "event": []
     },
     {
-      "id": "2b8383f0-97d1-4f13-80b6-bb99dfde0b4c",
+      "id": "4f9cbaba-d7d2-4dba-8f78-2a025c54ded2",
       "name": "Budgets",
       "description": {
         "content": "Quản lý ngân sách thu/chi theo danh mục và khoảng thời gian.\nBudget giúp người dùng đặt giới hạn chi tiêu cho từng danh mục\n(VD: Ăn uống tối đa 3 triệu/tháng). Hỗ trợ cả ngân sách cá nhân và gia đình.\n",
@@ -2952,7 +2952,7 @@
       },
       "item": [
         {
-          "id": "4f569287-3dd9-446d-9cbf-b1aee1142371",
+          "id": "192221ea-b8e7-4881-ae85-52c923b74917",
           "name": "Lấy danh sách ngân sách mà user có quyền xem",
           "request": {
             "name": "Lấy danh sách ngân sách mà user có quyền xem",
@@ -2990,7 +2990,7 @@
           },
           "response": [
             {
-              "id": "2cd174cc-2a94-43e7-aec4-6a211ba4c554",
+              "id": "efe6bcce-72b0-4f8c-b16e-9df60c2ac340",
               "name": "Danh sách ngân sách thành công",
               "originalRequest": {
                 "url": {
@@ -3040,7 +3040,7 @@
           }
         },
         {
-          "id": "11d17e42-a26f-422e-b608-d0c2dd2cb131",
+          "id": "9dbf4b68-c0f2-486b-8f3c-79071ab524ad",
           "name": "Tạo ngân sách mới",
           "request": {
             "name": "Tạo ngân sách mới",
@@ -3091,7 +3091,7 @@
           },
           "response": [
             {
-              "id": "f8e4aeb8-5870-40de-94aa-888c4524649c",
+              "id": "10f0196d-5332-47f1-9ed7-82767e9ece21",
               "name": "Tạo ngân sách thành công",
               "originalRequest": {
                 "url": {
@@ -3143,7 +3143,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "5505b77f-43ce-4f0d-b7d1-c595bccbe542",
+              "id": "6a51e0ec-2392-489f-828b-ac9a88a3b4ad",
               "name": "User không thuộc gia đình được chỉ định (NOT_FAMILY_MEMBER)",
               "originalRequest": {
                 "url": {
@@ -3191,7 +3191,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "244a3598-4ff7-4c55-9d12-9d016d98b439",
+              "id": "86e1d0c3-5515-4d44-a1dd-69cbe4b9e8d1",
               "name": "Dữ liệu không hợp lệ",
               "originalRequest": {
                 "url": {
@@ -3245,7 +3245,7 @@
           }
         },
         {
-          "id": "6364be7f-3d93-43c2-b2af-1eef8ce823cc",
+          "id": "b67707aa-c2c8-446b-98a2-df9648360f25",
           "name": "Cập nhật ngân sách",
           "request": {
             "name": "Cập nhật ngân sách",
@@ -3305,7 +3305,7 @@
           },
           "response": [
             {
-              "id": "40a0dcee-b3e3-43a8-b3cc-5ea70b46ce11",
+              "id": "6c9d5c77-18a1-4fbc-b520-336f3c85eae5",
               "name": "Cập nhật ngân sách thành công",
               "originalRequest": {
                 "url": {
@@ -3366,7 +3366,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "4ec56fba-6cb8-4a95-b025-b13237e7acf3",
+              "id": "e8a3abc0-297b-4616-81f8-b72035461d1e",
               "name": "Không tìm thấy ngân sách (BUDGET_NOT_FOUND)",
               "originalRequest": {
                 "url": {
@@ -3429,7 +3429,7 @@
           }
         },
         {
-          "id": "07019cd0-ae6f-44fd-a059-f1421c3687b9",
+          "id": "50c1b248-c608-40ff-a2e4-d0f005fb9dc0",
           "name": "Xóa ngân sách",
           "request": {
             "name": "Xóa ngân sách",
@@ -3476,7 +3476,7 @@
           },
           "response": [
             {
-              "id": "dd95ab38-46ff-4d8b-b59b-d4e6349ab444",
+              "id": "ddac0ffb-abef-4a3e-aae0-41d51898edd2",
               "name": "Xóa ngân sách thành công",
               "originalRequest": {
                 "url": {
@@ -3529,7 +3529,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "b74644c8-f433-456d-806c-58aea196fd2b",
+              "id": "3bf0ce42-847d-42f8-b6f9-739ff86256d3",
               "name": "Không tìm thấy ngân sách (BUDGET_NOT_FOUND)",
               "originalRequest": {
                 "url": {
@@ -3587,7 +3587,7 @@
       "event": []
     },
     {
-      "id": "5b3d3146-1f6d-4a88-8cd1-70479f8aae16",
+      "id": "36240475-f8d6-43a1-90a9-614ccd0765b9",
       "name": "Categories",
       "description": {
         "content": "Quản lý danh mục thu/chi.\nDanh mục dùng để phân loại giao dịch (VD: Ăn uống, Di chuyển, Lương...).\nHỗ trợ danh mục cha-con (parent_id) để tổ chức phân cấp.\n",
@@ -3595,7 +3595,7 @@
       },
       "item": [
         {
-          "id": "ad0513bb-01d1-4535-a7ab-6a6cad4b18cc",
+          "id": "251df94b-32cc-4190-92d6-968c38bcd312",
           "name": "Lấy danh sách tất cả danh mục",
           "request": {
             "name": "Lấy danh sách tất cả danh mục",
@@ -3633,7 +3633,7 @@
           },
           "response": [
             {
-              "id": "b518925f-bfa4-4526-b483-59e253214d75",
+              "id": "ec9f85a8-1874-4474-b71a-6020e862edc7",
               "name": "Danh sách danh mục thành công",
               "originalRequest": {
                 "url": {
@@ -3683,7 +3683,7 @@
           }
         },
         {
-          "id": "224fdf82-0433-47fc-8365-7ba5c5e3d31d",
+          "id": "597eef7f-d346-4a68-9066-b6f65706e266",
           "name": "Tạo danh mục thu/chi mới",
           "request": {
             "name": "Tạo danh mục thu/chi mới",
@@ -3734,7 +3734,7 @@
           },
           "response": [
             {
-              "id": "4177dcee-d448-4e5b-8c53-7214f0be6aa3",
+              "id": "0161ba78-3357-4da6-9108-a91e01e3884d",
               "name": "Tạo danh mục thành công",
               "originalRequest": {
                 "url": {
@@ -3786,7 +3786,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "edb2940a-630f-4cf1-90a2-5be8e0a161df",
+              "id": "0725f110-250b-431f-9fa9-9493a74ce5e1",
               "name": "Dữ liệu không hợp lệ (thiếu name hoặc type)",
               "originalRequest": {
                 "url": {
@@ -3840,7 +3840,7 @@
           }
         },
         {
-          "id": "b565aaba-1fbb-4c37-b08f-bb07403d2158",
+          "id": "c041c159-34d7-4d8a-afa5-195435d06134",
           "name": "Cập nhật thông tin danh mục",
           "request": {
             "name": "Cập nhật thông tin danh mục",
@@ -3900,7 +3900,7 @@
           },
           "response": [
             {
-              "id": "14f52cbc-5fdb-40d5-9747-2fb3d8160df4",
+              "id": "1ae8aa5f-b42e-495c-b3be-0886f0c89e14",
               "name": "Cập nhật danh mục thành công",
               "originalRequest": {
                 "url": {
@@ -3961,7 +3961,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "05df8e7c-05b0-4a4b-b273-bfd3f1f5dc78",
+              "id": "aaf287b9-af01-4701-ac57-3c2a301606f9",
               "name": "Không tìm thấy danh mục (CATEGORY_NOT_FOUND)",
               "originalRequest": {
                 "url": {
@@ -4024,7 +4024,7 @@
           }
         },
         {
-          "id": "d55fab30-17b4-42bd-b88e-6bee22c52dfc",
+          "id": "ec11d987-6a58-484f-8b30-bc67161ddc63",
           "name": "Xóa danh mục",
           "request": {
             "name": "Xóa danh mục",
@@ -4071,7 +4071,7 @@
           },
           "response": [
             {
-              "id": "aebfd798-bcac-4af2-8040-3bc7fd6083b2",
+              "id": "79332469-d1d3-4a89-aca8-4fd26df673a1",
               "name": "Xóa danh mục thành công",
               "originalRequest": {
                 "url": {
@@ -4124,7 +4124,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "696ed5eb-ed63-4f9e-9e59-960bd72df335",
+              "id": "6fba201a-aedf-430c-9ee8-8b9e1752987f",
               "name": "Không tìm thấy danh mục (CATEGORY_NOT_FOUND)",
               "originalRequest": {
                 "url": {
@@ -4182,7 +4182,7 @@
       "event": []
     },
     {
-      "id": "fbca474f-b3d2-4222-9e34-203df8b82ea3",
+      "id": "65b303c2-9d17-4f61-993e-ec53df4743de",
       "name": "Debts",
       "description": {
         "content": "Quản lý chia sẻ chi phí và nợ trong nhóm gia đình.\nKhi một thành viên gia đình tạo giao dịch chi tiêu chung,\nhệ thống tự động chia đều cho các thành viên và tạo khoản nợ.\nMỗi thành viên có thể tất toán khoản nợ của chính mình.\n",
@@ -4190,7 +4190,7 @@
       },
       "item": [
         {
-          "id": "4b1c71c0-344b-4146-b0c4-de509e5e64dc",
+          "id": "c1a8dec7-3d03-4535-88a9-fc2ef2f3471b",
           "name": "Tất toán nợ qua chuyển khoản nội bộ",
           "request": {
             "name": "Tất toán nợ qua chuyển khoản nội bộ",
@@ -4242,7 +4242,7 @@
           },
           "response": [
             {
-              "id": "839609fb-7ecd-4bf9-8636-513213c6346a",
+              "id": "44ceae20-1ea6-49cd-90c9-255992d8cad5",
               "name": "Tất toán nợ thành công",
               "originalRequest": {
                 "url": {
@@ -4295,7 +4295,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "0e815926-0e3f-4b41-8f19-f046adf2ee51",
+              "id": "c9f86843-84f9-4456-88e5-0d377c25680c",
               "name": "Số dư không đủ hoặc dữ liệu không hợp lệ (INSUFFICIENT_BALANCE)",
               "originalRequest": {
                 "url": {
@@ -4350,7 +4350,7 @@
           }
         },
         {
-          "id": "54ff104a-a4e1-4cbe-9f14-1470a313461b",
+          "id": "964b8f89-110b-4a1e-ac96-228c4b484415",
           "name": "Gợi ý tối ưu thanh toán nợ trong gia đình",
           "request": {
             "name": "Gợi ý tối ưu thanh toán nợ trong gia đình",
@@ -4398,7 +4398,7 @@
           },
           "response": [
             {
-              "id": "a0242590-af60-40ee-9bf2-e8303c16a5f0",
+              "id": "57e998db-882b-4247-934f-433bc26f1fba",
               "name": "Danh sách gợi ý thanh toán tối ưu",
               "originalRequest": {
                 "url": {
@@ -4461,7 +4461,7 @@
       "event": []
     },
     {
-      "id": "f4b95bf9-0f4e-484a-a1df-d7790dc73642",
+      "id": "8a35a84b-46fd-41b0-abe2-3e3cf9bb1030",
       "name": "Families",
       "description": {
         "content": "Quản lý nhóm gia đình và thành viên.\nGia đình cho phép nhiều người dùng chia sẻ ví chung, theo dõi chi tiêu chung,\nvà phân chia nợ trong nhóm.\n",
@@ -4469,7 +4469,7 @@
       },
       "item": [
         {
-          "id": "f2c0d142-fb46-419e-a434-749e38fa6700",
+          "id": "fbda249e-306a-4e21-a06e-2a14027b3f52",
           "name": "Lấy danh sách gia đình mà tôi tham gia",
           "request": {
             "name": "Lấy danh sách gia đình mà tôi tham gia",
@@ -4507,7 +4507,7 @@
           },
           "response": [
             {
-              "id": "7fe03c14-c1df-4a2c-876e-a36b899d4a42",
+              "id": "541f4a27-441e-44b1-9bc6-d3ab6acfb137",
               "name": "Danh sách gia đình thành công",
               "originalRequest": {
                 "url": {
@@ -4557,7 +4557,7 @@
           }
         },
         {
-          "id": "f416fa6d-3b4b-40e7-960e-4d603d446872",
+          "id": "5e947bad-f392-4386-bef9-c663da568cc6",
           "name": "Tạo nhóm gia đình mới",
           "request": {
             "name": "Tạo nhóm gia đình mới",
@@ -4608,7 +4608,7 @@
           },
           "response": [
             {
-              "id": "9af7690d-4dad-478d-8d8d-3c38ac7abddf",
+              "id": "5bbfd55c-bf7b-425d-af6c-774c8e0e943c",
               "name": "Tạo gia đình thành công",
               "originalRequest": {
                 "url": {
@@ -4660,7 +4660,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "41e923bf-5e54-4b91-9f05-5f2170068efd",
+              "id": "efdcd953-1c35-4e60-9391-5f8125e41207",
               "name": "Dữ liệu không hợp lệ (thiếu tên)",
               "originalRequest": {
                 "url": {
@@ -4714,7 +4714,7 @@
           }
         },
         {
-          "id": "aeef60b3-b69b-46ae-b2c0-8654262d2bcc",
+          "id": "71b7e150-e87b-430f-8641-476d84f5d231",
           "name": "Xem chi tiết gia đình và danh sách thành viên",
           "request": {
             "name": "Xem chi tiết gia đình và danh sách thành viên",
@@ -4761,7 +4761,7 @@
           },
           "response": [
             {
-              "id": "89a2e1e8-21f8-434a-a38d-6f3acfd3468a",
+              "id": "aee244b5-5eba-45e8-867b-61fc6f17ff57",
               "name": "Chi tiết gia đình thành công",
               "originalRequest": {
                 "url": {
@@ -4814,7 +4814,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "fbe568ef-9550-492a-b179-fd6b93a478b8",
+              "id": "da442c17-8317-4c6d-8cf0-27833e089703",
               "name": "Gia đình không tồn tại (FAMILY_NOT_FOUND)",
               "originalRequest": {
                 "url": {
@@ -4869,7 +4869,7 @@
           }
         },
         {
-          "id": "51e07bc7-1f9a-43de-81f8-ae012813a1d7",
+          "id": "1f43d34c-e627-49da-a64c-a30652a15230",
           "name": "Xóa gia đình vĩnh viễn",
           "request": {
             "name": "Xóa gia đình vĩnh viễn",
@@ -4916,7 +4916,7 @@
           },
           "response": [
             {
-              "id": "289dac46-6543-4d9c-92c3-534291b16190",
+              "id": "9c184dc8-31d9-4c6f-8067-79b15491cded",
               "name": "Xóa gia đình thành công",
               "originalRequest": {
                 "url": {
@@ -4969,7 +4969,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "ab59a34b-f870-437c-850f-3151036f32e3",
+              "id": "1237b460-a5e7-4fe2-8793-aa10d0b267f2",
               "name": "Chỉ người tạo mới có quyền xóa (NOT_FAMILY_OWNER)",
               "originalRequest": {
                 "url": {
@@ -5018,7 +5018,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "decb9f41-00bc-4363-b42e-e718cda16ddf",
+              "id": "90f1ff48-1106-43d5-9705-6bedf5952af5",
               "name": "Gia đình không tồn tại (FAMILY_NOT_FOUND)",
               "originalRequest": {
                 "url": {
@@ -5073,7 +5073,7 @@
           }
         },
         {
-          "id": "24d59666-78ea-48a9-a219-8eefa4dd9728",
+          "id": "d554ebc3-1267-4490-9e9d-d312fde137f7",
           "name": "Thêm thành viên vào gia đình bằng email",
           "request": {
             "name": "Thêm thành viên vào gia đình bằng email",
@@ -5134,7 +5134,7 @@
           },
           "response": [
             {
-              "id": "d344be32-e8f2-4718-8764-aebafe8c5453",
+              "id": "f2920fea-63a9-4a1f-95e0-331862f71553",
               "name": "Thêm thành viên thành công",
               "originalRequest": {
                 "url": {
@@ -5196,7 +5196,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "161523ab-bb8c-463f-93c4-a02b483892f6",
+              "id": "e1668fab-b255-485f-bdd3-ce25d3673a17",
               "name": "Gia đình hoặc user không tồn tại",
               "originalRequest": {
                 "url": {
@@ -5254,7 +5254,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "e21457ef-2a10-4d94-a3cc-5a019c7dd4e1",
+              "id": "4db71c06-91b3-41e4-910a-ddba588e776a",
               "name": "User đã là thành viên của gia đình (MEMBER_EXISTS)",
               "originalRequest": {
                 "url": {
@@ -5318,7 +5318,7 @@
           }
         },
         {
-          "id": "cf3dfad2-2a8d-4901-9b1f-08e44ada906b",
+          "id": "d73a82cc-53cd-4396-bb53-3c5a970e0efe",
           "name": "Xóa thành viên khỏi gia đình",
           "request": {
             "name": "Xóa thành viên khỏi gia đình",
@@ -5374,7 +5374,7 @@
           },
           "response": [
             {
-              "id": "e3a87ea6-96c4-43eb-b368-652173591d5e",
+              "id": "58647bd2-2442-480a-9c9d-292e817ff283",
               "name": "Xóa thành viên thành công",
               "originalRequest": {
                 "url": {
@@ -5436,7 +5436,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "4263a81e-7a1e-43de-9335-c022b98e9049",
+              "id": "740e92ca-295d-45b4-8d9a-2138b915f614",
               "name": "Chỉ admin gia đình mới có quyền xóa",
               "originalRequest": {
                 "url": {
@@ -5494,7 +5494,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "0570dcd1-5730-4064-a562-0a9b9830ed35",
+              "id": "6b6edfb6-1986-46a4-98f0-2112deeaab3c",
               "name": "Thành viên không tồn tại trong gia đình",
               "originalRequest": {
                 "url": {
@@ -5561,7 +5561,7 @@
       "event": []
     },
     {
-      "id": "d38b7384-4581-4e2d-b04b-93d89bcfd2f7",
+      "id": "5e9a38a1-e121-4209-84eb-928d64e6638f",
       "name": "Forecast",
       "description": {
         "content": "Dự báo xu hướng dòng tiền dựa trên lịch sử giao dịch của người dùng.",
@@ -5569,7 +5569,7 @@
       },
       "item": [
         {
-          "id": "e12459e1-d202-4ca2-9f2b-00e73305476c",
+          "id": "53b5f401-116e-430b-a056-156efddd15b2",
           "name": "Lấy dữ liệu dự báo dòng tiền tiêu chuẩn",
           "request": {
             "name": "Lấy dữ liệu dự báo dòng tiền tiêu chuẩn",
@@ -5608,7 +5608,7 @@
           },
           "response": [
             {
-              "id": "ad57d086-aea0-4a4c-9671-afed1be1cc44",
+              "id": "e76233e8-9d1e-4747-9ec8-4de58fa8e788",
               "name": "Lấy dữ liệu dự báo thành công",
               "originalRequest": {
                 "url": {
@@ -5659,7 +5659,7 @@
           }
         },
         {
-          "id": "965f9469-3c34-4d8f-8fb4-24203fec7d42",
+          "id": "1f5de1fb-60d3-4d4e-bef0-5a04a0fd8126",
           "name": "Lấy dữ liệu dự báo AI/ML",
           "request": {
             "name": "Lấy dữ liệu dự báo AI/ML",
@@ -5705,7 +5705,7 @@
           },
           "response": [
             {
-              "id": "479a31f9-932b-4398-adb6-15e19b5d9472",
+              "id": "bd37c376-a4dd-44a0-967f-83e795e68208",
               "name": "Lấy dữ liệu dự báo ML thành công",
               "originalRequest": {
                 "url": {
@@ -5764,7 +5764,7 @@
       "event": []
     },
     {
-      "id": "af8e4b88-4ad3-48db-9851-8d4fa563bc2a",
+      "id": "cdd5bdd3-c013-401a-ad8e-79b1d8e6e417",
       "name": "Goals",
       "description": {
         "content": "Quản lý mục tiêu tài chính (tiết kiệm).\nMục tiêu giúp người dùng theo dõi tiến độ tiết kiệm cho một mục đích cụ thể\n(VD: mua laptop, du lịch, quỹ khẩn cấp...).\nNgười dùng có thể nạp tiền từ ví cá nhân vào mục tiêu.\n",
@@ -5772,7 +5772,7 @@
       },
       "item": [
         {
-          "id": "a9091540-c965-42dd-9940-697df3dc7852",
+          "id": "1fa8b631-8bed-4371-b072-dce540177db7",
           "name": "Lấy danh sách mục tiêu tài chính",
           "request": {
             "name": "Lấy danh sách mục tiêu tài chính",
@@ -5810,7 +5810,7 @@
           },
           "response": [
             {
-              "id": "56c9462e-6ffd-4d1e-a0f5-91d5fa938e10",
+              "id": "b03d4034-b2c2-4aad-b26d-102bd665bf22",
               "name": "Danh sách mục tiêu thành công",
               "originalRequest": {
                 "url": {
@@ -5860,7 +5860,7 @@
           }
         },
         {
-          "id": "141c0f34-dff8-4881-8a0a-ee03cced469d",
+          "id": "8510db87-6ed6-466c-bb68-b7ae5eefc782",
           "name": "Tạo mục tiêu tiết kiệm mới",
           "request": {
             "name": "Tạo mục tiêu tiết kiệm mới",
@@ -5911,7 +5911,7 @@
           },
           "response": [
             {
-              "id": "d7df8a6e-661c-454b-a22b-d12aa94869e6",
+              "id": "2eec890a-ab68-40e1-bd82-b973a1ef5149",
               "name": "Tạo mục tiêu thành công",
               "originalRequest": {
                 "url": {
@@ -5963,7 +5963,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "0afc54ed-fdb8-47aa-80d7-cad36f86a3ae",
+              "id": "2a60865f-9d1f-4ee9-b9cb-428340c3f070",
               "name": "Dữ liệu không hợp lệ (thiếu name hoặc targetAmount <= 0)",
               "originalRequest": {
                 "url": {
@@ -6017,7 +6017,7 @@
           }
         },
         {
-          "id": "33735d11-8f5f-4446-9e0f-df13cd2df250",
+          "id": "bc318391-dc68-45a3-a668-adcd9f7f319b",
           "name": "Cập nhật thông tin mục tiêu",
           "request": {
             "name": "Cập nhật thông tin mục tiêu",
@@ -6077,7 +6077,7 @@
           },
           "response": [
             {
-              "id": "1b242691-04e0-47dc-ac7a-e33373158ad0",
+              "id": "850c87b4-a065-492a-bbed-09eafe0cd66d",
               "name": "Cập nhật mục tiêu thành công",
               "originalRequest": {
                 "url": {
@@ -6138,7 +6138,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "1a811921-b69f-4c42-a5cf-169798c8c464",
+              "id": "75b53027-9554-4cc6-be69-ab54cfdc6fe7",
               "name": "Không tìm thấy mục tiêu (GOAL_NOT_FOUND)",
               "originalRequest": {
                 "url": {
@@ -6201,7 +6201,7 @@
           }
         },
         {
-          "id": "c29f02e7-0015-4822-af47-8ff83391a80d",
+          "id": "1cecc5d3-0590-4a4e-94cd-c61f95614563",
           "name": "Xóa mục tiêu tiết kiệm",
           "request": {
             "name": "Xóa mục tiêu tiết kiệm",
@@ -6248,7 +6248,7 @@
           },
           "response": [
             {
-              "id": "98b31950-88db-4b17-8d93-e794f40d70d2",
+              "id": "59a422ee-e94a-418d-a682-b4417e87b39e",
               "name": "Xóa mục tiêu thành công",
               "originalRequest": {
                 "url": {
@@ -6301,7 +6301,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "2f0881f4-5f80-43f8-a999-c0262c9d736a",
+              "id": "c58f7c33-725d-401c-8a4c-8e32ae8ad2f8",
               "name": "Không tìm thấy mục tiêu (GOAL_NOT_FOUND)",
               "originalRequest": {
                 "url": {
@@ -6356,7 +6356,7 @@
           }
         },
         {
-          "id": "6657d2cf-514a-46c3-bcfa-41ea58f4b9ed",
+          "id": "cac43bf3-bb1f-438a-a6fa-4dc6cb173527",
           "name": "Nạp tiền vào mục tiêu từ ví cá nhân",
           "request": {
             "name": "Nạp tiền vào mục tiêu từ ví cá nhân",
@@ -6417,7 +6417,7 @@
           },
           "response": [
             {
-              "id": "23cc0177-5f18-4627-a2ff-ec52c081f34c",
+              "id": "de8691e6-a3f7-4198-90c9-2223f5857bd1",
               "name": "Nạp tiền vào mục tiêu thành công",
               "originalRequest": {
                 "url": {
@@ -6479,7 +6479,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "abd6b0d1-00d2-4a09-86f5-ea76677d229e",
+              "id": "13c7239f-a4f3-4cea-ba00-83400429af13",
               "name": "Ví không phải ví cá nhân hợp lệ (INVALID_WALLET)",
               "originalRequest": {
                 "url": {
@@ -6537,7 +6537,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "c741dae4-bc02-42cb-8d33-55cbef4c624a",
+              "id": "acf8c663-bb33-41e0-817f-f59407e99283",
               "name": "Mục tiêu không tồn tại (GOAL_NOT_FOUND)",
               "originalRequest": {
                 "url": {
@@ -6604,7 +6604,7 @@
       "event": []
     },
     {
-      "id": "6bde029d-db41-4859-a26c-072bfd8c215c",
+      "id": "60133233-cccf-477b-a6ac-7263298219e8",
       "name": "Market",
       "description": {
         "content": "Dữ liệu thị trường và các tiện ích tích hợp cho dashboard của người dùng đã đăng nhập.",
@@ -6612,7 +6612,7 @@
       },
       "item": [
         {
-          "id": "de17164b-c25c-4850-89ee-1d5805c72e8a",
+          "id": "366af1d5-5eab-4478-b433-6b5261e79cf3",
           "name": "Lấy giá vàng SJC mới nhất cho dashboard",
           "request": {
             "name": "Lấy giá vàng SJC mới nhất cho dashboard",
@@ -6645,7 +6645,7 @@
           },
           "response": [
             {
-              "id": "2ef5aed3-5bc7-4d9c-9451-ad03cf126b4d",
+              "id": "93e45015-47bc-4a31-8768-8e491131bba3",
               "name": "Lấy giá vàng thành công",
               "originalRequest": {
                 "url": {
@@ -6686,7 +6686,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "3e59d8af-6dae-4267-bc5b-71b36fc332b9",
+              "id": "c9af4553-2697-402b-8093-c2b695ea04cd",
               "name": "Dịch vụ giá vàng bên ngoài không phản hồi hoặc trả lỗi",
               "originalRequest": {
                 "url": {
@@ -6733,7 +6733,7 @@
           }
         },
         {
-          "id": "1f5c94e7-a327-4322-b3f7-122e20b905c4",
+          "id": "39855148-cd74-4f6e-98e3-1ebc9927418c",
           "name": "Lấy lịch sử giá vàng SJC cho biểu đồ dashboard",
           "request": {
             "name": "Lấy lịch sử giá vàng SJC cho biểu đồ dashboard",
@@ -6774,7 +6774,7 @@
           },
           "response": [
             {
-              "id": "d2c4a1d6-6333-49cf-a5c6-c7c66f073ab5",
+              "id": "b8428925-ce66-4424-8078-3b5dd513d26e",
               "name": "Lấy lịch sử giá vàng thành công",
               "originalRequest": {
                 "url": {
@@ -6821,7 +6821,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "bc3243e7-6b1f-4563-88d8-c130c61aa900",
+              "id": "826d0195-76fa-4f9c-9914-a775b228aafd",
               "name": "Khoảng thời gian lịch sử không hợp lệ",
               "originalRequest": {
                 "url": {
@@ -6868,7 +6868,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "2375e5fc-3bd9-4d94-8fe4-b75514ddffed",
+              "id": "349486c3-ba16-437d-a23f-0ae0bf8942ad",
               "name": "Không thể tải lịch sử giá vàng",
               "originalRequest": {
                 "url": {
@@ -6924,7 +6924,7 @@
       "event": []
     },
     {
-      "id": "4d9c733b-e521-4cac-93eb-d7b2d2f5c408",
+      "id": "229aa6ec-eb46-48d2-af25-8e7a0e44a23e",
       "name": "Notifications",
       "description": {
         "content": "Quản lý thông báo hệ thống.\nHệ thống tự động gửi thông báo khi có sự kiện quan trọng:\nvượt ngân sách, mục tiêu đạt được, khoản chia tiền mới, broadcast từ admin...\n",
@@ -6932,7 +6932,7 @@
       },
       "item": [
         {
-          "id": "22266588-af8e-4707-9a42-2b49f898dca4",
+          "id": "7aa590ab-0f21-471a-8daa-5af3d68a4b7d",
           "name": "Lấy danh sách thông báo của tôi",
           "request": {
             "name": "Lấy danh sách thông báo của tôi",
@@ -6970,7 +6970,7 @@
           },
           "response": [
             {
-              "id": "aec3aab6-0b06-4260-9cf9-55056724407f",
+              "id": "655e57de-000a-4a05-93d4-1d6cfa1a9a62",
               "name": "Danh sách thông báo",
               "originalRequest": {
                 "url": {
@@ -7020,7 +7020,7 @@
           }
         },
         {
-          "id": "1a055489-2aa2-4f27-9538-81134f57402e",
+          "id": "8e964f41-cd4b-40e3-99fb-9bced8d77977",
           "name": "Đánh dấu tất cả thông báo đã đọc",
           "request": {
             "name": "Đánh dấu tất cả thông báo đã đọc",
@@ -7059,7 +7059,7 @@
           },
           "response": [
             {
-              "id": "3d85ad8f-8fdd-42b1-a495-34992d0ab0e7",
+              "id": "8f7a44b3-7d8d-4269-a3ac-7a5b525c9d34",
               "name": "Đánh dấu tất cả đã đọc thành công",
               "originalRequest": {
                 "url": {
@@ -7110,7 +7110,7 @@
           }
         },
         {
-          "id": "d97c176a-8a5e-4def-acf6-bc0c2d9db084",
+          "id": "52cf4621-f0ca-406b-946b-8473e1e162c3",
           "name": "Đánh dấu một thông báo cụ thể đã đọc",
           "request": {
             "name": "Đánh dấu một thông báo cụ thể đã đọc",
@@ -7158,7 +7158,7 @@
           },
           "response": [
             {
-              "id": "cfc4c8bb-296d-4038-8cb2-f748fba6cc3c",
+              "id": "965827eb-9390-4dc2-9a81-a51abbf97adf",
               "name": "Đánh dấu đã đọc thành công",
               "originalRequest": {
                 "url": {
@@ -7212,7 +7212,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "eae3e6cf-c98b-49db-ad5f-08d04e0ceeb6",
+              "id": "89f4d10f-e490-48e5-b379-76d4e5f3d5b5",
               "name": "Không tìm thấy thông báo (NOTIFICATION_NOT_FOUND)",
               "originalRequest": {
                 "url": {
@@ -7268,7 +7268,7 @@
           }
         },
         {
-          "id": "3cfe00ed-af19-44c7-9967-33c31eade57e",
+          "id": "2f0f5e76-9dde-4ffc-90a6-d1dd17574bba",
           "name": "Gửi thông báo broadcast tới tất cả user (chỉ admin)",
           "request": {
             "name": "Gửi thông báo broadcast tới tất cả user (chỉ admin)",
@@ -7320,7 +7320,7 @@
           },
           "response": [
             {
-              "id": "164b3168-276f-4035-9234-dcd9f43378df",
+              "id": "2ccc0940-600b-4fd2-8156-ad697f04861a",
               "name": "Đã gửi broadcast thành công",
               "originalRequest": {
                 "url": {
@@ -7373,7 +7373,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "c706b7e1-a1e4-46c8-9c36-4e7f1ea34f34",
+              "id": "199431e9-715c-457d-a48e-266e22422a82",
               "name": "Chỉ admin mới có quyền gửi broadcast",
               "originalRequest": {
                 "url": {
@@ -7431,7 +7431,7 @@
       "event": []
     },
     {
-      "id": "216074cb-1d26-4748-8eec-406cafe73caa",
+      "id": "aef9565d-620e-4e9c-87d9-e9a44a16e114",
       "name": "Recurring",
       "description": {
         "content": "Quản lý giao dịch định kỳ (tự động lặp lại).\nCho phép người dùng thiết lập mẫu giao dịch tự động tạo theo chu kỳ:\nhàng ngày, hàng tuần, hàng tháng hoặc hàng năm.\nVD: Tiền điện hàng tháng, lương hàng tháng, tiền thuê nhà...\n",
@@ -7439,7 +7439,7 @@
       },
       "item": [
         {
-          "id": "f35e6f80-bd15-4753-ae94-f2479e8f3b73",
+          "id": "cb2bc350-411b-4b75-a4a3-668b2ac71084",
           "name": "Lấy danh sách mẫu giao dịch định kỳ",
           "request": {
             "name": "Lấy danh sách mẫu giao dịch định kỳ",
@@ -7477,7 +7477,7 @@
           },
           "response": [
             {
-              "id": "2019db7f-0663-4006-9f11-8dfc782b6e8b",
+              "id": "02a5b79f-9c58-495b-83b1-8faa091b5c96",
               "name": "Danh sách giao dịch định kỳ thành công",
               "originalRequest": {
                 "url": {
@@ -7527,7 +7527,7 @@
           }
         },
         {
-          "id": "87ccce80-ccf2-4ec8-9964-1e6fe5c4878a",
+          "id": "4c17e503-86d7-4130-b597-c0cbe4be42b2",
           "name": "Tạo mẫu giao dịch định kỳ mới",
           "request": {
             "name": "Tạo mẫu giao dịch định kỳ mới",
@@ -7578,7 +7578,7 @@
           },
           "response": [
             {
-              "id": "62723a8b-7245-4ec1-b5e3-0146e6c49e4c",
+              "id": "92f103e6-71f0-421f-9373-c6184673d2e1",
               "name": "Tạo mẫu định kỳ thành công",
               "originalRequest": {
                 "url": {
@@ -7630,7 +7630,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "548a7d1e-6233-4545-8abf-4489ed5c657c",
+              "id": "b29f5e0a-1fe2-4470-bf09-c8bd7941b5b6",
               "name": "Thiếu trường bắt buộc hoặc dữ liệu không hợp lệ",
               "originalRequest": {
                 "url": {
@@ -7684,7 +7684,7 @@
           }
         },
         {
-          "id": "874cacac-b259-46be-a4a2-c2a3850b96a4",
+          "id": "8b68bfaa-8b5c-4331-8ceb-41556d8661d0",
           "name": "Kích hoạt xử lý giao dịch định kỳ ngay lập tức",
           "request": {
             "name": "Kích hoạt xử lý giao dịch định kỳ ngay lập tức",
@@ -7723,7 +7723,7 @@
           },
           "response": [
             {
-              "id": "093c2a7b-a5e7-4f59-b7bc-d1af8a4781a2",
+              "id": "5c49f830-0e62-41a7-8ff2-f23cbe15a546",
               "name": "Kết quả chạy cron",
               "originalRequest": {
                 "url": {
@@ -7774,7 +7774,7 @@
           }
         },
         {
-          "id": "e41ada22-5f70-4ac3-b724-05207cd40bb6",
+          "id": "20eb1c64-ea3a-4441-af63-ac7d539a769b",
           "name": "Cập nhật mẫu giao dịch định kỳ",
           "request": {
             "name": "Cập nhật mẫu giao dịch định kỳ",
@@ -7834,7 +7834,7 @@
           },
           "response": [
             {
-              "id": "e934a77b-8d11-46c6-be5f-f9b29cfb96e2",
+              "id": "01328d72-d8ab-4266-9e50-864422f8f47d",
               "name": "Cập nhật thành công",
               "originalRequest": {
                 "url": {
@@ -7895,7 +7895,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "f3ef175a-ce39-4eaa-8c9f-4969d92173ba",
+              "id": "1bde8f2a-3767-4824-940a-5650a66f96b8",
               "name": "Không tìm thấy mẫu định kỳ (RECURRING_NOT_FOUND)",
               "originalRequest": {
                 "url": {
@@ -7958,7 +7958,7 @@
           }
         },
         {
-          "id": "b66aa319-6484-4e20-9333-cb52eb25d790",
+          "id": "b66757da-d135-4f5a-bb7f-e4f92390a92f",
           "name": "Xóa mẫu giao dịch định kỳ",
           "request": {
             "name": "Xóa mẫu giao dịch định kỳ",
@@ -8005,7 +8005,7 @@
           },
           "response": [
             {
-              "id": "9ed8aa4a-bccb-4cb7-bd2a-15962cd6df88",
+              "id": "ad194090-5ab2-4f7b-bf17-3617089c427d",
               "name": "Xóa thành công",
               "originalRequest": {
                 "url": {
@@ -8058,7 +8058,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "16b475ec-5ce1-4426-be17-85a876799408",
+              "id": "e24735e6-0900-4624-8f09-985e27a717a2",
               "name": "Không tìm thấy mẫu định kỳ (RECURRING_NOT_FOUND)",
               "originalRequest": {
                 "url": {
@@ -8116,7 +8116,7 @@
       "event": []
     },
     {
-      "id": "f4d0fedb-988c-4631-964e-0ef0fac93897",
+      "id": "8a665f66-c077-4366-a894-5e9a057f86b3",
       "name": "Transactions",
       "description": {
         "content": "Quản lý giao dịch thu chi, chuyển tiền, nhập và xuất dữ liệu.\nĐây là nhóm API trọng tâm của hệ thống, cho phép người dùng:\n- Ghi nhận thu nhập / chi tiêu hàng ngày\n- Chuyển tiền giữa các ví\n- Nhập hàng loạt giao dịch từ file\n- Xuất dữ liệu ra CSV/PDF\n",
@@ -8124,7 +8124,7 @@
       },
       "item": [
         {
-          "id": "3d232bf9-6640-4d50-afd2-7c56dc0b24f4",
+          "id": "5dbacf31-7f0e-44bb-ada6-58109f34be4f",
           "name": "Lấy danh sách giao dịch có phân trang và bộ lọc",
           "request": {
             "name": "Lấy danh sách giao dịch có phân trang và bộ lọc",
@@ -8223,7 +8223,7 @@
           },
           "response": [
             {
-              "id": "3887e21a-e5ac-4d24-8f53-4b8760c8d78f",
+              "id": "7f0ec08f-b483-4b91-8451-41b3077f3621",
               "name": "Danh sách giao dịch thành công",
               "originalRequest": {
                 "url": {
@@ -8314,7 +8314,7 @@
           }
         },
         {
-          "id": "b8e46b6f-98e3-40c4-b667-f55f84558b7d",
+          "id": "e560eef4-5b59-48bd-989e-aca4e42065c0",
           "name": "Tạo giao dịch mới (thu nhập hoặc chi tiêu)",
           "request": {
             "name": "Tạo giao dịch mới (thu nhập hoặc chi tiêu)",
@@ -8365,7 +8365,7 @@
           },
           "response": [
             {
-              "id": "8ea0f362-2bc4-4beb-8a6b-38004b510847",
+              "id": "8f046d6d-1ed3-4867-a541-84238ed4d3a9",
               "name": "Tạo giao dịch thành công",
               "originalRequest": {
                 "url": {
@@ -8417,7 +8417,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "83c5d020-df8f-490b-bc2f-8b0971d3fff0",
+              "id": "bfc92073-b2b6-4bf6-bddc-64d32cf8afbd",
               "name": "Chưa có ví hoặc số dư không đủ (INSUFFICIENT_BALANCE)",
               "originalRequest": {
                 "url": {
@@ -8465,7 +8465,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "a9b52d3e-70ab-4cd1-9e2c-7b0115e25620",
+              "id": "a97e040f-861e-42e4-806f-1d17faf0ad6c",
               "name": "Dữ liệu body không hợp lệ",
               "originalRequest": {
                 "url": {
@@ -8519,7 +8519,7 @@
           }
         },
         {
-          "id": "d96e2161-c454-4ad9-b13a-95177a084f3e",
+          "id": "0d12d22e-185e-4f93-a0d6-2943ebf8298f",
           "name": "Chuyển tiền giữa hai ví",
           "request": {
             "name": "Chuyển tiền giữa hai ví",
@@ -8571,7 +8571,7 @@
           },
           "response": [
             {
-              "id": "8ff9f1eb-a6aa-4e4f-ae3a-0e1d244dffa1",
+              "id": "eb3dd4cb-1ff2-47bc-835a-b283845c3a8c",
               "name": "Chuyển tiền thành công",
               "originalRequest": {
                 "url": {
@@ -8624,7 +8624,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "cb81a951-2f5c-43d4-b701-029417539adf",
+              "id": "4304b615-aab7-46d9-8326-73dbc3c20851",
               "name": "Ví không hợp lệ hoặc số dư không đủ (INSUFFICIENT_BALANCE)",
               "originalRequest": {
                 "url": {
@@ -8679,7 +8679,7 @@
           }
         },
         {
-          "id": "88446dc2-cd42-4712-b9f0-eb4fccaa7768",
+          "id": "dd8a1c8d-8a5e-4bdd-9c91-795b108ef536",
           "name": "Nhập hàng loạt giao dịch (Bulk Import)",
           "request": {
             "name": "Nhập hàng loạt giao dịch (Bulk Import)",
@@ -8731,7 +8731,7 @@
           },
           "response": [
             {
-              "id": "e0723c3e-3f3e-42e7-b249-b980e26895ab",
+              "id": "4781eccd-ebbc-42c7-aaf5-69d5cd2201bf",
               "name": "Nhập dữ liệu thành công",
               "originalRequest": {
                 "url": {
@@ -8784,7 +8784,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "024ca685-472a-4e36-a5bf-eac5225a5592",
+              "id": "b9acc756-852d-40d3-aaaa-69f586db9925",
               "name": "Body request rỗng hoặc bạn chưa có ví hợp lệ",
               "originalRequest": {
                 "url": {
@@ -8839,7 +8839,7 @@
           }
         },
         {
-          "id": "8ea8bf15-f790-4f49-ad0b-3e2ce54b50bc",
+          "id": "3f76d6c1-b87f-4ae2-99c9-cad4b1570fbf",
           "name": "Xuất danh sách giao dịch ra file (CSV/PDF)",
           "request": {
             "name": "Xuất danh sách giao dịch ra file (CSV/PDF)",
@@ -8933,7 +8933,7 @@
           },
           "response": [
             {
-              "id": "c2b022a2-5644-4345-8e34-843f7dfc9fd8",
+              "id": "00f2f108-8815-4001-8913-3ceb5bf764f3",
               "name": "File export được tạo thành công (tự động tải về)",
               "originalRequest": {
                 "url": {
@@ -9021,7 +9021,7 @@
           }
         },
         {
-          "id": "11bc11e4-33aa-4312-ab41-69bcaf73826f",
+          "id": "b44aaf3e-1738-40f9-bfbf-b1862a8ebc41",
           "name": "Lấy chi tiết một giao dịch",
           "request": {
             "name": "Lấy chi tiết một giao dịch",
@@ -9068,7 +9068,7 @@
           },
           "response": [
             {
-              "id": "836a2878-e316-4b9c-bca5-9b59201f0d4f",
+              "id": "10aead9f-c218-448b-b127-a626e8f06f5a",
               "name": "Chi tiết giao dịch thành công",
               "originalRequest": {
                 "url": {
@@ -9121,7 +9121,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "f5b1bfd5-f21e-4e26-9992-2ae3c5c4446c",
+              "id": "44610b30-9b4f-40eb-aaa1-fffa76708890",
               "name": "Không tìm thấy giao dịch hoặc không có quyền (TRANSACTION_NOT_FOUND)",
               "originalRequest": {
                 "url": {
@@ -9176,7 +9176,7 @@
           }
         },
         {
-          "id": "3ac2502c-ee63-4f54-8f74-263b0757576f",
+          "id": "2f5d1fa3-416e-455a-91a9-d9be78e95b8c",
           "name": "Xóa giao dịch (tự động hoàn tác số dư ví)",
           "request": {
             "name": "Xóa giao dịch (tự động hoàn tác số dư ví)",
@@ -9223,7 +9223,7 @@
           },
           "response": [
             {
-              "id": "764d5e47-911e-48dc-9a78-a0d7d90eb997",
+              "id": "d2a6853a-c113-4fa4-ac93-d782ceab2cd0",
               "name": "Xóa giao dịch thành công",
               "originalRequest": {
                 "url": {
@@ -9276,7 +9276,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "c2edab46-4f60-4fec-835d-01e1d4803989",
+              "id": "77ed93c2-c8cc-48f1-82e1-2ae50d93497a",
               "name": "Không tìm thấy giao dịch hoặc không có quyền (TRANSACTION_NOT_FOUND)",
               "originalRequest": {
                 "url": {
@@ -9334,7 +9334,7 @@
       "event": []
     },
     {
-      "id": "dfdd766c-5161-4487-8b1a-b2d361bfc4ae",
+      "id": "b68f8f5e-35d3-49d5-b9b3-0ef2b7db5c73",
       "name": "Users",
       "description": {
         "content": "Quản lý hồ sơ cá nhân của người dùng đang đăng nhập.\nTất cả endpoint trong nhóm này yêu cầu Bearer Token.\nĐây là nhóm endpoint chính (canonical) cho profile, avatar, đổi mật khẩu.\n",
@@ -9342,7 +9342,7 @@
       },
       "item": [
         {
-          "id": "198f6c57-750d-4d29-8e11-3b53d8e4abd3",
+          "id": "60b85e9a-88ce-4800-8d96-ad923a7e2a07",
           "name": "Lấy thông tin hồ sơ cá nhân",
           "request": {
             "name": "Lấy thông tin hồ sơ cá nhân",
@@ -9381,7 +9381,7 @@
           },
           "response": [
             {
-              "id": "34084996-21f0-4bb2-9e45-0a8d01cb552d",
+              "id": "305b6372-0c17-475d-8952-1969a5cecbf9",
               "name": "Lấy hồ sơ thành công",
               "originalRequest": {
                 "url": {
@@ -9426,7 +9426,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "0edc7109-d4d6-44ae-8c8c-22220ff89a1e",
+              "id": "70061cca-d0ee-4daa-af2f-9dbe7e3706b3",
               "name": "Chưa đăng nhập hoặc token hết hạn",
               "originalRequest": {
                 "url": {
@@ -9467,7 +9467,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "ec10b7be-3612-4229-a714-8cdb3e2b7d0f",
+              "id": "03ad67ee-edc4-4a1d-bb50-3fa16a6df2f8",
               "name": "Không tìm thấy user (USER_NOT_FOUND)",
               "originalRequest": {
                 "url": {
@@ -9514,7 +9514,7 @@
           }
         },
         {
-          "id": "5af4df5e-556d-476e-b098-9c735c524b2f",
+          "id": "e6a1d00d-ab3b-46af-83be-0c1a044198f8",
           "name": "Cập nhật hồ sơ cá nhân",
           "request": {
             "name": "Cập nhật hồ sơ cá nhân",
@@ -9566,7 +9566,7 @@
           },
           "response": [
             {
-              "id": "159e740f-9ddb-4018-8f07-669d1520bf59",
+              "id": "5f4afe27-43ff-4e46-8847-2af281a4d23c",
               "name": "Cập nhật hồ sơ thành công",
               "originalRequest": {
                 "url": {
@@ -9619,7 +9619,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "b57962e4-6476-4090-9fd4-d8fe60b68d41",
+              "id": "e5be2f58-ce87-40fd-86c6-24e1bd3d4697",
               "name": "Chưa đăng nhập",
               "originalRequest": {
                 "url": {
@@ -9674,7 +9674,7 @@
           }
         },
         {
-          "id": "fabe9e0a-bcb6-45c2-9fe9-0dddacad0848",
+          "id": "f1b3e1c0-8aa4-4664-88b9-201e4f278f37",
           "name": "Xóa tài khoản vĩnh viễn",
           "request": {
             "name": "Xóa tài khoản vĩnh viễn",
@@ -9726,7 +9726,7 @@
           },
           "response": [
             {
-              "id": "7dd24e05-cb13-40db-9e0b-72a24939759a",
+              "id": "86213199-ee43-4bd2-882b-a0758621ad94",
               "name": "Xóa tài khoản thành công",
               "originalRequest": {
                 "url": {
@@ -9779,7 +9779,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "7af3fe67-49ae-451d-8f39-f7ccad275c94",
+              "id": "5b1eb6cd-4a89-4a8b-ad8b-a24f5a53c650",
               "name": "Mật khẩu không đúng (WRONG_PASSWORD)",
               "originalRequest": {
                 "url": {
@@ -9834,7 +9834,7 @@
           }
         },
         {
-          "id": "2743fee1-21c8-4d00-a412-c0726e328796",
+          "id": "e29b7999-91a1-4f45-807f-e35f018b129c",
           "name": "Cập nhật ảnh đại diện (avatar)",
           "request": {
             "name": "Cập nhật ảnh đại diện (avatar)",
@@ -9888,7 +9888,7 @@
           },
           "response": [
             {
-              "id": "ea29e685-3949-4ef0-8ace-10cd021889d5",
+              "id": "0d4f9406-d243-47cb-8653-2cd79ab3d961",
               "name": "Cập nhật avatar thành công",
               "originalRequest": {
                 "url": {
@@ -9947,7 +9947,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "91ae36ca-f3ab-4457-b2c5-ac30c5e0b0e5",
+              "id": "93a0a784-e56d-40c4-930f-0c2434463dcc",
               "name": "File không hợp lệ (sai định dạng hoặc vượt quá 5MB)",
               "originalRequest": {
                 "url": {
@@ -10008,7 +10008,7 @@
           }
         },
         {
-          "id": "71b2e679-b305-4e27-80b1-4f8e9dabeadb",
+          "id": "068aed18-8a72-4bee-a109-763bfd7a7e3d",
           "name": "Đổi mật khẩu tài khoản",
           "request": {
             "name": "Đổi mật khẩu tài khoản",
@@ -10061,7 +10061,7 @@
           },
           "response": [
             {
-              "id": "0773f1e3-7e62-468a-b042-a03344734c1c",
+              "id": "37068b1e-21ef-4e0f-a5e8-1d56a2be364b",
               "name": "Đổi mật khẩu thành công",
               "originalRequest": {
                 "url": {
@@ -10115,7 +10115,7 @@
               "_postman_previewlanguage": "json"
             },
             {
-              "id": "8dc5ed0b-452b-4c6d-83bb-fcaae4f9aa41",
+              "id": "3dea67d0-bc6d-44ff-b1d0-e4d7efe33960",
               "name": "Mật khẩu hiện tại sai hoặc mật khẩu mới quá ngắn (WRONG_PASSWORD)",
               "originalRequest": {
                 "url": {
@@ -10174,7 +10174,7 @@
       "event": []
     },
     {
-      "id": "eeef152a-60e1-4921-9514-34290c650d23",
+      "id": "45623d33-5c1d-4f66-a78b-12dba0ae5ea2",
       "name": "Wallets",
       "description": {
         "content": "Quản lý ví cá nhân và ví gia đình",
@@ -10182,7 +10182,7 @@
       },
       "item": [
         {
-          "id": "350287d4-4d7c-4114-acc5-658625979103",
+          "id": "d573556c-6d14-42f9-a150-23a46a16dc13",
           "name": "Lấy danh sách ví mà người dùng có quyền truy cập",
           "request": {
             "name": "Lấy danh sách ví mà người dùng có quyền truy cập",
@@ -10217,7 +10217,7 @@
           },
           "response": [
             {
-              "id": "946a1d58-0a11-4bd2-b36c-d9458222e4ec",
+              "id": "b3e7407f-6126-4eea-b592-022b7175d507",
               "name": "Trả về danh sách ví thành công",
               "originalRequest": {
                 "url": {
@@ -10256,7 +10256,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"status\": \"string\",\n  \"message\": \"string\",\n  \"data\": [\n    {\n      \"id\": \"59416ebe-7a95-76a2-d1a2-85e756386189\",\n      \"name\": \"string\",\n      \"balance\": 5411.552719694392,\n      \"currency\": \"VND\",\n      \"user_id\": \"87618410-7d25-cac1-c812-78ec0dfcc447\",\n      \"family_id\": \"202f889a-b94a-51da-5ba2-e243d6be44e9\"\n    },\n    {\n      \"id\": \"95d4eac1-728e-1cf7-28f0-d5e6f8e70649\",\n      \"name\": \"string\",\n      \"balance\": 8379.795426513576,\n      \"currency\": \"VND\",\n      \"user_id\": \"b468f0ab-1cea-0a7a-fc96-22522fe9d3e8\",\n      \"family_id\": \"a7ae69ea-2869-46f9-ab4d-7674cfb0040c\"\n    }\n  ]\n}",
+              "body": "{\n  \"status\": \"string\",\n  \"message\": \"string\",\n  \"data\": [\n    {\n      \"id\": \"2736c1ed-1d76-554d-881e-4b0fd4ed1299\",\n      \"name\": \"string\",\n      \"balance\": 6337.06584316775,\n      \"currency\": \"VND\",\n      \"user_id\": \"2dddccd3-ebb5-45e7-842c-743e331e90e3\",\n      \"family_id\": \"4a7b5058-9ec2-48b8-5740-58fc8321ac69\"\n    },\n    {\n      \"id\": \"58d4f0b4-8cd9-cfd4-dc6b-16eff61c3498\",\n      \"name\": \"string\",\n      \"balance\": 4498.248765759339,\n      \"currency\": \"VND\",\n      \"user_id\": \"272fb6b4-e4e1-a698-a4f9-d4005aeaff5f\",\n      \"family_id\": \"7764e789-3728-2b2d-d075-c118289f149e\"\n    }\n  ]\n}",
               "cookie": [],
               "_postman_previewlanguage": "json"
             }
@@ -10267,7 +10267,7 @@
           }
         },
         {
-          "id": "43e1399c-ecd1-48b5-b327-b9ec59b041c8",
+          "id": "419dcd47-48a4-47de-af63-eb415078988c",
           "name": "Tạo ví mới",
           "request": {
             "name": "Tạo ví mới",
@@ -10314,7 +10314,7 @@
           },
           "response": [
             {
-              "id": "940d63ad-e9c5-46b5-a053-b21a0f64d7bb",
+              "id": "ad841e2f-dc41-47ab-8235-4b1c0e333b18",
               "name": "Tạo ví mới thành công",
               "originalRequest": {
                 "url": {
@@ -10362,7 +10362,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "1890bc7c-1b27-434e-b3d2-d52691ad89d4",
+              "id": "a4bf955b-3903-4a64-a71c-725c70b36847",
               "name": "Tên ví đã tồn tại trong cùng danh mục",
               "originalRequest": {
                 "url": {
@@ -10410,7 +10410,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "f2b25306-0292-4efc-accd-c5c38a9b35d2",
+              "id": "b34b6d6e-044d-4ac7-9485-c9e3f3af3524",
               "name": "Dữ liệu gửi lên không đúng định dạng",
               "originalRequest": {
                 "url": {
@@ -10464,7 +10464,7 @@
           }
         },
         {
-          "id": "68d94d8a-ec96-418b-b331-5d10f48b74f2",
+          "id": "ccba02af-f2f2-4513-a558-ecf6d1282530",
           "name": "Cập nhật thông tin ví",
           "request": {
             "name": "Cập nhật thông tin ví",
@@ -10517,7 +10517,7 @@
           },
           "response": [
             {
-              "id": "b5f91f0d-8786-4e61-9245-cdfcb6be4b3e",
+              "id": "6cb2028d-737d-4c6c-8ac1-47f4009de8a3",
               "name": "Cập nhật ví thành công",
               "originalRequest": {
                 "url": {
@@ -10574,7 +10574,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "d8906085-66f0-43ea-a5f4-671c408607f5",
+              "id": "35339332-3e85-4790-aeab-08d6e82f0130",
               "name": "Không tìm thấy ví tương ứng (WALLET_NOT_FOUND)",
               "originalRequest": {
                 "url": {
@@ -10637,7 +10637,7 @@
           }
         },
         {
-          "id": "2b4713d7-ff4b-4815-b4fb-ce849f876267",
+          "id": "bced3601-4986-423a-9b74-748ad45570dc",
           "name": "Xóa ví vĩnh viễn",
           "request": {
             "name": "Xóa ví vĩnh viễn",
@@ -10675,7 +10675,7 @@
           },
           "response": [
             {
-              "id": "07af55b3-9b8a-44ce-8d8d-81d6f76f9dfe",
+              "id": "3d108f0d-808c-4223-915c-cf66a1c61417",
               "name": "Xóa ví thành công",
               "originalRequest": {
                 "url": {
@@ -10724,7 +10724,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "92a54944-d9dc-44e4-b91a-fe7aae75f4a1",
+              "id": "fc996dfd-5946-480e-9715-ef3d4145b7a7",
               "name": "Không tìm thấy ví",
               "originalRequest": {
                 "url": {
@@ -10800,7 +10800,7 @@
     ]
   },
   "info": {
-    "_postman_id": "612363d2-1330-430f-9e4e-3c1048557e72",
+    "_postman_id": "db630b37-e87f-40f3-b432-2ade89e0c28b",
     "name": "Junkio Expense Tracker API",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "description": {

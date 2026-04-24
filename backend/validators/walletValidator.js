@@ -1,6 +1,11 @@
 const { body, param } = require('express-validator');
 const { buildValidationHandler, createValidationCode } = require('./validationHelper');
 
+// GHI CHÚ HỌC TẬP - Phần ví của Thành Đạt:
+// Validator bảo vệ API ví trước dữ liệu sai định dạng. Controller vẫn kiểm quyền,
+// còn file này tập trung kiểm name, balance, currency, family_id và id trên URL.
+
+// Tạo ví yêu cầu name hợp lệ; balance/currency/family_id là tùy chọn nhưng nếu gửi phải đúng dạng.
 exports.validateCreateWallet = [
     body('name')
         .trim()
@@ -34,6 +39,7 @@ exports.validateCreateWallet = [
     buildValidationHandler(['body']),
 ];
 
+// Sửa ví yêu cầu id hợp lệ; các field trong body là tùy chọn vì user có thể chỉ đổi tên hoặc số dư.
 exports.validateUpdateWallet = [
     param('id').isUUID().withMessage(createValidationCode('id', 'INVALID_UUID')),
     body('name')
@@ -66,6 +72,7 @@ exports.validateUpdateWallet = [
     buildValidationHandler(['params', 'body']),
 ];
 
+// Xóa ví chỉ cần id hợp lệ; nghiệp vụ "không xóa ví có giao dịch" nằm trong controller.
 exports.validateDeleteWallet = [
     param('id').isUUID().withMessage(createValidationCode('id', 'INVALID_UUID')),
     buildValidationHandler(['params']),

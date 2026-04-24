@@ -22,7 +22,7 @@ const cacheDashboard = (duration = 300) => {
             const cachedResponse = await client.get(rawKey);
 
             if (cachedResponse) {
-                console.log(`⚡ Redis Cache Hit: ${rawKey}`);
+                console.log(` Redis Cache Hit: ${rawKey}`);
                 const data = JSON.parse(cachedResponse);
                 return res.status(200).json({
                     success: true,

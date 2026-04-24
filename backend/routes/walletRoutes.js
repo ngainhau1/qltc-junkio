@@ -8,6 +8,9 @@ const {
     validateDeleteWallet
 } = require('../validators/walletValidator');
 
+// GHI CHÚ HỌC TẬP - Phần ví của Thành Đạt:
+// Mọi route ví đều cần đăng nhập. Route chỉ khai báo đường đi và middleware,
+// còn kiểm quyền chi tiết nằm trong walletController.
 router.use(authMiddleware);
 
 /**
@@ -61,6 +64,7 @@ router.use(authMiddleware);
  *                         format: uuid
  *                         nullable: true
  */
+// Lấy cả ví cá nhân và ví gia đình mà user có quyền truy cập.
 router.get('/', walletController.getUserWallets);
 
 /**
@@ -116,6 +120,7 @@ router.get('/', walletController.getUserWallets);
  *       422:
  *         description: Dữ liệu gửi lên không đúng định dạng
  */
+// Tạo ví cần validate body trước, đặc biệt là name, balance, currency và family_id.
 router.post('/', validateCreateWallet, walletController.createWallet);
 
 /**
@@ -154,6 +159,7 @@ router.post('/', validateCreateWallet, walletController.createWallet);
  *       404:
  *         description: Không tìm thấy ví tương ứng (WALLET_NOT_FOUND)
  */
+// Sửa ví cần validate id trên URL và các field muốn cập nhật.
 router.put('/:id', validateUpdateWallet, walletController.updateWallet);
 
 /**
@@ -177,6 +183,7 @@ router.put('/:id', validateUpdateWallet, walletController.updateWallet);
  *       404:
  *         description: Không tìm thấy ví
  */
+// Xóa ví cần validate id; controller sẽ chặn nếu ví đã có giao dịch.
 router.delete('/:id', validateDeleteWallet, walletController.deleteWallet);
 
 module.exports = router;

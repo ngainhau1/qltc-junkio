@@ -10,6 +10,10 @@ import { useTranslation } from 'react-i18next';
 
 import { resolveError } from '@/utils/authErrors';
 
+// GHI CHÚ HỌC TẬP - Phần ví của Thành Đạt:
+// Form này dùng chung cho tạo ví và sửa ví. Điểm cần nhớ là family_id được lấy theo phạm vi hiện tại,
+// vì vậy cùng một form có thể tạo ví cá nhân hoặc ví gia đình.
+
 const resolveWalletSubmitError = (rawError, t) => {
     const message = String(rawError || '').trim();
 
@@ -27,6 +31,7 @@ export function WalletForm({ onSuccess, initialData = null }) {
     const { activeFamilyId, families } = useSelector((state) => state.families ?? {});
     const isEdit = !!initialData;
     const [submitError, setSubmitError] = useState('');
+    // walletScope dùng để hiển thị cho người dùng biết ví sẽ thuộc cá nhân hay gia đình nào.
     const walletScope = getFinanceScopeLabels(t, {
         activeFamilyId: activeFamilyId ?? null,
         families: families ?? [],
@@ -36,6 +41,7 @@ export function WalletForm({ onSuccess, initialData = null }) {
         walletScope.scope === 'family' ? t('wallets.form.createFamilyBtn') : t('wallets.form.createPersonalBtn');
 
     const validationSchema = Yup.object().shape({
+        // Frontend kiểm tra nhanh để người dùng thấy lỗi sớm; backend vẫn kiểm tra lại bằng validator.
         name: Yup.string().required(t('wallets.form.validation.nameRequired')),
         balance: Yup.number().min(0, t('wallets.form.validation.balanceMin')).required(t('wallets.form.validation.balanceRequired')),
         type: Yup.string().oneOf(['cash', 'bank', 'credit-card', 'e-wallet']).required(t('wallets.form.validation.typeRequired')),
@@ -55,11 +61,13 @@ export function WalletForm({ onSuccess, initialData = null }) {
                 balance: parseFloat(values.balance),
                 currency: initialData?.currency || 'VND',
                 type: values.type,
+                // Khi sửa ví giữ family_id cũ; khi tạo mới dùng activeFamilyId hiện tại nếu có.
                 family_id: initialData?.family_id ?? activeFamilyId ?? null,
             };
 
             try {
                 if (isEdit) {
+                    // editWallet và createWallet đều unwrap để catch nhận đúng mã lỗi backend.
                     await dispatch(editWallet({ id: initialData.id, data: walletData })).unwrap();
                 } else {
                     await dispatch(createWallet(walletData)).unwrap();

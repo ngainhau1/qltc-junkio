@@ -1,6 +1,10 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '@/lib/api';
 
+// GHI CHÚ HỌC TẬP - Phần ví của Thành Đạt:
+// Slice này giữ danh sách ví ở frontend và gọi các API /wallets.
+// Backend vẫn là nơi kiểm quyền ví cá nhân/ví gia đình; frontend chỉ phản ánh kết quả lên UI.
+
 const initialState = {
     wallets: [],
     loading: false,
@@ -8,6 +12,7 @@ const initialState = {
 };
 
 // --- Thunks ---
+// fetchWallets lấy toàn bộ ví mà user được phép xem theo token hiện tại.
 export const fetchWallets = createAsyncThunk(
     'wallets/fetchWallets',
     async (_, { rejectWithValue }) => {
@@ -20,6 +25,7 @@ export const fetchWallets = createAsyncThunk(
     }
 );
 
+// createWallet gửi dữ liệu form lên backend; nếu family_id có giá trị thì tạo ví gia đình.
 export const createWallet = createAsyncThunk(
     'wallets/createWallet',
     async (walletData, { rejectWithValue }) => {
@@ -32,6 +38,7 @@ export const createWallet = createAsyncThunk(
     }
 );
 
+// editWallet cập nhật một ví theo id; controller sẽ kiểm quyền trước khi lưu.
 export const editWallet = createAsyncThunk(
     'wallets/editWallet',
     async ({ id, data }, { rejectWithValue }) => {
@@ -44,6 +51,7 @@ export const editWallet = createAsyncThunk(
     }
 );
 
+// removeWallet xóa ví theo id; backend sẽ từ chối nếu ví đã có giao dịch.
 export const removeWallet = createAsyncThunk(
     'wallets/removeWallet',
     async (id, { rejectWithValue }) => {
@@ -61,7 +69,8 @@ const walletSlice = createSlice({
     name: 'wallets',
     initialState,
     reducers: {
-        // Reducers local for optimistics updates if necessary
+        // Reducers local dùng để cập nhật số dư trên UI ngay khi giao dịch thay đổi.
+        // Các hàm này không thay thế dữ liệu chuẩn từ backend, chỉ giúp giao diện phản hồi nhanh hơn.
         updateWalletBalanceLocal: (state, action) => {
             const { id, amount, type } = action.payload;
             const wallet = state.wallets.find(w => w.id === id);
@@ -97,6 +106,7 @@ const walletSlice = createSlice({
             })
             .addCase(fetchWallets.fulfilled, (state, action) => {
                 state.loading = false;
+                // API trả đúng danh sách ví trong phạm vi user được phép truy cập.
                 state.wallets = action.payload;
             })
             .addCase(fetchWallets.rejected, (state, action) => {
@@ -111,6 +121,7 @@ const walletSlice = createSlice({
             })
             .addCase(createWallet.fulfilled, (state, action) => {
                 state.loading = false;
+                // Ví mới được đưa lên đầu danh sách để người dùng thấy ngay.
                 state.wallets.unshift(action.payload); // Add to beginning
             })
             .addCase(createWallet.rejected, (state, action) => {
