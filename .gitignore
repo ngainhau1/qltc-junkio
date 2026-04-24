@@ -90,3 +90,5 @@ backend/coverage/
 # Ignore additional frontend reports
 frontend/report_*.*
 .idea/
+/.vscode/
+/coverage/
