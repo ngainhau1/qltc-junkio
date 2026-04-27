@@ -1,4 +1,3 @@
-// @vitest-environment jsdom
 import { render, waitFor } from '@testing-library/react';
 import { describe, expect, it, beforeEach, vi } from 'vitest';
 import { Provider } from 'react-redux';

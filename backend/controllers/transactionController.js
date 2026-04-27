@@ -77,7 +77,6 @@ const rollbackWalletForDeletedTransaction = (wallet, transaction) => {
     wallet.balance = parseFloat(wallet.balance) + amount;
 };
 
-// GET /api/transactions/:id
 exports.getTransactionById = async (req, res) => {
     try {
         const { id } = req.params;
@@ -125,7 +124,6 @@ exports.getTransactionById = async (req, res) => {
     }
 };
 
-// GET /api/transactions
 exports.getTransactions = async (req, res) => {
     try {
         const {
@@ -182,7 +180,6 @@ exports.getTransactions = async (req, res) => {
         const perPage = Number(limit);
         const offset = (pageNum - 1) * perPage;
 
-        // Build dynamic order clause
         const allowedSortFields = ['date', 'amount', 'type', 'created_at'];
         const sortField = allowedSortFields.includes(sortBy) ? sortBy : 'date';
         const sortDir = sortOrder.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
@@ -211,7 +208,6 @@ exports.getTransactions = async (req, res) => {
     }
 };
 
-// POST /api/transactions
 exports.createTransaction = async (req, res) => {
     const { wallet_id, category_id, amount, type, description, date, family_id, shares } = req.body;
 
@@ -280,7 +276,6 @@ exports.createTransaction = async (req, res) => {
     }
 };
 
-// DELETE /api/transactions/:id
 exports.deleteTransaction = async (req, res) => {
     const { id } = req.params;
     const t = await sequelize.transaction();
@@ -350,7 +345,6 @@ exports.deleteTransaction = async (req, res) => {
     }
 };
 
-// POST /api/transactions/transfer
 exports.createTransfer = async (req, res) => {
     const { from_wallet_id, to_wallet_id, amount, description, date } = req.body;
 
@@ -463,7 +457,6 @@ exports.createTransfer = async (req, res) => {
     });
 };
 
-// POST /api/transactions/import
 exports.importTransactions = async (req, res) => {
     const { transactions } = req.body;
     if (!transactions || !Array.isArray(transactions) || transactions.length === 0) {
@@ -531,7 +524,6 @@ exports.importTransactions = async (req, res) => {
     }
 };
 
-// GET /api/transactions/export
 exports.exportTransactions = async (req, res) => {
     try {
         const {

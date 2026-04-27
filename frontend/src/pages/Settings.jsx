@@ -28,9 +28,7 @@ export function Settings() {
                 <p className="text-muted-foreground mt-2">{t('settings.subtitle')}</p>
             </div>
 
-            {/* Sidebar Desktop Layout */}
             <Tabs defaultValue="appearance" className="mt-8 flex flex-col gap-6 md:flex-row">
-                {/* Left Navigation */}
                 <TabsList className="scrollbar-hidden flex h-auto w-full items-stretch justify-start gap-1 overflow-x-auto bg-transparent p-0 font-medium md:w-[250px] md:flex-col md:overflow-visible">
                     <TabsTrigger value="appearance" className="touch-target shrink-0 justify-start rounded-md px-4 py-2.5 data-[state=active]:bg-muted data-[state=active]:shadow-none transition-colors hover:bg-muted/50">
                         <Settings2 className="w-4 h-4 mr-2" />
@@ -54,7 +52,6 @@ export function Settings() {
                     </TabsTrigger>
                 </TabsList>
 
-                {/* Right Content */}
                 <div className="flex-1 w-full min-w-0">
                     <TabsContent value="appearance" className="m-0 space-y-6">
                         <AppearanceSettings />
@@ -94,7 +91,6 @@ function AppearanceSettings() {
                 <CardDescription>{t('settings.appearance.desc')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-8">
-                {/* Theme Selector */}
                 <div className="space-y-3">
                     <Label className="text-base font-semibold">{t('settings.appearance.themeTitle')}</Label>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -130,7 +126,6 @@ function AppearanceSettings() {
 
                 <div className="border-t border-border/50"></div>
 
-                {/* Currency & Language */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-3">
                         <div>
@@ -144,7 +139,6 @@ function AppearanceSettings() {
                             <SelectContent>
                                 <SelectItem value="VND">{t('settings.appearance.currencyVND')}</SelectItem>
                                 <SelectItem value="USD">{t('settings.appearance.currencyUSD')}</SelectItem>
-                                {/* Thêm ngoại tệ khác nếu cần */}
                             </SelectContent>
                         </Select>
                     </div>
@@ -360,7 +354,6 @@ function DataSettings() {
                 </div>
             </Modal>
 
-            {/* Import Confirmation Modal */}
             <Modal isOpen={isImportModalOpen} onClose={() => { setIsImportModalOpen(false); setImportData(null); }} title={t('settings.data.importModalTitle')}>
                 <div className="py-4 space-y-3">
                     <p className="text-sm text-muted-foreground">{t('settings.data.importModalDesc')}</p>
@@ -394,7 +387,6 @@ function AccountSettings() {
     const { user } = useSelector(state => state.auth)
     const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
-    // Password strength
     const [newPasswordValue, setNewPasswordValue] = useState('');
     const getPasswordStrength = (pwd) => {
         let score = 0;
@@ -410,13 +402,11 @@ function AccountSettings() {
     };
     const passwordStrength = newPasswordValue ? getPasswordStrength(newPasswordValue) : null;
 
-    // Delete account states
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [deletePassword, setDeletePassword] = useState('');
     const [deleteConfirmText, setDeleteConfirmText] = useState('');
     const [isDeleting, setIsDeleting] = useState(false);
 
-    // Broadcast states
     const [broadcastTitle, setBroadcastTitle] = useState('');
     const [broadcastMsg, setBroadcastMsg] = useState('');
     const [isSending, setIsSending] = useState(false);
@@ -454,7 +444,6 @@ function AccountSettings() {
                 <CardDescription>{t('settings.account.desc')} ({user?.email || 'N/A'}).</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-                {/* Change Password Area */}
                 <div className="rounded-xl border p-5 space-y-4">
                     <div className="space-y-1">
                         <Label className="text-base font-semibold">{t('settings.account.changePasswordTitle')}</Label>
@@ -472,7 +461,7 @@ function AccountSettings() {
                         if (newPassword !== confirmPassword) {
                             return toast.error(t('settings.account.passwordConfirmMismatch'));
                         }
-                        
+
                         try {
                             await api.put('/users/me/password', { currentPassword, newPassword });
                             toast.success(t('settings.account.passwordUpdateSuccess'));
@@ -507,7 +496,6 @@ function AccountSettings() {
                     </form>
                 </div>
 
-                {/* Logout Area */}
                 <div className="flex flex-col justify-between gap-4 rounded-xl border border-destructive/20 bg-destructive/5 p-5 lg:flex-row lg:items-center">
                     <div className="space-y-1">
                         <Label className="text-base font-semibold text-destructive">{t('settings.account.logoutTitle')}</Label>
@@ -520,7 +508,6 @@ function AccountSettings() {
                     </Button>
                 </div>
 
-                {/* Delete Account Area */}
                 <div className="flex flex-col justify-between gap-4 rounded-xl border border-destructive/40 bg-destructive/10 p-5 lg:flex-row lg:items-center">
                     <div className="space-y-1">
                         <Label className="text-base font-semibold text-destructive flex items-center gap-2">
@@ -537,7 +524,6 @@ function AccountSettings() {
                 </div>
             </CardContent>
 
-            {/* Admin Area */}
             {user?.role === 'admin' && (
                 <>
                     <div className="border-t border-border/50 my-6 mx-6"></div>
@@ -591,7 +577,6 @@ function AccountSettings() {
                 </div>
             </Modal>
 
-            {/* Delete Account Modal */}
             <Modal isOpen={isDeleteModalOpen} onClose={() => { setIsDeleteModalOpen(false); setDeletePassword(''); setDeleteConfirmText(''); }} title={t('settings.account.deleteModalTitle')}>
                 <div className="py-2 pb-4 space-y-4">
                     <div className="rounded-lg bg-destructive/10 border border-destructive/30 p-3">
@@ -657,7 +642,6 @@ function SupportSettings() {
 
     return (
         <div className="space-y-6">
-            {/* App Info Card */}
             <Card className="shadow-none border-muted/60">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -690,7 +674,6 @@ function SupportSettings() {
                 </CardContent>
             </Card>
 
-            {/* Legal & Policies Card */}
             <Card className="shadow-none border-muted/60">
                 <CardHeader>
                     <CardTitle>{t('settings.support.legalTitle')}</CardTitle>
@@ -713,7 +696,6 @@ function SupportSettings() {
                 </CardContent>
             </Card>
 
-            {/* Feedback & Source Code Card */}
             <Card className="shadow-none border-muted/60">
                 <CardHeader>
                     <CardTitle>{t('settings.support.feedbackTitle')}</CardTitle>

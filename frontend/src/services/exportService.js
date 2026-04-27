@@ -1,6 +1,7 @@
 import Papa from 'papaparse';
 import api from '@/lib/api';
 import { cleanQueryParams } from '@/features/finance/context';
+import { localizeCategoryName } from '@/features/categories/categoryLocalization';
 import { formatDateString } from '@/lib/utils';
 import i18n from '@/lib/i18n';
 import { loadRobotoBase64 } from './pdfFont';
@@ -35,7 +36,7 @@ const transactionToRow = (transaction) => ({
     [i18n.t('export.description')]: transaction.description || i18n.t('export.noDescription'),
     [i18n.t('export.type')]: transaction.type,
     [i18n.t('export.amount')]: Number(transaction.amount || 0),
-    [i18n.t('export.category')]: transaction.Category?.name || transaction.category_id || '',
+    [i18n.t('export.category')]: localizeCategoryName(transaction.Category?.name, i18n.t.bind(i18n)) || transaction.category_id || '',
     [i18n.t('export.wallet')]: transaction.Wallet?.name || transaction.wallet_id || '',
 });
 
@@ -67,7 +68,7 @@ const reportDataToRows = (reportData) => {
         },
         ...expenseByCategory.map((item) => ({
             [i18n.t('export.section')]: i18n.t('export.expenseByCategory'),
-            [i18n.t('export.metric')]: item.name,
+            [i18n.t('export.metric')]: localizeCategoryName(item.name, i18n.t.bind(i18n)),
             [i18n.t('export.value')]: Number(item.value || 0),
         })),
         ...cashflowSeries.map((item) => ({
@@ -79,14 +80,12 @@ const reportDataToRows = (reportData) => {
     ];
 };
 
-// ── CSV Export ──
 export const exportRowsToCSV = (rows, filename = `export_${getTodaySuffix()}.csv`) => {
     const csv = Papa.unparse(normalizeRows(rows));
     const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' });
     downloadBlob(blob, filename);
 };
 
-// ── Excel Export (Enhanced) ──
 export const exportRowsToExcel = async (
     rows,
     filename = `report_${getTodaySuffix()}.xlsx`,
@@ -96,7 +95,6 @@ export const exportRowsToExcel = async (
     const normalizedRows = normalizeRows(rows);
     const worksheet = XLSX.utils.json_to_sheet(normalizedRows);
 
-    // Auto-fit column widths based on content
     const columns = Object.keys(normalizedRows[0] || { Data: '' });
     worksheet['!cols'] = columns.map((col) => {
         const maxLen = Math.max(
@@ -111,7 +109,6 @@ export const exportRowsToExcel = async (
     XLSX.writeFile(workbook, filename);
 };
 
-// ── PDF Export (Enhanced with summary and pagination) ──
 export const exportRowsToPDF = async (
     rows,
     {
@@ -137,7 +134,6 @@ export const exportRowsToPDF = async (
         doc.setFont('helvetica', 'normal');
     }
 
-    // Header
     doc.setFontSize(20);
     doc.text(i18n.t('export.titleTracker'), 14, 22);
     doc.setFontSize(14);
@@ -146,7 +142,6 @@ export const exportRowsToPDF = async (
     doc.text(`${i18n.t('export.exportDate')} ${formatDateString(new Date())}`, 14, 40);
     doc.text(`${i18n.t('common.total')}: ${normalizedRows.length} ${i18n.t('export.records')}`, 14, 46);
 
-    // Format data for display
     const amountKey = i18n.t('export.amount');
     const formattedBody = normalizedRows.map((row) =>
         columns.map((col) => {
@@ -180,7 +175,6 @@ export const exportRowsToPDF = async (
             return acc;
         }, {}),
         didDrawPage: (data) => {
-            // Footer with page number
             const pageCount = doc.getNumberOfPages();
             doc.setFontSize(8);
             doc.setTextColor(150);
@@ -192,7 +186,6 @@ export const exportRowsToPDF = async (
         },
     });
 
-    // Summary footer after table (only for transaction exports)
     if (columns.includes(amountKey) && columns.includes(i18n.t('export.type'))) {
         const typeKey = i18n.t('export.type');
         let totalIncome = 0;
@@ -226,7 +219,6 @@ export const exportRowsToPDF = async (
     doc.save(filename);
 };
 
-// ── Fetch all for export ──
 export const fetchAllTransactionsForExport = async (params = {}) => {
     const limit = 500;
     const transactions = [];
@@ -251,7 +243,6 @@ export const fetchAllTransactionsForExport = async (params = {}) => {
     return transactions;
 };
 
-// ── Transaction-specific exports ──
 export const exportTransactionRowsToCSV = (transactions) =>
     exportRowsToCSV(transactions.map(transactionToRow), `transactions_${getTodaySuffix()}.csv`);
 
@@ -268,7 +259,6 @@ export const exportTransactionRowsToPDF = (transactions, title = '') =>
         filename: `transactions_${getTodaySuffix()}.pdf`,
     });
 
-// ── Report-specific exports ──
 export const exportReportRowsToCSV = (reportData) =>
     exportRowsToCSV(reportDataToRows(reportData), `report_${getTodaySuffix()}.csv`);
 

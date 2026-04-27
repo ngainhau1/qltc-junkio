@@ -67,7 +67,6 @@ export function CreateGoalModal({ isOpen, onClose }) {
 
             toast.success(t('goals.modals.create.successMsg', { name: name.trim() }));
 
-            // Reset and close
             setName('');
             setTargetAmount('');
             setDeadline('');
@@ -89,7 +88,6 @@ export function CreateGoalModal({ isOpen, onClose }) {
         >
             <div className="space-y-6 p-2 sm:p-4">
 
-                {/* Visual Preview */}
                 <div className="flex items-center justify-center p-6 rounded-xl border border-dashed border-border/60 bg-muted/20">
                     <div className="flex flex-col items-center gap-3">
                         <div
@@ -110,7 +108,6 @@ export function CreateGoalModal({ isOpen, onClose }) {
                     </div>
                 </div>
 
-                {/* Form Fields */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="col-span-full space-y-2">
                         <Label htmlFor="goal-name">{t('goals.modals.create.nameLabel')}</Label>
@@ -143,7 +140,6 @@ export function CreateGoalModal({ isOpen, onClose }) {
                         />
                     </div>
 
-                    {/* Color Picker */}
                     <div className="col-span-full space-y-2 pt-2">
                         <Label>{t('goals.modals.create.colorLabel')}</Label>
                         <div className="flex flex-wrap gap-3">
@@ -160,7 +156,6 @@ export function CreateGoalModal({ isOpen, onClose }) {
                         </div>
                     </div>
 
-                    {/* Icon Picker */}
                     <div className="col-span-full space-y-2 pt-2">
                         <Label>{t('goals.modals.create.iconLabel')}</Label>
                         <div className="grid grid-cols-4 gap-2 sm:grid-cols-5 sm:gap-3">

@@ -2,7 +2,6 @@
 
 module.exports = {
     async up(queryInterface, Sequelize) {
-        // Resolve existing duplicates before adding unique indexes.
         await queryInterface.sequelize.query(`
             WITH ranked AS (
                 SELECT

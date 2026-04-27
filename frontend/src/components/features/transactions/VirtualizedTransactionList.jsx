@@ -2,6 +2,7 @@ import { memo, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowDownLeft, ArrowRightLeft, ArrowUpRight, ChevronRight } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
+import { localizeCategoryName } from '@/features/categories/categoryLocalization';
 import {
     formatCurrency,
     formatDateString,
@@ -26,7 +27,7 @@ const TransactionRow = memo(({ item, onRowClick }) => {
     const amountMeta = getTransactionAmountMeta(transaction.type);
     const secondaryText = isTransfer
         ? getTransactionTypeLabel(transaction.type, t)
-        : transaction.Category?.name || transaction.category_id || '-';
+        : localizeCategoryName(transaction.Category?.name, t) || transaction.category_id || '-';
     const displayDescription = transaction.description || '';
     const transactionDate = transaction.date || transaction.transaction_date;
 

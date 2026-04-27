@@ -12,13 +12,6 @@ import { Users, ArrowRightLeft, Home as HomeIcon, Search, Lock, Unlock, Shield, 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, LineChart, Line } from "recharts"
 import api from "@/lib/api"
 
-/**
- * GHI CHÚ HỌC TẬP - Phần quản trị của Thành Đạt:
- * Trang chính dành cho Quản trị viên (Admin Dashboard).
- * - Hiển thị biểu đồ tăng trưởng người dùng, hoạt động giao dịch và danh mục chi tiêu.
- * - Quản lý danh sách người dùng (khóa, mở khóa, đổi role, xóa).
- * - Theo dõi nhật ký hệ thống (Audit Logs).
- */
 export function AdminDashboard() {
     const { t } = useTranslation()
     const { user } = useSelector(state => state.auth)
@@ -36,8 +29,7 @@ export function AdminDashboard() {
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
     const [userToDelete, setUserToDelete] = useState(null)
     const [loading, setLoading] = useState(true)
-    
-    // Logs State: dùng riêng cho tab nhật ký hoạt động, có phân trang và lọc theo action.
+
     const [activeTab, setActiveTab] = useState('overview')
     const [logs, setLogs] = useState([])
     const [logPage, setLogPage] = useState(1)
@@ -169,9 +161,6 @@ export function AdminDashboard() {
         }
     }
 
-    /**
-     * Xóa người dùng khỏi hệ thống.
-     */
     const deleteUser = async () => {
         if (!userToDelete) return;
         try {
@@ -216,7 +205,6 @@ export function AdminDashboard() {
 
             {activeTab === 'overview' ? (
                 <div className="space-y-6">
-                    {/* Stats Cards */}
                     {analytics?.stats && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     <Card className="p-6">
@@ -288,10 +276,8 @@ export function AdminDashboard() {
                 </div>
             )}
 
-            {/* Analytics Charts */}
             {analytics && (
                 <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                    {/* User Growth */}
                     <Card className="p-6 col-span-1 lg:col-span-2 xl:col-span-1">
                         <h2 className="text-lg font-semibold mb-4">{t("admin.userGrowth")}</h2>
                         <ResponsiveContainer width="100%" height={250}>
@@ -305,7 +291,6 @@ export function AdminDashboard() {
                         </ResponsiveContainer>
                     </Card>
 
-                    {/* Weekly Activity */}
                     <Card className="p-6 col-span-1 xl:col-span-1">
                         <h2 className="text-lg font-semibold mb-4">{t("admin.weeklyActivity")}</h2>
                         <ResponsiveContainer width="100%" height={250}>
@@ -325,7 +310,6 @@ export function AdminDashboard() {
                         </ResponsiveContainer>
                     </Card>
 
-                    {/* Top Categories */}
                     <Card className="p-6 col-span-1 lg:col-span-2 xl:col-span-1">
                         <h2 className="text-lg font-semibold mb-4">{t("admin.topCategories")}</h2>
                         <ResponsiveContainer width="100%" height={250}>
@@ -352,10 +336,8 @@ export function AdminDashboard() {
                 </div>
             )}
 
-            {/* Financial Overview Advanced */}
             {financial && (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-                    {/* Revenue Trends */}
                     <Card className="p-6">
                         <h2 className="text-lg font-semibold mb-4">{t("admin.revenueOverview")}</h2>
                         <ResponsiveContainer width="100%" height={250}>
@@ -370,7 +352,6 @@ export function AdminDashboard() {
                         </ResponsiveContainer>
                     </Card>
 
-                    {/* Financial Summaries & Top Spenders */}
                     <div className="space-y-6">
                         <div className="grid grid-cols-2 gap-4">
                             <Card className="p-4 bg-primary/5 border-primary/20">
@@ -385,15 +366,15 @@ export function AdminDashboard() {
                                     <span className="text-xs font-bold">{financial.budgetCompliance}%</span>
                                 </div>
                                 <div className="w-full bg-secondary h-2 rounded-full mt-2 overflow-hidden">
-                                    <div 
-                                        className={`h-full rounded-full ${financial.budgetCompliance >= 80 ? 'bg-green-500' : financial.budgetCompliance >= 50 ? 'bg-yellow-500' : 'bg-red-500'}`} 
-                                        style={{ width: `${financial.budgetCompliance}%` }} 
+                                    <div
+                                        className={`h-full rounded-full ${financial.budgetCompliance >= 80 ? 'bg-green-500' : financial.budgetCompliance >= 50 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                                        style={{ width: `${financial.budgetCompliance}%` }}
                                     />
                                 </div>
                                 <p className="text-xs text-muted-foreground mt-2">{t("admin.budgetComplianceDesc")}</p>
                             </Card>
                         </div>
-                        
+
                         <Card className="p-4">
                             <h3 className="text-sm font-semibold mb-3">{t("admin.topSpendersTitle")}</h3>
                             {financial.topSpenders?.length > 0 ? (
@@ -421,7 +402,6 @@ export function AdminDashboard() {
                 </div>
             )}
 
-            {/* User Management */}
             <Card className="p-4 sm:p-6">
                 <div className="mb-4 flex flex-col gap-4">
                     <div className="flex flex-col gap-1">
@@ -439,7 +419,7 @@ export function AdminDashboard() {
                             />
                         </div>
                         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:w-auto">
-                            <select 
+                            <select
                                 className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 lg:min-w-[144px]"
                                 value={roleFilter}
                                 onChange={(e) => { setRoleFilter(e.target.value); setPage(1); }}
@@ -449,7 +429,7 @@ export function AdminDashboard() {
                                 <option value="staff">{t("admin.roleStaff")}</option>
                                 <option value="member">{t("admin.roleMember")}</option>
                             </select>
-                            <select 
+                            <select
                                 className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 lg:min-w-[144px]"
                                 value={statusFilter}
                                 onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
@@ -560,7 +540,7 @@ export function AdminDashboard() {
                                                     <td className="py-3 px-2 text-muted-foreground">{u.email}</td>
                                                     <td className="py-3 px-2">
                                                         {u.id !== user?.id ? (
-                                                            <select 
+                                                            <select
                                                                 className="text-xs rounded border p-1 bg-transparent"
                                                                 value={u.role}
                                                                 onChange={(e) => changeRole(u.id, e.target.value)}
@@ -617,7 +597,6 @@ export function AdminDashboard() {
                     />
                 )}
 
-                {/* Pagination */}
                 <div className="mt-4 flex flex-col gap-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
                     <span>{t("admin.showing", { from: userRangeFrom, to: userRangeTo, total })}</span>
                     <div className="flex items-center gap-2 self-start sm:self-auto">
@@ -638,7 +617,7 @@ export function AdminDashboard() {
                             <Activity className="h-5 w-5" />
                             {t("admin.activityLogs")}
                         </h2>
-                        <select 
+                        <select
                             className="flex h-10 w-full sm:w-64 items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                             value={logAction}
                             onChange={(e) => { setLogAction(e.target.value); setLogPage(1); }}
@@ -685,7 +664,7 @@ export function AdminDashboard() {
                             })}
                         </div>
                     )}
-                    
+
                     {logs.length < logTotal && (
                         <div className="mt-8">
                             <Button variant="outline" className="w-full sm:w-auto" onClick={() => setLogPage(p => p + 1)}>
@@ -696,14 +675,13 @@ export function AdminDashboard() {
                 </Card>
             )}
 
-            {/* User Detail Modal */}
             {selectedUser && userDetail && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
                     <Card className="relative max-h-[90dvh] w-full max-w-lg overflow-y-auto p-4 shadow-lg sm:p-6">
-                        <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="absolute right-3 top-3 h-10 w-10 sm:right-4 sm:top-4" 
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-3 top-3 h-10 w-10 sm:right-4 sm:top-4"
                             onClick={() => { setSelectedUser(null); setUserDetail(null); }}
                         >
                             <X className="h-4 w-4" />
@@ -750,7 +728,6 @@ export function AdminDashboard() {
                 </div>
             )}
 
-            {/* Delete Confirmation Modal */}
             {isDeleteDialogOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
                     <Card className="w-full max-w-sm p-4 shadow-lg sm:p-6">

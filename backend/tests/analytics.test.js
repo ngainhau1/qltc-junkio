@@ -2,7 +2,6 @@ const request = require('supertest');
 const express = require('express');
 const { Sequelize, DataTypes, Op } = require('sequelize');
 
-// Setup mock DB & model
 const mockSequelize = new Sequelize('sqlite::memory:', { logging: false });
 
 const mockUser = mockSequelize.define('User', {
@@ -77,26 +76,21 @@ describe('Analytics API', () => {
         userId = crypto.randomUUID();
         familyId = crypto.randomUUID();
 
-        // user is in a family
         await mockFamilyMember.create({ user_id: userId, family_id: familyId });
 
-        // Personal Wallet
         const pw = await mockWallet.create({ user_id: userId, balance: 1000 });
-        
-        // Family Wallet
+
         const fw = await mockWallet.create({ family_id: familyId, balance: 2500 });
 
         const catId = crypto.randomUUID();
         await mockCategory.create({ id: catId, name: 'Food', icon: 'burger' });
 
         const today = new Date();
-        
-        // Income
+
         await mockTransaction.create({
             wallet_id: pw.id, category_id: catId, amount: 2000, type: 'INCOME', date: today
         });
 
-        // Expense
         await mockTransaction.create({
             wallet_id: fw.id, category_id: catId, amount: 500, type: 'EXPENSE', date: today
         });
@@ -113,9 +107,8 @@ describe('Analytics API', () => {
             const res = await request(app).get('/api/analytics/dashboard');
             expect(res.statusCode).toEqual(200);
             expect(res.body.data.stats).toBeDefined();
-            
-            // Personal(1000) + Family(2500) = 3500 assets
-            expect(res.body.data.stats.totalAssets).toBe(3500); 
+
+            expect(res.body.data.stats.totalAssets).toBe(3500);
             expect(res.body.data.stats.totalIncome).toBe(2000);
             expect(res.body.data.stats.totalExpense).toBe(500);
             expect(res.body.data.stats.activeWalletsCount).toBe(2);

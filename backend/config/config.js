@@ -5,7 +5,7 @@ module.exports = {
         username: process.env.DB_USER || 'admin',
         password: process.env.DB_PASS || 'password123',
         database: process.env.DB_NAME || 'expense_tracker_db',
-        host: process.env.DB_HOST || 'localhost', // Default to localhost for local dev if not in docker
+        host: process.env.DB_HOST || 'localhost',
         dialect: 'postgres',
         logging: false
     },

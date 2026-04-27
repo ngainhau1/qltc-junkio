@@ -10,6 +10,7 @@ import {
     getTransactionTypeLabel
 } from '@/lib/utils';
 import { clearSelectedTransaction, deleteTransaction } from '@/features/transactions/transactionSlice';
+import { localizeCategoryName } from '@/features/categories/categoryLocalization';
 import { refreshFinanceData } from '@/features/finance/refreshFinanceData';
 import { Calendar, Tag, Trash2, Users, Wallet } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -125,7 +126,7 @@ export function TransactionDetailModal({ isOpen, onClose }) {
                                     <Tag className="h-4 w-4" />
                                     {t('transactions.detail.category')}
                                 </span>
-                                <span className="font-medium">{tx.Category.name}</span>
+                                <span className="font-medium">{localizeCategoryName(tx.Category.name, t)}</span>
                             </div>
                         )}
                     </div>

@@ -1,13 +1,9 @@
-# Ignore dependencies
 node_modules/
 /backend/node_modules/
 /frontend/node_modules/
 
-
-# Ignore database state
 postgres_data/
 
-# Ignore environment files
 .env
 .env.local
 !.env.example
@@ -15,24 +11,19 @@ frontend/.env
 frontend/.env.*
 !frontend/.env.example
 
-# Ignore OS files
 .DS_Store
 Thumbs.db
 
-# Ignore frontend build output
 frontend/dist/
 
-# Ignore logs
 *.log
 backend/error.log
 
-# Ignore test and debug output
 test_*.js
 *_test.js
 **/test-results.json
 security_*.txt
 
-# Ignore build and lint output
 **/build_*.txt
 **/build.log
 **/lint_*.txt
@@ -40,25 +31,20 @@ security_*.txt
 lint*.json
 phaseC-*.txt
 
-# Ignore temporary documentation workspace artifacts only
 docx/_tmp/
 
-# Ignore temporary and local Postman workspace state
 tmp/
 .postman/
 postman/
 
-# Ignore QA/browser artifacts
 output/
 frontend/playwright-report/
 frontend/test-results/
 
-# Ignore generated export artifacts
 frontend/transactions_*.pdf
 frontend/transactions_*.csv
 frontend/transactions_*.xlsx
 
-# Ignore agent folders
 .agent/
 .agents/
 _agent/
@@ -72,7 +58,6 @@ docx/07-tham-chieu/*
 docx/07-tham-chieu/postman/*
 !docx/07-tham-chieu/postman/Junkio.postman_collection.json
 !docx/07-tham-chieu/postman/Junkio.postman_environment.json
-# Ignore backend testing logs and outputs
 backend/*-log.txt
 backend/*_error.txt
 backend/final_test.txt
@@ -84,10 +69,9 @@ backend/uploads/
 /baocao/
 rule.md
 backend/coverage/
-# Ignore agent and AI tool folders
 .ai-devkit.json
 
-# Ignore additional frontend reports
 frontend/report_*.*
 .idea/
-/docx/
+/.vscode/
+/coverage/

@@ -20,7 +20,7 @@ module.exports = {
                 type: Sequelize.STRING
             },
             type: {
-                type: Sequelize.STRING, // EXPENSE / INCOME
+                type: Sequelize.STRING,
                 allowNull: false
             },
             wallet_id: {

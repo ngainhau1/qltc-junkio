@@ -14,7 +14,7 @@ module.exports = {
             },
             type: {
                 type: Sequelize.STRING,
-                allowNull: false // 'EXPENSE' or 'INCOME'
+                allowNull: false
             },
             parent_id: {
                 type: Sequelize.UUID,

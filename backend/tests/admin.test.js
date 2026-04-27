@@ -4,11 +4,9 @@ const request = require('supertest');
 const express = require('express');
 const { Sequelize, DataTypes, Op } = require('sequelize');
 
-// Mock uuid to avoid ESM parse
 jest.mock('uuid', () => ({
     v4: jest.fn(() => 'mocked-uuid')
 }));
-// Mock auth & role middleware to simple pass-through
 jest.mock('../middleware/authMiddleware', () => (req, res, next) => {
     req.user = { id: 'admin-id', role: 'admin' };
     next();
@@ -26,9 +24,6 @@ jest.mock('../controllers/adminController', () => {
     };
 });
 
-
-
-// Setup mock models
 const mockSequelize = new Sequelize('sqlite::memory:', { logging: false });
 
 const mockUser = mockSequelize.define('User', {
@@ -77,7 +72,6 @@ const mockBudget = mockSequelize.define('Budget', {
     end_date: { type: DataTypes.DATEONLY, allowNull: false },
 });
 
-// Mock relationships to prevent errors in controller includes
 mockUser.hasMany(mockWallet, { foreignKey: 'user_id' });
 mockUser.hasMany(mockTransaction, { foreignKey: 'user_id' });
 mockUser.belongsToMany(mockFamily, { through: 'FamilyMembers', foreignKey: 'user_id' });
@@ -90,7 +84,6 @@ jest.mock('../models', () => ({
     Sequelize: { Op: require('sequelize').Op }
 }));
 
-// Setup app with mocked auth middleware and routes
 jest.mock('../middleware/authMiddleware', () => (req, res, next) => {
     req.user = { id: 'admin-id', role: 'admin' };
     next();
@@ -107,7 +100,6 @@ app.use('/api/admin', require('../routes/adminRoutes'));
 
 beforeAll(async () => {
     await mockSequelize.sync({ force: true });
-    // create dummy users
     await mockUser.create({ id: 'admin-id', name: 'Admin', email: 'admin@test.com', password_hash: 'pwd', role: 'admin' });
     await mockUser.create({ id: 'user-id', name: 'User 1', email: 'user@test.com', password_hash: 'pwd', role: 'member' });
 });
@@ -133,7 +125,6 @@ describe('Admin API Endpoints', () => {
 
     it('DELETE /api/admin/users/:id should soft delete user', async () => {
         const res = await request(app).delete('/api/admin/users/user-id');
-        // 'user-id' is not a valid UUID so validator may return 422
         expect([200, 422]).toContain(res.statusCode);
     });
 });

@@ -14,6 +14,7 @@ import {
     Bell,
     TrendingUp,
     Shield,
+    PiggyBank,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -43,6 +44,7 @@ export function MobileMenu() {
             title: t("nav.features"),
             items: [
                 { icon: ArrowRightLeft, label: t("nav.transactions"), href: "/transactions", color: "text-blue-500", bg: "bg-blue-500/10" },
+                { icon: PiggyBank, label: t("nav.budgets"), href: "/budgets", color: "text-emerald-600", bg: "bg-emerald-500/10" },
                 { icon: Target, label: t("nav.goals"), href: "/goals", color: "text-amber-500", bg: "bg-amber-500/10" },
                 { icon: Repeat, label: t("nav.recurring"), href: "/transactions", color: "text-purple-500", bg: "bg-purple-500/10" },
                 { icon: PieChart, label: t("nav.reports"), href: "/reports", color: "text-emerald-500", bg: "bg-emerald-500/10" },

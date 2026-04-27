@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { createTransaction, createTransfer } from '@/features/transactions/transactionSlice';
 import { fetchCategories } from '@/features/categories/categorySlice';
+import { localizeCategoryName } from '@/features/categories/categoryLocalization';
 import { getFinanceScopeLabels } from '@/features/finance/context';
 import { refreshFinanceData } from '@/features/finance/refreshFinanceData';
 import { formatCurrency } from '@/lib/utils';
@@ -274,7 +275,7 @@ export function TransactionForm({ onSuccess }) {
                                 .filter((category) => (formik.values.type === 'INCOME' ? category.type === 'INCOME' : category.type === 'EXPENSE'))
                                 .map((category) => (
                                     <option key={category.id} value={category.id}>
-                                        {category.name}
+                                        {localizeCategoryName(category.name, t)}
                                     </option>
                                 ))}
                         </select>

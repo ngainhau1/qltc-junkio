@@ -1,4 +1,3 @@
-// @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
@@ -9,7 +8,6 @@ import recurringReducer, { createRecurring } from '@/features/recurring/recurrin
 import walletReducer from '@/features/wallets/walletSlice';
 import familyReducer from '@/features/families/familySlice';
 
-// Mock action creator to observe dispatch payload
 vi.mock('@/features/recurring/recurringSlice', async () => {
   const original = await vi.importActual('@/features/recurring/recurringSlice');
   return {
@@ -18,7 +16,6 @@ vi.mock('@/features/recurring/recurringSlice', async () => {
   };
 });
 
-// Simplify i18n labels to raw keys
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (k, opts) => (opts?.amount ? String(opts.amount) : k),
@@ -58,7 +55,6 @@ describe('RecurringRuleForm', () => {
     renderForm();
     expect(screen.getAllByPlaceholderText('0')[0]).toBeTruthy();
 
-    // choose weekly
     fireEvent.change(screen.getByLabelText('transactions.recurring.form.frequency'), { target: { value: 'WEEKLY' } });
     expect(screen.getByLabelText('transactions.recurring.form.frequency')).toHaveValue('WEEKLY');
   });

@@ -1,12 +1,4 @@
 #!/usr/bin/env node
-/**
- * Run Postman collection via Newman with sane defaults.
- *
- * Env vars:
- *   BASE_URL     - override baseUrl variable (default http://localhost:5000)
- *   NEWMAN_ENV   - path to environment file (default docx/07-tham-chieu/postman/Junkio.postman_environment.json)
- *   REPORT_JUNIT - "true" to emit JUnit report newman-results.xml
- */
 const { spawnSync } = require('child_process');
 const path = require('path');
 

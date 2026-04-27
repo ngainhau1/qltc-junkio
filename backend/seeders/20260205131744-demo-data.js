@@ -8,7 +8,6 @@ module.exports = {
         const now = new Date();
         const passwordHash = bcrypt.hashSync('demo123', 10);
 
-        // Users
         const adminId = uuidv4();
         const userId = uuidv4();
         const staffId = uuidv4();
@@ -42,7 +41,6 @@ module.exports = {
             }
         ], {});
 
-        // Family + members
         const familyId = uuidv4();
         await queryInterface.bulkInsert('Families', [{
             id: familyId,
@@ -79,7 +77,6 @@ module.exports = {
             }
         ], {});
 
-        // Categories
         const expenseNames = ['Ăn uống', 'Di chuyển', 'Nhà cửa', 'Giải trí', 'Mua sắm', 'Học phí'];
         const incomeNames = ['Lương', 'Thưởng', 'Đầu tư'];
         const categories = [];
@@ -97,7 +94,6 @@ module.exports = {
         });
         await queryInterface.bulkInsert('Categories', categories, {});
 
-        // Wallets (2 cá nhân + 1 gia đình)
         const adminWalletId = uuidv4();
         const userWalletId = uuidv4();
         const familyWalletId = uuidv4();
@@ -109,7 +105,6 @@ module.exports = {
             { id: familyWalletId, name: 'Quỹ Gia Đình', balance: 5000000, currency: 'VND', user_id: null, family_id: familyId, createdAt: now, updatedAt: now }
         ], {});
 
-        // Transactions (12 mục đa dạng)
         const transactions = [
             { description: 'Lương tháng 3', amount: 15000000, type: 'INCOME', wallet_id: adminWalletId, category_id: categoryIds['Lương'], user_id: adminId, date: new Date(), createdAt: now, updatedAt: now },
             { description: 'Bonus Q1', amount: 3000000, type: 'INCOME', wallet_id: adminWalletId, category_id: categoryIds['Thưởng'], user_id: adminId, date: new Date(), createdAt: now, updatedAt: now },
@@ -127,7 +122,6 @@ module.exports = {
 
         await queryInterface.bulkInsert('Transactions', transactions, {});
 
-        // Transaction shares (để demo modal chi tiết)
         const shares = [];
         const shareTargets = transactions.filter(t => [ 'Siêu thị cuối tuần', 'Đóng học phí', 'Ăn tối gia đình' ].includes(t.description));
         shareTargets.forEach(t => {
@@ -153,14 +147,12 @@ module.exports = {
         });
         await queryInterface.bulkInsert('transaction_shares', shares, {});
 
-        // Goals (3 mục tiêu)
         await queryInterface.bulkInsert('goals', [
             { id: uuidv4(), name: 'Mua xe máy', targetAmount: 15000000, currentAmount: 4000000, deadline: new Date(new Date().setMonth(now.getMonth() + 6)), colorCode: '#3b82f6', imageUrl: 'Bike', status: 'IN_PROGRESS', user_id: userId, created_at: now, updated_at: now },
             { id: uuidv4(), name: 'Quỹ du lịch Đà Lạt', targetAmount: 8000000, currentAmount: 2500000, deadline: new Date(new Date().setMonth(now.getMonth() + 4)), colorCode: '#22c55e', imageUrl: 'Plane', status: 'IN_PROGRESS', user_id: adminId, created_at: now, updated_at: now },
             { id: uuidv4(), name: 'Dự phòng khẩn cấp', targetAmount: 10000000, currentAmount: 6000000, deadline: null, colorCode: '#f59e0b', imageUrl: 'Shield', status: 'IN_PROGRESS', user_id: adminId, created_at: now, updated_at: now }
         ], {});
 
-        // Budgets (2)
         const start = new Date(now.getFullYear(), now.getMonth(), 1);
         const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
         await queryInterface.bulkInsert('Budgets', [

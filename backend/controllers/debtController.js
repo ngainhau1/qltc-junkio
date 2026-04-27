@@ -116,8 +116,6 @@ const applyShareReductions = async (shares, reductions, transaction) => {
     }
 };
 
-// POST /api/debts/settle
-// Body: { to_user_id, amount, from_wallet_id, to_wallet_id?, family_id? }
 exports.settleDebt = async (req, res) => {
     const { to_user_id, amount, from_wallet_id, to_wallet_id, family_id, from_user_id } = req.body;
     const payerUserId = req.user.id;
@@ -326,8 +324,6 @@ exports.settleDebt = async (req, res) => {
     }
 };
 
-// GET /api/debts/simplified/:familyId
-// Thuật toán Tham lam (Greedy) tối ưu hóa mạng lưới nợ trong gia đình
 exports.getSimplifiedDebts = async (req, res) => {
     try {
         const { familyId } = req.params;
@@ -344,7 +340,6 @@ exports.getSimplifiedDebts = async (req, res) => {
             return sendError(res, 'FORBIDDEN_FAMILY_SETTLEMENT', 403);
         }
 
-        // 1. Lấy tất cả TransactionShare UNPAID + APPROVED trong family
         const shares = await TransactionShare.findAll({
             where: {
                 status: 'UNPAID',
@@ -358,18 +353,15 @@ exports.getSimplifiedDebts = async (req, res) => {
             }]
         });
 
-        // 2. Định dạng lại Input cho hàm Thuật toán
         const mappedDebts = shares.map(share => ({
             debtor: share.user_id,
             creditor: share.Transaction.user_id,
             amount: share.amount
         }));
 
-        // 3. Sử dụng Core Algorithm (Tham Lam + Bipartite Graph Matching)
         const { simplifyDebts } = require('../services/debtService');
         const suggestions = simplifyDebts(mappedDebts);
 
-        // 4. Enrich với thông tin user (tên, avatar)
         const userIds = [...new Set(suggestions.flatMap(s => [s.from, s.to]))];
         const users = await User.findAll({
             where: { id: userIds },

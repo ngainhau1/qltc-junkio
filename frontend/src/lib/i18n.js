@@ -14,7 +14,6 @@ const resources = {
     }
 };
 
-// Cố gắng lấy ngôn ngữ đã lưu trong Settings Redux Store ra để làm default nếu chưa có gì
 const getStoredLanguage = () => {
     try {
         const storedSettings = localStorage.getItem('app_settings');
@@ -23,25 +22,22 @@ const getStoredLanguage = () => {
             if (parsed.language) return parsed.language;
         }
     } catch {
-        // fail silently
+        return 'vi';
     }
-    return 'vi'; // Default to vietnamese
+    return 'vi';
 }
 
 i18n
-    // Phát hiện ngôn ngữ trình duyệt (optional, nhưng ta ghi đè bằng Redux)
     .use(LanguageDetector)
-    // Truyền instance i18n vào react-i18next
     .use(initReactI18next)
-    // Khởi tạo i18next
     .init({
         resources,
-        lng: getStoredLanguage(), // Ngôn ngữ mặc định load nhanh từ localStorage trước khi store mount
-        fallbackLng: 'vi',      // Ngôn ngữ dự phòng nếu ngôn ngữ chính bị lỗi
+        lng: getStoredLanguage(),
+        fallbackLng: 'vi',
         debug: false,
 
         interpolation: {
-            escapeValue: false, // React đã an toàn khỏi XSS
+            escapeValue: false,
         }
     });
 

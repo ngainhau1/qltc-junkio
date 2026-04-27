@@ -4,7 +4,6 @@ const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
     class Goal extends Model {
         static associate(models) {
-            // A goal belongs to a user
             Goal.belongsTo(models.User, { foreignKey: 'user_id' });
         }
     }
@@ -35,15 +34,15 @@ module.exports = (sequelize, DataTypes) => {
         },
         colorCode: {
             type: DataTypes.STRING,
-            defaultValue: '#3b82f6' // Default blue
+            defaultValue: '#3b82f6'
         },
         imageUrl: {
             type: DataTypes.STRING,
-            defaultValue: 'Target' // Default icon name
+            defaultValue: 'Target'
         },
         status: {
             type: DataTypes.STRING,
-            defaultValue: 'IN_PROGRESS' // IN_PROGRESS, ACHIEVED
+            defaultValue: 'IN_PROGRESS'
         },
         user_id: {
             type: DataTypes.UUID,

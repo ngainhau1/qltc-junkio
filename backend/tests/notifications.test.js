@@ -2,7 +2,6 @@ const request = require('supertest');
 const express = require('express');
 const { Sequelize, DataTypes } = require('sequelize');
 
-// Setup mock DB & model
 const mockSequelize = new Sequelize('sqlite::memory:', { logging: false });
 
 const mockNotification = mockSequelize.define('Notification', {
@@ -25,7 +24,6 @@ jest.mock('../models', () => ({
     User: mockUser
 }));
 
-// Mock socket
 jest.mock('../config/socket', () => ({
     getIO: () => ({
         to: () => ({
@@ -94,7 +92,6 @@ describe('Notification API Endpoints', () => {
             const res = await request(app).put('/api/notifications/read-all');
             expect(res.statusCode).toEqual(200);
 
-            // Verify in DB
             const unreadCount = await mockNotification.count({ where: { user_id: regularUserId, isRead: false } });
             expect(unreadCount).toBe(0);
         });
@@ -111,7 +108,6 @@ describe('Notification API Endpoints', () => {
 
         it('should mark single notification as read', async () => {
             mockUserId = regularUserId;
-            // Create a fresh unread notification
             const n3 = await mockNotification.create({
                 user_id: regularUserId,
                 title: 'Test Notif 3',
@@ -122,7 +118,6 @@ describe('Notification API Endpoints', () => {
             const res = await request(app).put(`/api/notifications/${n3.id}/read`);
             expect(res.statusCode).toEqual(200);
 
-            // Verify
             const updated = await mockNotification.findByPk(n3.id);
             expect(updated.isRead).toBe(true);
         });
@@ -149,8 +144,7 @@ describe('Notification API Endpoints', () => {
             });
             expect(res.statusCode).toEqual(200);
             expect(res.body.message).toBe('NOTIFICATION_BROADCAST_SUCCESS');
-            
-            // Verify notifications inserted into db
+
             const count = await mockNotification.count({ where: { message: '[Hello] Broadcast message' } });
             expect(count).toBe(2);
         });

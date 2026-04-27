@@ -1,4 +1,3 @@
-// Standardized API response helpers
 const success = (res, data = null, message = 'SUCCESS', status = 200) => {
     return res.status(status).json({ status: 'success', message, data });
 };

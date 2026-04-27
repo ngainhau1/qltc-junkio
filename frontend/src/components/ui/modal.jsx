@@ -29,7 +29,6 @@ export function Modal({ isOpen, onClose, title, children, contentTestId, content
                     contentClassName
                 )}
             >
-                {/* Drag Handle for Mobile */}
                 <div className="w-full flex justify-center mb-4 md:hidden">
                     <div className="h-1.5 w-12 rounded-full bg-muted-foreground/20"></div>
                 </div>

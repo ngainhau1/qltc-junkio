@@ -11,6 +11,7 @@ import settingsReducer from '../features/settings/settingsSlice';
 import categoryReducer from '../features/categories/categorySlice';
 import analyticsReducer from '../features/analytics/analyticsSlice';
 import goldPriceReducer from '../features/market/goldPriceSlice';
+import budgetReducer from '../features/budgets/budgetSlice';
 
 export const store = configureStore({
     reducer: {
@@ -26,5 +27,6 @@ export const store = configureStore({
         categories: categoryReducer,
         analytics: analyticsReducer,
         goldPrice: goldPriceReducer,
+        budgets: budgetReducer,
     },
 });

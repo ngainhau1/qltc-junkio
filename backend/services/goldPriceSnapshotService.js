@@ -107,7 +107,6 @@ const upsertGoldPriceSnapshot = async (livePrice) => {
             snapshot = await GoldPriceSnapshot.create(snapshotData);
         } catch (error) {
             if (error.name === 'SequelizeUniqueConstraintError') {
-                // Handle TOCTOU concurrency race condition where another worker created it
                 snapshot = await GoldPriceSnapshot.findOne({
                     where: {
                         source: snapshotData.source,

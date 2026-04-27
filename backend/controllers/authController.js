@@ -60,14 +60,6 @@ const buildAuthUser = (user) => ({
     avatar: user.avatar || null
 });
 
-/**
- * Xử lý đăng ký người dùng mới.
- * - Kiểm tra dữ liệu đầu vào (tên, email, mật khẩu).
- * - Mã hóa mật khẩu bằng bcrypt.
- * - Tạo người dùng mới với vai trò mặc định là 'member'.
- * - Tự động tạo một nhóm Gia đình (Family) mặc định cho người dùng.
- * - Trả về Access Token và thiết lập Refresh Token trong Cookie.
- */
 exports.register = async (req, res) => {
     const { name, email, password } = req.body;
 
@@ -124,13 +116,6 @@ exports.register = async (req, res) => {
     }
 };
 
-/**
- * Xử lý đăng nhập.
- * - Kiểm tra email và mật khẩu.
- * - Kiểm tra xem tài khoản có đang bị khóa (is_locked) bởi Admin không.
- * - So sánh mật khẩu đã mã hóa.
- * - Cấp mới Access Token và Refresh Token nếu thành công.
- */
 exports.login = async (req, res) => {
     const { email, password } = req.body;
     try {
@@ -161,12 +146,6 @@ exports.login = async (req, res) => {
     }
 };
 
-/**
- * Cấp lại Access Token mới (Silent Refresh).
- * - Đọc Refresh Token từ cookie bảo mật (httpOnly).
- * - Xác thực token và kiểm tra trạng thái người dùng.
- * - Trả về Access Token mới để Frontend tiếp tục gọi API mà không bị gián đoạn.
- */
 exports.refreshToken = async (req, res) => {
     const refreshToken = req.cookies?.refresh_token;
 
@@ -198,10 +177,6 @@ exports.refreshToken = async (req, res) => {
     }
 };
 
-/**
- * Đăng xuất người dùng.
- * - Xóa Refresh Token khỏi Cookie của trình duyệt.
- */
 exports.logout = async (req, res) => {
     // Xóa cookie refresh_token để trình duyệt không thể xin access token mới sau khi đăng xuất.
     res.clearCookie('refresh_token', {
@@ -213,12 +188,6 @@ exports.logout = async (req, res) => {
     success(res, null, 'LOGOUT_SUCCESS');
 };
 
-/**
- * Xử lý yêu cầu quên mật khẩu.
- * - Tạo một Token khôi phục mật khẩu (resetToken) ngẫu nhiên.
- * - Lưu mã băm của Token vào DB với thời gian hết hạn (10 phút).
- * - Gửi Email chứa đường dẫn khôi phục mật khẩu cho người dùng.
- */
 exports.forgotPassword = async (req, res) => {
     const { email } = req.body;
     try {
@@ -258,12 +227,6 @@ exports.forgotPassword = async (req, res) => {
     }
 };
 
-/**
- * Đặt lại mật khẩu mới.
- * - Kiểm tra Token khôi phục từ URL có khớp và còn hạn không.
- * - Mã hóa mật khẩu mới và cập nhật vào Database.
- * - Xóa bỏ Token khôi phục sau khi sử dụng thành công.
- */
 exports.resetPassword = async (req, res) => {
     const resetToken = req.params.token;
     const { password } = req.body;

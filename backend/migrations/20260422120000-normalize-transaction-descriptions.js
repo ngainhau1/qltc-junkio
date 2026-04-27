@@ -105,6 +105,5 @@ module.exports = {
     },
 
     async down() {
-        // Normalized descriptions include user names and cannot be safely reversed to UUID-based text.
     }
 };

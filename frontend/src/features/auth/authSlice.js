@@ -13,11 +13,6 @@ const initialState = {
     error: null
 };
 
-/**
- * Thunk xử lý đăng nhập.
- * - Gửi thông tin đăng nhập lên server.
- * - Lưu token và thông tin người dùng vào Redux state nếu thành công.
- */
 export const loginUser = createAsyncThunk(
     'auth/loginUser',
     async (credentials, { rejectWithValue }) => {
@@ -30,11 +25,6 @@ export const loginUser = createAsyncThunk(
     }
 );
 
-/**
- * Thunk xử lý đăng ký tài khoản mới.
- * - Gửi thông tin đăng ký (name, email, password) lên server.
- * - Tự động đăng nhập người dùng sau khi đăng ký thành công.
- */
 export const registerUser = createAsyncThunk(
     'auth/registerUser',
     async (userData, { rejectWithValue }) => {
@@ -47,11 +37,6 @@ export const registerUser = createAsyncThunk(
     }
 );
 
-/**
- * Thunk lấy thông tin người dùng hiện tại (Me).
- * - Được gọi khi ứng dụng khởi chạy hoặc khi refresh trang để kiểm tra trạng thái đăng nhập.
- * - Xác định xem token trong localStorage còn hiệu lực hay không.
- */
 export const fetchCurrentUser = createAsyncThunk(
     'auth/fetchCurrentUser',
     async (_, { rejectWithValue }) => {
@@ -80,11 +65,6 @@ export const uploadUserAvatar = createAsyncThunk(
     }
 );
 
-
-/**
- * Thunk cập nhật thông tin cá nhân.
- * - Cho phép thay đổi tên hoặc các thông tin profile khác của người dùng.
- */
 export const updateProfileAsync = createAsyncThunk(
     'auth/updateProfileAsync',
     async (profileData, { rejectWithValue }) => {
@@ -101,12 +81,6 @@ const authSlice = createSlice({
     name: 'auth',
     initialState,
     reducers: {
-        /**
-         * Xử lý đăng xuất ở phía Client.
-         * - Xóa thông tin user khỏi Redux Store.
-         * - Xóa token trong localStorage.
-         * - Gọi API logout để xóa cookie ở phía Server.
-         */
         logout: (state) => {
             state.user = null;
             state.isAuthenticated = false;

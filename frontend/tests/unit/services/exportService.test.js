@@ -1,4 +1,3 @@
-// @vitest-environment jsdom
 import { describe, it, expect, vi } from 'vitest';
 import {
     exportTransactionRowsToCSV,
@@ -9,7 +8,6 @@ vi.mock('@/services/pdfFont', () => ({
     loadRobotoBase64: vi.fn().mockResolvedValue(null),
 }));
 
-// Mock DOM elements for download
 global.URL.createObjectURL = vi.fn();
 global.document.createElement = vi.fn().mockReturnValue({
     setAttribute: vi.fn(),
@@ -18,7 +16,6 @@ global.document.createElement = vi.fn().mockReturnValue({
 });
 global.document.body.appendChild = vi.fn();
 global.document.body.removeChild = vi.fn();
-
 
 describe('exportService', () => {
     it('should generate valid CSV link', () => {

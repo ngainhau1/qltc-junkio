@@ -11,14 +11,12 @@ const initialState = {
     error: null,
 };
 
-// --- Thunks ---
-// fetchWallets lấy toàn bộ ví mà user được phép xem theo token hiện tại.
 export const fetchWallets = createAsyncThunk(
     'wallets/fetchWallets',
     async (_, { rejectWithValue }) => {
         try {
             const response = await api.get('/wallets');
-            return response.data; // array of wallets
+            return response.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || 'WALLET_LOAD_FAILED');
         }
@@ -31,7 +29,7 @@ export const createWallet = createAsyncThunk(
     async (walletData, { rejectWithValue }) => {
         try {
             const response = await api.post('/wallets', walletData);
-            return response.data; // new wallet object
+            return response.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || 'WALLET_CREATE_FAILED');
         }
@@ -44,7 +42,7 @@ export const editWallet = createAsyncThunk(
     async ({ id, data }, { rejectWithValue }) => {
         try {
             const response = await api.put(`/wallets/${id}`, data);
-            return response.data; // updated wallet object
+            return response.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || 'WALLET_UPDATE_FAILED');
         }
@@ -64,13 +62,10 @@ export const removeWallet = createAsyncThunk(
     }
 );
 
-
 const walletSlice = createSlice({
     name: 'wallets',
     initialState,
     reducers: {
-        // Reducers local dùng để cập nhật số dư trên UI ngay khi giao dịch thay đổi.
-        // Các hàm này không thay thế dữ liệu chuẩn từ backend, chỉ giúp giao diện phản hồi nhanh hơn.
         updateWalletBalanceLocal: (state, action) => {
             const { id, amount, type } = action.payload;
             const wallet = state.wallets.find(w => w.id === id);
@@ -99,7 +94,6 @@ const walletSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
-            // Fetch Wallets
             .addCase(fetchWallets.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -114,22 +108,19 @@ const walletSlice = createSlice({
                 state.error = action.payload;
             })
 
-            // Create Wallet
             .addCase(createWallet.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
             .addCase(createWallet.fulfilled, (state, action) => {
                 state.loading = false;
-                // Ví mới được đưa lên đầu danh sách để người dùng thấy ngay.
-                state.wallets.unshift(action.payload); // Add to beginning
+                state.wallets.unshift(action.payload);
             })
             .addCase(createWallet.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
             })
 
-            // Edit Wallet
             .addCase(editWallet.fulfilled, (state, action) => {
                 const index = state.wallets.findIndex(w => w.id === action.payload.id);
                 if (index !== -1) {
@@ -137,7 +128,6 @@ const walletSlice = createSlice({
                 }
             })
 
-            // Remove Wallet
             .addCase(removeWallet.fulfilled, (state, action) => {
                 state.wallets = state.wallets.filter(w => w.id !== action.payload);
             });

@@ -101,7 +101,6 @@ const notificationsSlice = createSlice({
 
 export const { addNotification, clearAll } = notificationsSlice.actions;
 
-// Selectors
 export const selectUnreadCount = (state) =>
     state.notifications.items.filter((notification) => !notification.isRead).length;
 

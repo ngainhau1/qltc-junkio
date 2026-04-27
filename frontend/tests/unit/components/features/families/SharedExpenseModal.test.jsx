@@ -1,4 +1,3 @@
-// @vitest-environment jsdom
 import { beforeEach, describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { SharedExpenseModal } from '@/components/features/families/SharedExpenseModal';
@@ -33,7 +32,6 @@ vi.mock('sonner', () => ({
   },
 }));
 
-// Mock UI components to avoid portal/radix complexity
 vi.mock('@/components/ui/modal', () => ({
   Modal: ({ children }) => <div data-testid="modal">{children}</div>,
 }));
@@ -57,7 +55,6 @@ vi.mock('@/components/ui/select', () => ({
   SelectValue: () => null,
   SelectItem: ({ value, children }) => <option value={value}>{children}</option>,
 }));
-// Mock translation
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (k, opts) => (opts?.amount ? String(opts.amount) : k), i18n: { language: 'vi', changeLanguage: () => {} } }),
   initReactI18next: { type: '3rdParty', init: vi.fn() }
@@ -108,7 +105,6 @@ describe('SharedExpenseModal', () => {
 
     fireEvent.change(screen.getByPlaceholderText('0'), { target: { value: '1000' } });
 
-    // Each member should show 500
     await waitFor(() => expect(screen.getByText(/500/)).toBeTruthy());
   });
 
@@ -166,6 +162,5 @@ describe('SharedExpenseModal', () => {
   });
 
   it.skip('supports percent split', () => {
-    // UI hiện tại chưa có lựa chọn chia theo %, cần triển khai trước khi test.
   });
 });

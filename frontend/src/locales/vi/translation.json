@@ -89,6 +89,7 @@
     "nav": {
         "dashboard": "Tổng Quan",
         "wallets": "Ví Của Tôi",
+        "budgets": "Ngân Sách",
         "transactions": "Giao Dịch",
         "family": "Gia Đình",
         "goals": "Mục Tiêu",
@@ -608,6 +609,57 @@
             }
         }
     },
+    "budgets": {
+        "createBtn": "Tạo ngân sách",
+        "createSuccess": "Tạo ngân sách thành công.",
+        "updateSuccess": "Cập nhật ngân sách thành công.",
+        "deleteSuccess": "Đã xóa ngân sách.",
+        "deleteFailed": "Không thể xóa ngân sách.",
+        "deleteTitle": "Xóa ngân sách?",
+        "deleteConfirmPersonal": "Ngân sách này sẽ bị xóa khỏi phạm vi cá nhân của bạn.",
+        "deleteConfirmFamily": "Ngân sách này sẽ bị xóa khỏi {{target}}.",
+        "limitLabel": "Hạn mức",
+        "periodLabel": "Kỳ áp dụng",
+        "noCategoryName": "Chưa phân loại",
+        "noCategoriesTitle": "Chưa có danh mục chi tiêu",
+        "noCategoriesDesc": "Hãy tạo ít nhất một danh mục chi tiêu trước khi tạo ngân sách.",
+        "context": {
+            "personalTitle": "Ngân sách cá nhân",
+            "familyTitle": "Ngân sách gia đình",
+            "personalDesc": "Đặt giới hạn chi tiêu cho các danh mục cá nhân của bạn.",
+            "familyDesc": "Đặt giới hạn chi tiêu chung cho {{target}}.",
+            "emptyPersonalTitle": "Chưa có ngân sách cá nhân",
+            "emptyFamilyTitle": "Chưa có ngân sách gia đình",
+            "emptyPersonalDesc": "Tạo ngân sách cá nhân đầu tiên để giới hạn chi tiêu theo danh mục.",
+            "emptyFamilyDesc": "Tạo ngân sách đầu tiên cho {{target}} để kiểm soát chi tiêu chung.",
+            "addPersonalTitle": "Tạo ngân sách cá nhân",
+            "addFamilyTitle": "Tạo ngân sách gia đình",
+            "editPersonalTitle": "Sửa ngân sách cá nhân",
+            "editFamilyTitle": "Sửa ngân sách gia đình"
+        },
+        "form": {
+            "scopeLabel": "Tạo cho",
+            "category": "Danh mục",
+            "categoryPlaceholder": "Chọn danh mục chi tiêu",
+            "amount": "Số tiền giới hạn",
+            "amountPlaceholder": "0",
+            "startDate": "Ngày bắt đầu",
+            "endDate": "Ngày kết thúc",
+            "createPersonalBtn": "Tạo ngân sách cá nhân",
+            "createFamilyBtn": "Tạo ngân sách gia đình",
+            "saveBtn": "Lưu ngân sách",
+            "noCategories": "Hiện chưa có danh mục chi tiêu để chọn.",
+            "validation": {
+                "categoryRequired": "Vui lòng chọn danh mục chi tiêu",
+                "amountRequired": "Vui lòng nhập hạn mức hợp lệ",
+                "amountPositive": "Hạn mức phải lớn hơn 0",
+                "startDateRequired": "Vui lòng chọn ngày bắt đầu",
+                "endDateRequired": "Vui lòng chọn ngày kết thúc",
+                "endDateAfterStart": "Ngày kết thúc phải từ ngày bắt đầu trở đi",
+                "saveFailed": "Không thể lưu ngân sách. Vui lòng thử lại."
+            }
+        }
+    },
     "reports": {
         "title": "Báo Cáo & Thống Kê",
         "desc": "Hiểu rõ hơn về thói quen chi tiêu của bạn.",
@@ -1008,6 +1060,23 @@
             "balance_invalid_range": "Biểu số dư cung cấp bị đánh lỗi.",
             "currency_min_length_not_met": "Ký hiệu mã tiền quá ngắn.",
             "currency_max_length_exceeded": "Ký hiệu mã tiền khá thừa thãi."
+        }
+    },
+    "categories": {
+        "labels": {
+            "food": "?n U?ng",
+            "transport": "Di Chuy?n",
+            "housing": "Nh? C?a",
+            "entertainment": "Gi?i Tr?",
+            "shopping": "Mua S?m",
+            "health": "S?c Kh?e",
+            "education": "Gi?o D?c",
+            "digitalServices": "D?ch V? S?",
+            "utilities": "H?a ??n & Ti?n ?ch",
+            "salary": "L??ng",
+            "bonus": "Th??ng",
+            "investment": "??u T?",
+            "sideIncome": "Thu Nh?p Ph?"
         }
     }
 }

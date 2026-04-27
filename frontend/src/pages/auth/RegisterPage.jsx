@@ -17,7 +17,6 @@ import { resolveError } from "@/utils/authErrors"
 export function RegisterPage() {
     const { t } = useTranslation()
 
-    // Validation Schema
     const RegisterSchema = Yup.object().shape({
         name: Yup.string().required(t('auth.nameRequired')),
         email: Yup.string().email(t('auth.emailInvalid')).required(t('auth.emailRequired')),

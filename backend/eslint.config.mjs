@@ -16,6 +16,14 @@ export default [
     },
     pluginJs.configs.recommended,
     {
+        files: ['public/swagger/**/*.js'],
+        languageOptions: {
+            globals: {
+                ...globals.browser,
+            }
+        }
+    },
+    {
         rules: {
             // Một số biến được bỏ qua cảnh báo vì Sequelize hoặc test có thể cần giữ tên cố định.
             'no-unused-vars': ['warn', { 'argsIgnorePattern': '^(?:_.*|Sequelize)$', 'varsIgnorePattern': '^(Op|Sequelize|User|Category|Goal|transferTxOut|transferTxIn|type|x|err|userId|year|month)$' }],

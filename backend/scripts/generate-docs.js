@@ -4,7 +4,6 @@ const yaml = require('js-yaml');
 const swaggerSpec = require('../config/swagger');
 const Converter = require('openapi-to-postmanv2');
 
-// Output paths
 const DOCS_DIR = path.join(__dirname, '../docs');
 const POSTMAN_PATH = path.join(__dirname, '..', '..', 'docx', '07-tham-chieu', 'postman', 'Junkio.postman_collection.json');
 
@@ -14,14 +13,12 @@ if (!fs.existsSync(DOCS_DIR)) {
 
 console.log('[docs:build] Bat dau trich xuat tai lieu...');
 
-// ── Helper: render JSON example as fenced code block ──
 function renderExample(example, indent = '') {
     if (!example) return '';
     const json = JSON.stringify(example, null, 2);
     return `\n${indent}\`\`\`json\n${json}\n\`\`\`\n`;
 }
 
-// ── Helper: render parameter table ──
 function renderParams(params) {
     if (!params || params.length === 0) return '';
     let md = '\n| Tham so | Vi tri | Mo ta | Bat buoc | Kieu du lieu |\n';
@@ -43,7 +40,6 @@ function renderParams(params) {
     return md;
 }
 
-// ── Helper: render request body ──
 function renderRequestBody(body) {
     if (!body) return '';
     let md = '\n**Request Body:**\n';
@@ -53,7 +49,6 @@ function renderRequestBody(body) {
     for (const [mediaType, mediaObj] of Object.entries(content)) {
         md += `\n*Content-Type:* \`${mediaType}\`\n`;
 
-        // Schema properties
         if (mediaObj.schema && mediaObj.schema.properties) {
             md += '\n| Truong | Kieu | Bat buoc | Mo ta |\n';
             md += '| --- | --- | --- | --- |\n';
@@ -66,13 +61,11 @@ function renderRequestBody(body) {
             }
         }
 
-        // Single example
         if (mediaObj.example) {
             md += '\n**Vi du:**\n';
             md += renderExample(mediaObj.example);
         }
 
-        // Multiple examples
         if (mediaObj.examples) {
             for (const [exName, exObj] of Object.entries(mediaObj.examples)) {
                 const summary = exObj.summary || exName;
@@ -84,7 +77,6 @@ function renderRequestBody(body) {
     return md;
 }
 
-// ── Helper: render responses ──
 function renderResponses(responses) {
     if (!responses) return '';
     let md = '\n**Responses:**\n\n';
@@ -97,7 +89,6 @@ function renderResponses(responses) {
         const desc = (resp.description || '').replace(/\n/g, ' ');
         md += `| \`${code}\` | ${desc} |\n`;
 
-        // Collect example for detail section
         if (resp.content) {
             for (const [, mediaObj] of Object.entries(resp.content)) {
                 if (mediaObj.example) {
@@ -107,7 +98,6 @@ function renderResponses(responses) {
         }
     }
 
-    // Render example JSON blocks
     for (const d of details) {
         md += `\n**Response ${d.code} - Vi du:**\n`;
         md += renderExample(d.example);
@@ -116,11 +106,9 @@ function renderResponses(responses) {
     return md;
 }
 
-// ── Main: Custom Markdown Renderer ──
 function generateMarkdown(spec) {
     let md = '';
 
-    // Title & Description
     md += `# ${spec.info.title}\n\n`;
     if (spec.info.description) {
         md += `${spec.info.description}\n\n`;
@@ -128,18 +116,15 @@ function generateMarkdown(spec) {
     md += `**Phien ban:** ${spec.info.version}\n\n`;
     md += '---\n\n';
 
-    // Group endpoints by tag
     const tagMap = {};
     const tagDescriptions = {};
 
-    // Collect tag descriptions
     if (spec.tags) {
         for (const tag of spec.tags) {
             tagDescriptions[tag.name] = tag.description || '';
         }
     }
 
-    // Group paths by tag
     for (const [pathStr, methods] of Object.entries(spec.paths)) {
         for (const [method, operation] of Object.entries(methods)) {
             if (typeof operation !== 'object') continue;
@@ -151,11 +136,9 @@ function generateMarkdown(spec) {
         }
     }
 
-    // Render each tag group
     for (const [tagName, endpoints] of Object.entries(tagMap)) {
         md += `## ${tagName}\n\n`;
 
-        // Tag description
         if (tagDescriptions[tagName]) {
             md += `${tagDescriptions[tagName].trim()}\n\n`;
         }
@@ -164,17 +147,14 @@ function generateMarkdown(spec) {
             const op = ep.operation;
             md += `### ${ep.method} \`${ep.path}\`\n\n`;
 
-            // Summary
             if (op.summary) {
                 md += `**${op.summary}**\n\n`;
             }
 
-            // Description
             if (op.description) {
                 md += `${op.description.trim()}\n\n`;
             }
 
-            // Security
             if (op.security && op.security.length > 0) {
                 const hasBearer = op.security.some(s => s.bearerAuth !== undefined);
                 if (hasBearer) {
@@ -182,20 +162,17 @@ function generateMarkdown(spec) {
                 }
             }
 
-            // Parameters
             if (op.parameters && op.parameters.length > 0) {
                 md += '**Parameters:**\n';
                 md += renderParams(op.parameters);
                 md += '\n';
             }
 
-            // Request Body
             if (op.requestBody) {
                 md += renderRequestBody(op.requestBody);
                 md += '\n';
             }
 
-            // Responses
             if (op.responses) {
                 md += renderResponses(op.responses);
             }
@@ -207,28 +184,20 @@ function generateMarkdown(spec) {
     return md;
 }
 
-// ══════════════════════════════════════
-// Execute
-// ══════════════════════════════════════
-
 try {
-    // 1. JSON
     const jsonPath = path.join(DOCS_DIR, 'swagger.json');
     fs.writeFileSync(jsonPath, JSON.stringify(swaggerSpec, null, 2), 'utf8');
     console.log('[OK] docs/swagger.json');
 
-    // 2. YAML
     const yamlPath = path.join(DOCS_DIR, 'swagger.yaml');
     fs.writeFileSync(yamlPath, yaml.dump(swaggerSpec), 'utf8');
     console.log('[OK] docs/swagger.yaml');
 
-    // 3. Markdown (Custom renderer)
     const mdPath = path.join(DOCS_DIR, 'api-docs.md');
     const mdContent = generateMarkdown(swaggerSpec);
     fs.writeFileSync(mdPath, mdContent, 'utf8');
     console.log('[OK] docs/api-docs.md (' + mdContent.length + ' chars)');
 
-    // 4. Postman Collection
     if (fs.existsSync(path.dirname(POSTMAN_PATH))) {
         Converter.convert({ type: 'json', data: swaggerSpec }, {
             folderStrategy: 'Tags',
