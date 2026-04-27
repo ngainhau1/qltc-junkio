@@ -1,5 +1,9 @@
 const { client } = require('../config/redis');
 
+// GHI CHÚ HỌC TẬP - Phần giá vàng SJC của Thành Đạt:
+// Service này lấy giá vàng hiện tại từ SJC, chuẩn hóa dữ liệu về một cấu trúc ổn định,
+// lưu Redis trong 60 giây và ghi thêm snapshot lịch sử nếu lấy dữ liệu mới.
+
 const CACHE_KEY = 'market:gold:sjc:hcm:current';
 const CACHE_TTL_SECONDS = 60;
 const SJC_PRICE_SERVICE_URL = 'https://sjc.com.vn/GoldPrice/Services/PriceService.ashx';
@@ -15,6 +19,7 @@ const createGoldPriceError = (code) => {
     return error;
 };
 
+// SJC trả thời gian dạng "HH:mm DD/MM/YYYY"; hàm này đổi sang chuỗi ISO có múi giờ Việt Nam.
 const parseSjcLatestDate = (value) => {
     if (typeof value !== 'string') {
         return null;
@@ -30,6 +35,7 @@ const parseSjcLatestDate = (value) => {
     return `${year}-${month}-${day}T${hours}:${minutes}:00+07:00`;
 };
 
+// Ưu tiên đúng sản phẩm và chi nhánh cần hiển thị; nếu không có thì lấy bản ghi Vàng SJC đầu tiên.
 const selectGoldRecord = (records = []) => {
     const exactMatch = records.find(
         (record) => record?.BranchName === TARGET_BRANCH && record?.TypeName === TARGET_PRODUCT
@@ -42,6 +48,7 @@ const selectGoldRecord = (records = []) => {
     return records.find((record) => typeof record?.TypeName === 'string' && record.TypeName.startsWith('Vàng SJC'));
 };
 
+// Chuẩn hóa payload từ SJC để frontend không phụ thuộc cấu trúc gốc của bên thứ ba.
 const normalizeSjcResponse = (payload) => {
     if (!payload || payload.success !== true || !Array.isArray(payload.data)) {
         throw createGoldPriceError('GOLD_PRICE_PAYLOAD_INVALID');
@@ -69,6 +76,7 @@ const normalizeSjcResponse = (payload) => {
 };
 
 const fetchSjcGoldPrice = async () => {
+    // API SJC dùng POST dạng form cũ, nên body cần method=GetCurrentGoldPrice.
     const response = await fetch(SJC_PRICE_SERVICE_URL, {
         method: 'POST',
         headers: {
@@ -93,6 +101,7 @@ const getGoldPrice = async () => {
         const cachedValue = await client.get(CACHE_KEY);
 
         if (cachedValue) {
+            // Có cache thì trả ngay, không gọi SJC để giảm độ trễ và giảm phụ thuộc nguồn ngoài.
             return JSON.parse(cachedValue);
         }
     } catch (error) {
@@ -102,12 +111,14 @@ const getGoldPrice = async () => {
     const freshData = await fetchSjcGoldPrice();
 
     try {
+        // setEx tự xóa cache sau CACHE_TTL_SECONDS.
         await client.setEx(CACHE_KEY, CACHE_TTL_SECONDS, JSON.stringify(freshData));
     } catch (error) {
         console.error('Gold price cache write error:', error);
     }
 
     try {
+        // Snapshot phục vụ biểu đồ lịch sử; nếu ghi snapshot lỗi thì vẫn trả giá hiện tại cho user.
         const { upsertGoldPriceSnapshot } = require('./goldPriceSnapshotService');
         await upsertGoldPriceSnapshot(freshData);
     } catch (error) {

@@ -2,6 +2,14 @@ const { Wallet, Transaction, FamilyMember } = require('../models');
 const { Op, fn, col, where } = require('sequelize');
 const { success, error, notFound, serverError, created } = require('../utils/responseHelper');
 
+// GHI CHÚ HỌC TẬP - Phần ví của Thành Đạt:
+// Controller này xử lý ví cá nhân và ví gia đình. Điểm quan trọng nhất là mọi thao tác
+// đều phải kiểm tra phạm vi truy cập để người dùng không xem/sửa/xóa ví của người khác.
+
+/**
+ * Lấy danh sách family_id mà user đang tham gia.
+ * Danh sách này dùng để cho phép user nhìn thấy ví gia đình bên cạnh ví cá nhân.
+ */
 const getUserFamilyIds = async (userId) => {
     const userFamilies = await FamilyMember.findAll({
         where: { user_id: userId },
@@ -10,6 +18,10 @@ const getUserFamilyIds = async (userId) => {
     return userFamilies.map((f) => f.family_id);
 };
 
+/**
+ * Tạo điều kiện truy vấn ví theo quyền truy cập.
+ * Nếu có id, chỉ tìm một ví cụ thể; nếu không có id, lấy toàn bộ ví user được phép xem.
+ */
 const buildWalletAccessWhere = (id, userId, familyIds) => ({
     ...(id ? { id } : {}),
     [Op.or]: [
@@ -18,6 +30,10 @@ const buildWalletAccessWhere = (id, userId, familyIds) => ({
     ]
 });
 
+/**
+ * Kiểm tra trùng tên ví trong cùng phạm vi.
+ * Ví cá nhân chỉ so với ví cá nhân của user; ví gia đình chỉ so trong family đó.
+ */
 const hasDuplicateWalletName = async ({ name, userId, familyId = null, excludeId = null }) => {
     const normalizedName = String(name || '').trim().toLowerCase();
     if (!normalizedName) return false;
@@ -30,6 +46,7 @@ const hasDuplicateWalletName = async ({ name, userId, familyId = null, excludeId
     };
 
     if (excludeId) {
+        // Khi sửa ví, bỏ qua chính ví đang sửa để không tự báo trùng với nó.
         whereClause.id = { [Op.ne]: excludeId };
     }
 
@@ -40,6 +57,7 @@ const hasDuplicateWalletName = async ({ name, userId, familyId = null, excludeId
 exports.getUserWallets = async (req, res) => {
     try {
         const userId = req.user.id;
+        // familyIds quyết định user được nhìn thấy những ví gia đình nào.
         const familyIds = await getUserFamilyIds(userId);
 
         const wallets = await Wallet.findAll({
@@ -62,6 +80,7 @@ exports.createWallet = async (req, res) => {
         const familyIds = await getUserFamilyIds(userId);
 
         if (family_id && !familyIds.includes(family_id)) {
+            // Không cho tạo ví trong một gia đình mà user không thuộc về.
             return error(res, 'WALLET_FAMILY_FORBIDDEN', 403);
         }
 
@@ -78,6 +97,7 @@ exports.createWallet = async (req, res) => {
             name: normalizedName,
             balance: balance || 0,
             currency: currency || 'VND',
+            // Ví gia đình dùng family_id và để user_id null; ví cá nhân làm ngược lại.
             user_id: family_id ? null : userId,
             family_id: family_id || null
         });
@@ -105,6 +125,7 @@ exports.updateWallet = async (req, res) => {
         });
 
         if (!wallet) {
+            // Trả 404 thay vì 403 để không tiết lộ ví có tồn tại nhưng thuộc người khác hay không.
             return notFound(res, 'WALLET_NOT_FOUND');
         }
 
@@ -152,6 +173,7 @@ exports.deleteWallet = async (req, res) => {
 
         const transactionCount = await Transaction.count({ where: { wallet_id: id } });
         if (transactionCount > 0) {
+            // Không xóa ví đã có giao dịch để giữ toàn vẹn lịch sử thu chi.
             return error(res, 'WALLET_HAS_TRANSACTIONS', 400);
         }
 

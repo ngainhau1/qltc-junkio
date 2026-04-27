@@ -5,6 +5,10 @@ const ctrl = require('../controllers/adminController');
 const { validateUserParam, validateChangeRole } = require('../validators/adminValidator');
 const audit = require('../middleware/auditMiddleware');
 
+// GHI CHÚ HỌC TẬP - Phần quản trị của Thành Đạt:
+// Tất cả route admin đều đi qua auth + role('admin'). Một số thao tác nhạy cảm
+// còn đi qua auditMiddleware để ghi nhật ký hoạt động.
+
 /**
  * @swagger
  * tags:
@@ -91,6 +95,7 @@ const audit = require('../middleware/auditMiddleware');
  *       403:
  *         description: Không có quyền admin
  */
+// Dashboard tổng hợp dữ liệu nhanh cho trang quản trị.
 router.get('/dashboard', auth, role('admin'), ctrl.getDashboard);
 
 /**
@@ -179,6 +184,7 @@ router.get('/dashboard', auth, role('admin'), ctrl.getDashboard);
  *       403:
  *         description: Không có quyền admin
  */
+// Analytics trả dữ liệu biểu đồ: tăng trưởng user, danh mục chi tiêu, hoạt động tuần.
 router.get('/analytics', auth, role('admin'), ctrl.getAnalytics);
 
 /**
@@ -253,6 +259,7 @@ router.get('/analytics', auth, role('admin'), ctrl.getAnalytics);
  *       403:
  *         description: Không có quyền admin
  */
+// Financial overview trả tổng số dư, xu hướng thu/chi và top người chi tiêu.
 router.get('/financial-overview', auth, role('admin'), ctrl.getFinancialOverview);
 
 /**
@@ -351,6 +358,7 @@ router.get('/financial-overview', auth, role('admin'), ctrl.getFinancialOverview
  *       403:
  *         description: Không có quyền admin
  */
+// Danh sách user hỗ trợ phân trang, tìm kiếm, lọc role và lọc trạng thái khóa.
 router.get('/users', auth, role('admin'), ctrl.listUsers);
 
 /**
@@ -431,6 +439,7 @@ router.get('/users', auth, role('admin'), ctrl.listUsers);
  *       404:
  *         description: Không tìm thấy user (USER_NOT_FOUND)
  */
+// Chi tiết user cho admin xem ví, gia đình và số giao dịch trước khi thao tác.
 router.get('/users/:id', auth, role('admin'), ctrl.getUserDetail);
 
 /**
@@ -466,6 +475,7 @@ router.get('/users/:id', auth, role('admin'), ctrl.getUserDetail);
  *       404:
  *         description: Không tìm thấy user (USER_NOT_FOUND)
  */
+// Xóa user là thao tác nhạy cảm nên cần validate id và ghi audit log.
 router.delete('/users/:id', auth, role('admin'), validateUserParam, audit('USER_DELETED', 'USER'), ctrl.deleteUser);
 
 /**
@@ -504,6 +514,7 @@ router.delete('/users/:id', auth, role('admin'), validateUserParam, audit('USER_
  *       400:
  *         description: Không được khóa chính mình (CANNOT_LOCK_SELF)
  */
+// Khóa/mở khóa user cũng được ghi log để admin truy lại lịch sử xử lý tài khoản.
 router.put('/users/:id/toggle-lock', auth, role('admin'), validateUserParam, audit('USER_LOCKED_UNLOCKED', 'USER'), ctrl.toggleLock);
 
 /**
@@ -557,6 +568,7 @@ router.put('/users/:id/toggle-lock', auth, role('admin'), validateUserParam, aud
  *       400:
  *         description: Role không hợp lệ hoặc đang tự đổi role (INVALID_ROLE / CANNOT_CHANGE_OWN_ROLE)
  */
+// Đổi role cần validate cả id và role mới; audit log lưu lại thay đổi quyền.
 router.put('/users/:id/role', auth, role('admin'), validateChangeRole, audit('ROLE_CHANGED', 'USER'), ctrl.changeRole);
 
 /**
@@ -642,6 +654,7 @@ router.put('/users/:id/role', auth, role('admin'), validateChangeRole, audit('RO
  *       403:
  *         description: Không có quyền admin
  */
+// Nhật ký hoạt động chỉ admin được xem.
 router.get('/logs', auth, role('admin'), ctrl.getLogs);
 
 module.exports = router;

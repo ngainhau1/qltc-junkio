@@ -1,6 +1,10 @@
 const { Category } = require('../models');
 const { success, notFound, serverError, created } = require('../utils/responseHelper');
 
+// GHI CHÚ HỌC TẬP - Phần danh mục của Thành Đạt:
+// Danh mục dùng để phân loại giao dịch thu/chi. parent_id cho phép tạo danh mục cha-con,
+// ví dụ "Ăn uống" là cha và "Cà phê" là con.
+
 exports.getCategories = async (req, res) => {
     try {
         const categories = await Category.findAll();
@@ -18,7 +22,9 @@ exports.createCategory = async (req, res) => {
         const newCategory = await Category.create({
             name,
             type,
+            // parent_id null nghĩa là danh mục gốc, không nằm dưới danh mục khác.
             parent_id: parent_id || null,
+            // Nếu frontend không gửi icon, dùng Circle để giao diện vẫn có biểu tượng mặc định.
             icon: icon || 'Circle',
         });
 
@@ -36,6 +42,7 @@ exports.updateCategory = async (req, res) => {
 
         const category = await Category.findByPk(id);
         if (!category) {
+            // Không tìm thấy danh mục thì dừng sớm, tránh update nhầm dữ liệu.
             return notFound(res, 'CATEGORY_NOT_FOUND');
         }
 
@@ -58,6 +65,7 @@ exports.deleteCategory = async (req, res) => {
         const category = await Category.findByPk(id);
 
         if (!category) {
+            // Xóa danh mục chỉ được thực hiện khi id tồn tại.
             return notFound(res, 'CATEGORY_NOT_FOUND');
         }
 

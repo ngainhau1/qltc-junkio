@@ -1,17 +1,24 @@
-
+# GHI CHÚ HỌC TẬP - Phần hạ tầng của Thành Đạt:
+# File này mô tả cách chạy toàn bộ ứng dụng Junkio bằng Docker Compose.
+# Thứ tự cần nhớ khi trình bày: db và redis sẵn sàng trước, api chạy sau,
+# cuối cùng web mới phục vụ giao diện cho người dùng.
 services:
   db:
     image: postgres:15-alpine
     container_name: junkio_db
     environment:
+      # Các giá trị này lấy từ file .env để không ghi trực tiếp thông tin nhạy cảm vào mã nguồn.
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     ports:
+      # Mở cổng 5432 để máy bên ngoài container có thể kết nối PostgreSQL khi cần kiểm tra.
       - "5432:5432"
     volumes:
+      # Volume giúp dữ liệu PostgreSQL không mất sau khi container bị tắt hoặc tạo lại.
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
+      # Healthcheck cho Docker biết lúc nào PostgreSQL đã nhận kết nối được.
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
       interval: 10s
       timeout: 5s
@@ -21,8 +28,10 @@ services:
     build: ./backend
     container_name: junkio_api
     ports:
+      # Máy chủ Express lắng nghe cổng 5000; frontend và Postman gọi API qua cổng này.
       - "5000:5000"
     environment:
+      # Nhóm biến môi trường này nối API với cơ sở dữ liệu, Redis, email và bảo mật JWT.
       DB_HOST: ${DB_HOST}
       DB_USER: ${DB_USER}
       DB_PASS: ${DB_PASS}
@@ -39,11 +48,13 @@ services:
       EMAIL_USER: ${EMAIL_USER}
       EMAIL_PASS: ${EMAIL_PASS}
     depends_on:
+      # API phải chờ DB và Redis khỏe trước để tránh lỗi kết nối khi vừa khởi động.
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
     healthcheck:
+      # Đường dẫn /health cho biết server Express đã chạy ổn định.
       test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
       interval: 15s
       timeout: 5s
@@ -53,8 +64,10 @@ services:
     build: ./frontend
     container_name: junkio_web
     ports:
+      # Cổng 80 là cổng web mặc định; người dùng có thể mở localhost để vào giao diện.
       - "80:80"
     depends_on:
+      # Web chỉ nên chạy sau khi API sẵn sàng để tránh giao diện mở lên nhưng không gọi được dữ liệu.
       api:
         condition: service_healthy
       redis:
@@ -65,12 +78,16 @@ services:
     container_name: junkio_cache
     ports:
       - "6379:6379"
+    # Redis chỉ lưu tạm dữ liệu tốc độ cao, ví dụ giá vàng SJC trong 60 giây.
+    # Vì vậy không bật lưu bền vững ra ổ đĩa.
     command: ["redis-server", "--save", "", "--appendonly", "no"]
     healthcheck:
+      # Redis trả PONG nghĩa là bộ nhớ tạm đã sẵn sàng cho API sử dụng.
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 3s
       retries: 5
 
 volumes:
+  # Khai báo tên volume dùng bởi dịch vụ db ở trên.
   postgres_data:

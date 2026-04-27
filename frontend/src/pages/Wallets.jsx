@@ -15,6 +15,10 @@ import { getFinanceScopeLabels } from "@/features/finance/context"
 import { toast } from "sonner"
 import { PageHeader } from "@/components/layout/PageHeader"
 
+// GHI CHÚ HỌC TẬP - Phần ví của Thành Đạt:
+// Trang này hiển thị ví theo phạm vi tài chính đang chọn: cá nhân hoặc gia đình.
+// Dữ liệu ví đến từ walletSlice; thao tác xóa/tạo/sửa vẫn đi qua backend để kiểm quyền.
+
 const walletTypeKeyMap = {
     cash: 'wallets.form.types.cash',
     bank: 'wallets.form.types.bank',
@@ -32,6 +36,7 @@ export function Wallets() {
     const [editingWallet, setEditingWallet] = useState(null)
 
     const handleDelete = async (id) => {
+        // Xóa ví là thao tác nhạy cảm nên cần xác nhận trước khi gọi API.
         if (!window.confirm(t('wallets.deleteConfirm'))) {
             return
         }
@@ -47,6 +52,7 @@ export function Wallets() {
     const contextWallets = wallets.filter((wallet) =>
         activeFamilyId ? wallet.family_id === activeFamilyId : !wallet.family_id
     )
+    // currentScope quyết định toàn bộ nhãn trên trang: đang xem ví cá nhân hay ví của một gia đình.
     const currentScope = getFinanceScopeLabels(t, { activeFamilyId, families })
     const addWalletLabel = currentScope.scope === 'family' ? t('wallets.context.addFamily') : t('wallets.context.addPersonal')
     const addWalletTitle = currentScope.scope === 'family' ? t('wallets.context.addFamilyTitle') : t('wallets.context.addPersonalTitle')

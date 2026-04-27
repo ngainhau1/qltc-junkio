@@ -2,6 +2,14 @@ const { User, Transaction, Wallet, Family, Goal, Budget, Category, sequelize } =
 const { Op, fn, col } = require('sequelize');
 const { success, error: sendError } = require('../utils/responseHelper');
 
+// GHI CHÚ HỌC TẬP - Phần quản trị của Thành Đạt:
+// Controller này chỉ dành cho admin. Nó gom dữ liệu toàn hệ thống, quản lý user,
+// đổi quyền, khóa tài khoản, xóa user và đọc nhật ký hoạt động.
+
+/**
+ * Tạo điều kiện tìm kiếm người dùng theo tên hoặc email.
+ * PostgreSQL dùng iLike để tìm không phân biệt hoa/thường; môi trường khác dùng like.
+ */
 const buildSearchWhere = (search) => {
     if (!search) {
         return {};
@@ -18,6 +26,7 @@ const buildSearchWhere = (search) => {
 
 exports.getDashboard = async (req, res) => {
     try {
+        // Ba phép đếm độc lập nên chạy song song để giảm thời gian phản hồi.
         const [totalUsers, totalTransactions, totalFamilies] = await Promise.all([
             User.count(),
             Transaction.count(),
@@ -40,6 +49,7 @@ exports.getDashboard = async (req, res) => {
             }
         });
 
+        // Tái sử dụng getAnalytics và getFinancialOverview để dashboard có dữ liệu tổng hợp nhất quán.
         const analyticsResponse = createMockRes();
         await exports.getAnalytics(req, analyticsResponse);
 
@@ -62,6 +72,7 @@ exports.getDashboard = async (req, res) => {
 
 exports.getAnalytics = async (req, res) => {
     try {
+        // Các chỉ số tổng quan này dùng cho các thẻ thống kê trên đầu trang admin.
         const [totalWallets, totalGoals, totalBudgets] = await Promise.all([
             Wallet.count(),
             Goal.count(),
@@ -74,6 +85,7 @@ exports.getAnalytics = async (req, res) => {
         sixMonthsAgo.setHours(0, 0, 0, 0);
 
         const isSqlite = sequelize?.getDialect && sequelize.getDialect() === 'sqlite';
+        // date_trunc dùng cho PostgreSQL; strftime dùng cho SQLite trong test.
         const monthExpr = isSqlite
             ? fn('strftime', '%Y-%m', col('createdAt'))
             : fn('date_trunc', 'month', col('createdAt'));
@@ -90,6 +102,7 @@ exports.getAnalytics = async (req, res) => {
         });
 
         const topCategories = await Transaction.findAll({
+            // Chỉ xét chi tiêu để biết danh mục nào đang được dùng nhiều nhất cho expense.
             where: { type: 'EXPENSE' },
             attributes: [
                 'category_id',
@@ -154,6 +167,7 @@ exports.listUsers = async (req, res) => {
         const offset = (pageNumber - 1) * perPage;
 
         const where = buildSearchWhere(search);
+        // Các bộ lọc này đến từ giao diện: vai trò và trạng thái khóa tài khoản.
         if (role && role !== 'all') where.role = role;
         if (status && status !== 'all') {
             where.is_locked = status === 'locked';
@@ -163,6 +177,7 @@ exports.listUsers = async (req, res) => {
             where,
             offset,
             limit: perPage,
+            // Không trả password_hash ra frontend dù admin đang xem danh sách user.
             attributes: { exclude: ['password_hash'] },
             order: [['createdAt', 'DESC']]
         });
@@ -181,6 +196,7 @@ exports.listUsers = async (req, res) => {
 
 exports.getUserDetail = async (req, res) => {
     try {
+        // include giúp admin xem nhanh ví và gia đình liên quan đến user trước khi thao tác.
         const user = await User.findByPk(req.params.id, {
             attributes: { exclude: ['password_hash'] },
             include: [
@@ -205,6 +221,7 @@ exports.deleteUser = async (req, res) => {
     try {
         const user = await User.findByPk(req.params.id);
         if (!user) return sendError(res, 'USER_NOT_FOUND', 404);
+        // Chặn admin tự xóa chính mình để tránh mất tài khoản quản trị cuối cùng đang dùng.
         if (user.id === req.user.id) return sendError(res, 'CANNOT_DELETE_SELF', 400);
 
         await user.destroy();
@@ -221,8 +238,10 @@ exports.toggleLock = async (req, res) => {
             attributes: { exclude: ['password_hash'] }
         });
         if (!user) return sendError(res, 'USER_NOT_FOUND', 404);
+        // Chặn admin tự khóa tài khoản hiện tại.
         if (user.id === req.user.id) return sendError(res, 'CANNOT_LOCK_SELF', 400);
 
+        // Đảo trạng thái: đang mở thì khóa, đang khóa thì mở lại.
         user.is_locked = !user.is_locked;
         await user.save();
         success(res, { user }, user.is_locked ? 'USER_LOCKED' : 'USER_UNLOCKED');
@@ -235,6 +254,7 @@ exports.toggleLock = async (req, res) => {
 exports.changeRole = async (req, res) => {
     try {
         const { role } = req.body;
+        // Chỉ cho phép ba vai trò hệ thống đang hỗ trợ.
         if (!['member', 'staff', 'admin'].includes(role)) {
             return sendError(res, 'INVALID_ROLE', 400);
         }
@@ -243,6 +263,7 @@ exports.changeRole = async (req, res) => {
             attributes: { exclude: ['password_hash'] }
         });
         if (!user) return sendError(res, 'USER_NOT_FOUND', 404);
+        // Chặn admin tự đổi quyền của mình để tránh tự mất quyền quản trị.
         if (user.id === req.user.id) return sendError(res, 'CANNOT_CHANGE_OWN_ROLE', 400);
 
         user.role = role;
@@ -261,6 +282,7 @@ exports.getLogs = async (req, res) => {
         const pageNumber = parseInt(page, 10);
         const perPage = parseInt(limit, 10);
         const offset = (pageNumber - 1) * perPage;
+        // action=ALL nghĩa là xem toàn bộ; action cụ thể dùng để lọc nhật ký.
         const where = action && action !== 'ALL' ? { action } : {};
 
         const { count, rows } = await AuditLog.findAndCountAll({
@@ -285,6 +307,7 @@ exports.getLogs = async (req, res) => {
 
 exports.getFinancialOverview = async (req, res) => {
     try {
+        // Tổng số dư hệ thống được tính từ toàn bộ ví.
         const systemBalance = parseFloat(await Wallet.sum('balance')) || 0;
 
         const sixMonthsAgo = new Date();
@@ -307,6 +330,7 @@ exports.getFinancialOverview = async (req, res) => {
             GROUP BY ${dateTruncFn}, type
             ORDER BY month ASC
         `, {
+            // replacements giúp truyền tham số an toàn thay vì ghép chuỗi trực tiếp.
             replacements: { sixMonthsAgo },
             type: sequelize.QueryTypes.SELECT
         });
@@ -352,6 +376,7 @@ exports.getFinancialOverview = async (req, res) => {
         let overBudgetCount = 0;
 
         for (const budget of budgets) {
+            // Tính từng ngân sách có vượt hạn mức hay không để ra tỷ lệ tuân thủ ngân sách.
             const spent = await Transaction.sum('amount', {
                 where: {
                     category_id: budget.category_id,

@@ -1,6 +1,10 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '@/lib/api';
 
+// GHI CHÚ HỌC TẬP - Phần ví của Thành Đạt:
+// Slice này giữ danh sách ví ở frontend và gọi các API /wallets.
+// Backend vẫn là nơi kiểm quyền ví cá nhân/ví gia đình; frontend chỉ phản ánh kết quả lên UI.
+
 const initialState = {
     wallets: [],
     loading: false,
@@ -19,6 +23,7 @@ export const fetchWallets = createAsyncThunk(
     }
 );
 
+// createWallet gửi dữ liệu form lên backend; nếu family_id có giá trị thì tạo ví gia đình.
 export const createWallet = createAsyncThunk(
     'wallets/createWallet',
     async (walletData, { rejectWithValue }) => {
@@ -31,6 +36,7 @@ export const createWallet = createAsyncThunk(
     }
 );
 
+// editWallet cập nhật một ví theo id; controller sẽ kiểm quyền trước khi lưu.
 export const editWallet = createAsyncThunk(
     'wallets/editWallet',
     async ({ id, data }, { rejectWithValue }) => {
@@ -43,6 +49,7 @@ export const editWallet = createAsyncThunk(
     }
 );
 
+// removeWallet xóa ví theo id; backend sẽ từ chối nếu ví đã có giao dịch.
 export const removeWallet = createAsyncThunk(
     'wallets/removeWallet',
     async (id, { rejectWithValue }) => {
@@ -93,6 +100,7 @@ const walletSlice = createSlice({
             })
             .addCase(fetchWallets.fulfilled, (state, action) => {
                 state.loading = false;
+                // API trả đúng danh sách ví trong phạm vi user được phép truy cập.
                 state.wallets = action.payload;
             })
             .addCase(fetchWallets.rejected, (state, action) => {

@@ -1,6 +1,11 @@
 const { body, param } = require('express-validator');
 const { buildValidationHandler, createValidationCode } = require('./validationHelper');
 
+// GHI CHÚ HỌC TẬP - Phần danh mục của Thành Đạt:
+// Danh mục cần name và type rõ ràng để giao dịch được phân loại đúng.
+// parent_id là tùy chọn, dùng khi tạo danh mục con.
+
+// Tạo danh mục yêu cầu name và type; icon/parent_id có thể bỏ trống.
 exports.validateCreateCategory = [
     body('name')
         .trim()
@@ -26,6 +31,7 @@ exports.validateCreateCategory = [
     buildValidationHandler(['body']),
 ];
 
+// Cập nhật danh mục cho phép sửa từng phần, nhưng id trên URL luôn phải là UUID hợp lệ.
 exports.validateUpdateCategory = [
     param('id').isUUID().withMessage(createValidationCode('id', 'INVALID_UUID')),
     body('name')
@@ -50,6 +56,7 @@ exports.validateUpdateCategory = [
     buildValidationHandler(['params', 'body']),
 ];
 
+// Xóa danh mục chỉ cần kiểm tra id trước khi controller tìm trong DB.
 exports.validateDeleteCategory = [
     param('id').isUUID().withMessage(createValidationCode('id', 'INVALID_UUID')),
     buildValidationHandler(['params']),

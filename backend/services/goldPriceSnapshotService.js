@@ -9,6 +9,10 @@ const {
     fetchSjcGoldPrice,
 } = require('./goldPriceService');
 
+// GHI CHÚ HỌC TẬP - Phần giá vàng SJC của Thành Đạt:
+// Service này quản lý lịch sử giá vàng. Nó lưu snapshot, lấy dữ liệu theo khoảng 24H/7D,
+// tính tăng giảm và xóa dữ liệu quá cũ để bảng không tăng mãi.
+
 const GOLD_HISTORY_RANGES = Object.freeze({
     '24H': 24 * 60 * 60 * 1000,
     '7D': 7 * 24 * 60 * 60 * 1000,
@@ -24,6 +28,7 @@ const normalizeSnapshotRow = (row) => ({
     dataOrigin: row.dataOrigin || LIVE_DATA_ORIGIN,
 });
 
+// Tính mức tăng/giảm giữa điểm đầu và điểm mới nhất để frontend hiện trend.
 const buildSummary = (points) => {
     if (!Array.isArray(points) || points.length === 0) {
         return null;
@@ -48,6 +53,7 @@ const buildSummary = (points) => {
     };
 };
 
+// Nếu cùng thời điểm có cả dữ liệu seed và dữ liệu live, ưu tiên dữ liệu live.
 const dedupeHistoryRows = (rows) => {
     const dedupedRows = new Map();
 
@@ -65,6 +71,7 @@ const dedupeHistoryRows = (rows) => {
         .map(({ capturedAt, buy, sell }) => ({ capturedAt, buy, sell }));
 };
 
+// Lưu hoặc cập nhật snapshot theo source/branch/product/time để tránh trùng bản ghi.
 const upsertGoldPriceSnapshot = async (livePrice) => {
     if (!livePrice?.updatedAt) {
         console.warn('Skipping gold price snapshot because updatedAt is unavailable.');
@@ -124,6 +131,7 @@ const upsertGoldPriceSnapshot = async (livePrice) => {
 };
 
 const captureLatestGoldPriceSnapshot = async () => {
+    // Cron job dùng hàm này để chủ động lưu lịch sử, không cần người dùng mở dashboard.
     const livePrice = await fetchSjcGoldPrice();
     await upsertGoldPriceSnapshot(livePrice);
     return livePrice;
@@ -133,6 +141,7 @@ const getGoldPriceHistory = async (range, referenceTime = new Date()) => {
     const rangeDuration = GOLD_HISTORY_RANGES[range];
 
     if (!rangeDuration) {
+        // Chỉ nhận các khoảng được frontend hỗ trợ để tránh query tùy ý.
         throw new Error('GOLD_PRICE_HISTORY_RANGE_INVALID');
     }
 
@@ -164,6 +173,7 @@ const getGoldPriceHistory = async (range, referenceTime = new Date()) => {
 };
 
 const pruneOldGoldPriceSnapshots = async (referenceTime = new Date()) => {
+    // Dọn dữ liệu cũ hơn SNAPSHOT_RETENTION_DAYS để giảm dung lượng DB.
     const cutoff = new Date(referenceTime.getTime() - SNAPSHOT_RETENTION_DAYS * 24 * 60 * 60 * 1000);
 
     return GoldPriceSnapshot.destroy({

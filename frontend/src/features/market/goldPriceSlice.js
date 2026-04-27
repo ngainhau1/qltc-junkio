@@ -1,6 +1,10 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import api from '@/lib/api';
 
+// GHI CHÚ HỌC TẬP - Phần giá vàng SJC của Thành Đạt:
+// Slice này giữ giá vàng hiện tại và lịch sử giá vàng ở frontend.
+// GoldPriceCard đọc state này để hiển thị giá, trend và biểu đồ nhỏ.
+
 export const GOLD_HISTORY_RANGE_OPTIONS = ['24H', '7D'];
 export const HISTORY_CACHE_TTL_MS = 5 * 60 * 1000;
 
@@ -34,6 +38,7 @@ export const fetchGoldPrice = createAsyncThunk(
         }
     },
     {
+        // Không gửi thêm request mới nếu request giá hiện tại đang chạy.
         condition: (_, { getState }) => !getState()?.goldPrice?.loading,
     }
 );
@@ -56,6 +61,7 @@ export const fetchGoldPriceHistory = createAsyncThunk(
     },
     {
         condition: ({ range, force = false } = {}, { getState }) => {
+            // Chỉ cho phép range mà UI hỗ trợ để tránh gọi API với tham số sai.
             if (!GOLD_HISTORY_RANGE_OPTIONS.includes(range)) {
                 return false;
             }
@@ -67,6 +73,7 @@ export const fetchGoldPriceHistory = createAsyncThunk(
             }
 
             if (force) {
+                // force=true dùng cho lịch tự làm mới 5 phút trong GoldPriceCard.
                 return true;
             }
 
@@ -75,6 +82,7 @@ export const fetchGoldPriceHistory = createAsyncThunk(
                 historyState.lastFetchedAt &&
                 Date.now() - historyState.lastFetchedAt < HISTORY_CACHE_TTL_MS
             ) {
+                // Dữ liệu lịch sử còn mới thì không gọi lại API.
                 return false;
             }
 
@@ -88,6 +96,7 @@ const goldPriceSlice = createSlice({
     initialState,
     reducers: {
         setGoldHistoryRange: (state, action) => {
+            // Chỉ đổi range nếu là 24H hoặc 7D.
             if (GOLD_HISTORY_RANGE_OPTIONS.includes(action.payload)) {
                 state.selectedRange = action.payload;
             }
@@ -101,6 +110,7 @@ const goldPriceSlice = createSlice({
             })
             .addCase(fetchGoldPrice.fulfilled, (state, action) => {
                 state.loading = false;
+                // data là giá vàng hiện tại đã được backend chuẩn hóa.
                 state.data = action.payload;
                 state.error = null;
                 state.lastFetchedAt = Date.now();
@@ -128,6 +138,7 @@ const goldPriceSlice = createSlice({
                 }
 
                 state.historyByRange[range].loading = false;
+                // Lưu lịch sử theo từng range để chuyển tab 24H/7D không phải tải lại ngay.
                 state.historyByRange[range].data = data;
                 state.historyByRange[range].error = null;
                 state.historyByRange[range].lastFetchedAt = Date.now();
