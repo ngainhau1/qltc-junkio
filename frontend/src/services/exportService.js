@@ -1,6 +1,7 @@
 import Papa from 'papaparse';
 import api from '@/lib/api';
 import { cleanQueryParams } from '@/features/finance/context';
+import { localizeCategoryName } from '@/features/categories/categoryLocalization';
 import { formatDateString } from '@/lib/utils';
 import i18n from '@/lib/i18n';
 import { loadRobotoBase64 } from './pdfFont';
@@ -35,7 +36,7 @@ const transactionToRow = (transaction) => ({
     [i18n.t('export.description')]: transaction.description || i18n.t('export.noDescription'),
     [i18n.t('export.type')]: transaction.type,
     [i18n.t('export.amount')]: Number(transaction.amount || 0),
-    [i18n.t('export.category')]: transaction.Category?.name || transaction.category_id || '',
+    [i18n.t('export.category')]: localizeCategoryName(transaction.Category?.name, i18n.t.bind(i18n)) || transaction.category_id || '',
     [i18n.t('export.wallet')]: transaction.Wallet?.name || transaction.wallet_id || '',
 });
 
@@ -67,7 +68,7 @@ const reportDataToRows = (reportData) => {
         },
         ...expenseByCategory.map((item) => ({
             [i18n.t('export.section')]: i18n.t('export.expenseByCategory'),
-            [i18n.t('export.metric')]: item.name,
+            [i18n.t('export.metric')]: localizeCategoryName(item.name, i18n.t.bind(i18n)),
             [i18n.t('export.value')]: Number(item.value || 0),
         })),
         ...cashflowSeries.map((item) => ({

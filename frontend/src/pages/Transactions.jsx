@@ -41,6 +41,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { closeImportModal, openImportModal } from '@/features/ui/uiSlice';
 import { ImportTransactionsModal } from '@/components/features/transactions/ImportTransactionsModal';
+import { localizeCategoryName } from '@/features/categories/categoryLocalization';
 import { buildTransactionQueryFromState } from '@/features/finance/context';
 import { toast } from 'sonner';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -244,7 +245,7 @@ export function Transactions() {
                 >
                     <option value="">{t('transactions.filters.allCategories', 'Tất cả danh mục')}</option>
                     {categories.map((c) => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
+                        <option key={c.id} value={c.id}>{localizeCategoryName(c.name, t)}</option>
                     ))}
                 </select>
 

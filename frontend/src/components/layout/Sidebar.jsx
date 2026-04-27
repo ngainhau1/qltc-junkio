@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom"
-import { Home, Wallet, PieChart, Settings, Users, ArrowRightLeft, ChevronsUpDown, Target, Plus, TrendingUp, Shield } from "lucide-react"
+import { Home, Wallet, PieChart, Settings, Users, ArrowRightLeft, ChevronsUpDown, Target, Plus, TrendingUp, Shield, PiggyBank } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -24,6 +24,7 @@ export function Sidebar({ className }) {
         { icon: Home, label: t('nav.dashboard'), href: "/" },
         { icon: ArrowRightLeft, label: t('nav.transactions'), href: "/transactions" },
         { icon: Wallet, label: t('nav.wallets'), href: "/wallets" },
+        { icon: PiggyBank, label: t('nav.budgets'), href: "/budgets" },
         { icon: Target, label: t('nav.goals'), href: "/goals" },
         { icon: PieChart, label: t('nav.reports'), href: "/reports" },
         { icon: TrendingUp, label: t('nav.forecast'), href: "/forecast" },

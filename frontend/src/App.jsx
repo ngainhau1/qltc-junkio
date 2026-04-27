@@ -17,6 +17,7 @@ import { Wallets } from '@/pages/Wallets';
 import { Family } from '@/pages/Family';
 import { Settings } from '@/pages/Settings';
 import { Goals } from '@/pages/Goals';
+import { Budgets } from '@/pages/Budgets';
 import { Profile } from '@/pages/Profile';
 import { MobileMenu } from '@/pages/MobileMenu';
 import { fetchWallets } from '@/features/wallets/walletSlice';
@@ -102,6 +103,7 @@ function App() {
                             }
                         />
                         <Route path="/wallets" element={<Wallets />} />
+                        <Route path="/budgets" element={<Budgets />} />
                         <Route path="/goals" element={<Goals />} />
                         <Route path="/family" element={<Family />} />
                         <Route

@@ -89,6 +89,7 @@
     "nav": {
         "dashboard": "Dashboard",
         "wallets": "Wallets",
+        "budgets": "Budgets",
         "transactions": "Transactions",
         "family": "Family Hub",
         "goals": "Goals",
@@ -608,6 +609,57 @@
             }
         }
     },
+    "budgets": {
+        "createBtn": "Create budget",
+        "createSuccess": "Budget created.",
+        "updateSuccess": "Budget updated.",
+        "deleteSuccess": "Budget deleted.",
+        "deleteFailed": "Unable to delete budget.",
+        "deleteTitle": "Delete budget?",
+        "deleteConfirmPersonal": "This budget will be removed from your personal scope.",
+        "deleteConfirmFamily": "This budget will be removed from {{target}}.",
+        "limitLabel": "Limit",
+        "periodLabel": "Period",
+        "noCategoryName": "Uncategorized",
+        "noCategoriesTitle": "No expense categories available",
+        "noCategoriesDesc": "Create at least one expense category before adding a budget.",
+        "context": {
+            "personalTitle": "Personal budgets",
+            "familyTitle": "Family budgets",
+            "personalDesc": "Set spending limits for your personal categories.",
+            "familyDesc": "Set shared spending limits for {{target}}.",
+            "emptyPersonalTitle": "No personal budgets yet",
+            "emptyFamilyTitle": "No family budgets yet",
+            "emptyPersonalDesc": "Create your first personal budget to cap a spending category.",
+            "emptyFamilyDesc": "Create the first budget for {{target}} to keep shared spending under control.",
+            "addPersonalTitle": "Create personal budget",
+            "addFamilyTitle": "Create family budget",
+            "editPersonalTitle": "Edit personal budget",
+            "editFamilyTitle": "Edit family budget"
+        },
+        "form": {
+            "scopeLabel": "Create for",
+            "category": "Category",
+            "categoryPlaceholder": "Select an expense category",
+            "amount": "Limit amount",
+            "amountPlaceholder": "0",
+            "startDate": "Start date",
+            "endDate": "End date",
+            "createPersonalBtn": "Create personal budget",
+            "createFamilyBtn": "Create family budget",
+            "saveBtn": "Save budget",
+            "noCategories": "No expense categories are available right now.",
+            "validation": {
+                "categoryRequired": "Please select an expense category",
+                "amountRequired": "Please enter a valid budget limit",
+                "amountPositive": "Budget limit must be greater than 0",
+                "startDateRequired": "Please select a start date",
+                "endDateRequired": "Please select an end date",
+                "endDateAfterStart": "End date must be on or after the start date",
+                "saveFailed": "Unable to save budget. Please try again."
+            }
+        }
+    },
     "reports": {
         "title": "Reports & Statistics",
         "desc": "Understand your spending habits better.",
@@ -1008,6 +1060,23 @@
             "balance_invalid_range": "balance is outside the allowed range.",
             "currency_min_length_not_met": "currency does not meet the minimum length.",
             "currency_max_length_exceeded": "currency exceeds the maximum allowed length."
+        }
+    },
+    "categories": {
+        "labels": {
+            "food": "Food & Dining",
+            "transport": "Transportation",
+            "housing": "Housing",
+            "entertainment": "Entertainment",
+            "shopping": "Shopping",
+            "health": "Health & Fitness",
+            "education": "Education",
+            "digitalServices": "Digital Services",
+            "utilities": "Bills & Utilities",
+            "salary": "Salary",
+            "bonus": "Bonus",
+            "investment": "Investment",
+            "sideIncome": "Side Income"
         }
     }
 }

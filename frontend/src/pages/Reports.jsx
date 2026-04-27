@@ -22,6 +22,7 @@ import {
     exportReportRowsToExcel,
     exportReportRowsToPDF,
 } from '@/services/exportService';
+import { localizeCategoryName } from '@/features/categories/categoryLocalization';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { ResponsiveActions } from '@/components/layout/ResponsiveActions';
 import {
@@ -43,10 +44,14 @@ export function Reports() {
         { name: t('reports.expense'), amount: Number(summary.totalExpense || 0) },
         { name: t('dashboard.stats.unassigned'), amount: Number(summary.net || 0) },
     ];
+    const localizedExpenseByCategory = expenseByCategory.map((entry) => ({
+        ...entry,
+        name: localizeCategoryName(entry.name, t),
+    }));
 
     const reportData = {
         summary,
-        expenseByCategory,
+        expenseByCategory: localizedExpenseByCategory,
         cashflowSeries,
     };
 
@@ -128,7 +133,7 @@ export function Reports() {
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
                                     <Pie
-                                        data={expenseByCategory}
+                                        data={localizedExpenseByCategory}
                                         cx="50%"
                                         cy="50%"
                                         innerRadius={60}
@@ -136,7 +141,7 @@ export function Reports() {
                                         paddingAngle={5}
                                         dataKey="value"
                                     >
-                                        {expenseByCategory.map((entry, index) => (
+                                        {localizedExpenseByCategory.map((entry, index) => (
                                             <Cell key={`${entry.name}-${index}`} fill={COLORS[index % COLORS.length]} />
                                         ))}
                                     </Pie>
