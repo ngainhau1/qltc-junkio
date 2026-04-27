@@ -89,9 +89,5 @@ backend/coverage/
 
 # Ignore additional frontend reports
 frontend/report_*.*
-<<<<<<< HEAD
 .idea/
 /docx/
-=======
-.idea/
->>>>>>> 3f0ba3e0fc10750002d7069171e3da43aad42d8f
