@@ -9,7 +9,7 @@ module.exports = (sequelize, DataTypes) => {
             Family.belongsToMany(models.User, { through: models.FamilyMember, foreignKey: 'family_id', as: 'Members' });
             Family.hasMany(models.Wallet, { foreignKey: 'family_id' });
             Family.hasMany(models.Budget, { foreignKey: 'family_id' });
-            Family.hasMany(models.Transaction, { foreignKey: 'family_id' }); // If keeping track of family transactions directly or derived
+            Family.hasMany(models.Transaction, { foreignKey: 'family_id' });
         }
     }
     Family.init({

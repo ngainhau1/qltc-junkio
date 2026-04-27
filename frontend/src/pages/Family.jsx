@@ -63,7 +63,6 @@ export function Family() {
     const { wallets } = useSelector(state => state.wallets)
     const { transactions } = useSelector(state => state.transactions)
 
-    // --- Redux Connected Logic ---
     const activeFamily = families.find(f => f.id === activeFamilyId)
     const activeFamilyMembers = useMemo(() => (
         Array.isArray(activeFamily?.members) ? activeFamily.members : []
@@ -81,7 +80,6 @@ export function Family() {
         allFamilyDebts.filter(t => !isFullyPaidExpense(t))
     ), [allFamilyDebts])
 
-    // UI purely for displaying the expense list (Limit to 50 items and hide settlements)
     const displayExpenses = useMemo(() => openFamilyDebts.filter(t => {
         if (t.type === 'TRANSFER') return false;
         return true;
@@ -94,22 +92,18 @@ export function Family() {
 
     const [settlements, setSettlements] = useState([])
 
-    // Create Family Modal State
     const [createModalOpen, setCreateModalOpen] = useState(false)
     const [newFamilyDesc, setNewFamilyDesc] = useState("")
 
-    // Invite Modal State
     const [inviteModalOpen, setInviteModalOpen] = useState(false)
     const [inviteCode, setInviteCode] = useState("")
     const [copied, setCopied] = useState(false)
     const [associatedFamilyName, setAssociatedFamilyName] = useState("")
 
-    // Settle Modal State
     const [settleModalOpen, setSettleModalOpen] = useState(false)
     const [selectedSettlement, setSelectedSettlement] = useState(null)
     const [selectedPaymentWalletId, setSelectedPaymentWalletId] = useState("")
 
-    // Shared Expense Modal State
     const [sharedExpenseModalOpen, setSharedExpenseModalOpen] = useState(false)
 
     const handleCreateFamily = async (e) => {
@@ -143,7 +137,6 @@ export function Family() {
 
     const handleOpenInvite = (family) => {
         setAssociatedFamilyName(family.name)
-        // Generate a random 6-character code
         const code = Math.random().toString(36).substring(2, 8).toUpperCase()
         setInviteCode(code)
         setInviteModalOpen(true)
@@ -213,7 +206,6 @@ export function Family() {
             />
 
             <div className="grid gap-6 md:grid-cols-1">
-                {/* Family List */}
                 <Card>
                     <CardHeader>
                         <CardTitle>{t('family.list.title')}</CardTitle>
@@ -226,7 +218,6 @@ export function Family() {
                         ) : (
                             <div className="space-y-4">
                                 {families.map(family => {
-                                    // Find current user's role in this family
                                     const members = Array.isArray(family.members) ? family.members : []
                                     const myRole = family.owner_id === user?.id
                                         ? 'OWNER'
@@ -271,7 +262,6 @@ export function Family() {
                                                 </div>
                                             </div>
 
-                                            {/* Member List (Expandable or visible) */}
                                             {activeFamilyId === family.id && (
                                                 <div className="mt-4 border-t pt-4">
                                                     <h4 className="text-sm font-semibold mb-3">{t('family.list.memberListTitle')}</h4>
@@ -288,7 +278,6 @@ export function Family() {
                                                                     </div>
                                                                 </div>
 
-                                                                {/* Actions for Owner/Admin */}
                                                                 {(myRole === 'OWNER' || myRole === 'ADMIN') && member.id !== user?.id && (
                                                                     <DropdownMenu>
                                                                         <DropdownMenuTrigger asChild>
@@ -300,7 +289,6 @@ export function Family() {
                                                                         <DropdownMenuContent align="end">
                                                                             <DropdownMenuLabel>{t('family.actions.manage')}</DropdownMenuLabel>
                                                                             <DropdownMenuSeparator />
-                                                                            {/* Temporarily disabled role updates until backend API is ready */}
                                                                             <DropdownMenuSeparator />
                                                                             <DropdownMenuItem className="text-red-600" onClick={() => dispatch(removeMemberFromFamily({ familyId: family.id, userId: member.id }))}>
                                                                                 <LogOut className="mr-2 h-4 w-4" /> {t('family.actions.remove')}
@@ -311,7 +299,6 @@ export function Family() {
                                                             </div>
                                                         ))}
 
-                                                        {/* Invite Button */}
                                                         <Button
                                                             variant="outline" size="sm" className="w-full mt-2 border-dashed"
                                                             onClick={() => handleOpenInvite(family)}
@@ -330,7 +317,6 @@ export function Family() {
                 </Card>
             </div>
 
-            {/* Debt Demo Section */}
             {activeFamilyId ? (
                 <div className="grid gap-6 xl:grid-cols-2">
                     <Card className="flex max-h-[500px] flex-col overflow-auto">
@@ -429,7 +415,6 @@ export function Family() {
                 </Card>
             )}
 
-            {/* Modals */}
             <Modal isOpen={inviteModalOpen} onClose={() => setInviteModalOpen(false)} title={t('family.modals.invite.title', { name: associatedFamilyName })}>
                 <div className="space-y-4">
                     <p className="text-sm text-muted-foreground">{t('family.modals.invite.desc')}</p>
@@ -469,7 +454,6 @@ export function Family() {
                 </form>
             </Modal>
 
-            {/* Settle Modal */}
             <Modal isOpen={settleModalOpen} onClose={() => setSettleModalOpen(false)} title={t('family.modals.settle.title')}>
                 {selectedSettlement && (
                     <div className="space-y-6">
@@ -520,7 +504,6 @@ export function Family() {
                 )}
             </Modal>
 
-            {/* Shared Expense Modal */}
             <SharedExpenseModal
                 isOpen={sharedExpenseModalOpen}
                 onClose={() => setSharedExpenseModalOpen(false)}

@@ -10,7 +10,6 @@ import { CreateGoalModal } from '@/components/features/goals/CreateGoalModal';
 import { EmptyState } from '@/components/ui/empty-state';
 import { PageHeader } from '@/components/layout/PageHeader';
 
-// Icon Map for dynamic rendering
 const iconMap = {
     Laptop: Laptop,
     Plane: Plane,
@@ -27,12 +26,10 @@ export function Goals() {
     const { t } = useTranslation();
     const { goals = [] } = useSelector(state => state.goals);
 
-    // Derived states
     const activeGoals = goals.filter(g => g.status === 'IN_PROGRESS');
     const achievedGoals = goals.filter(g => g.status === 'ACHIEVED');
     const totalSaved = activeGoals.reduce((sum, g) => sum + parseFloat(g.currentAmount || 0), 0);
 
-    // Modal states
     const [selectedGoal, setSelectedGoal] = useState(null);
     const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -44,7 +41,6 @@ export function Goals() {
 
     return (
         <div className="space-y-4 animate-in fade-in duration-500 sm:space-y-6">
-            {/* Header Area */}
             <PageHeader
                 title={t('goals.title')}
                 description={t('goals.desc')}
@@ -59,7 +55,6 @@ export function Goals() {
                 }
             />
 
-            {/* Overview Stats */}
             <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <Card className="bg-card/50 backdrop-blur border-border/50">
                     <CardContent className="p-3 flex items-center justify-between sm:p-6">
@@ -85,7 +80,6 @@ export function Goals() {
                 </Card>
             </div>
 
-            {/* Active Goals Grid */}
             <div>
                 <h2 className="text-lg font-bold mb-3 flex items-center gap-2 sm:text-xl sm:mb-6">{t('goals.activeGoals')} <span className="bg-secondary text-secondary-foreground text-xs px-2 py-1 rounded-full">{activeGoals.length}</span></h2>
 
@@ -130,7 +124,6 @@ export function Goals() {
                                                 </div>
                                             </div>
 
-                                            {/* Progress Bar Area */}
                                             <div className="space-y-2 mb-4 sm:mb-6">
                                                 <div className="flex justify-between text-sm font-medium">
                                                     <span className="text-primary">{formatCurrency(goal.currentAmount)}</span>
@@ -162,7 +155,6 @@ export function Goals() {
                 )}
             </div>
 
-            {/* Achieved Goals List */}
             {achievedGoals.length > 0 && (
                 <div className="pt-4 opacity-80 sm:pt-8">
                     <h2 className="text-base font-bold mb-3 flex items-center gap-2 text-emerald-500 sm:text-lg sm:mb-4">
@@ -189,7 +181,6 @@ export function Goals() {
                 </div>
             )}
 
-            {/* Modals */}
             {selectedGoal && (
                 <DepositModal
                     isOpen={isDepositModalOpen}

@@ -16,9 +16,9 @@ module.exports = (sequelize, DataTypes) => {
             primaryKey: true
         },
         user_id: DataTypes.UUID,
-        family_id: DataTypes.UUID, // Ràng buộc log với gia đình cụ thể
-        action: DataTypes.STRING, // CREATE, UPDATE, DELETE
-        entity_type: DataTypes.STRING, // TRANSACTION, WALLET, BUDGET
+        family_id: DataTypes.UUID,
+        action: DataTypes.STRING,
+        entity_type: DataTypes.STRING,
         entity_id: DataTypes.STRING,
         old_value: DataTypes.JSONB,
         new_value: DataTypes.JSONB,

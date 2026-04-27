@@ -20,7 +20,6 @@ const sendEmail = async (options) => {
             }
         });
     } else {
-        // Dev/Test: fallback Ethereal
         const testAccount = await nodemailer.createTestAccount();
         transporter = nodemailer.createTransport({
             host: 'smtp.ethereal.email',

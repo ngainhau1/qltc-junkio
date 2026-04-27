@@ -4,7 +4,6 @@ const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
     class Notification extends Model {
         static associate(models) {
-            // A notification belongs to a single user
             Notification.belongsTo(models.User, { foreignKey: 'user_id' });
         }
     }
@@ -16,7 +15,7 @@ module.exports = (sequelize, DataTypes) => {
             primaryKey: true
         },
         type: {
-            type: DataTypes.STRING, // e.g., 'BUDGET_ALERT', 'DEBT_REMINDER', 'GOAL_ACHIEVED'
+            type: DataTypes.STRING,
             allowNull: false
         },
         title: {

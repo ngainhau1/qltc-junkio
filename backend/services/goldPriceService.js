@@ -68,9 +68,6 @@ const normalizeSjcResponse = (payload) => {
     };
 };
 
-/**
- * Truy vấn dữ liệu giá vàng thực tế từ API chính thức của SJC.
- */
 const fetchSjcGoldPrice = async () => {
     const response = await fetch(SJC_PRICE_SERVICE_URL, {
         method: 'POST',
@@ -91,12 +88,6 @@ const fetchSjcGoldPrice = async () => {
     return normalizeSjcResponse(payload);
 };
 
-/**
- * Lấy giá vàng hiện tại.
- * - Ưu tiên đọc dữ liệu từ Redis Cache để tối ưu hiệu năng.
- * - Nếu Cache không có hoặc hết hạn, thực hiện fetch mới từ SJC và lưu lại vào Cache.
- * - Tự động lưu bản ghi lịch sử (snapshot) vào DB.
- */
 const getGoldPrice = async () => {
     try {
         const cachedValue = await client.get(CACHE_KEY);

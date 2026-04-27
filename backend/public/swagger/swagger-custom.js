@@ -1,4 +1,3 @@
-/* global window, document */
 (function () {
     const LOGIN_PATH = '/api/auth/login';
 
@@ -18,7 +17,7 @@
                 window.ui.preauthorizeApiKey('bearerAuth', token);
             }
         } catch {
-            // Ignore parse failures to keep Swagger UI stable.
+            return;
         }
     };
 

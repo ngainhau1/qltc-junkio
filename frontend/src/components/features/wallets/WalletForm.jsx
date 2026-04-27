@@ -17,7 +17,6 @@ const resolveWalletSubmitError = (rawError, t) => {
         return t('wallets.form.validation.duplicateName');
     }
 
-    // Fall back to centralized error mapper
     return resolveError(message, t, 'wallets.form.validation.saveFailed');
 };
 

@@ -3,7 +3,6 @@ const path = require('path');
 const { randomUUID } = require('crypto');
 const fs = require('fs');
 
-// Ensure upload directory exists
 const uploadDir = path.join(__dirname, '../uploads/avatars');
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
@@ -11,10 +10,9 @@ if (!fs.existsSync(uploadDir)) {
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, uploadDir); // Local storage path
+        cb(null, uploadDir);
     },
     filename: function (req, file, cb) {
-        // user-id-uuid.ext configuration
         const ext = path.extname(file.originalname);
         const fileName = `${req.user?.id || 'guest'}-${randomUUID()}${ext}`;
         cb(null, fileName);
@@ -22,7 +20,6 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-    // Only accept images
     if (file.mimetype.startsWith('image/')) {
         cb(null, true);
     } else {
@@ -34,7 +31,7 @@ const uploadAvatar = multer({
     storage: storage,
     fileFilter: fileFilter,
     limits: {
-        fileSize: 2 * 1024 * 1024 // 2MB limit
+        fileSize: 2 * 1024 * 1024
     }
 });
 

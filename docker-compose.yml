@@ -1,6 +1,5 @@
 
 services:
-  # --- DỊCH VỤ 1: DATABASE (POSTGRESQL) ---
   db:
     image: postgres:15-alpine
     container_name: junkio_db
@@ -18,7 +17,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # --- DỊCH VỤ 2: BACKEND (NODEJS) ---
   api:
     build: ./backend
     container_name: junkio_api
@@ -51,7 +49,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # --- DỊCH VỤ 3: FRONTEND (REACT + NGINX) ---
   web:
     build: ./frontend
     container_name: junkio_web
@@ -63,7 +60,6 @@ services:
       redis:
         condition: service_healthy
 
-  # --- DỊCH VỤ 4: REDIS CACHE ---
   redis:
     image: redis:7-alpine
     container_name: junkio_cache

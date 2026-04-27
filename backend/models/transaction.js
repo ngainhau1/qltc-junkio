@@ -8,9 +8,8 @@ module.exports = (sequelize, DataTypes) => {
             Transaction.belongsTo(models.Wallet, { foreignKey: 'wallet_id' });
             Transaction.belongsTo(models.Category, { foreignKey: 'category_id' });
             Transaction.belongsTo(models.User, { foreignKey: 'user_id' });
-            Transaction.belongsTo(models.Family, { foreignKey: 'family_id' }); // Optional direct link if needed
+            Transaction.belongsTo(models.Family, { foreignKey: 'family_id' });
 
-            // A transaction can have multiple shares (for splitting debts)
             Transaction.hasMany(models.TransactionShare, { foreignKey: 'transaction_id', as: 'Shares' });
         }
     }

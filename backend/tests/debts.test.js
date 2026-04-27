@@ -2,7 +2,6 @@ const request = require('supertest');
 const express = require('express');
 const { Sequelize, DataTypes } = require('sequelize');
 
-// Setup mock DB & model
 const mockSequelize = new Sequelize('sqlite::memory:', { logging: false });
 
 const mockUser = mockSequelize.define('User', {
@@ -58,7 +57,6 @@ const mockNotification = mockSequelize.define('Notification', {
     message: { type: DataTypes.STRING }
 });
 
-// Relationships
 mockTransactionShare.belongsTo(mockTransaction, { as: 'Transaction', foreignKey: 'transaction_id' });
 mockTransaction.hasMany(mockTransactionShare, { as: 'Shares', foreignKey: 'transaction_id' });
 
@@ -66,7 +64,7 @@ mockTransaction.belongsTo(mockUser, { foreignKey: 'user_id' });
 mockTransaction.belongsTo(mockWallet, { foreignKey: 'wallet_id' });
 
 jest.mock('../models/index', () => ({
-    sequelize: mockSequelize, // Also mocking the literal sequelize instance
+    sequelize: mockSequelize,
     User: mockUser,
     Family: mockFamily,
     FamilyMember: mockFamilyMember,
@@ -87,7 +85,6 @@ jest.mock('../models', () => ({
     Notification: mockNotification
 }));
 
-// Mock socket
 jest.mock('../config/socket', () => ({
     getIO: () => ({
         to: () => ({
@@ -96,7 +93,7 @@ jest.mock('../config/socket', () => ({
     })
 }));
 
-let mockUserId; 
+let mockUserId;
 jest.mock('../middleware/authMiddleware', () => (req, res, next) => {
     req.user = { id: mockUserId, role: 'USER' };
     next();
@@ -135,16 +132,14 @@ describe('Debt API Endpoints', () => {
 
         const unrelatedWallet = await mockWallet.create({ name: 'W_OTHER', user_id: creditorId, balance: 2000 });
 
-        // Transaction driven by creditor
         const tx = await mockTransaction.create({
             user_id: creditorId,
             wallet_id: walletCreditorId,
-            amount: 2000, // Debtor owes 2000 to creditor
+            amount: 2000,
             type: 'EXPENSE',
             description: 'Lunch',
             family_id: familyId
         });
-        // Debtor owes 1000
         const share1 = await mockTransactionShare.create({
             transaction_id: tx.id,
             user_id: debtorId,
@@ -154,7 +149,6 @@ describe('Debt API Endpoints', () => {
         });
         primaryShareId = share1.id;
 
-        // Debtor owes 500, approved
         await mockTransactionShare.create({
             transaction_id: tx.id,
             user_id: debtorId,
@@ -188,15 +182,15 @@ describe('Debt API Endpoints', () => {
     describe('GET /api/debts/simplified/:familyId', () => {
         it('should return simplified debts for the family', async () => {
             mockUserId = creditorId;
-            
+
             const res = await request(app).get(`/api/debts/simplified/${familyId}`);
-            
+
             expect(res.statusCode).toEqual(200);
             expect(res.body.data.originalTransactions).toBe(2);
             expect(res.body.data.simplifiedTransactions).toBe(1);
             expect(res.body.data.suggestions[0].from.id).toBe(debtorId);
             expect(res.body.data.suggestions[0].to.id).toBe(creditorId);
-            expect(res.body.data.suggestions[0].amount).toBe(1500); // 1000+500
+            expect(res.body.data.suggestions[0].amount).toBe(1500);
         });
 
         it('rejects simplified debt lookup for non-members', async () => {
@@ -334,10 +328,10 @@ describe('Debt API Endpoints', () => {
 
     describe('POST /api/debts/settle', () => {
         it('should settle partial debt and deduct from wallet', async () => {
-            mockUserId = debtorId; // Debtor is paying
+            mockUserId = debtorId;
             const res = await request(app).post('/api/debts/settle').send({
                 to_user_id: creditorId,
-                amount: 600, // partial of 1500
+                amount: 600,
                 from_wallet_id: walletDebtorId,
                 to_wallet_id: walletCreditorId
             });
@@ -345,20 +339,16 @@ describe('Debt API Endpoints', () => {
             expect(res.statusCode).toEqual(200);
             expect(res.body.message).toBe('DEBT_SETTLED');
 
-            // Verify wallet balances updated
             const vDebtor = await mockWallet.findByPk(walletDebtorId);
             const vCreditor = await mockWallet.findByPk(walletCreditorId);
             expect(Number(vDebtor.balance)).toBe(5000 - 600);
             expect(Number(vCreditor.balance)).toBe(10000 + 600);
 
-            // Verify shares
-            // share1 was 1000, now should be 400 (if it iterated first)
             const share1 = await mockTransactionShare.findByPk(primaryShareId);
-            expect(Number(share1.amount)).toBe(400); 
+            expect(Number(share1.amount)).toBe(400);
 
-            // Verify transactions generated
             const rx = await mockTransaction.findAll();
-            expect(rx.length).toBeGreaterThan(1); // 1 original + 2 transfers
+            expect(rx.length).toBeGreaterThan(1);
         });
 
         it('should settle full direct debt once and reject duplicate settlement', async () => {

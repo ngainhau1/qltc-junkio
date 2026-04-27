@@ -12,6 +12,14 @@ export default [
     },
     pluginJs.configs.recommended,
     {
+        files: ['public/swagger/**/*.js'],
+        languageOptions: {
+            globals: {
+                ...globals.browser,
+            }
+        }
+    },
+    {
         rules: {
             'no-unused-vars': ['warn', { 'argsIgnorePattern': '^(?:_.*|Sequelize)$', 'varsIgnorePattern': '^(Op|Sequelize|User|Category|Goal|transferTxOut|transferTxIn|type|x|err|userId|year|month)$' }],
             'no-console': 'off',

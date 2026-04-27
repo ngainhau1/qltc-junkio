@@ -31,7 +31,6 @@ export function Sidebar({ className }) {
         ...(user?.role === 'admin' ? [{ icon: Shield, label: t('nav.admin'), href: "/admin" }] : []),
     ]
 
-    // Derived state for display
     const activeFamily = families.find(f => f.id === activeFamilyId)
     const contextName = activeFamily ? activeFamily.name : t('sidebar.personalWallet')
 

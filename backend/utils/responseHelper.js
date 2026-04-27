@@ -1,8 +1,3 @@
-/**
- * Standard API response helpers.
- * Error responses must return stable codes in `message`.
- */
-
 exports.success = (res, data, message = 'SUCCESS', statusCode = 200) => {
     return res.status(statusCode).json({
         status: 'success',

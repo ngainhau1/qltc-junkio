@@ -4,9 +4,7 @@ const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
     class TransactionShare extends Model {
         static associate(models) {
-            // A share belongs to a specific transaction
             TransactionShare.belongsTo(models.Transaction, { foreignKey: 'transaction_id', as: 'Transaction' });
-            // A share is assigned to a specific user (the one who owes or is owed)
             TransactionShare.belongsTo(models.User, { foreignKey: 'user_id', as: 'User' });
         }
     }
@@ -31,11 +29,11 @@ module.exports = (sequelize, DataTypes) => {
         },
         status: {
             type: DataTypes.STRING,
-            defaultValue: 'UNPAID' // UNPAID, PAID
+            defaultValue: 'UNPAID'
         },
         approval_status: {
             type: DataTypes.STRING,
-            defaultValue: 'APPROVED' // APPROVED, REJECTED
+            defaultValue: 'APPROVED'
         }
     }, {
         sequelize,

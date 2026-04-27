@@ -17,7 +17,6 @@ import { resolveError } from "@/utils/authErrors"
 export function LoginPage() {
     const { t } = useTranslation();
 
-    // Validation Schema
     const LoginSchema = Yup.object().shape({
         email: Yup.string().email(t('auth.emailInvalid')).required(t('auth.emailRequired')),
         password: Yup.string().required(t('auth.passwordRequired')),

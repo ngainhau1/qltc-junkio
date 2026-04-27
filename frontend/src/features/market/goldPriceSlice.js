@@ -23,9 +23,6 @@ const initialState = {
     },
 };
 
-/**
- * Thunk lấy giá vàng hiện tại từ Server.
- */
 export const fetchGoldPrice = createAsyncThunk(
     'goldPrice/fetchGoldPrice',
     async (_, { rejectWithValue }) => {
@@ -41,10 +38,6 @@ export const fetchGoldPrice = createAsyncThunk(
     }
 );
 
-/**
- * Thunk lấy lịch sử giá vàng theo khoảng thời gian (24H hoặc 7D).
- * - Sử dụng cache metadata để tránh fetch lại dữ liệu nếu vẫn còn trong vòng 5 phút (HISTORY_CACHE_TTL_MS).
- */
 export const fetchGoldPriceHistory = createAsyncThunk(
     'goldPrice/fetchGoldPriceHistory',
     async ({ range }, { rejectWithValue }) => {

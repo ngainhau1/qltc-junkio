@@ -11,12 +11,11 @@ module.exports = {
                 credentials: true
             }
         });
- 
+
         io.on('connection', (socket) => {
             console.log(` Client connected via WebSockets: ${socket.id}`);
- 
+
             socket.on('join_user_room', (userId) => {
-                // User joins their personal room for private notifications
                 socket.join(userId);
                 console.log(`User ${userId} joined their personal socket room.`);
             });

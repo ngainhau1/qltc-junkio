@@ -1,7 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import i18n from '@/lib/i18n';
 
-// Khởi tạo state từ localStorage nếu có, nếu không thì dùng mặc định
 const loadPreloadedState = () => {
     try {
         const serializedState = localStorage.getItem('app_settings');
@@ -15,8 +14,8 @@ const loadPreloadedState = () => {
 };
 
 const defaultState = {
-    currency: 'VND', // 'VND', 'USD', 'EUR'
-    language: 'vi', // 'vi', 'en'
+    currency: 'VND',
+    language: 'vi',
     notifications: {
         budgetAlerts: true,
         debtReminders: true,
@@ -37,7 +36,7 @@ const settingsSlice = createSlice({
         updateLanguage: (state, action) => {
             state.language = action.payload;
             localStorage.setItem('app_settings', JSON.stringify(state));
-            i18n.changeLanguage(action.payload); // Sync với i18next engine ngay lập tức
+            i18n.changeLanguage(action.payload);
         },
         toggleNotification: (state, action) => {
             const { key, value } = action.payload;

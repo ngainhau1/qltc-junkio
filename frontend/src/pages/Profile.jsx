@@ -17,11 +17,9 @@ export function Profile() {
     const fileInputRef = useRef(null);
     const [isUploading, setIsUploading] = useState(false);
 
-    // Lấy API base để nối url tương đối của ảnh
     const API_URL = import.meta.env.VITE_API_URL || '/api';
     const serverUrl = API_URL.replace('/api', '');
 
-    // Provide initial state directly from redux where possible to avoid effect updates
     const [formData, setFormData] = useState({
         name: user?.name || "",
         email: user?.email || "",
@@ -41,14 +39,12 @@ export function Profile() {
     const handleSave = async (e) => {
         e.preventDefault();
 
-        // Basic validation
         if (!formData.name.trim()) {
             toast.error(t('profile.reqName'));
             return;
         }
 
         try {
-            // Dispatch to Redux Async Thunk
             await dispatch(updateProfileAsync({
                 name: formData.name,
                 phone: formData.phone,
@@ -66,7 +62,6 @@ export function Profile() {
         const file = e.target.files[0];
         if (!file) return;
 
-        // Chỉ cho phép ảnh
         if (!file.type.startsWith('image/')) {
             toast.error(t('profile.onlyImageAllowed'));
             return;
@@ -101,7 +96,6 @@ export function Profile() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Cột trái: Avatar */}
                 <div className="md:col-span-1 space-y-6">
                     <Card>
                         <CardHeader className="text-center">
@@ -151,7 +145,6 @@ export function Profile() {
                     </Card>
                 </div>
 
-                {/* Cột phải: Thông tin form */}
                 <div className="md:col-span-2">
                     <form onSubmit={handleSave}>
                         <Card>

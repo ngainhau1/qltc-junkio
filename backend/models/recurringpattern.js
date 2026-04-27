@@ -20,10 +20,10 @@ module.exports = (sequelize, DataTypes) => {
         wallet_id: DataTypes.UUID,
         category_id: DataTypes.UUID,
         amount: DataTypes.DECIMAL,
-        type: DataTypes.STRING, // 'INCOME' or 'EXPENSE'
+        type: DataTypes.STRING,
         description: DataTypes.STRING,
-        frequency: DataTypes.STRING, // 'DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY'
-        next_run_date: DataTypes.DATEONLY, // Chỉ cần lưu ngày chạy tiếp theo
+        frequency: DataTypes.STRING,
+        next_run_date: DataTypes.DATEONLY,
         is_active: {
             type: DataTypes.BOOLEAN,
             defaultValue: true

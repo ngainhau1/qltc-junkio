@@ -122,19 +122,16 @@ describe('goldPriceSnapshotService', () => {
             updatedAt: '2026-04-16T08:00:00+07:00',
         };
 
-        // Fire multiple upserts simultaneously to simulate race condition
         const results = await Promise.all([
             service.upsertGoldPriceSnapshot(livePriceData),
             service.upsertGoldPriceSnapshot(livePriceData),
             service.upsertGoldPriceSnapshot(livePriceData)
         ]);
 
-        // Expect all to resolve successfully (return snapshot shapes) without throwing errors
         expect(results[0]).not.toBeNull();
         expect(results[1]).not.toBeNull();
         expect(results[2]).not.toBeNull();
 
-        // Exactly 1 row should be persisted in the DB
         const count = (await GoldPriceSnapshot.findAll()).length;
         expect(count).toBe(1);
     });

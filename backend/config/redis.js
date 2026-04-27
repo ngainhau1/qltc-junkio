@@ -13,7 +13,6 @@ client.on('connect', () => {
     console.log('Connected to Redis Cache Engine Successfully');
 });
 
-// Avoid connecting multiple times
 let isConnected = false;
 const connectRedis = async () => {
     if (!isConnected) {

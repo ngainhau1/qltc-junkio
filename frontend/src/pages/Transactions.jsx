@@ -60,7 +60,6 @@ export function Transactions() {
     const [isDetailOpen, setIsDetailOpen] = useState(false);
     const [showFilters, setShowFilters] = useState(false);
 
-    // Filter context wallets based on active family
     const contextWallets = wallets.filter((w) =>
         activeFamilyId ? w.family_id === activeFamilyId : !w.family_id
     );
@@ -215,7 +214,6 @@ export function Transactions() {
     const filterBar = (
         <div className="space-y-3 rounded-xl border bg-card p-4">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                {/* Type filter */}
                 <select
                     className="h-10 w-full rounded-md border bg-background px-3 text-sm"
                     value={filter.type}
@@ -228,7 +226,6 @@ export function Transactions() {
                     <option value="TRANSFER_IN">{t('transactions.filters.transferIn', 'Nhận về')}</option>
                 </select>
 
-                {/* Wallet filter */}
                 <select
                     className="h-10 w-full rounded-md border bg-background px-3 text-sm"
                     value={filter.walletId}
@@ -240,7 +237,6 @@ export function Transactions() {
                     ))}
                 </select>
 
-                {/* Category filter */}
                 <select
                     className="h-10 w-full rounded-md border bg-background px-3 text-sm"
                     value={filter.categoryId}
@@ -252,7 +248,6 @@ export function Transactions() {
                     ))}
                 </select>
 
-                {/* Sort */}
                 <select
                     className="h-10 w-full rounded-md border bg-background px-3 text-sm"
                     value={`${filter.sortBy}_${filter.sortOrder}`}
@@ -268,7 +263,6 @@ export function Transactions() {
                 </select>
             </div>
 
-            {/* Date range */}
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <div className="flex items-center gap-2">
                     <label className="shrink-0 text-sm text-muted-foreground">{t('transactions.filters.from', 'Từ')}</label>
