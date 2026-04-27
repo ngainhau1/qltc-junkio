@@ -2,14 +2,6 @@ const { User, Transaction, Wallet, Family, Goal, Budget, Category, sequelize } =
 const { Op, fn, col } = require('sequelize');
 const { success, error: sendError } = require('../utils/responseHelper');
 
-// GHI CHÚ HỌC TẬP - Phần quản trị của Thành Đạt:
-// Controller này chỉ dành cho admin. Nó gom dữ liệu toàn hệ thống, quản lý user,
-// đổi quyền, khóa tài khoản, xóa user và đọc nhật ký hoạt động.
-
-/**
- * Tạo điều kiện tìm kiếm người dùng theo tên hoặc email.
- * PostgreSQL dùng iLike để tìm không phân biệt hoa/thường; môi trường khác dùng like.
- */
 const buildSearchWhere = (search) => {
     if (!search) {
         return {};
@@ -26,7 +18,6 @@ const buildSearchWhere = (search) => {
 
 exports.getDashboard = async (req, res) => {
     try {
-        // Ba phép đếm độc lập nên chạy song song để giảm thời gian phản hồi.
         const [totalUsers, totalTransactions, totalFamilies] = await Promise.all([
             User.count(),
             Transaction.count(),
@@ -49,7 +40,6 @@ exports.getDashboard = async (req, res) => {
             }
         });
 
-        // Tái sử dụng getAnalytics và getFinancialOverview để dashboard có dữ liệu tổng hợp nhất quán.
         const analyticsResponse = createMockRes();
         await exports.getAnalytics(req, analyticsResponse);
 
@@ -72,7 +62,7 @@ exports.getDashboard = async (req, res) => {
 
 exports.getAnalytics = async (req, res) => {
     try {
-        // Các chỉ số tổng quan này dùng cho các thẻ thống kê trên đầu trang admin.
+
         const [totalWallets, totalGoals, totalBudgets] = await Promise.all([
             Wallet.count(),
             Goal.count(),
@@ -85,7 +75,7 @@ exports.getAnalytics = async (req, res) => {
         sixMonthsAgo.setHours(0, 0, 0, 0);
 
         const isSqlite = sequelize?.getDialect && sequelize.getDialect() === 'sqlite';
-        // date_trunc dùng cho PostgreSQL; strftime dùng cho SQLite trong test.
+  
         const monthExpr = isSqlite
             ? fn('strftime', '%Y-%m', col('createdAt'))
             : fn('date_trunc', 'month', col('createdAt'));

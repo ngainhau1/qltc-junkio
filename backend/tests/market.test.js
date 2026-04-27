@@ -89,6 +89,21 @@ describe('Market API', () => {
             updatedAt: '2026-04-16T13:52:00+07:00',
             updatedLabel: '13:52 16/04/2026',
         });
+        expect(global.fetch).toHaveBeenCalledWith(
+            'https://sjc.com.vn/GoldPrice/Services/PriceService.ashx',
+            expect.objectContaining({
+                method: 'POST',
+                headers: expect.objectContaining({
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    Accept: 'application/json',
+                    'User-Agent': expect.stringContaining('Mozilla/5.0'),
+                    Origin: 'https://sjc.com.vn',
+                    Referer: 'https://sjc.com.vn/',
+                    'X-Requested-With': 'XMLHttpRequest',
+                }),
+                body: 'method=GetCurrentGoldPrice',
+            })
+        );
         expect(upsertGoldPriceSnapshot).toHaveBeenCalledTimes(1);
     });
 
@@ -156,6 +171,22 @@ describe('Market API', () => {
             status: 200,
             text: jest.fn().mockResolvedValue('not-json'),
         });
+
+        const response = await request(app).get('/api/market/gold');
+
+        expect(response.statusCode).toBe(502);
+        expect(response.body.status).toBe('error');
+        expect(response.body.message).toBe('GOLD_PRICE_FETCH_FAILED');
+    });
+
+    it('returns a 502 error when the upstream service rejects the request', async () => {
+        global.fetch.mockResolvedValue(
+            buildFetchResponse('Forbidden', {
+                ok: false,
+                status: 403,
+                statusText: 'Forbidden',
+            })
+        );
 
         const response = await request(app).get('/api/market/gold');
 
