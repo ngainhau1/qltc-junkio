@@ -7,6 +7,14 @@ const { client } = require('../config/redis');
 const CACHE_KEY = 'market:gold:sjc:hcm:current';
 const CACHE_TTL_SECONDS = 60;
 const SJC_PRICE_SERVICE_URL = 'https://sjc.com.vn/GoldPrice/Services/PriceService.ashx';
+const SJC_REQUEST_HEADERS = Object.freeze({
+    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+    Accept: 'application/json',
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0 Safari/537.36',
+    Origin: 'https://sjc.com.vn',
+    Referer: 'https://sjc.com.vn/',
+    'X-Requested-With': 'XMLHttpRequest',
+});
 const TARGET_SOURCE = 'sjc';
 const TARGET_BRANCH = 'Hồ Chí Minh';
 const TARGET_PRODUCT = 'Vàng SJC 1L, 10L, 1KG';
@@ -79,10 +87,7 @@ const fetchSjcGoldPrice = async () => {
     // API SJC dùng POST dạng form cũ, nên body cần method=GetCurrentGoldPrice.
     const response = await fetch(SJC_PRICE_SERVICE_URL, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-            Accept: 'application/json',
-        },
+        headers: SJC_REQUEST_HEADERS,
         body: new URLSearchParams({ method: 'GetCurrentGoldPrice' }).toString(),
     });
 
@@ -131,6 +136,7 @@ const getGoldPrice = async () => {
 module.exports = {
     CACHE_KEY,
     CACHE_TTL_SECONDS,
+    SJC_REQUEST_HEADERS,
     TARGET_BRANCH,
     TARGET_CURRENCY,
     TARGET_PRODUCT,

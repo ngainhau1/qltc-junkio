@@ -1064,19 +1064,19 @@
     },
     "categories": {
         "labels": {
-            "food": "?n U?ng",
-            "transport": "Di Chuy?n",
-            "housing": "Nh? C?a",
-            "entertainment": "Gi?i Tr?",
-            "shopping": "Mua S?m",
-            "health": "S?c Kh?e",
-            "education": "Gi?o D?c",
-            "digitalServices": "D?ch V? S?",
-            "utilities": "H?a ??n & Ti?n ?ch",
-            "salary": "L??ng",
-            "bonus": "Th??ng",
-            "investment": "??u T?",
-            "sideIncome": "Thu Nh?p Ph?"
+            "food": "Ăn Uống",
+            "transport": "Di Chuyển",
+            "housing": "Nhà Cửa",
+            "entertainment": "Giải Trí",
+            "shopping": "Mua Sắm",
+            "health": "Sức Khỏe",
+            "education": "Giáo Dục",
+            "digitalServices": "Dịch Vụ Số",
+            "utilities": "Hóa Đơn & Tiền Dịch",
+            "salary": "Lương",
+            "bonus": "Thưởng",
+            "investment": "Đầu Tư",
+            "sideIncome": "Thu Nhập Phụ"
         }
     }
 }

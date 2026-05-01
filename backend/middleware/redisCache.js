@@ -18,10 +18,9 @@ const cacheDashboard = (duration = 300) => {
                 console.log(` Redis Cache Hit: ${rawKey}`);
                 const data = JSON.parse(cachedResponse);
                 return res.status(200).json({
-                    success: true,
-                    data,
-                    message: 'Lấy dữ liệu từ Redis Cache thành công',
-                    cached: true
+                    status: 'success',
+                    message: 'DASHBOARD_CACHE_HIT',
+                    data
                 });
             }
 
@@ -29,11 +28,11 @@ const cacheDashboard = (duration = 300) => {
 
             const originalSend = res.json.bind(res);
             res.json = (body) => {
-                if (body && body.success && body.data) {
+                if (body && (body.status === 'success' || body.success === true) && body.data) {
                     client.setEx(rawKey, duration, JSON.stringify(body.data))
                         .catch(err => console.error('Redis Set Error:', err));
                 }
-                originalSend(body);
+                return originalSend(body);
             };
 
             next();

@@ -25,6 +25,7 @@ const STAFF_EMAIL = 'staff@junkio.com';
 const STAFF_PASS  = 'staff123';
 const ADMIN_EMAIL = 'admin@junkio.com';
 const ADMIN_PASS  = 'admin123';
+const CURRENT_MONTH_TRANSACTION_WINDOW_DAYS = 30;
 
 const CATEGORIES = [
     { name: 'Ăn uống',      type: 'EXPENSE' },
@@ -105,6 +106,20 @@ function daysAgo(n) {
     const d = new Date();
     d.setDate(d.getDate() - n);
     return d;
+}
+
+function demoTransactionDate(daysBack, sequence = 0) {
+    const date = daysAgo(daysBack);
+    const now = new Date();
+    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    if (daysBack >= 0 && daysBack <= CURRENT_MONTH_TRANSACTION_WINDOW_DAYS && date < currentMonthStart) {
+        const clampedDate = new Date(currentMonthStart);
+        clampedDate.setMilliseconds(sequence % 1000);
+        return clampedDate;
+    }
+
+    return date;
 }
 
 async function deleteIfExists(email) {
@@ -226,8 +241,8 @@ async function main() {
             amount: raw.amount,
             type: raw.type,
             description: raw.desc,
-            date: daysAgo(raw.daysAgo),
-            transaction_date: daysAgo(raw.daysAgo),
+            date: demoTransactionDate(raw.daysAgo, i),
+            transaction_date: demoTransactionDate(raw.daysAgo, i),
             family_id: null
         });
 

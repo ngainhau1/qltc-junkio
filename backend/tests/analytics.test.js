@@ -62,6 +62,7 @@ jest.mock('../middleware/authMiddleware', () => (req, res, next) => {
 });
 
 const analyticsRoutes = require('../routes/analyticsRoutes');
+const { client } = require('../config/redis');
 
 const app = express();
 app.use(express.json());
@@ -101,6 +102,13 @@ describe('Analytics API', () => {
         await mockSequelize.close();
     });
 
+    beforeEach(async () => {
+        const cacheKeys = await client.keys('dashboardStats:*');
+        if (cacheKeys.length > 0) {
+            await client.del(cacheKeys);
+        }
+    });
+
     describe('GET /api/analytics/dashboard', () => {
         it('should return aggregated dashboard stats', async () => {
             mockUserId = userId;
@@ -116,6 +124,24 @@ describe('Analytics API', () => {
 
             expect(res.body.data.recentTransactions.length).toBe(2);
             expect(res.body.data.recentTransactions[0].Category.name).toBe('Food');
+        });
+
+        it('should return the standard response envelope on a dashboard cache hit', async () => {
+            mockUserId = userId;
+
+            const firstRes = await request(app).get('/api/analytics/dashboard');
+            expect(firstRes.statusCode).toEqual(200);
+
+            await new Promise((resolve) => setImmediate(resolve));
+
+            const cachedRes = await request(app).get('/api/analytics/dashboard');
+            expect(cachedRes.statusCode).toEqual(200);
+            expect(cachedRes.body.status).toBe('success');
+            expect(cachedRes.body.message).toBe('DASHBOARD_CACHE_HIT');
+            expect(cachedRes.body.success).toBeUndefined();
+            expect(cachedRes.body.cached).toBeUndefined();
+            expect(cachedRes.body.data.stats.totalIncome).toBe(2000);
+            expect(cachedRes.body.data.stats.totalExpense).toBe(500);
         });
     });
 

@@ -1,14 +1,14 @@
 ﻿import { expect, test } from "@playwright/test";
-import { assertNoRuntimeArtifacts, login } from "./helpers/app";
+import { assertNoRuntimeArtifacts, loginByApi } from "./helpers/app";
 
-test("staff is blocked from admin route", async ({ page }) => {
-    await login(page, "staff");
+test("staff is blocked from admin route", async ({ page, request }) => {
+    await loginByApi(page, request, "staff");
     await page.goto("/admin");
     await expect(page).not.toHaveURL(/\/admin$/);
 });
 
-test("admin dashboard loads real data and logs tab responds", async ({ page }) => {
-    await login(page, "admin");
+test("admin dashboard loads real data and logs tab responds", async ({ page, request }) => {
+    await loginByApi(page, request, "admin");
     await page.goto("/admin");
 
     await expect(page.getByRole("heading", { name: /qu.n tr.|admin/i }).first()).toBeVisible();

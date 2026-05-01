@@ -36,6 +36,23 @@ export async function login(page, role = "member") {
     await expect(page).not.toHaveURL(/\/login$/);
 }
 
+export async function loginByApi(page, request, role = "member") {
+    const credentials = users[role];
+    const response = await request.post(`${apiBaseUrl}/auth/login`, {
+        data: credentials,
+    });
+    expect(response.ok(), `API login failed for ${role}: ${response.status()}`).toBeTruthy();
+    const json = await response.json();
+    const token = json.data?.token || json.token;
+    expect(token, `API login token missing for ${role}`).toBeTruthy();
+
+    await page.addInitScript((authToken) => {
+        window.localStorage.setItem("auth_token", authToken);
+    }, token);
+
+    return token;
+}
+
 export async function logout(page) {
     await page.goto("/settings");
     const accountTab = page.getByRole("tab", { name: /t.i kho.n|account/i });
@@ -155,6 +172,7 @@ export async function assertNoRuntimeArtifacts(page, label) {
 
         const rawKeyMatches = [...text.matchAll(/\b[a-z][a-z0-9_-]*(?:\.[a-z0-9_-]+){1,}\b/g)]
             .map((match) => match[0])
+            .filter((value) => !/^v\d+\.\d+(?:\.\d+)?$/i.test(value))
             .filter((value) => !/^https?\./i.test(value))
             .filter((value) => !value.includes(".com"))
             .filter((value) => !value.startsWith("vite."))
