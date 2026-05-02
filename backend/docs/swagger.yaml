@@ -3,49 +3,68 @@ info:
   title: Junkio Expense Tracker API
   version: 1.0.0
   description: >-
-    **Chào mừng đến với thư viện API của Junkio Expense Tracker!**  
+    **Chào mừng đến với thư viện API của Junkio Expense Tracker!**
 
 
-    Dưới đây là các tài liệu hướng dẫn sử dụng API chi tiết dành cho Lập trình
-    viên, Tester và Admin hệ thống. Thiết kế tuân theo chuẩn RESTful.
-
-
-    ---
-
-    ###  Hướng dẫn dành cho Người Dùng Mới (Getting Started)
-
-
-    Nếu bạn là người mới sử dụng API này, hãy làm theo các bước sau để xác thực:
-
-
-    1. **Đăng nhập (Login):** Mở route `/api/auth/login` và nhập email cùng mật
-    khẩu.
-
-    2. **Lấy Token:** Copy chuỗi `token` trả về từ kết quả JSON (trong object
-    `data`).
-
-    3. **Cấp quyền (Authorize):** Kéo lên trên cùng của trang web này, bấm vào
-    nút **Authorize** màu xanh lá cây hoặc click vào biểu tượng 🔒 ở bất kỳ API
-    nào, dán chuỗi token vừa copy vào ô **Value** và nhấn **Authorize**.
-
-    4. **Bắt đầu gọi API:** Nhấn `Try it out` ở các endpoint có yêu cầu xác thực
-    để thực hiện các yêu cầu (Requests). Server sẽ nhận diện được phiên làm việc
-    của bạn.
-
-
-    > ** Mẹo:** Swagger UI đã được cấu hình lưu lại Token kể cả khi bạn tải lại
-    trang (Persist Authorization).
+    Dưới đây là tài liệu hướng dẫn sử dụng API dành cho lập trình viên, tester
+    và admin hệ thống. Thiết kế tuân theo chuẩn RESTful, mọi endpoint JSON đều
+    ưu tiên response envelope thống nhất.
 
 
     ---
 
+    ### Hướng dẫn dành cho người dùng mới (Getting Started)
 
-    ###  Mã Lỗi (Error Codes)
 
-    Junkio API sử dụng hệ thống `Error Codes` chuẩn và thông báo lỗi đa ngôn ngữ
-    (i18n). Thay vì đọc chuỗi ký tự thô, Frontend sẽ nhận được các mã như
-    `WALLET_NOT_FOUND`, `INSUFFICIENT_BALANCE` và tự thông dịch thành văn bản.
-    Bạn có thể xem chi tiết mô hình phản hồi (Response) ở từng route bên dưới.
+    1. **Đăng nhập:** Mở route `/api/auth/login` và nhập email cùng mật khẩu.
+
+    2. **Lấy token:** Copy chuỗi `token` trả về trong object `data`.
+
+    3. **Cấp quyền:** Bấm **Authorize**, dán token vào ô **Value** theo dạng
+    `Bearer <token>` hoặc chỉ dán token nếu Swagger UI đã tự thêm prefix.
+
+    4. **Gọi API:** Nhấn `Try it out` tại endpoint cần kiểm tra. Các endpoint có
+    biểu tượng khóa sẽ gửi kèm Bearer token.
+
+
+    > **Mẹo:** Swagger UI đã được cấu hình lưu token khi tải lại trang (Persist
+    Authorization).
+
+
+    ---
+
+    ### Response envelope
+
+
+    Các endpoint JSON trả về một trong hai dạng chuẩn:
+
+
+    ```json
+
+    { "status": "success", "message": "MESSAGE_CODE", "data": {} }
+
+    ```
+
+
+    ```json
+
+    { "status": "error", "message": "ERROR_CODE", "data": null }
+
+    ```
+
+
+    Endpoint xuất file như export CSV/PDF là ngoại lệ có chủ đích và trả về
+    file/binary response.
+
+
+    ---
+
+    ### Mã lỗi (Error Codes)
+
+
+    Backend trả về mã lỗi ổn định như `AUTH_TOKEN_MISSING`, `VALIDATION_ERROR`,
+    `WALLET_NOT_FOUND`, `INSUFFICIENT_BALANCE`, `FAMILY_FORBIDDEN`. Frontend có
+    thể dùng các mã này để dịch thông báo theo ngôn ngữ hiện tại.
 servers:
   - url: /
 components:
@@ -54,8 +73,235 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-security:
-  - bearerAuth: []
+  schemas:
+    ApiSuccessEnvelope:
+      type: object
+      required:
+        - status
+        - message
+        - data
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: REQUEST_SUCCESS
+        data:
+          nullable: true
+    ApiErrorEnvelope:
+      type: object
+      required:
+        - status
+        - message
+        - data
+      properties:
+        status:
+          type: string
+          example: error
+        message:
+          type: string
+          example: ERROR_CODE
+        data:
+          nullable: true
+          example: null
+    ValidationErrorEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/ApiErrorEnvelope'
+        - type: object
+          properties:
+            message:
+              type: string
+              example: VALIDATION_ERROR
+            data:
+              type: object
+              properties:
+                errors:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      field:
+                        type: string
+                        example: email
+                      message:
+                        type: string
+                        example: email.INVALID_EMAIL
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Nguyen Van Demo
+        email:
+          type: string
+          format: email
+          example: demo@junkio.com
+        role:
+          type: string
+          example: member
+        avatar:
+          type: string
+          nullable: true
+          example: null
+        phone:
+          type: string
+          nullable: true
+          example: +84 901 234 567
+        dateOfBirth:
+          type: string
+          format: date
+          nullable: true
+          example: '1995-05-20'
+    Wallet:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Ví MB Bank
+        balance:
+          type: string
+          example: '10000000.00'
+        currency:
+          type: string
+          example: VND
+        user_id:
+          type: string
+          format: uuid
+          nullable: true
+        family_id:
+          type: string
+          format: uuid
+          nullable: true
+    Family:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Gia Đình Demo
+        owner_id:
+          type: string
+          format: uuid
+        my_role:
+          type: string
+          example: ADMIN
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserProfile'
+    FamilyInvitation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        family_id:
+          type: string
+          format: uuid
+        code:
+          type: string
+          example: AB12CD34
+        role:
+          type: string
+          enum:
+            - ADMIN
+            - MEMBER
+          example: MEMBER
+        expires_at:
+          type: string
+          format: date-time
+        used_at:
+          type: string
+          format: date-time
+          nullable: true
+        used_by:
+          type: string
+          format: uuid
+          nullable: true
+    DashboardStats:
+      type: object
+      properties:
+        stats:
+          type: object
+        recentTransactions:
+          type: array
+          items:
+            type: object
+        cashflowSeries:
+          type: array
+          items:
+            type: object
+    GoldPrice:
+      type: object
+      properties:
+        source:
+          type: string
+          example: sjc
+        branch:
+          type: string
+          example: Hồ Chí Minh
+        productName:
+          type: string
+          example: Vàng SJC 1L, 10L, 1KG
+        buy:
+          type: number
+          example: 163600000
+        sell:
+          type: number
+          example: 166600000
+        currency:
+          type: string
+          example: VND
+        unit:
+          type: string
+          example: VND_PER_LUONG
+        updatedAt:
+          type: string
+          format: date-time
+        updatedLabel:
+          type: string
+          example: 08:30 04/05/2026
+    GoldHistory:
+      type: object
+      properties:
+        range:
+          type: string
+          enum:
+            - 24H
+            - 7D
+          example: 24H
+        source:
+          type: string
+          example: sjc
+        branch:
+          type: string
+          example: Hồ Chí Minh
+        productName:
+          type: string
+          example: Vàng SJC 1L, 10L, 1KG
+        points:
+          type: array
+          items:
+            type: object
+            properties:
+              capturedAt:
+                type: string
+                format: date-time
+              buy:
+                type: number
+                example: 163600000
+              sell:
+                type: number
+                example: 166600000
 paths:
   /api/admin/dashboard:
     get:
@@ -133,8 +379,24 @@ paths:
                       createdAt: '2026-03-29T08:30:00.000Z'
         '401':
           description: Chưa đăng nhập hoặc token hết hạn
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
         '403':
           description: Không có quyền admin
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: FORBIDDEN
+                data: null
   /api/admin/analytics:
     get:
       summary: Lấy phân tích dữ liệu toàn hệ thống (System Analytics)
@@ -224,8 +486,24 @@ paths:
                       transactions: 1350
         '401':
           description: Chưa đăng nhập hoặc token hết hạn
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
         '403':
           description: Không có quyền admin
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: FORBIDDEN
+                data: null
   /api/admin/financial-overview:
     get:
       summary: Lấy tổng quan tài chính toàn hệ thống (Financial Overview)
@@ -301,8 +579,24 @@ paths:
                   budgetCompliance: 72.5
         '401':
           description: Chưa đăng nhập hoặc token hết hạn
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
         '403':
           description: Không có quyền admin
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: FORBIDDEN
+                data: null
   /api/admin/users:
     get:
       summary: Lấy danh sách người dùng toàn hệ thống
@@ -408,8 +702,24 @@ paths:
                   totalPages: 73
         '401':
           description: Chưa đăng nhập hoặc token hết hạn
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
         '403':
           description: Không có quyền admin
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: FORBIDDEN
+                data: null
   /api/admin/users/{id}:
     get:
       summary: Lấy chi tiết một người dùng
@@ -491,8 +801,26 @@ paths:
                     - id: f1a2b3c4-...
                       name: Gia đình Nguyễn
                   transactionCount: 342
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
         '404':
           description: Không tìm thấy user (USER_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: NOT_FOUND
+                data: null
     delete:
       summary: Xóa vĩnh viễn một tài khoản người dùng
       description: |
@@ -520,14 +848,43 @@ paths:
               example:
                 status: success
                 message: Xóa user thành công
+                data: null
+              schema:
+                $ref: '#/components/schemas/ApiSuccessEnvelope'
         '400':
           description: Không được xóa chính mình (CANNOT_DELETE_SELF)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: BAD_REQUEST
+                data: null
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
         '404':
           description: Không tìm thấy user (USER_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: NOT_FOUND
+                data: null
   /api/admin/users/{id}/toggle-lock:
     put:
       summary: Khóa hoặc mở khóa tài khoản người dùng
-      description: >
+      description: >-
         Chuyển đổi trạng thái khóa của một tài khoản:
 
         - Nếu user đang **active** -> chuyển sang **locked** (không thể đăng
@@ -540,6 +897,10 @@ paths:
         **Lưu ý:** Admin không thể khóa chính mình.
 
         Khi user bị khóa, token hiện tại vẫn hoạt động cho đến khi hết hạn.
+
+
+
+        Không cần request body.
       tags:
         - Admin
       security:
@@ -563,8 +924,28 @@ paths:
                 data:
                   id: b2c3d4e5-f6a7-8901-bcde-f12345678901
                   is_locked: true
+              schema:
+                $ref: '#/components/schemas/ApiSuccessEnvelope'
         '400':
           description: Không được khóa chính mình (CANNOT_LOCK_SELF)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: BAD_REQUEST
+                data: null
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
   /api/admin/users/{id}/role:
     put:
       summary: Thay đổi vai trò (role) của người dùng
@@ -617,10 +998,40 @@ paths:
                 data:
                   id: b2c3d4e5-f6a7-8901-bcde-f12345678901
                   role: staff
+              schema:
+                $ref: '#/components/schemas/ApiSuccessEnvelope'
         '400':
           description: >-
             Role không hợp lệ hoặc đang tự đổi role (INVALID_ROLE /
             CANNOT_CHANGE_OWN_ROLE)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: BAD_REQUEST
+                data: null
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
+        '422':
+          description: Dữ liệu request không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: VALIDATION_ERROR
+                data: null
   /api/admin/logs:
     get:
       summary: Lấy nhật ký hệ thống (Audit Logs)
@@ -711,8 +1122,24 @@ paths:
                   totalPages: 106
         '401':
           description: Chưa đăng nhập hoặc token hết hạn
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
         '403':
           description: Không có quyền admin
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: FORBIDDEN
+                data: null
   /api/analytics/dashboard:
     get:
       summary: Lấy số liệu tổng quan tài chính cá nhân
@@ -735,6 +1162,7 @@ paths:
             application/json:
               example:
                 status: success
+                message: L_Y_S_LI_U_T_NG_QUAN_T_I_CH_NH_C_NH_N
                 data:
                   totalBalance: 45000000
                   monthlyIncome: 28000000
@@ -750,6 +1178,18 @@ paths:
                       type: INCOME
                       description: Lương tháng 3
                       date: '2026-03-28'
+              schema:
+                $ref: '#/components/schemas/ApiSuccessEnvelope'
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
   /api/analytics/reports:
     get:
       summary: Lấy dữ liệu báo cáo tài chính theo tháng/năm
@@ -781,6 +1221,7 @@ paths:
             application/json:
               example:
                 status: success
+                message: L_Y_D_LI_U_B_O_C_O_T_I_CH_NH_THEO_TH_NG_N_M
                 data:
                   year: 2026
                   month: 3
@@ -793,6 +1234,18 @@ paths:
                     - category: Di chuyển
                       amount: 3200000
                       percentage: 21
+              schema:
+                $ref: '#/components/schemas/ApiSuccessEnvelope'
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
   /api/auth/register:
     post:
       summary: Đăng ký tài khoản mới
@@ -850,10 +1303,29 @@ paths:
               example:
                 status: success
                 message: Đăng ký thành công
+                data: null
+              schema:
+                $ref: '#/components/schemas/ApiSuccessEnvelope'
         '409':
           description: Email đã tồn tại trên hệ thống (EMAIL_EXISTS)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: CONFLICT
+                data: null
         '422':
           description: Dữ liệu gửi lên không hợp lệ (thiếu field, sai format)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: VALIDATION_ERROR
+                data: null
   /api/auth/login:
     post:
       summary: Đăng nhập và nhận JWT access token
@@ -945,22 +1417,51 @@ paths:
                               - admin
               example:
                 status: success
-                message: Đăng nhập thành công
+                message: LOGIN_SUCCESS
                 data:
-                  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImIyZGYw...
+                  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
                   user:
                     id: b2df0d5d-1234-4abc-9def-bbbd02910001
-                    name: Demo User
+                    name: Nguyen Van Demo
                     email: demo@junkio.com
                     role: member
+                    avatar: null
+                    phone: null
+                    dateOfBirth: null
         '400':
           description: Email hoặc mật khẩu không đúng (INVALID_CREDENTIALS)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: BAD_REQUEST
+                data: null
+        '422':
+          description: Dữ liệu request không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: VALIDATION_ERROR
+                data: null
         '423':
           description: Tài khoản đã bị khóa bởi admin (ACCOUNT_LOCKED)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: ACCOUNT_LOCKED
+                data: null
   /api/auth/refresh-token:
     post:
       summary: Làm mới access token từ refresh token cookie
-      description: >
+      description: >-
         Khi access token hết hạn (sau 15 phút), Frontend tự động gọi API này
 
         để lấy token mới mà không cần người dùng đăng nhập lại.
@@ -977,6 +1478,10 @@ paths:
 
 
         **Lưu ý:** API này không cần gửi body, chỉ cần cookie hợp lệ.
+
+
+
+        Không cần request body.
       tags:
         - Auth
       security: []
@@ -1024,12 +1529,28 @@ paths:
                     role: member
         '401':
           description: Không có refresh token trong cookie (REFRESH_TOKEN_MISSING)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
         '403':
           description: Refresh token hết hạn hoặc không hợp lệ (REFRESH_TOKEN_EXPIRED)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: FORBIDDEN
+                data: null
   /api/auth/logout:
     post:
       summary: Đăng xuất và xóa refresh token
-      description: >
+      description: >-
         Xóa refresh token cookie khỏi trình duyệt.
 
         Sau khi gọi API này, access token hiện tại vẫn hoạt động cho đến khi hết
@@ -1040,6 +1561,10 @@ paths:
 
         **Lưu ý:** Frontend nên xóa access token khỏi bộ nhớ local sau khi gọi
         API này.
+
+
+
+        Không cần request body.
       tags:
         - Auth
       responses:
@@ -1050,6 +1575,9 @@ paths:
               example:
                 status: success
                 message: Đăng xuất thành công
+                data: null
+              schema:
+                $ref: '#/components/schemas/ApiSuccessEnvelope'
   /api/auth/forgot-password:
     post:
       summary: Gửi email khôi phục mật khẩu
@@ -1099,8 +1627,29 @@ paths:
               example:
                 status: success
                 message: Email khôi phục đã được gửi
+                data: null
+              schema:
+                $ref: '#/components/schemas/ApiSuccessEnvelope'
         '404':
           description: Email không tồn tại trên hệ thống (EMAIL_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: NOT_FOUND
+                data: null
+        '422':
+          description: Dữ liệu request không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: VALIDATION_ERROR
+                data: null
   /api/auth/reset-password/{token}:
     post:
       summary: Đặt lại mật khẩu bằng token khôi phục
@@ -1153,8 +1702,29 @@ paths:
               example:
                 status: success
                 message: Mật khẩu đã được đặt lại thành công
+                data: null
+              schema:
+                $ref: '#/components/schemas/ApiSuccessEnvelope'
         '400':
           description: Token không hợp lệ hoặc đã hết hạn (INVALID_RESET_TOKEN)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: BAD_REQUEST
+                data: null
+        '422':
+          description: Dữ liệu request không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: VALIDATION_ERROR
+                data: null
   /api/budgets:
     get:
       summary: Lấy danh sách ngân sách mà user có quyền xem
@@ -1193,6 +1763,18 @@ paths:
                     start_date: '2026-03-01'
                     end_date: '2026-03-31'
                     family_id: f1a2b3c4-...
+              schema:
+                $ref: '#/components/schemas/ApiSuccessEnvelope'
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
     post:
       summary: Tạo ngân sách mới
       description: >
@@ -1273,10 +1855,39 @@ paths:
               example:
                 status: success
                 message: Tạo budget thành công
+                data: null
+              schema:
+                $ref: '#/components/schemas/ApiSuccessEnvelope'
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
         '403':
           description: User không thuộc gia đình được chỉ định (NOT_FAMILY_MEMBER)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: FORBIDDEN
+                data: null
         '422':
           description: Dữ liệu không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: VALIDATION_ERROR
+                data: null
   /api/budgets/{id}:
     put:
       summary: Cập nhật ngân sách
@@ -1332,8 +1943,39 @@ paths:
               example:
                 status: success
                 message: Cập nhật budget thành công
+                data: null
+              schema:
+                $ref: '#/components/schemas/ApiSuccessEnvelope'
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
         '404':
           description: Không tìm thấy ngân sách (BUDGET_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: NOT_FOUND
+                data: null
+        '422':
+          description: Dữ liệu request không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: VALIDATION_ERROR
+                data: null
     delete:
       summary: Xóa ngân sách
       description: >
@@ -1361,8 +2003,29 @@ paths:
               example:
                 status: success
                 message: Xóa budget thành công
+                data: null
+              schema:
+                $ref: '#/components/schemas/ApiSuccessEnvelope'
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
         '404':
           description: Không tìm thấy ngân sách (BUDGET_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: NOT_FOUND
+                data: null
   /api/categories:
     get:
       summary: Lấy danh sách tất cả danh mục
@@ -1402,21 +2065,34 @@ paths:
                       type: string
                       nullable: true
               example:
-                - id: c1a2b3c4-...
-                  name: Ăn uống
-                  type: EXPENSE
-                  icon: Utensils
-                  parent_id: null
-                - id: c2b3c4d5-...
-                  name: Cà phê
-                  type: EXPENSE
-                  icon: Coffee
-                  parent_id: c1a2b3c4-...
-                - id: c3c4d5e6-...
-                  name: Lương
-                  type: INCOME
-                  icon: Banknote
-                  parent_id: null
+                status: success
+                message: L_Y_DANH_S_CH_T_T_C_DANH_M_C
+                data:
+                  - id: c1a2b3c4-...
+                    name: Ăn uống
+                    type: EXPENSE
+                    icon: Utensils
+                    parent_id: null
+                  - id: c2b3c4d5-...
+                    name: Cà phê
+                    type: EXPENSE
+                    icon: Coffee
+                    parent_id: c1a2b3c4-...
+                  - id: c3c4d5e6-...
+                    name: Lương
+                    type: INCOME
+                    icon: Banknote
+                    parent_id: null
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
     post:
       summary: Tạo danh mục thu/chi mới
       description: >
@@ -1495,8 +2171,38 @@ paths:
                   type: EXPENSE
                   icon: Gamepad2
                   parent_id: null
+              schema:
+                $ref: '#/components/schemas/ApiSuccessEnvelope'
         '400':
           description: Dữ liệu không hợp lệ (thiếu name hoặc type)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: BAD_REQUEST
+                data: null
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
+        '422':
+          description: Dữ liệu request không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: VALIDATION_ERROR
+                data: null
   /api/categories/{id}:
     put:
       summary: Cập nhật thông tin danh mục
@@ -1547,8 +2253,39 @@ paths:
               example:
                 status: success
                 message: Cập nhật danh mục thành công
+                data: null
+              schema:
+                $ref: '#/components/schemas/ApiSuccessEnvelope'
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
         '404':
           description: Không tìm thấy danh mục (CATEGORY_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: NOT_FOUND
+                data: null
+        '422':
+          description: Dữ liệu request không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: VALIDATION_ERROR
+                data: null
     delete:
       summary: Xóa danh mục
       description: |
@@ -1576,8 +2313,29 @@ paths:
               example:
                 status: success
                 message: Xóa danh mục thành công
+                data: null
+              schema:
+                $ref: '#/components/schemas/ApiSuccessEnvelope'
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
         '404':
           description: Không tìm thấy danh mục (CATEGORY_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: NOT_FOUND
+                data: null
   /api/debts/settle:
     post:
       summary: Tất toán nợ qua chuyển khoản nội bộ
@@ -1654,8 +2412,39 @@ paths:
               example:
                 status: success
                 message: Tất toán nợ thành công
+                data: null
+              schema:
+                $ref: '#/components/schemas/ApiSuccessEnvelope'
         '400':
           description: Số dư không đủ hoặc dữ liệu không hợp lệ (INSUFFICIENT_BALANCE)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: BAD_REQUEST
+                data: null
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
+        '422':
+          description: Dữ liệu request không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: VALIDATION_ERROR
+                data: null
   /api/debts/simplified/{familyId}:
     get:
       summary: Gợi ý tối ưu thanh toán nợ trong gia đình
@@ -1690,6 +2479,7 @@ paths:
             application/json:
               example:
                 status: success
+                message: G_I_T_I_U_THANH_TO_N_N_TRONG_GIA_NH
                 data:
                   - from: Nguyễn Văn A
                     to: Trần Thị B
@@ -1697,6 +2487,18 @@ paths:
                   - from: Lê Văn C
                     to: Trần Thị B
                     amount: 150000
+              schema:
+                $ref: '#/components/schemas/ApiSuccessEnvelope'
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
   /api/families:
     get:
       summary: Lấy danh sách gia đình mà tôi tham gia
@@ -1724,12 +2526,25 @@ paths:
                     created_by:
                       type: string
               example:
-                - id: f1a2b3c4-...
-                  name: Gia đình Nguyễn
-                  created_by: b2df0d5d-...
-                - id: f2b3c4d5-...
-                  name: Nhóm bạn thân
-                  created_by: c3ef1e6e-...
+                status: success
+                message: L_Y_DANH_S_CH_GIA_NH_M_T_I_THAM_GIA
+                data:
+                  - id: f1a2b3c4-...
+                    name: Gia đình Nguyễn
+                    created_by: b2df0d5d-...
+                  - id: f2b3c4d5-...
+                    name: Nhóm bạn thân
+                    created_by: c3ef1e6e-...
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
     post:
       summary: Tạo nhóm gia đình mới
       description: >
@@ -1769,8 +2584,38 @@ paths:
                   id: f-new-family-id
                   name: Gia đình Nguyễn
                   created_by: b2df0d5d-...
+              schema:
+                $ref: '#/components/schemas/ApiSuccessEnvelope'
         '400':
           description: Dữ liệu không hợp lệ (thiếu tên)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: BAD_REQUEST
+                data: null
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
+        '422':
+          description: Dữ liệu request không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: VALIDATION_ERROR
+                data: null
   /api/families/{id}:
     get:
       summary: Xem chi tiết gia đình và danh sách thành viên
@@ -1799,6 +2644,7 @@ paths:
             application/json:
               example:
                 status: success
+                message: XEM_CHI_TI_T_GIA_NH_V_DANH_S_CH_TH_NH_VI_N
                 data:
                   id: f1a2b3c4-...
                   name: Gia đình Nguyễn
@@ -1812,8 +2658,28 @@ paths:
                       name: Nguyễn Thị B
                       email: nguyenthib@junkio.com
                       role: MEMBER
+              schema:
+                $ref: '#/components/schemas/ApiSuccessEnvelope'
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
         '404':
           description: Gia đình không tồn tại (FAMILY_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: NOT_FOUND
+                data: null
     delete:
       summary: Xóa gia đình vĩnh viễn
       description: |
@@ -1842,10 +2708,39 @@ paths:
               example:
                 status: success
                 message: Xóa gia đình thành công
+                data: null
+              schema:
+                $ref: '#/components/schemas/ApiSuccessEnvelope'
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
         '403':
           description: Chỉ người tạo mới có quyền xóa (NOT_FAMILY_OWNER)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: FORBIDDEN
+                data: null
         '404':
           description: Gia đình không tồn tại (FAMILY_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: NOT_FOUND
+                data: null
   /api/families/{id}/members:
     post:
       summary: Thêm thành viên vào gia đình bằng email
@@ -1903,10 +2798,49 @@ paths:
               example:
                 status: success
                 message: Thêm thành viên thành công
+                data: null
+              schema:
+                $ref: '#/components/schemas/ApiSuccessEnvelope'
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
         '404':
           description: Gia đình hoặc user không tồn tại
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: NOT_FOUND
+                data: null
         '409':
           description: User đã là thành viên của gia đình (MEMBER_EXISTS)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: CONFLICT
+                data: null
+        '422':
+          description: Dữ liệu request không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: VALIDATION_ERROR
+                data: null
   /api/families/{id}/members/{userIdToRemove}:
     delete:
       summary: Xóa thành viên khỏi gia đình
@@ -1949,10 +2883,39 @@ paths:
               example:
                 status: success
                 message: Xóa thành viên thành công
+                data: null
+              schema:
+                $ref: '#/components/schemas/ApiSuccessEnvelope'
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
         '403':
           description: Chỉ admin gia đình mới có quyền xóa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: FORBIDDEN
+                data: null
         '404':
           description: Thành viên không tồn tại trong gia đình
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: NOT_FOUND
+                data: null
   /api/forecast:
     get:
       summary: Lấy dữ liệu dự báo dòng tiền tiêu chuẩn
@@ -1975,6 +2938,24 @@ paths:
       responses:
         '200':
           description: Lấy dữ liệu dự báo thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSuccessEnvelope'
+              example:
+                status: success
+                message: L_Y_D_LI_U_D_B_O_D_NG_TI_N_TI_U_CHU_N
+                data: {}
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
   /api/forecast/ml:
     get:
       summary: Lấy dữ liệu dự báo AI/ML
@@ -2017,6 +2998,18 @@ paths:
                     type: SIMPLE_LINEAR_REGRESSION
                     sourceMonths: 6
                     forecastMonths: 3
+              schema:
+                $ref: '#/components/schemas/ApiSuccessEnvelope'
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
   /api/goals:
     get:
       summary: Lấy danh sách mục tiêu tài chính
@@ -2054,6 +3047,18 @@ paths:
                     status: ACHIEVED
                     deadline: '2026-06-01'
                     colorCode: '#2563eb'
+              schema:
+                $ref: '#/components/schemas/ApiSuccessEnvelope'
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
     post:
       summary: Tạo mục tiêu tiết kiệm mới
       description: |
@@ -2122,8 +3127,28 @@ paths:
                   targetAmount: 30000000
                   currentAmount: 0
                   status: IN_PROGRESS
+              schema:
+                $ref: '#/components/schemas/ApiSuccessEnvelope'
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
         '422':
           description: Dữ liệu không hợp lệ (thiếu name hoặc targetAmount <= 0)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: VALIDATION_ERROR
+                data: null
   /api/goals/{id}:
     put:
       summary: Cập nhật thông tin mục tiêu
@@ -2186,8 +3211,39 @@ paths:
               example:
                 status: success
                 message: Cập nhật mục tiêu thành công
+                data: null
+              schema:
+                $ref: '#/components/schemas/ApiSuccessEnvelope'
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
         '404':
           description: Không tìm thấy mục tiêu (GOAL_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: NOT_FOUND
+                data: null
+        '422':
+          description: Dữ liệu request không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: VALIDATION_ERROR
+                data: null
     delete:
       summary: Xóa mục tiêu tiết kiệm
       description: >
@@ -2218,8 +3274,29 @@ paths:
               example:
                 status: success
                 message: Xóa mục tiêu thành công
+                data: null
+              schema:
+                $ref: '#/components/schemas/ApiSuccessEnvelope'
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
         '404':
           description: Không tìm thấy mục tiêu (GOAL_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: NOT_FOUND
+                data: null
   /api/goals/{id}/deposit:
     post:
       summary: Nạp tiền vào mục tiêu từ ví cá nhân
@@ -2311,10 +3388,46 @@ paths:
                   sourceWallet:
                     id: 11111111-...
                     balance: 8000000
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
         '403':
           description: Ví không phải ví cá nhân hợp lệ (INVALID_WALLET)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: FORBIDDEN
+                data: null
         '404':
           description: Mục tiêu không tồn tại (GOAL_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: NOT_FOUND
+                data: null
+        '422':
+          description: Dữ liệu request không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: VALIDATION_ERROR
+                data: null
   /api/market/gold:
     get:
       summary: Lấy giá vàng SJC mới nhất cho dashboard
@@ -2328,8 +3441,34 @@ paths:
       responses:
         '200':
           description: Lấy giá vàng thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSuccessEnvelope'
+              example:
+                status: success
+                message: L_Y_GI_V_NG_SJC_M_I_NH_T_CHO_DASHBOARD
+                data: {}
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
         '502':
           description: Dịch vụ giá vàng bên ngoài không phản hồi hoặc trả lỗi
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: UPSTREAM_SERVICE_UNAVAILABLE
+                data: null
   /api/market/gold/history:
     get:
       summary: Lấy lịch sử giá vàng SJC cho biểu đồ dashboard
@@ -2353,10 +3492,44 @@ paths:
       responses:
         '200':
           description: Lấy lịch sử giá vàng thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSuccessEnvelope'
+              example:
+                status: success
+                message: L_Y_L_CH_S_GI_V_NG_SJC_CHO_BI_U_DASHBOARD
+                data: {}
         '400':
           description: Khoảng thời gian lịch sử không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: BAD_REQUEST
+                data: null
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
         '500':
           description: Không thể tải lịch sử giá vàng
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: INTERNAL_SERVER_ERROR
+                data: null
   /api/notifications:
     get:
       summary: Lấy danh sách thông báo của tôi
@@ -2394,22 +3567,38 @@ paths:
                       type: string
                       format: date-time
               example:
-                - id: n1a2b3c4-...
-                  type: BUDGET_WARNING
-                  message: Bạn đã chi 85% ngân sách Ăn uống tháng này
-                  isRead: false
-                  created_at: '2026-03-30T08:00:00.000Z'
-                - id: n2b3c4d5-...
-                  type: GOAL_ACHIEVED
-                  message: Chúc mừng! Mục tiêu Mua laptop đã hoàn thành
-                  isRead: true
-                  created_at: '2026-03-29T15:30:00.000Z'
+                status: success
+                message: L_Y_DANH_S_CH_TH_NG_B_O_C_A_T_I
+                data:
+                  - id: n1a2b3c4-...
+                    type: BUDGET_WARNING
+                    message: Bạn đã chi 85% ngân sách Ăn uống tháng này
+                    isRead: false
+                    created_at: '2026-03-30T08:00:00.000Z'
+                  - id: n2b3c4d5-...
+                    type: GOAL_ACHIEVED
+                    message: Chúc mừng! Mục tiêu Mua laptop đã hoàn thành
+                    isRead: true
+                    created_at: '2026-03-29T15:30:00.000Z'
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
   /api/notifications/read-all:
     put:
       summary: Đánh dấu tất cả thông báo đã đọc
-      description: |
+      description: |-
         Đánh dấu toàn bộ thông báo chưa đọc thành đã đọc.
         Thường được gọi khi người dùng mở dropdown thông báo.
+
+
+        Không cần request body.
       tags:
         - Notifications
       security:
@@ -2420,13 +3609,31 @@ paths:
           content:
             application/json:
               example:
-                msg: All notifications marked as read
+                status: success
+                message: NH_D_U_T_T_C_TH_NG_B_O_C
+                data:
+                  msg: All notifications marked as read
+              schema:
+                $ref: '#/components/schemas/ApiSuccessEnvelope'
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
   /api/notifications/{id}/read:
     put:
       summary: Đánh dấu một thông báo cụ thể đã đọc
-      description: |
+      description: |-
         Đánh dấu một thông báo đã đọc theo UUID.
         Chỉ có thể đánh dấu thông báo thuộc về chính mình.
+
+
+        Không cần request body.
       tags:
         - Notifications
       security:
@@ -2447,8 +3654,29 @@ paths:
               example:
                 status: success
                 message: Đã đánh dấu đã đọc
+                data: null
+              schema:
+                $ref: '#/components/schemas/ApiSuccessEnvelope'
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
         '404':
           description: Không tìm thấy thông báo (NOTIFICATION_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: NOT_FOUND
+                data: null
   /api/notifications/broadcast:
     post:
       summary: Gửi thông báo broadcast tới tất cả user (chỉ admin)
@@ -2492,8 +3720,39 @@ paths:
               example:
                 status: success
                 message: Đã gửi broadcast tới tất cả user
+                data: null
+              schema:
+                $ref: '#/components/schemas/ApiSuccessEnvelope'
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
         '403':
           description: Chỉ admin mới có quyền gửi broadcast
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: FORBIDDEN
+                data: null
+        '422':
+          description: Dữ liệu request không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: VALIDATION_ERROR
+                data: null
   /api/recurring:
     get:
       summary: Lấy danh sách mẫu giao dịch định kỳ
@@ -2533,20 +3792,33 @@ paths:
                     is_active:
                       type: boolean
               example:
-                - id: r1a2b3c4-...
-                  amount: 300000
-                  type: EXPENSE
-                  description: Tiền điện hàng tháng
-                  frequency: MONTHLY
-                  next_run_date: '2026-04-01'
-                  is_active: true
-                - id: r2b3c4d5-...
-                  amount: 25000000
-                  type: INCOME
-                  description: Lương tháng
-                  frequency: MONTHLY
-                  next_run_date: '2026-04-28'
-                  is_active: true
+                status: success
+                message: L_Y_DANH_S_CH_M_U_GIAO_D_CH_NH_K
+                data:
+                  - id: r1a2b3c4-...
+                    amount: 300000
+                    type: EXPENSE
+                    description: Tiền điện hàng tháng
+                    frequency: MONTHLY
+                    next_run_date: '2026-04-01'
+                    is_active: true
+                  - id: r2b3c4d5-...
+                    amount: 25000000
+                    type: INCOME
+                    description: Lương tháng
+                    frequency: MONTHLY
+                    next_run_date: '2026-04-28'
+                    is_active: true
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
     post:
       summary: Tạo mẫu giao dịch định kỳ mới
       description: >
@@ -2635,12 +3907,43 @@ paths:
               example:
                 status: success
                 message: Tạo giao dịch định kỳ thành công
+                data: null
+              schema:
+                $ref: '#/components/schemas/ApiSuccessEnvelope'
         '400':
           description: Thiếu trường bắt buộc hoặc dữ liệu không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: BAD_REQUEST
+                data: null
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
+        '422':
+          description: Dữ liệu request không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: VALIDATION_ERROR
+                data: null
   /api/recurring/trigger-cron:
     post:
       summary: Kích hoạt xử lý giao dịch định kỳ ngay lập tức
-      description: >
+      description: >-
         Chạy ngay lập tức job cron xử lý các giao dịch định kỳ đến hạn.
 
         API này thường được gọi tự động bởi hệ thống cron,
@@ -2653,6 +3956,10 @@ paths:
 
         tạo giao dịch tương ứng và cập nhật `next_run_date` cho chu kỳ tiếp
         theo.
+
+
+
+        Không cần request body.
       tags:
         - Recurring
       security:
@@ -2663,7 +3970,22 @@ paths:
           content:
             application/json:
               example:
-                message: Đã chạy thành công 3 giao dịch định kỳ.
+                status: success
+                message: K_CH_HO_T_X_L_GIAO_D_CH_NH_K_NGAY_L_P_T_C
+                data:
+                  message: Đã chạy thành công 3 giao dịch định kỳ.
+              schema:
+                $ref: '#/components/schemas/ApiSuccessEnvelope'
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
   /api/recurring/{id}:
     put:
       summary: Cập nhật mẫu giao dịch định kỳ
@@ -2720,8 +4042,39 @@ paths:
               example:
                 status: success
                 message: Cập nhật giao dịch định kỳ thành công
+                data: null
+              schema:
+                $ref: '#/components/schemas/ApiSuccessEnvelope'
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
         '404':
           description: Không tìm thấy mẫu định kỳ (RECURRING_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: NOT_FOUND
+                data: null
+        '422':
+          description: Dữ liệu request không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: VALIDATION_ERROR
+                data: null
     delete:
       summary: Xóa mẫu giao dịch định kỳ
       description: |
@@ -2748,8 +4101,29 @@ paths:
               example:
                 status: success
                 message: Xóa giao dịch định kỳ thành công
+                data: null
+              schema:
+                $ref: '#/components/schemas/ApiSuccessEnvelope'
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
         '404':
           description: Không tìm thấy mẫu định kỳ (RECURRING_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: NOT_FOUND
+                data: null
   /api/transactions:
     get:
       summary: Lấy danh sách giao dịch có phân trang và bộ lọc
@@ -2888,6 +4262,16 @@ paths:
                   totalItems: 342
                   totalPages: 35
                   currentPage: 1
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
     post:
       summary: Tạo giao dịch mới (thu nhập hoặc chi tiêu)
       description: >
@@ -2986,10 +4370,38 @@ paths:
                   type: EXPENSE
                   description: Cà phê buổi sáng
                   wallet_balance: 9850000
+              schema:
+                $ref: '#/components/schemas/ApiSuccessEnvelope'
         '400':
           description: Chưa có ví hoặc số dư không đủ (INSUFFICIENT_BALANCE)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: BAD_REQUEST
+                data: null
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
         '422':
           description: Dữ liệu body không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: VALIDATION_ERROR
+                data: null
   /api/transactions/transfer:
     post:
       summary: Chuyển tiền giữa hai ví
@@ -3087,6 +4499,34 @@ paths:
                   to_wallet_balance: 15000000
         '400':
           description: Ví không hợp lệ hoặc số dư không đủ (INSUFFICIENT_BALANCE)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: BAD_REQUEST
+                data: null
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
+        '422':
+          description: Dữ liệu request không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: VALIDATION_ERROR
+                data: null
   /api/transactions/import:
     post:
       summary: Nhập hàng loạt giao dịch (Bulk Import)
@@ -3162,8 +4602,39 @@ paths:
               example:
                 status: success
                 message: Nhập 2 giao dịch thành công
+                data: null
+              schema:
+                $ref: '#/components/schemas/ApiSuccessEnvelope'
         '400':
           description: Body request rỗng hoặc bạn chưa có ví hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: BAD_REQUEST
+                data: null
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
+        '422':
+          description: Dữ liệu request không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: VALIDATION_ERROR
+                data: null
   /api/transactions/export:
     get:
       summary: Xuất danh sách giao dịch ra file (CSV/PDF)
@@ -3256,6 +4727,16 @@ paths:
               schema:
                 type: string
                 format: binary
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
   /api/transactions/{id}:
     get:
       summary: Lấy chi tiết một giao dịch
@@ -3299,8 +4780,28 @@ paths:
                   category:
                     id: c1a2b3c4-...
                     name: Ăn uống
+              schema:
+                $ref: '#/components/schemas/ApiSuccessEnvelope'
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
         '404':
           description: Không tìm thấy giao dịch hoặc không có quyền (TRANSACTION_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: NOT_FOUND
+                data: null
     delete:
       summary: Xóa giao dịch (tự động hoàn tác số dư ví)
       description: >
@@ -3343,8 +4844,26 @@ paths:
                 status: success
                 message: Xóa giao dịch thành công
                 data: null
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
         '404':
           description: Không tìm thấy giao dịch hoặc không có quyền (TRANSACTION_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: NOT_FOUND
+                data: null
   /api/users/me:
     get:
       summary: Lấy thông tin hồ sơ cá nhân
@@ -3389,17 +4908,35 @@ paths:
                           - admin
               example:
                 status: success
-                message: Lấy profile thành công
+                message: PROFILE_FETCH_SUCCESS
                 data:
                   id: b2df0d5d-1234-4abc-9def-bbbd02910001
-                  name: Nguyễn Văn A
-                  email: nguyenvana@junkio.com
-                  avatar: /uploads/avatars/b2df0d5d-avatar.jpg
+                  name: Nguyen Van Demo
+                  email: demo@junkio.com
+                  avatar: null
                   role: member
+                  phone: null
+                  dateOfBirth: null
         '401':
           description: Chưa đăng nhập hoặc token hết hạn
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
         '404':
           description: Không tìm thấy user (USER_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: NOT_FOUND
+                data: null
     put:
       summary: Cập nhật hồ sơ cá nhân
       description: |
@@ -3430,13 +4967,37 @@ paths:
             application/json:
               example:
                 status: success
-                message: Cập nhật profile thành công
+                message: PROFILE_UPDATE_SUCCESS
                 data:
                   id: b2df0d5d-1234-4abc-9def-bbbd02910001
-                  name: Nguyễn Văn B
-                  email: nguyenvana@junkio.com
+                  name: Nguyen Van Demo
+                  email: demo@junkio.com
+                  avatar: null
+                  role: member
+                  phone: +84 901 234 567
+                  dateOfBirth: '1995-05-20'
+              schema:
+                $ref: '#/components/schemas/ApiSuccessEnvelope'
         '401':
           description: Chưa đăng nhập
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
+        '422':
+          description: Dữ liệu request không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: VALIDATION_ERROR
+                data: null
     delete:
       summary: Xóa tài khoản vĩnh viễn
       description: >
@@ -3476,8 +5037,39 @@ paths:
               example:
                 status: success
                 message: Tài khoản đã được xóa vĩnh viễn
+                data: null
+              schema:
+                $ref: '#/components/schemas/ApiSuccessEnvelope'
         '400':
           description: Mật khẩu không đúng (WRONG_PASSWORD)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: BAD_REQUEST
+                data: null
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
+        '422':
+          description: Dữ liệu request không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: VALIDATION_ERROR
+                data: null
   /api/users/me/avatar:
     post:
       summary: Cập nhật ảnh đại diện (avatar)
@@ -3518,8 +5110,38 @@ paths:
                 message: Cập nhật avatar thành công
                 data:
                   avatar_url: /uploads/avatars/b2df0d5d-avatar-1711792000.jpg
+              schema:
+                $ref: '#/components/schemas/ApiSuccessEnvelope'
         '400':
           description: File không hợp lệ (sai định dạng hoặc vượt quá 5MB)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: BAD_REQUEST
+                data: null
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
+        '422':
+          description: Dữ liệu request không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: VALIDATION_ERROR
+                data: null
   /api/users/me/password:
     put:
       summary: Đổi mật khẩu tài khoản
@@ -3574,8 +5196,39 @@ paths:
               example:
                 status: success
                 message: Đổi mật khẩu thành công
+                data: null
+              schema:
+                $ref: '#/components/schemas/ApiSuccessEnvelope'
         '400':
           description: Mật khẩu hiện tại sai hoặc mật khẩu mới quá ngắn (WRONG_PASSWORD)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: BAD_REQUEST
+                data: null
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
+        '422':
+          description: Dữ liệu request không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: VALIDATION_ERROR
+                data: null
   /api/wallets:
     get:
       summary: Lấy danh sách ví mà người dùng có quyền truy cập
@@ -3618,6 +5271,23 @@ paths:
                           type: string
                           format: uuid
                           nullable: true
+              example:
+                status: success
+                message: L_Y_DANH_S_CH_V_M_NG_I_D_NG_C_QUY_N_TRUY_C_P
+                data: {}
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
+      description: >-
+        Trả về danh sách ví cá nhân và ví gia đình mà user hiện tại có quyền
+        truy cập. Có thể lọc theo context cá nhân hoặc gia đình.
     post:
       summary: Tạo ví mới
       description: >-
@@ -3670,10 +5340,44 @@ paths:
       responses:
         '201':
           description: Tạo ví mới thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSuccessEnvelope'
+              example:
+                status: success
+                message: T_O_V_M_I
+                data: {}
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
         '409':
           description: Tên ví đã tồn tại trong cùng danh mục
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: CONFLICT
+                data: null
         '422':
           description: Dữ liệu gửi lên không đúng định dạng
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: VALIDATION_ERROR
+                data: null
   /api/wallets/{id}:
     put:
       summary: Cập nhật thông tin ví
@@ -3709,8 +5413,47 @@ paths:
       responses:
         '200':
           description: Cập nhật ví thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSuccessEnvelope'
+              example:
+                status: success
+                message: C_P_NH_T_TH_NG_TIN_V
+                data: {}
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
         '404':
           description: Không tìm thấy ví tương ứng (WALLET_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: NOT_FOUND
+                data: null
+        '422':
+          description: Dữ liệu request không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: VALIDATION_ERROR
+                data: null
+      description: >-
+        Cập nhật thông tin ví mà user có quyền quản lý. Không dùng endpoint này
+        để chuyển tiền; hãy dùng API transfer khi cần đổi số dư qua giao dịch.
     delete:
       summary: Xóa ví vĩnh viễn
       tags:
@@ -3727,8 +5470,37 @@ paths:
       responses:
         '200':
           description: Xóa ví thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSuccessEnvelope'
+              example:
+                status: success
+                message: X_A_V_V_NH_VI_N
+                data: {}
+        '401':
+          description: Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: AUTH_TOKEN_MISSING
+                data: null
         '404':
           description: Không tìm thấy ví
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorEnvelope'
+              example:
+                status: error
+                message: NOT_FOUND
+                data: null
+      description: >-
+        Xóa ví khi user có quyền và ví thỏa điều kiện nghiệp vụ. Hành động này
+        không phải endpoint export hay download.
 tags:
   - name: Admin
     description: |

@@ -1,25 +1,38 @@
 # Junkio Expense Tracker API
 
-**Chào mừng đến với thư viện API của Junkio Expense Tracker!**  
+**Chào mừng đến với thư viện API của Junkio Expense Tracker!**
 
-Dưới đây là các tài liệu hướng dẫn sử dụng API chi tiết dành cho Lập trình viên, Tester và Admin hệ thống. Thiết kế tuân theo chuẩn RESTful.
-
----
-###  Hướng dẫn dành cho Người Dùng Mới (Getting Started)
-
-Nếu bạn là người mới sử dụng API này, hãy làm theo các bước sau để xác thực:
-
-1. **Đăng nhập (Login):** Mở route `/api/auth/login` và nhập email cùng mật khẩu.
-2. **Lấy Token:** Copy chuỗi `token` trả về từ kết quả JSON (trong object `data`).
-3. **Cấp quyền (Authorize):** Kéo lên trên cùng của trang web này, bấm vào nút **Authorize** màu xanh lá cây hoặc click vào biểu tượng 🔒 ở bất kỳ API nào, dán chuỗi token vừa copy vào ô **Value** và nhấn **Authorize**.
-4. **Bắt đầu gọi API:** Nhấn `Try it out` ở các endpoint có yêu cầu xác thực để thực hiện các yêu cầu (Requests). Server sẽ nhận diện được phiên làm việc của bạn.
-
-> ** Mẹo:** Swagger UI đã được cấu hình lưu lại Token kể cả khi bạn tải lại trang (Persist Authorization).
+Dưới đây là tài liệu hướng dẫn sử dụng API dành cho lập trình viên, tester và admin hệ thống. Thiết kế tuân theo chuẩn RESTful, mọi endpoint JSON đều ưu tiên response envelope thống nhất.
 
 ---
+### Hướng dẫn dành cho người dùng mới (Getting Started)
 
-###  Mã Lỗi (Error Codes)
-Junkio API sử dụng hệ thống `Error Codes` chuẩn và thông báo lỗi đa ngôn ngữ (i18n). Thay vì đọc chuỗi ký tự thô, Frontend sẽ nhận được các mã như `WALLET_NOT_FOUND`, `INSUFFICIENT_BALANCE` và tự thông dịch thành văn bản. Bạn có thể xem chi tiết mô hình phản hồi (Response) ở từng route bên dưới.
+1. **Đăng nhập:** Mở route `/api/auth/login` và nhập email cùng mật khẩu.
+2. **Lấy token:** Copy chuỗi `token` trả về trong object `data`.
+3. **Cấp quyền:** Bấm **Authorize**, dán token vào ô **Value** theo dạng `Bearer <token>` hoặc chỉ dán token nếu Swagger UI đã tự thêm prefix.
+4. **Gọi API:** Nhấn `Try it out` tại endpoint cần kiểm tra. Các endpoint có biểu tượng khóa sẽ gửi kèm Bearer token.
+
+> **Mẹo:** Swagger UI đã được cấu hình lưu token khi tải lại trang (Persist Authorization).
+
+---
+### Response envelope
+
+Các endpoint JSON trả về một trong hai dạng chuẩn:
+
+```json
+{ "status": "success", "message": "MESSAGE_CODE", "data": {} }
+```
+
+```json
+{ "status": "error", "message": "ERROR_CODE", "data": null }
+```
+
+Endpoint xuất file như export CSV/PDF là ngoại lệ có chủ đích và trả về file/binary response.
+
+---
+### Mã lỗi (Error Codes)
+
+Backend trả về mã lỗi ổn định như `AUTH_TOKEN_MISSING`, `VALIDATION_ERROR`, `WALLET_NOT_FOUND`, `INSUFFICIENT_BALANCE`, `FAMILY_FORBIDDEN`. Frontend có thể dùng các mã này để dịch thông báo theo ngôn ngữ hiện tại.
 
 **Phien ban:** 1.0.0
 
@@ -81,6 +94,26 @@ API này được gọi khi Admin mở trang Dashboard.
       }
     ]
   }
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
+```
+
+**Response 403 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "FORBIDDEN",
+  "data": null
 }
 ```
 
@@ -159,6 +192,26 @@ Dùng để hiển thị biểu đồ trên trang Analytics của Admin Panel.
 }
 ```
 
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
+```
+
+**Response 403 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "FORBIDDEN",
+  "data": null
+}
+```
+
 ---
 
 ### GET `/api/admin/financial-overview`
@@ -216,6 +269,26 @@ Endpoint này hữu ích để Admin đánh giá sức khỏe tài chính tổng
     ],
     "budgetCompliance": 72.5
   }
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
+```
+
+**Response 403 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "FORBIDDEN",
+  "data": null
 }
 ```
 
@@ -285,6 +358,26 @@ Kết quả trả về bao gồm thông tin phân trang (tổng số user, số 
 }
 ```
 
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
+```
+
+**Response 403 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "FORBIDDEN",
+  "data": null
+}
+```
+
 ---
 
 ### GET `/api/admin/users/{id}`
@@ -313,6 +406,7 @@ Admin dùng API này để xem xét hoạt động của một user trước khi
 | Code | Mo ta |
 | --- | --- |
 | `200` | Chi tiết user thành công |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
 | `404` | Không tìm thấy user (USER_NOT_FOUND) |
 
 **Response 200 - Vi du:**
@@ -345,6 +439,26 @@ Admin dùng API này để xem xét hoạt động của một user trước khi
 }
 ```
 
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
+```
+
+**Response 404 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "NOT_FOUND",
+  "data": null
+}
+```
+
 ---
 
 ### DELETE `/api/admin/users/{id}`
@@ -371,6 +485,7 @@ Dữ liệu liên quan (ví, giao dịch, mục tiêu...) sẽ bị xóa theo.
 | --- | --- |
 | `200` | Xóa user thành công |
 | `400` | Không được xóa chính mình (CANNOT_DELETE_SELF) |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
 | `404` | Không tìm thấy user (USER_NOT_FOUND) |
 
 **Response 200 - Vi du:**
@@ -378,7 +493,38 @@ Dữ liệu liên quan (ví, giao dịch, mục tiêu...) sẽ bị xóa theo.
 ```json
 {
   "status": "success",
-  "message": "Xóa user thành công"
+  "message": "Xóa user thành công",
+  "data": null
+}
+```
+
+**Response 400 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "BAD_REQUEST",
+  "data": null
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
+```
+
+**Response 404 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "NOT_FOUND",
+  "data": null
 }
 ```
 
@@ -395,6 +541,9 @@ Chuyển đổi trạng thái khóa của một tài khoản:
 **Lưu ý:** Admin không thể khóa chính mình.
 Khi user bị khóa, token hiện tại vẫn hoạt động cho đến khi hết hạn.
 
+
+Không cần request body.
+
 > Yeu cau xac thuc: `Bearer Token`
 
 **Parameters:**
@@ -410,6 +559,7 @@ Khi user bị khóa, token hiện tại vẫn hoạt động cho đến khi hế
 | --- | --- |
 | `200` | Thay đổi trạng thái khóa thành công |
 | `400` | Không được khóa chính mình (CANNOT_LOCK_SELF) |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
 
 **Response 200 - Vi du:**
 
@@ -421,6 +571,26 @@ Khi user bị khóa, token hiện tại vẫn hoạt động cho đến khi hế
     "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
     "is_locked": true
   }
+}
+```
+
+**Response 400 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "BAD_REQUEST",
+  "data": null
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
 }
 ```
 
@@ -470,6 +640,8 @@ Các vai trò hợp lệ:
 | --- | --- |
 | `200` | Đổi role thành công |
 | `400` | Role không hợp lệ hoặc đang tự đổi role (INVALID_ROLE / CANNOT_CHANGE_OWN_ROLE) |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
+| `422` | Dữ liệu request không hợp lệ |
 
 **Response 200 - Vi du:**
 
@@ -481,6 +653,36 @@ Các vai trò hợp lệ:
     "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
     "role": "staff"
   }
+}
+```
+
+**Response 400 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "BAD_REQUEST",
+  "data": null
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
+```
+
+**Response 422 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "VALIDATION_ERROR",
+  "data": null
 }
 ```
 
@@ -548,6 +750,26 @@ Hỗ trợ phân trang và lọc theo loại hành động (`action`).
 }
 ```
 
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
+```
+
+**Response 403 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "FORBIDDEN",
+  "data": null
+}
+```
+
 ---
 
 ## Analytics
@@ -576,12 +798,14 @@ API này được gọi mỗi khi người dùng mở trang chủ ứng dụng.
 | Code | Mo ta |
 | --- | --- |
 | `200` | Thống kê dashboard thành công |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
 
 **Response 200 - Vi du:**
 
 ```json
 {
   "status": "success",
+  "message": "L_Y_S_LI_U_T_NG_QUAN_T_I_CH_NH_C_NH_N",
   "data": {
     "totalBalance": 45000000,
     "monthlyIncome": 28000000,
@@ -603,6 +827,16 @@ API này được gọi mỗi khi người dùng mở trang chủ ứng dụng.
       }
     ]
   }
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
 }
 ```
 
@@ -633,12 +867,14 @@ Nếu không truyền tham số, mặc định trả về dữ liệu tháng hi�
 | Code | Mo ta |
 | --- | --- |
 | `200` | Dữ liệu báo cáo thành công |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
 
 **Response 200 - Vi du:**
 
 ```json
 {
   "status": "success",
+  "message": "L_Y_D_LI_U_B_O_C_O_T_I_CH_NH_THEO_TH_NG_N_M",
   "data": {
     "year": 2026,
     "month": 3,
@@ -657,6 +893,16 @@ Nếu không truyền tham số, mặc định trả về dữ liệu tháng hi�
       }
     ]
   }
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
 }
 ```
 
@@ -715,7 +961,28 @@ Sau khi đăng ký thành công, người dùng cần **đăng nhập** để nh
 ```json
 {
   "status": "success",
-  "message": "Đăng ký thành công"
+  "message": "Đăng ký thành công",
+  "data": null
+}
+```
+
+**Response 409 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "CONFLICT",
+  "data": null
+}
+```
+
+**Response 422 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "VALIDATION_ERROR",
+  "data": null
 }
 ```
 
@@ -765,6 +1032,7 @@ Xác thực thông tin đăng nhập và trả về JWT access token.
 | --- | --- |
 | `200` | Đăng nhập thành công, trả về token và thông tin user |
 | `400` | Email hoặc mật khẩu không đúng (INVALID_CREDENTIALS) |
+| `422` | Dữ liệu request không hợp lệ |
 | `423` | Tài khoản đã bị khóa bởi admin (ACCOUNT_LOCKED) |
 
 **Response 200 - Vi du:**
@@ -772,16 +1040,49 @@ Xác thực thông tin đăng nhập và trả về JWT access token.
 ```json
 {
   "status": "success",
-  "message": "Đăng nhập thành công",
+  "message": "LOGIN_SUCCESS",
   "data": {
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImIyZGYw...",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
     "user": {
       "id": "b2df0d5d-1234-4abc-9def-bbbd02910001",
-      "name": "Demo User",
+      "name": "Nguyen Van Demo",
       "email": "demo@junkio.com",
-      "role": "member"
+      "role": "member",
+      "avatar": null,
+      "phone": null,
+      "dateOfBirth": null
     }
   }
+}
+```
+
+**Response 400 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "BAD_REQUEST",
+  "data": null
+}
+```
+
+**Response 422 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "VALIDATION_ERROR",
+  "data": null
+}
+```
+
+**Response 423 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "ACCOUNT_LOCKED",
+  "data": null
 }
 ```
 
@@ -800,6 +1101,9 @@ Khi access token hết hạn (sau 15 phút), Frontend tự động gọi API nà
 - Nếu refresh token cũng hết hạn (sau 7 ngày), yêu cầu đăng nhập lại
 
 **Lưu ý:** API này không cần gửi body, chỉ cần cookie hợp lệ.
+
+
+Không cần request body.
 
 
 **Responses:**
@@ -828,6 +1132,26 @@ Khi access token hết hạn (sau 15 phút), Frontend tự động gọi API nà
 }
 ```
 
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
+```
+
+**Response 403 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "FORBIDDEN",
+  "data": null
+}
+```
+
 ---
 
 ### POST `/api/auth/logout`
@@ -841,6 +1165,9 @@ nhưng không thể làm mới token nữa.
 **Lưu ý:** Frontend nên xóa access token khỏi bộ nhớ local sau khi gọi API này.
 
 
+Không cần request body.
+
+
 **Responses:**
 
 | Code | Mo ta |
@@ -852,7 +1179,8 @@ nhưng không thể làm mới token nữa.
 ```json
 {
   "status": "success",
-  "message": "Đăng xuất thành công"
+  "message": "Đăng xuất thành công",
+  "data": null
 }
 ```
 
@@ -897,13 +1225,35 @@ Link khôi phục có hiệu lực trong **10 phút**.
 | --- | --- |
 | `200` | Email khôi phục đã được gửi |
 | `404` | Email không tồn tại trên hệ thống (EMAIL_NOT_FOUND) |
+| `422` | Dữ liệu request không hợp lệ |
 
 **Response 200 - Vi du:**
 
 ```json
 {
   "status": "success",
-  "message": "Email khôi phục đã được gửi"
+  "message": "Email khôi phục đã được gửi",
+  "data": null
+}
+```
+
+**Response 404 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "NOT_FOUND",
+  "data": null
+}
+```
+
+**Response 422 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "VALIDATION_ERROR",
+  "data": null
 }
 ```
 
@@ -952,13 +1302,35 @@ Sau khi đặt lại thành công, người dùng cần đăng nhập lại vớ
 | --- | --- |
 | `200` | Mật khẩu đã được đặt lại thành công |
 | `400` | Token không hợp lệ hoặc đã hết hạn (INVALID_RESET_TOKEN) |
+| `422` | Dữ liệu request không hợp lệ |
 
 **Response 200 - Vi du:**
 
 ```json
 {
   "status": "success",
-  "message": "Mật khẩu đã được đặt lại thành công"
+  "message": "Mật khẩu đã được đặt lại thành công",
+  "data": null
+}
+```
+
+**Response 400 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "BAD_REQUEST",
+  "data": null
+}
+```
+
+**Response 422 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "VALIDATION_ERROR",
+  "data": null
 }
 ```
 
@@ -988,6 +1360,7 @@ Mỗi budget bao gồm: danh mục, hạn mức, khoảng thời gian, số ti�
 | Code | Mo ta |
 | --- | --- |
 | `200` | Danh sách ngân sách thành công |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
 
 **Response 200 - Vi du:**
 
@@ -1017,6 +1390,16 @@ Mỗi budget bao gồm: danh mục, hạn mức, khoảng thời gian, số ti�
       "family_id": "f1a2b3c4-..."
     }
   ]
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
 }
 ```
 
@@ -1078,6 +1461,7 @@ Tạo một ngân sách mới để giới hạn chi tiêu theo danh mục và t
 | Code | Mo ta |
 | --- | --- |
 | `201` | Tạo ngân sách thành công |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
 | `403` | User không thuộc gia đình được chỉ định (NOT_FAMILY_MEMBER) |
 | `422` | Dữ liệu không hợp lệ |
 
@@ -1086,7 +1470,38 @@ Tạo một ngân sách mới để giới hạn chi tiêu theo danh mục và t
 ```json
 {
   "status": "success",
-  "message": "Tạo budget thành công"
+  "message": "Tạo budget thành công",
+  "data": null
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
+```
+
+**Response 403 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "FORBIDDEN",
+  "data": null
+}
+```
+
+**Response 422 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "VALIDATION_ERROR",
+  "data": null
 }
 ```
 
@@ -1139,14 +1554,47 @@ Chỉ gửi các field muốn thay đổi (partial update).
 | Code | Mo ta |
 | --- | --- |
 | `200` | Cập nhật ngân sách thành công |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
 | `404` | Không tìm thấy ngân sách (BUDGET_NOT_FOUND) |
+| `422` | Dữ liệu request không hợp lệ |
 
 **Response 200 - Vi du:**
 
 ```json
 {
   "status": "success",
-  "message": "Cập nhật budget thành công"
+  "message": "Cập nhật budget thành công",
+  "data": null
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
+```
+
+**Response 404 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "NOT_FOUND",
+  "data": null
+}
+```
+
+**Response 422 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "VALIDATION_ERROR",
+  "data": null
 }
 ```
 
@@ -1173,6 +1621,7 @@ Xóa vĩnh viễn một ngân sách. Hành động này không ảnh hưởng đ
 | Code | Mo ta |
 | --- | --- |
 | `200` | Xóa ngân sách thành công |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
 | `404` | Không tìm thấy ngân sách (BUDGET_NOT_FOUND) |
 
 **Response 200 - Vi du:**
@@ -1180,7 +1629,28 @@ Xóa vĩnh viễn một ngân sách. Hành động này không ảnh hưởng đ
 ```json
 {
   "status": "success",
-  "message": "Xóa budget thành công"
+  "message": "Xóa budget thành công",
+  "data": null
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
+```
+
+**Response 404 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "NOT_FOUND",
+  "data": null
 }
 ```
 
@@ -1211,33 +1681,48 @@ Mỗi danh mục có thể có `parent_id` trỏ đến danh mục cha (cấu tr
 | Code | Mo ta |
 | --- | --- |
 | `200` | Danh sách danh mục thành công |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
 
 **Response 200 - Vi du:**
 
 ```json
-[
-  {
-    "id": "c1a2b3c4-...",
-    "name": "Ăn uống",
-    "type": "EXPENSE",
-    "icon": "Utensils",
-    "parent_id": null
-  },
-  {
-    "id": "c2b3c4d5-...",
-    "name": "Cà phê",
-    "type": "EXPENSE",
-    "icon": "Coffee",
-    "parent_id": "c1a2b3c4-..."
-  },
-  {
-    "id": "c3c4d5e6-...",
-    "name": "Lương",
-    "type": "INCOME",
-    "icon": "Banknote",
-    "parent_id": null
-  }
-]
+{
+  "status": "success",
+  "message": "L_Y_DANH_S_CH_T_T_C_DANH_M_C",
+  "data": [
+    {
+      "id": "c1a2b3c4-...",
+      "name": "Ăn uống",
+      "type": "EXPENSE",
+      "icon": "Utensils",
+      "parent_id": null
+    },
+    {
+      "id": "c2b3c4d5-...",
+      "name": "Cà phê",
+      "type": "EXPENSE",
+      "icon": "Coffee",
+      "parent_id": "c1a2b3c4-..."
+    },
+    {
+      "id": "c3c4d5e6-...",
+      "name": "Lương",
+      "type": "INCOME",
+      "icon": "Banknote",
+      "parent_id": null
+    }
+  ]
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
 ```
 
 ---
@@ -1296,6 +1781,8 @@ Tạo một danh mục mới để phân loại giao dịch.
 | --- | --- |
 | `201` | Tạo danh mục thành công |
 | `400` | Dữ liệu không hợp lệ (thiếu name hoặc type) |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
+| `422` | Dữ liệu request không hợp lệ |
 
 **Response 201 - Vi du:**
 
@@ -1310,6 +1797,36 @@ Tạo một danh mục mới để phân loại giao dịch.
     "icon": "Gamepad2",
     "parent_id": null
   }
+}
+```
+
+**Response 400 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "BAD_REQUEST",
+  "data": null
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
+```
+
+**Response 422 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "VALIDATION_ERROR",
+  "data": null
 }
 ```
 
@@ -1359,14 +1876,47 @@ cách hiển thị các giao dịch đã gắn danh mục này.
 | Code | Mo ta |
 | --- | --- |
 | `200` | Cập nhật danh mục thành công |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
 | `404` | Không tìm thấy danh mục (CATEGORY_NOT_FOUND) |
+| `422` | Dữ liệu request không hợp lệ |
 
 **Response 200 - Vi du:**
 
 ```json
 {
   "status": "success",
-  "message": "Cập nhật danh mục thành công"
+  "message": "Cập nhật danh mục thành công",
+  "data": null
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
+```
+
+**Response 404 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "NOT_FOUND",
+  "data": null
+}
+```
+
+**Response 422 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "VALIDATION_ERROR",
+  "data": null
 }
 ```
 
@@ -1395,6 +1945,7 @@ Xóa vĩnh viễn một danh mục khỏi hệ thống.
 | Code | Mo ta |
 | --- | --- |
 | `200` | Xóa danh mục thành công |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
 | `404` | Không tìm thấy danh mục (CATEGORY_NOT_FOUND) |
 
 **Response 200 - Vi du:**
@@ -1402,7 +1953,28 @@ Xóa vĩnh viễn một danh mục khỏi hệ thống.
 ```json
 {
   "status": "success",
-  "message": "Xóa danh mục thành công"
+  "message": "Xóa danh mục thành công",
+  "data": null
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
+```
+
+**Response 404 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "NOT_FOUND",
+  "data": null
 }
 ```
 
@@ -1462,13 +2034,46 @@ Hệ thống sẽ tạo 2 giao dịch (TRANSFER_OUT / TRANSFER_IN) và đánh d�
 | --- | --- |
 | `200` | Tất toán nợ thành công |
 | `400` | Số dư không đủ hoặc dữ liệu không hợp lệ (INSUFFICIENT_BALANCE) |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
+| `422` | Dữ liệu request không hợp lệ |
 
 **Response 200 - Vi du:**
 
 ```json
 {
   "status": "success",
-  "message": "Tất toán nợ thành công"
+  "message": "Tất toán nợ thành công",
+  "data": null
+}
+```
+
+**Response 400 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "BAD_REQUEST",
+  "data": null
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
+```
+
+**Response 422 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "VALIDATION_ERROR",
+  "data": null
 }
 ```
 
@@ -1498,12 +2103,14 @@ giữa các thành viên trong một gia đình. Giảm thiểu số lượng gi
 | Code | Mo ta |
 | --- | --- |
 | `200` | Danh sách gợi ý thanh toán tối ưu |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
 
 **Response 200 - Vi du:**
 
 ```json
 {
   "status": "success",
+  "message": "G_I_T_I_U_THANH_TO_N_N_TRONG_GIA_NH",
   "data": [
     {
       "from": "Nguyễn Văn A",
@@ -1516,6 +2123,16 @@ giữa các thành viên trong một gia đình. Giảm thiểu số lượng gi
       "amount": 150000
     }
   ]
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
 }
 ```
 
@@ -1542,22 +2159,37 @@ Trả về tất cả các nhóm gia đình mà người dùng hiện tại là 
 | Code | Mo ta |
 | --- | --- |
 | `200` | Danh sách gia đình thành công |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
 
 **Response 200 - Vi du:**
 
 ```json
-[
-  {
-    "id": "f1a2b3c4-...",
-    "name": "Gia đình Nguyễn",
-    "created_by": "b2df0d5d-..."
-  },
-  {
-    "id": "f2b3c4d5-...",
-    "name": "Nhóm bạn thân",
-    "created_by": "c3ef1e6e-..."
-  }
-]
+{
+  "status": "success",
+  "message": "L_Y_DANH_S_CH_GIA_NH_M_T_I_THAM_GIA",
+  "data": [
+    {
+      "id": "f1a2b3c4-...",
+      "name": "Gia đình Nguyễn",
+      "created_by": "b2df0d5d-..."
+    },
+    {
+      "id": "f2b3c4d5-...",
+      "name": "Nhóm bạn thân",
+      "created_by": "c3ef1e6e-..."
+    }
+  ]
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
 ```
 
 ---
@@ -1595,6 +2227,8 @@ Sau khi tạo, có thể mời thêm thành viên bằng email qua API thêm th�
 | --- | --- |
 | `201` | Tạo gia đình thành công |
 | `400` | Dữ liệu không hợp lệ (thiếu tên) |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
+| `422` | Dữ liệu request không hợp lệ |
 
 **Response 201 - Vi du:**
 
@@ -1607,6 +2241,36 @@ Sau khi tạo, có thể mời thêm thành viên bằng email qua API thêm th�
     "name": "Gia đình Nguyễn",
     "created_by": "b2df0d5d-..."
   }
+}
+```
+
+**Response 400 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "BAD_REQUEST",
+  "data": null
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
+```
+
+**Response 422 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "VALIDATION_ERROR",
+  "data": null
 }
 ```
 
@@ -1636,6 +2300,7 @@ Chỉ thành viên của gia đình mới có quyền xem.
 | Code | Mo ta |
 | --- | --- |
 | `200` | Chi tiết gia đình thành công |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
 | `404` | Gia đình không tồn tại (FAMILY_NOT_FOUND) |
 
 **Response 200 - Vi du:**
@@ -1643,6 +2308,7 @@ Chỉ thành viên của gia đình mới có quyền xem.
 ```json
 {
   "status": "success",
+  "message": "XEM_CHI_TI_T_GIA_NH_V_DANH_S_CH_TH_NH_VI_N",
   "data": {
     "id": "f1a2b3c4-...",
     "name": "Gia đình Nguyễn",
@@ -1662,6 +2328,26 @@ Chỉ thành viên của gia đình mới có quyền xem.
       }
     ]
   }
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
+```
+
+**Response 404 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "NOT_FOUND",
+  "data": null
 }
 ```
 
@@ -1691,6 +2377,7 @@ Ví gia đình, giao dịch chung, ngân sách gia đình sẽ bị xóa theo.
 | Code | Mo ta |
 | --- | --- |
 | `200` | Xóa gia đình thành công |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
 | `403` | Chỉ người tạo mới có quyền xóa (NOT_FAMILY_OWNER) |
 | `404` | Gia đình không tồn tại (FAMILY_NOT_FOUND) |
 
@@ -1699,7 +2386,38 @@ Ví gia đình, giao dịch chung, ngân sách gia đình sẽ bị xóa theo.
 ```json
 {
   "status": "success",
-  "message": "Xóa gia đình thành công"
+  "message": "Xóa gia đình thành công",
+  "data": null
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
+```
+
+**Response 403 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "FORBIDDEN",
+  "data": null
+}
+```
+
+**Response 404 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "NOT_FOUND",
+  "data": null
 }
 ```
 
@@ -1753,15 +2471,58 @@ Mời một người dùng khác vào gia đình bằng địa chỉ email.
 | Code | Mo ta |
 | --- | --- |
 | `200` | Thêm thành viên thành công |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
 | `404` | Gia đình hoặc user không tồn tại |
 | `409` | User đã là thành viên của gia đình (MEMBER_EXISTS) |
+| `422` | Dữ liệu request không hợp lệ |
 
 **Response 200 - Vi du:**
 
 ```json
 {
   "status": "success",
-  "message": "Thêm thành viên thành công"
+  "message": "Thêm thành viên thành công",
+  "data": null
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
+```
+
+**Response 404 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "NOT_FOUND",
+  "data": null
+}
+```
+
+**Response 409 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "CONFLICT",
+  "data": null
+}
+```
+
+**Response 422 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "VALIDATION_ERROR",
+  "data": null
 }
 ```
 
@@ -1793,6 +2554,7 @@ Xóa một thành viên ra khỏi nhóm gia đình.
 | Code | Mo ta |
 | --- | --- |
 | `200` | Xóa thành viên thành công |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
 | `403` | Chỉ admin gia đình mới có quyền xóa |
 | `404` | Thành viên không tồn tại trong gia đình |
 
@@ -1801,7 +2563,38 @@ Xóa một thành viên ra khỏi nhóm gia đình.
 ```json
 {
   "status": "success",
-  "message": "Xóa thành viên thành công"
+  "message": "Xóa thành viên thành công",
+  "data": null
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
+```
+
+**Response 403 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "FORBIDDEN",
+  "data": null
+}
+```
+
+**Response 404 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "NOT_FOUND",
+  "data": null
 }
 ```
 
@@ -1831,6 +2624,27 @@ Trả về tổng thu/chi theo tháng trong quá khứ cùng dữ liệu dự b�
 | Code | Mo ta |
 | --- | --- |
 | `200` | Lấy dữ liệu dự báo thành công |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
+
+**Response 200 - Vi du:**
+
+```json
+{
+  "status": "success",
+  "message": "L_Y_D_LI_U_D_B_O_D_NG_TI_N_TI_U_CHU_N",
+  "data": {}
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
+```
 
 ---
 
@@ -1854,6 +2668,7 @@ Sử dụng hồi quy tuyến tính đơn giản trên lịch sử giao dịch 6
 | Code | Mo ta |
 | --- | --- |
 | `200` | Lấy dữ liệu dự báo ML thành công |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
 
 **Response 200 - Vi du:**
 
@@ -1887,6 +2702,16 @@ Sử dụng hồi quy tuyến tính đơn giản trên lịch sử giao dịch 6
 }
 ```
 
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
+```
+
 ---
 
 ## Goals
@@ -1912,6 +2737,7 @@ Mỗi mục tiêu hiển thị: tên, số tiền mục tiêu, số tiền đã 
 | Code | Mo ta |
 | --- | --- |
 | `200` | Danh sách mục tiêu thành công |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
 
 **Response 200 - Vi du:**
 
@@ -1939,6 +2765,16 @@ Mỗi mục tiêu hiển thị: tên, số tiền mục tiêu, số tiền đã 
       "colorCode": "#2563eb"
     }
   ]
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
 }
 ```
 
@@ -1990,6 +2826,7 @@ Tạo một mục tiêu tài chính mới để theo dõi tiến độ tiết ki
 | Code | Mo ta |
 | --- | --- |
 | `201` | Tạo mục tiêu thành công |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
 | `422` | Dữ liệu không hợp lệ (thiếu name hoặc targetAmount <= 0) |
 
 **Response 201 - Vi du:**
@@ -2005,6 +2842,26 @@ Tạo một mục tiêu tài chính mới để theo dõi tiến độ tiết ki
     "currentAmount": 0,
     "status": "IN_PROGRESS"
   }
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
+```
+
+**Response 422 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "VALIDATION_ERROR",
+  "data": null
 }
 ```
 
@@ -2058,14 +2915,47 @@ Chỉ gửi các field muốn cập nhật (partial update).
 | Code | Mo ta |
 | --- | --- |
 | `200` | Cập nhật mục tiêu thành công |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
 | `404` | Không tìm thấy mục tiêu (GOAL_NOT_FOUND) |
+| `422` | Dữ liệu request không hợp lệ |
 
 **Response 200 - Vi du:**
 
 ```json
 {
   "status": "success",
-  "message": "Cập nhật mục tiêu thành công"
+  "message": "Cập nhật mục tiêu thành công",
+  "data": null
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
+```
+
+**Response 404 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "NOT_FOUND",
+  "data": null
+}
+```
+
+**Response 422 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "VALIDATION_ERROR",
+  "data": null
 }
 ```
 
@@ -2094,6 +2984,7 @@ Nếu muốn lấy lại tiền, hãy rút trước khi xóa.
 | Code | Mo ta |
 | --- | --- |
 | `200` | Xóa mục tiêu thành công |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
 | `404` | Không tìm thấy mục tiêu (GOAL_NOT_FOUND) |
 
 **Response 200 - Vi du:**
@@ -2101,7 +2992,28 @@ Nếu muốn lấy lại tiền, hãy rút trước khi xóa.
 ```json
 {
   "status": "success",
-  "message": "Xóa mục tiêu thành công"
+  "message": "Xóa mục tiêu thành công",
+  "data": null
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
+```
+
+**Response 404 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "NOT_FOUND",
+  "data": null
 }
 ```
 
@@ -2152,8 +3064,10 @@ Chuyển một khoản tiền từ ví cá nhân vào mục tiêu tiết kiệm.
 | Code | Mo ta |
 | --- | --- |
 | `200` | Nạp tiền vào mục tiêu thành công |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
 | `403` | Ví không phải ví cá nhân hợp lệ (INVALID_WALLET) |
 | `404` | Mục tiêu không tồn tại (GOAL_NOT_FOUND) |
+| `422` | Dữ liệu request không hợp lệ |
 
 **Response 200 - Vi du:**
 
@@ -2170,6 +3084,46 @@ Chuyển một khoản tiền từ ví cá nhân vào mục tiêu tiết kiệm.
       "balance": 8000000
     }
   }
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
+```
+
+**Response 403 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "FORBIDDEN",
+  "data": null
+}
+```
+
+**Response 404 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "NOT_FOUND",
+  "data": null
+}
+```
+
+**Response 422 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "VALIDATION_ERROR",
+  "data": null
 }
 ```
 
@@ -2193,7 +3147,38 @@ Gọi dịch vụ giá vàng SJC trực tiếp, chuẩn hóa bản ghi SJC khu v
 | Code | Mo ta |
 | --- | --- |
 | `200` | Lấy giá vàng thành công |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
 | `502` | Dịch vụ giá vàng bên ngoài không phản hồi hoặc trả lỗi |
+
+**Response 200 - Vi du:**
+
+```json
+{
+  "status": "success",
+  "message": "L_Y_GI_V_NG_SJC_M_I_NH_T_CHO_DASHBOARD",
+  "data": {}
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
+```
+
+**Response 502 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "UPSTREAM_SERVICE_UNAVAILABLE",
+  "data": null
+}
+```
 
 ---
 
@@ -2218,7 +3203,48 @@ Trả về lịch sử giá vàng SJC đang lưu cục bộ theo khoảng thời
 | --- | --- |
 | `200` | Lấy lịch sử giá vàng thành công |
 | `400` | Khoảng thời gian lịch sử không hợp lệ |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
 | `500` | Không thể tải lịch sử giá vàng |
+
+**Response 200 - Vi du:**
+
+```json
+{
+  "status": "success",
+  "message": "L_Y_L_CH_S_GI_V_NG_SJC_CHO_BI_U_DASHBOARD",
+  "data": {}
+}
+```
+
+**Response 400 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "BAD_REQUEST",
+  "data": null
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
+```
+
+**Response 500 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "INTERNAL_SERVER_ERROR",
+  "data": null
+}
+```
 
 ---
 
@@ -2245,26 +3271,41 @@ Frontend dùng API này để hiển thị badge số thông báo chưa đọc v
 | Code | Mo ta |
 | --- | --- |
 | `200` | Danh sách thông báo |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
 
 **Response 200 - Vi du:**
 
 ```json
-[
-  {
-    "id": "n1a2b3c4-...",
-    "type": "BUDGET_WARNING",
-    "message": "Bạn đã chi 85% ngân sách Ăn uống tháng này",
-    "isRead": false,
-    "created_at": "2026-03-30T08:00:00.000Z"
-  },
-  {
-    "id": "n2b3c4d5-...",
-    "type": "GOAL_ACHIEVED",
-    "message": "Chúc mừng! Mục tiêu Mua laptop đã hoàn thành",
-    "isRead": true,
-    "created_at": "2026-03-29T15:30:00.000Z"
-  }
-]
+{
+  "status": "success",
+  "message": "L_Y_DANH_S_CH_TH_NG_B_O_C_A_T_I",
+  "data": [
+    {
+      "id": "n1a2b3c4-...",
+      "type": "BUDGET_WARNING",
+      "message": "Bạn đã chi 85% ngân sách Ăn uống tháng này",
+      "isRead": false,
+      "created_at": "2026-03-30T08:00:00.000Z"
+    },
+    {
+      "id": "n2b3c4d5-...",
+      "type": "GOAL_ACHIEVED",
+      "message": "Chúc mừng! Mục tiêu Mua laptop đã hoàn thành",
+      "isRead": true,
+      "created_at": "2026-03-29T15:30:00.000Z"
+    }
+  ]
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
 ```
 
 ---
@@ -2276,6 +3317,9 @@ Frontend dùng API này để hiển thị badge số thông báo chưa đọc v
 Đánh dấu toàn bộ thông báo chưa đọc thành đã đọc.
 Thường được gọi khi người dùng mở dropdown thông báo.
 
+
+Không cần request body.
+
 > Yeu cau xac thuc: `Bearer Token`
 
 
@@ -2284,12 +3328,27 @@ Thường được gọi khi người dùng mở dropdown thông báo.
 | Code | Mo ta |
 | --- | --- |
 | `200` | Đánh dấu tất cả đã đọc thành công |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
 
 **Response 200 - Vi du:**
 
 ```json
 {
-  "msg": "All notifications marked as read"
+  "status": "success",
+  "message": "NH_D_U_T_T_C_TH_NG_B_O_C",
+  "data": {
+    "msg": "All notifications marked as read"
+  }
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
 }
 ```
 
@@ -2301,6 +3360,9 @@ Thường được gọi khi người dùng mở dropdown thông báo.
 
 Đánh dấu một thông báo đã đọc theo UUID.
 Chỉ có thể đánh dấu thông báo thuộc về chính mình.
+
+
+Không cần request body.
 
 > Yeu cau xac thuc: `Bearer Token`
 
@@ -2316,6 +3378,7 @@ Chỉ có thể đánh dấu thông báo thuộc về chính mình.
 | Code | Mo ta |
 | --- | --- |
 | `200` | Đánh dấu đã đọc thành công |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
 | `404` | Không tìm thấy thông báo (NOTIFICATION_NOT_FOUND) |
 
 **Response 200 - Vi du:**
@@ -2323,7 +3386,28 @@ Chỉ có thể đánh dấu thông báo thuộc về chính mình.
 ```json
 {
   "status": "success",
-  "message": "Đã đánh dấu đã đọc"
+  "message": "Đã đánh dấu đã đọc",
+  "data": null
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
+```
+
+**Response 404 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "NOT_FOUND",
+  "data": null
 }
 ```
 
@@ -2365,14 +3449,47 @@ Hữu ích cho: thông báo bảo trì, cập nhật tính năng mới, cảnh b
 | Code | Mo ta |
 | --- | --- |
 | `200` | Đã gửi broadcast thành công |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
 | `403` | Chỉ admin mới có quyền gửi broadcast |
+| `422` | Dữ liệu request không hợp lệ |
 
 **Response 200 - Vi du:**
 
 ```json
 {
   "status": "success",
-  "message": "Đã gửi broadcast tới tất cả user"
+  "message": "Đã gửi broadcast tới tất cả user",
+  "data": null
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
+```
+
+**Response 403 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "FORBIDDEN",
+  "data": null
+}
+```
+
+**Response 422 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "VALIDATION_ERROR",
+  "data": null
 }
 ```
 
@@ -2400,30 +3517,45 @@ Mỗi mẫu hiển thị: số tiền, tần suất, ngày chạy tiếp theo, t
 | Code | Mo ta |
 | --- | --- |
 | `200` | Danh sách giao dịch định kỳ thành công |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
 
 **Response 200 - Vi du:**
 
 ```json
-[
-  {
-    "id": "r1a2b3c4-...",
-    "amount": 300000,
-    "type": "EXPENSE",
-    "description": "Tiền điện hàng tháng",
-    "frequency": "MONTHLY",
-    "next_run_date": "2026-04-01",
-    "is_active": true
-  },
-  {
-    "id": "r2b3c4d5-...",
-    "amount": 25000000,
-    "type": "INCOME",
-    "description": "Lương tháng",
-    "frequency": "MONTHLY",
-    "next_run_date": "2026-04-28",
-    "is_active": true
-  }
-]
+{
+  "status": "success",
+  "message": "L_Y_DANH_S_CH_M_U_GIAO_D_CH_NH_K",
+  "data": [
+    {
+      "id": "r1a2b3c4-...",
+      "amount": 300000,
+      "type": "EXPENSE",
+      "description": "Tiền điện hàng tháng",
+      "frequency": "MONTHLY",
+      "next_run_date": "2026-04-01",
+      "is_active": true
+    },
+    {
+      "id": "r2b3c4d5-...",
+      "amount": 25000000,
+      "type": "INCOME",
+      "description": "Lương tháng",
+      "frequency": "MONTHLY",
+      "next_run_date": "2026-04-28",
+      "is_active": true
+    }
+  ]
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
 ```
 
 ---
@@ -2479,13 +3611,46 @@ Hệ thống sẽ tự động tạo giao dịch vào `next_run_date` và cập 
 | --- | --- |
 | `201` | Tạo mẫu định kỳ thành công |
 | `400` | Thiếu trường bắt buộc hoặc dữ liệu không hợp lệ |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
+| `422` | Dữ liệu request không hợp lệ |
 
 **Response 201 - Vi du:**
 
 ```json
 {
   "status": "success",
-  "message": "Tạo giao dịch định kỳ thành công"
+  "message": "Tạo giao dịch định kỳ thành công",
+  "data": null
+}
+```
+
+**Response 400 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "BAD_REQUEST",
+  "data": null
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
+```
+
+**Response 422 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "VALIDATION_ERROR",
+  "data": null
 }
 ```
 
@@ -2502,6 +3667,9 @@ nhưng cũng có thể kích hoạt thủ công để debug hoặc test.
 Job sẽ quét tất cả mẫu có `is_active = true` và `next_run_date <= today`,
 tạo giao dịch tương ứng và cập nhật `next_run_date` cho chu kỳ tiếp theo.
 
+
+Không cần request body.
+
 > Yeu cau xac thuc: `Bearer Token`
 
 
@@ -2510,12 +3678,27 @@ tạo giao dịch tương ứng và cập nhật `next_run_date` cho chu kỳ ti
 | Code | Mo ta |
 | --- | --- |
 | `200` | Kết quả chạy cron |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
 
 **Response 200 - Vi du:**
 
 ```json
 {
-  "message": "Đã chạy thành công 3 giao dịch định kỳ."
+  "status": "success",
+  "message": "K_CH_HO_T_X_L_GIAO_D_CH_NH_K_NGAY_L_P_T_C",
+  "data": {
+    "message": "Đã chạy thành công 3 giao dịch định kỳ."
+  }
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
 }
 ```
 
@@ -2566,14 +3749,47 @@ Chỉ gửi các field muốn cập nhật.
 | Code | Mo ta |
 | --- | --- |
 | `200` | Cập nhật thành công |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
 | `404` | Không tìm thấy mẫu định kỳ (RECURRING_NOT_FOUND) |
+| `422` | Dữ liệu request không hợp lệ |
 
 **Response 200 - Vi du:**
 
 ```json
 {
   "status": "success",
-  "message": "Cập nhật giao dịch định kỳ thành công"
+  "message": "Cập nhật giao dịch định kỳ thành công",
+  "data": null
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
+```
+
+**Response 404 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "NOT_FOUND",
+  "data": null
+}
+```
+
+**Response 422 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "VALIDATION_ERROR",
+  "data": null
 }
 ```
 
@@ -2601,6 +3817,7 @@ Chỉ ngừng tạo giao dịch mới trong tương lai.
 | Code | Mo ta |
 | --- | --- |
 | `200` | Xóa thành công |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
 | `404` | Không tìm thấy mẫu định kỳ (RECURRING_NOT_FOUND) |
 
 **Response 200 - Vi du:**
@@ -2608,7 +3825,28 @@ Chỉ ngừng tạo giao dịch mới trong tương lai.
 ```json
 {
   "status": "success",
-  "message": "Xóa giao dịch định kỳ thành công"
+  "message": "Xóa giao dịch định kỳ thành công",
+  "data": null
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
+```
+
+**Response 404 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "NOT_FOUND",
+  "data": null
 }
 ```
 
@@ -2660,6 +3898,7 @@ Kết quả có phân trang, mặc định 10 bản ghi mỗi trang.
 | Code | Mo ta |
 | --- | --- |
 | `200` | Danh sách giao dịch thành công |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
 
 **Response 200 - Vi du:**
 
@@ -2692,6 +3931,16 @@ Kết quả có phân trang, mặc định 10 bản ghi mỗi trang.
     "totalPages": 35,
     "currentPage": 1
   }
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
 }
 ```
 
@@ -2759,6 +4008,7 @@ Ghi nhận một giao dịch thu nhập hoặc chi tiêu mới vào ví.
 | --- | --- |
 | `201` | Tạo giao dịch thành công |
 | `400` | Chưa có ví hoặc số dư không đủ (INSUFFICIENT_BALANCE) |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
 | `422` | Dữ liệu body không hợp lệ |
 
 **Response 201 - Vi du:**
@@ -2774,6 +4024,36 @@ Ghi nhận một giao dịch thu nhập hoặc chi tiêu mới vào ví.
     "description": "Cà phê buổi sáng",
     "wallet_balance": 9850000
   }
+}
+```
+
+**Response 400 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "BAD_REQUEST",
+  "data": null
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
+```
+
+**Response 422 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "VALIDATION_ERROR",
+  "data": null
 }
 ```
 
@@ -2824,6 +4104,8 @@ Hai giao dịch được liên kết bằng `transfer_group_id` để dễ truy 
 | --- | --- |
 | `201` | Chuyển tiền thành công |
 | `400` | Ví không hợp lệ hoặc số dư không đủ (INSUFFICIENT_BALANCE) |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
+| `422` | Dữ liệu request không hợp lệ |
 
 **Response 201 - Vi du:**
 
@@ -2838,6 +4120,36 @@ Hai giao dịch được liên kết bằng `transfer_group_id` để dễ truy 
     "from_wallet_balance": 5000000,
     "to_wallet_balance": 15000000
   }
+}
+```
+
+**Response 400 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "BAD_REQUEST",
+  "data": null
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
+```
+
+**Response 422 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "VALIDATION_ERROR",
+  "data": null
 }
 ```
 
@@ -2897,13 +4209,46 @@ Nếu một giao dịch lỗi, các giao dịch khác vẫn được tạo thàn
 | --- | --- |
 | `200` | Nhập dữ liệu thành công |
 | `400` | Body request rỗng hoặc bạn chưa có ví hợp lệ |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
+| `422` | Dữ liệu request không hợp lệ |
 
 **Response 200 - Vi du:**
 
 ```json
 {
   "status": "success",
-  "message": "Nhập 2 giao dịch thành công"
+  "message": "Nhập 2 giao dịch thành công",
+  "data": null
+}
+```
+
+**Response 400 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "BAD_REQUEST",
+  "data": null
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
+```
+
+**Response 422 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "VALIDATION_ERROR",
+  "data": null
 }
 ```
 
@@ -2943,6 +4288,17 @@ Response trả về file binary, trình duyệt sẽ tự tải về.
 | Code | Mo ta |
 | --- | --- |
 | `200` | File export được tạo thành công (tự động tải về) |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
+```
 
 ---
 
@@ -2969,6 +4325,7 @@ Thông tin bao gồm: số tiền, loại, mô tả, ngày, ví liên quan, danh
 | Code | Mo ta |
 | --- | --- |
 | `200` | Chi tiết giao dịch thành công |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
 | `404` | Không tìm thấy giao dịch hoặc không có quyền (TRANSACTION_NOT_FOUND) |
 
 **Response 200 - Vi du:**
@@ -2992,6 +4349,26 @@ Thông tin bao gồm: số tiền, loại, mô tả, ngày, ví liên quan, danh
       "name": "Ăn uống"
     }
   }
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
+```
+
+**Response 404 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "NOT_FOUND",
+  "data": null
 }
 ```
 
@@ -3021,6 +4398,7 @@ Hành động này không thể hoàn tác. Nếu cần, hãy tạo giao dịch 
 | Code | Mo ta |
 | --- | --- |
 | `200` | Xóa giao dịch thành công |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
 | `404` | Không tìm thấy giao dịch hoặc không có quyền (TRANSACTION_NOT_FOUND) |
 
 **Response 200 - Vi du:**
@@ -3029,6 +4407,26 @@ Hành động này không thể hoàn tác. Nếu cần, hãy tạo giao dịch 
 {
   "status": "success",
   "message": "Xóa giao dịch thành công",
+  "data": null
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
+```
+
+**Response 404 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "NOT_FOUND",
   "data": null
 }
 ```
@@ -3066,14 +4464,36 @@ bao gồm tên, email, role, và đường dẫn avatar.
 ```json
 {
   "status": "success",
-  "message": "Lấy profile thành công",
+  "message": "PROFILE_FETCH_SUCCESS",
   "data": {
     "id": "b2df0d5d-1234-4abc-9def-bbbd02910001",
-    "name": "Nguyễn Văn A",
-    "email": "nguyenvana@junkio.com",
-    "avatar": "/uploads/avatars/b2df0d5d-avatar.jpg",
-    "role": "member"
+    "name": "Nguyen Van Demo",
+    "email": "demo@junkio.com",
+    "avatar": null,
+    "role": "member",
+    "phone": null,
+    "dateOfBirth": null
   }
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
+```
+
+**Response 404 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "NOT_FOUND",
+  "data": null
 }
 ```
 
@@ -3114,18 +4534,43 @@ Chỉ cần gửi các field muốn thay đổi, không bắt buộc gửi tất
 | --- | --- |
 | `200` | Cập nhật hồ sơ thành công |
 | `401` | Chưa đăng nhập |
+| `422` | Dữ liệu request không hợp lệ |
 
 **Response 200 - Vi du:**
 
 ```json
 {
   "status": "success",
-  "message": "Cập nhật profile thành công",
+  "message": "PROFILE_UPDATE_SUCCESS",
   "data": {
     "id": "b2df0d5d-1234-4abc-9def-bbbd02910001",
-    "name": "Nguyễn Văn B",
-    "email": "nguyenvana@junkio.com"
+    "name": "Nguyen Van Demo",
+    "email": "demo@junkio.com",
+    "avatar": null,
+    "role": "member",
+    "phone": "+84 901 234 567",
+    "dateOfBirth": "1995-05-20"
   }
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
+```
+
+**Response 422 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "VALIDATION_ERROR",
+  "data": null
 }
 ```
 
@@ -3167,13 +4612,46 @@ Hành động này **không thể hoàn tác**.
 | --- | --- |
 | `200` | Xóa tài khoản thành công |
 | `400` | Mật khẩu không đúng (WRONG_PASSWORD) |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
+| `422` | Dữ liệu request không hợp lệ |
 
 **Response 200 - Vi du:**
 
 ```json
 {
   "status": "success",
-  "message": "Tài khoản đã được xóa vĩnh viễn"
+  "message": "Tài khoản đã được xóa vĩnh viễn",
+  "data": null
+}
+```
+
+**Response 400 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "BAD_REQUEST",
+  "data": null
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
+```
+
+**Response 422 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "VALIDATION_ERROR",
+  "data": null
 }
 ```
 
@@ -3211,6 +4689,8 @@ Upload hoặc thay thế ảnh đại diện của người dùng hiện tại.
 | --- | --- |
 | `200` | Cập nhật avatar thành công |
 | `400` | File không hợp lệ (sai định dạng hoặc vượt quá 5MB) |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
+| `422` | Dữ liệu request không hợp lệ |
 
 **Response 200 - Vi du:**
 
@@ -3221,6 +4701,36 @@ Upload hoặc thay thế ảnh đại diện của người dùng hiện tại.
   "data": {
     "avatar_url": "/uploads/avatars/b2df0d5d-avatar-1711792000.jpg"
   }
+}
+```
+
+**Response 400 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "BAD_REQUEST",
+  "data": null
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
+```
+
+**Response 422 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "VALIDATION_ERROR",
+  "data": null
 }
 ```
 
@@ -3267,13 +4777,46 @@ Sau khi đổi thành công, token hiện tại vẫn hoạt động bình thư�
 | --- | --- |
 | `200` | Đổi mật khẩu thành công |
 | `400` | Mật khẩu hiện tại sai hoặc mật khẩu mới quá ngắn (WRONG_PASSWORD) |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
+| `422` | Dữ liệu request không hợp lệ |
 
 **Response 200 - Vi du:**
 
 ```json
 {
   "status": "success",
-  "message": "Đổi mật khẩu thành công"
+  "message": "Đổi mật khẩu thành công",
+  "data": null
+}
+```
+
+**Response 400 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "BAD_REQUEST",
+  "data": null
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
+```
+
+**Response 422 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "VALIDATION_ERROR",
+  "data": null
 }
 ```
 
@@ -3287,6 +4830,8 @@ Quản lý ví cá nhân và ví gia đình
 
 **Lấy danh sách ví mà người dùng có quyền truy cập**
 
+Trả về danh sách ví cá nhân và ví gia đình mà user hiện tại có quyền truy cập. Có thể lọc theo context cá nhân hoặc gia đình.
+
 > Yeu cau xac thuc: `Bearer Token`
 
 
@@ -3295,6 +4840,27 @@ Quản lý ví cá nhân và ví gia đình
 | Code | Mo ta |
 | --- | --- |
 | `200` | Trả về danh sách ví thành công |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
+
+**Response 200 - Vi du:**
+
+```json
+{
+  "status": "success",
+  "message": "L_Y_DANH_S_CH_V_M_NG_I_D_NG_C_QUY_N_TRUY_C_P",
+  "data": {}
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
+```
 
 ---
 
@@ -3345,14 +4911,57 @@ Bỏ qua \`family_id\` để tạo ví cá nhân. Gửi \`family_id\` để tạ
 | Code | Mo ta |
 | --- | --- |
 | `201` | Tạo ví mới thành công |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
 | `409` | Tên ví đã tồn tại trong cùng danh mục |
 | `422` | Dữ liệu gửi lên không đúng định dạng |
+
+**Response 201 - Vi du:**
+
+```json
+{
+  "status": "success",
+  "message": "T_O_V_M_I",
+  "data": {}
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
+```
+
+**Response 409 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "CONFLICT",
+  "data": null
+}
+```
+
+**Response 422 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "VALIDATION_ERROR",
+  "data": null
+}
+```
 
 ---
 
 ### PUT `/api/wallets/{id}`
 
 **Cập nhật thông tin ví**
+
+Cập nhật thông tin ví mà user có quyền quản lý. Không dùng endpoint này để chuyển tiền; hãy dùng API transfer khi cần đổi số dư qua giao dịch.
 
 > Yeu cau xac thuc: `Bearer Token`
 
@@ -3379,13 +4988,57 @@ Bỏ qua \`family_id\` để tạo ví cá nhân. Gửi \`family_id\` để tạ
 | Code | Mo ta |
 | --- | --- |
 | `200` | Cập nhật ví thành công |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
 | `404` | Không tìm thấy ví tương ứng (WALLET_NOT_FOUND) |
+| `422` | Dữ liệu request không hợp lệ |
+
+**Response 200 - Vi du:**
+
+```json
+{
+  "status": "success",
+  "message": "C_P_NH_T_TH_NG_TIN_V",
+  "data": {}
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
+```
+
+**Response 404 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "NOT_FOUND",
+  "data": null
+}
+```
+
+**Response 422 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "VALIDATION_ERROR",
+  "data": null
+}
+```
 
 ---
 
 ### DELETE `/api/wallets/{id}`
 
 **Xóa ví vĩnh viễn**
+
+Xóa ví khi user có quyền và ví thỏa điều kiện nghiệp vụ. Hành động này không phải endpoint export hay download.
 
 > Yeu cau xac thuc: `Bearer Token`
 
@@ -3401,7 +5054,38 @@ Bỏ qua \`family_id\` để tạo ví cá nhân. Gửi \`family_id\` để tạ
 | Code | Mo ta |
 | --- | --- |
 | `200` | Xóa ví thành công |
+| `401` | Chưa đăng nhập, thiếu Bearer token hoặc token không hợp lệ |
 | `404` | Không tìm thấy ví |
+
+**Response 200 - Vi du:**
+
+```json
+{
+  "status": "success",
+  "message": "X_A_V_V_NH_VI_N",
+  "data": {}
+}
+```
+
+**Response 401 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "AUTH_TOKEN_MISSING",
+  "data": null
+}
+```
+
+**Response 404 - Vi du:**
+
+```json
+{
+  "status": "error",
+  "message": "NOT_FOUND",
+  "data": null
+}
+```
 
 ---
 
