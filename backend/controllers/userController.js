@@ -2,10 +2,25 @@ const bcrypt = require('bcryptjs');
 const { User } = require('../models');
 const { success, notFound, serverError, error: sendError } = require('../utils/responseHelper');
 
+const PROFILE_ATTRIBUTES = ['id', 'name', 'email', 'avatar', 'role', 'phone', 'dateOfBirth'];
+
+const normalizeNullableText = (value) => {
+    if (value === undefined) {
+        return undefined;
+    }
+
+    if (value === null) {
+        return null;
+    }
+
+    const normalized = String(value).trim();
+    return normalized === '' ? null : normalized;
+};
+
 exports.getProfile = async (req, res) => {
     try {
         const user = await User.findByPk(req.user.id, {
-            attributes: ['id', 'name', 'email', 'avatar', 'role'],
+            attributes: PROFILE_ATTRIBUTES,
         });
 
         if (!user) {
@@ -50,13 +65,33 @@ exports.updateProfile = async (req, res) => {
             return notFound(res, 'USER_NOT_FOUND');
         }
 
-        await user.update({
-            name: req.body.name !== undefined ? req.body.name : user.name,
-        });
+        const updates = {};
+
+        if (req.body.name !== undefined) {
+            updates.name = req.body.name;
+        }
+
+        if (req.body.phone !== undefined) {
+            updates.phone = normalizeNullableText(req.body.phone);
+        }
+
+        if (req.body.dateOfBirth !== undefined) {
+            updates.dateOfBirth = normalizeNullableText(req.body.dateOfBirth);
+        }
+
+        await user.update(updates);
 
         return success(
             res,
-            { id: user.id, name: user.name, email: user.email, avatar: user.avatar },
+            {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                avatar: user.avatar,
+                role: user.role,
+                phone: user.phone,
+                dateOfBirth: user.dateOfBirth,
+            },
             'PROFILE_UPDATE_SUCCESS'
         );
     } catch (error) {
