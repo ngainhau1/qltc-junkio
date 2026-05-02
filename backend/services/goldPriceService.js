@@ -1,6 +1,5 @@
 const { client } = require('../config/redis');
 
-// GHI CHÚ HỌC TẬP - Phần giá vàng SJC của Thành Đạt:
 // Service này lấy giá vàng hiện tại từ SJC, chuẩn hóa dữ liệu về một cấu trúc ổn định,
 // lưu Redis trong 60 giây và ghi thêm snapshot lịch sử nếu lấy dữ liệu mới.
 
