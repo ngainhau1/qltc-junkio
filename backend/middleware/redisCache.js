@@ -11,6 +11,7 @@ const cacheDashboard = (duration = 300) => {
         const context = req.query.context || 'personal';
         const startDate = req.query.startDate || 'all';
         const endDate = req.query.endDate || 'all';
+        //Thay vì dùng 1 Key chung chungCache Key được tạo động bằng Template Literal:
         const rawKey = `dashboardStats:userId_${userId}:family_${familyId}:context_${context}:start_${startDate}:end_${endDate}`;
 
         try {
@@ -27,13 +28,16 @@ const cacheDashboard = (duration = 300) => {
             }
 
             console.log(` Redis Cache Miss: ${rawKey}. Proceeding to query DB.`);
-
+            // 1. Chặn (Intercept) ngõ ra
             const originalSend = res.json.bind(res);
             res.json = (body) => {
+                // 2. Kiểm tra điều kiện ghi (phải thành công và có data)
                 if (body && (body.status === 'success' || body.success === true) && body.data) {
+                    // 3. Set Cache với thời gian sống (TTL)
                     client.setEx(rawKey, duration, JSON.stringify(body.data))
                         .catch(err => console.error('Redis Set Error:', err));
                 }
+                //trả về dữ liệu về client
                 return originalSend(body);
             };
 
