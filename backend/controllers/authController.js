@@ -5,8 +5,6 @@ const { Op } = require('sequelize');
 const { User, Family, FamilyMember } = require('../models');
 const sendEmail = require('../services/emailService');
 const { success, error: sendError } = require('../utils/responseHelper');
-
-// GHI CHÚ HỌC TẬP - Phần xác thực của Thành Đạt:
 // Controller này là trung tâm xử lý đăng ký, đăng nhập, làm mới phiên,
 // đăng xuất và khôi phục mật khẩu. Khi trình bày, nên đi theo luồng:
 // dữ liệu từ request -> kiểm tra -> thao tác cơ sở dữ liệu -> trả response chuẩn.
