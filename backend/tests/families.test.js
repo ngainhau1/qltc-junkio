@@ -26,6 +26,16 @@ const mockFamilyMember = mockSequelize.define('FamilyMember', {
     joined_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW }
 });
 
+const mockFamilyInvitation = mockSequelize.define('FamilyInvitation', {
+    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    code: { type: DataTypes.STRING, unique: true },
+    role: { type: DataTypes.STRING, defaultValue: 'MEMBER' },
+    created_by: { type: DataTypes.UUID },
+    expires_at: { type: DataTypes.DATE },
+    used_at: { type: DataTypes.DATE },
+    used_by: { type: DataTypes.UUID }
+});
+
 const mockWallet = mockSequelize.define('Wallet', {
     id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
     name: { type: DataTypes.STRING },
@@ -42,12 +52,17 @@ mockWallet.belongsTo(mockFamily, { foreignKey: 'family_id' });
 mockFamilyMember.belongsTo(mockFamily, { foreignKey: 'family_id' });
 mockFamily.hasMany(mockFamilyMember, { foreignKey: 'family_id' });
 mockFamilyMember.belongsTo(mockUser, { foreignKey: 'user_id' });
+mockFamily.hasMany(mockFamilyInvitation, { foreignKey: 'family_id' });
+mockFamilyInvitation.belongsTo(mockFamily, { foreignKey: 'family_id' });
+mockFamilyInvitation.belongsTo(mockUser, { as: 'Creator', foreignKey: 'created_by' });
+mockFamilyInvitation.belongsTo(mockUser, { as: 'UsedBy', foreignKey: 'used_by' });
 
 jest.mock('../models/index', () => ({
     sequelize: mockSequelize,
     User: mockUser,
     Family: mockFamily,
     FamilyMember: mockFamilyMember,
+    FamilyInvitation: mockFamilyInvitation,
     Wallet: mockWallet
 }));
 jest.mock('../models', () => ({
@@ -55,6 +70,7 @@ jest.mock('../models', () => ({
     User: mockUser,
     Family: mockFamily,
     FamilyMember: mockFamilyMember,
+    FamilyInvitation: mockFamilyInvitation,
     Wallet: mockWallet
 }));
 
@@ -196,6 +212,102 @@ describe('Family API Endpoints', () => {
 
         expect(res.statusCode).toEqual(400);
         expect(res.body.message).toBeTruthy();
+    });
+
+    it('creates a backend invitation code when the caller is admin', async () => {
+        mockUserId = ownerId;
+
+        const res = await request(app).post(`/api/families/${testFamilyId}/invitations`);
+
+        expect(res.statusCode).toEqual(201);
+        expect(res.body.message).toBe('FAMILY_INVITATION_CREATED');
+        expect(res.body.data.code).toMatch(/^[A-Z0-9]{8}$/);
+        expect(res.body.data.expiresAt).toBeTruthy();
+
+        const invitation = await mockFamilyInvitation.findOne({ where: { code: res.body.data.code } });
+        expect(invitation).not.toBeNull();
+        expect(invitation.family_id).toBe(testFamilyId);
+        expect(invitation.role).toBe('MEMBER');
+    });
+
+    it('rejects invitation creation when the caller is not family admin', async () => {
+        mockUserId = memberId;
+
+        const res = await request(app).post(`/api/families/${testFamilyId}/invitations`);
+
+        expect(res.statusCode).toEqual(403);
+        expect(res.body.message).toBe('FAMILY_ADMIN_REQUIRED');
+    });
+
+    it('lets a non-member join with a valid invitation code', async () => {
+        const joiner = await mockUser.create({ name: 'Invitee', email: 'invitee@ex.com' });
+        mockUserId = ownerId;
+        const invitationRes = await request(app).post(`/api/families/${testFamilyId}/invitations`);
+        const code = invitationRes.body.data.code;
+
+        mockUserId = joiner.id;
+        const res = await request(app).post('/api/families/join').send({ code: code.toLowerCase() });
+
+        expect(res.statusCode).toEqual(201);
+        expect(res.body.message).toBe('FAMILY_JOIN_SUCCESS');
+        expect(res.body.data.id).toBe(testFamilyId);
+
+        const memberRecord = await mockFamilyMember.findOne({
+            where: { family_id: testFamilyId, user_id: joiner.id }
+        });
+        expect(memberRecord).not.toBeNull();
+        expect(memberRecord.role).toBe('MEMBER');
+
+        const usedInvitation = await mockFamilyInvitation.findOne({ where: { code } });
+        expect(usedInvitation.used_by).toBe(joiner.id);
+        expect(usedInvitation.used_at).toBeTruthy();
+    });
+
+    it('rejects reused invitation codes', async () => {
+        const anotherJoiner = await mockUser.create({ name: 'Another Invitee', email: 'another-invitee@ex.com' });
+        const usedInvitation = await mockFamilyInvitation.create({
+            family_id: testFamilyId,
+            code: 'USED0001',
+            role: 'MEMBER',
+            created_by: ownerId,
+            expires_at: new Date(Date.now() + 60 * 60 * 1000),
+            used_at: new Date(),
+            used_by: ownerId
+        });
+
+        mockUserId = anotherJoiner.id;
+        const res = await request(app).post('/api/families/join').send({ code: usedInvitation.code });
+
+        expect(res.statusCode).toEqual(400);
+        expect(res.body.message).toBe('FAMILY_INVITATION_USED');
+    });
+
+    it('rejects invitation join when the user is already a member', async () => {
+        mockUserId = ownerId;
+        const invitationRes = await request(app).post(`/api/families/${testFamilyId}/invitations`);
+
+        mockUserId = memberId;
+        const res = await request(app).post('/api/families/join').send({ code: invitationRes.body.data.code });
+
+        expect(res.statusCode).toEqual(400);
+        expect(res.body.message).toBe('FAMILY_MEMBER_ALREADY_EXISTS');
+    });
+
+    it('rejects expired invitation codes', async () => {
+        const expiredUser = await mockUser.create({ name: 'Expired Invitee', email: 'expired@ex.com' });
+        const expiredInvitation = await mockFamilyInvitation.create({
+            family_id: testFamilyId,
+            code: 'EXPIRE01',
+            role: 'MEMBER',
+            created_by: ownerId,
+            expires_at: new Date(Date.now() - 60 * 1000)
+        });
+
+        mockUserId = expiredUser.id;
+        const res = await request(app).post('/api/families/join').send({ code: expiredInvitation.code });
+
+        expect(res.statusCode).toEqual(400);
+        expect(res.body.message).toBe('FAMILY_INVITATION_EXPIRED');
     });
 
     it('removes a member when the caller is admin', async () => {

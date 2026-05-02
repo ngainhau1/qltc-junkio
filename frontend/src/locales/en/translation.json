@@ -355,10 +355,11 @@
             "manage": "Manage Member",
             "makeAdmin": "Make Admin",
             "makeMember": "Make Member",
-            "makeViewer": "Make Viewer",
-            "remove": "Remove from Group",
-            "invite": "Invite New Member",
-            "openMenu": "Open actions menu"
+      "makeViewer": "Make Viewer",
+      "remove": "Remove from Group",
+      "invite": "Invite New Member",
+      "joinByCode": "Join by code",
+      "openMenu": "Open actions menu"
         },
         "expenses": {
             "title": "Shared Expenses ({{count}})",
@@ -387,11 +388,21 @@
             "algorithmNote": "Payments are optimized to reduce the number of transfers between members."
         },
         "modals": {
-            "invite": {
-                "title": "Invite to {{name}}",
-                "desc": "Share this code with your contacts to let them join the group.",
-                "validity": "Code is valid for 24 hours."
-            },
+      "invite": {
+        "title": "Invite to {{name}}",
+        "desc": "Share this code with your contacts to let them join the group.",
+        "loading": "Creating invitation code...",
+        "validity": "Code is valid for 7 days.",
+        "expiresAt": "Code expires at {{date}}."
+      },
+      "join": {
+        "title": "Join a family",
+        "desc": "Enter the invitation code sent by the family owner or admin.",
+        "codeLabel": "Invitation code",
+        "placeholder": "Ex: AB12CD34",
+        "cancel": "Cancel",
+        "submit": "Join"
+      },
             "create": {
                 "title": "Create New Family",
                 "nameLabel": "Family / Group Name",
@@ -413,9 +424,10 @@
             }
         },
         "toasts": {
-            "paymentRecorded": "Payment recorded: {{amount}}",
-            "optimizationEmpty": "No expenses to optimize at the moment.",
-            "optimizationZero": "Great! Current members have no outstanding debts."
+      "paymentRecorded": "Payment recorded: {{amount}}",
+      "optimizationEmpty": "No expenses to optimize at the moment.",
+      "optimizationZero": "Great! Current members have no outstanding debts.",
+      "joinSuccess": "Joined family successfully."
         },
         "emptySelection": "Please select a Family above to see the Debt Management feature."
     },
@@ -931,9 +943,14 @@
             "forbidden": "You don't have access.",
             "loadFailed": "Failed to load families.",
             "createFailed": "Failed to create family.",
-            "detailFailed": "Failed to load family details.",
-            "inviteFailed": "Failed to invite member.",
-            "removeFailed": "Failed to remove member.",
+      "detailFailed": "Failed to load family details.",
+      "inviteFailed": "Failed to invite member.",
+      "invitationCreateFailed": "Failed to create invitation code.",
+      "invitationInvalid": "Invalid invitation code.",
+      "invitationExpired": "Invitation code has expired.",
+      "invitationUsed": "Invitation code has already been used.",
+      "joinFailed": "Failed to join the family with this code.",
+      "removeFailed": "Failed to remove member.",
             "deleteFailed": "Failed to delete the family.",
             "notFound": "Family not found.",
             "adminRequired": "Only a family admin can perform this action.",

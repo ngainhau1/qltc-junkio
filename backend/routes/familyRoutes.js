@@ -2,7 +2,14 @@ const express = require('express');
 const router = express.Router();
 const familyController = require('../controllers/familyController');
 const authMiddleware = require('../middleware/authMiddleware');
-const { validateCreateFamily, validateAddMember, validateFamilyParam, validateRemoveMember } = require('../validators/familyValidator');
+const {
+    validateCreateFamily,
+    validateAddMember,
+    validateFamilyParam,
+    validateRemoveMember,
+    validateCreateInvitation,
+    validateJoinInvitation
+} = require('../validators/familyValidator');
 
 router.use(authMiddleware);
 
@@ -94,6 +101,10 @@ router.get('/', familyController.getUserFamilies);
  *         description: Dữ liệu không hợp lệ (thiếu tên)
  */
 router.post('/', validateCreateFamily, familyController.createFamily);
+
+router.post('/join', validateJoinInvitation, familyController.joinByInvitation);
+
+router.post('/:id/invitations', validateCreateInvitation, familyController.createInvitation);
 
 /**
  * @swagger

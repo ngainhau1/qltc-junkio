@@ -355,10 +355,11 @@
             "manage": "Quản lý thành viên",
             "makeAdmin": "Thăng làm Admin",
             "makeMember": "Đặt làm Thành viên",
-            "makeViewer": "Đặt làm Viewer",
-            "remove": "Mời ra khỏi nhóm",
-            "invite": "Mời Thành Viên Mới",
-            "openMenu": "Mở menu thao tác"
+      "makeViewer": "Đặt làm Viewer",
+      "remove": "Mời ra khỏi nhóm",
+      "invite": "Mời Thành Viên Mới",
+      "joinByCode": "Tham gia bằng mã",
+      "openMenu": "Mở menu thao tác"
         },
         "expenses": {
             "title": "Chi Tiêu Chung ({{count}})",
@@ -387,11 +388,21 @@
             "algorithmNote": "Giao dịch được tối ưu để giảm số lần chuyển tiền giữa các thành viên."
         },
         "modals": {
-            "invite": {
-                "title": "Mời tham gia {{name}}",
-                "desc": "Chia sẻ mã này cho người thân để họ tham gia nhóm gia đình.",
-                "validity": "Mã có hiệu lực trong 24 giờ."
-            },
+      "invite": {
+        "title": "Mời tham gia {{name}}",
+        "desc": "Chia sẻ mã này cho người thân để họ tham gia nhóm gia đình.",
+        "loading": "Đang tạo mã mời...",
+        "validity": "Mã có hiệu lực trong 7 ngày.",
+        "expiresAt": "Mã hết hạn lúc {{date}}."
+      },
+      "join": {
+        "title": "Tham gia gia đình",
+        "desc": "Nhập mã mời do chủ gia đình hoặc quản trị viên gửi cho bạn.",
+        "codeLabel": "Mã mời",
+        "placeholder": "VD: AB12CD34",
+        "cancel": "Hủy",
+        "submit": "Tham gia"
+      },
             "create": {
                 "title": "Tạo Gia Đình Mới",
                 "nameLabel": "Tên Gia Đình / Nhóm",
@@ -413,9 +424,10 @@
             }
         },
         "toasts": {
-            "paymentRecorded": "Đã ghi nhận thanh toán {{amount}}",
-            "optimizationEmpty": "Tạm thời không có chi phí nào để tính toán.",
-            "optimizationZero": "Tuyệt vời! Hiện tại các thành viên không nợ khoản nào."
+      "paymentRecorded": "Đã ghi nhận thanh toán {{amount}}",
+      "optimizationEmpty": "Tạm thời không có chi phí nào để tính toán.",
+      "optimizationZero": "Tuyệt vời! Hiện tại các thành viên không nợ khoản nào.",
+      "joinSuccess": "Tham gia gia đình thành công."
         },
         "emptySelection": "Vui lòng chọn một Gia Đình ở trên để xem tính năng Quản Lý Nợ."
     },
@@ -931,9 +943,14 @@
             "forbidden": "Bạn không có quyền truy cập.",
             "loadFailed": "Lỗi khi tải danh sách gia đình.",
             "createFailed": "Lỗi khi tạo gia đình.",
-            "detailFailed": "Lỗi khi tải chi tiết gia đình.",
-            "inviteFailed": "Lỗi khi mời thành viên.",
-            "removeFailed": "Lỗi khi xóa thành viên.",
+      "detailFailed": "Lỗi khi tải chi tiết gia đình.",
+      "inviteFailed": "Lỗi khi mời thành viên.",
+      "invitationCreateFailed": "Không thể tạo mã mời.",
+      "invitationInvalid": "Mã mời không hợp lệ.",
+      "invitationExpired": "Mã mời đã hết hạn.",
+      "invitationUsed": "Mã mời đã được sử dụng.",
+      "joinFailed": "Không thể tham gia gia đình bằng mã này.",
+      "removeFailed": "Lỗi khi xóa thành viên.",
             "deleteFailed": "Không thể xóa gia đình.",
             "notFound": "Không tìm thấy gia đình.",
             "adminRequired": "Chỉ quản trị viên gia đình mới được thực hiện thao tác này.",

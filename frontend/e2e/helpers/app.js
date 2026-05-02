@@ -174,7 +174,7 @@ export async function assertNoRuntimeArtifacts(page, label) {
             .map((match) => match[0])
             .filter((value) => !/^v\d+\.\d+(?:\.\d+)?$/i.test(value))
             .filter((value) => !/^https?\./i.test(value))
-            .filter((value) => !value.includes(".com"))
+            .filter((value) => !/^[a-z0-9-]+\.(?:com|local|net|org|dev|test)$/i.test(value))
             .filter((value) => !value.startsWith("vite."))
             .filter((value) => !value.startsWith("react."));
 

@@ -73,6 +73,11 @@ const ERROR_MAP = {
     FAMILY_CREATE_FAILED: 'errors.families.createFailed',
     FAMILY_DETAIL_FAILED: 'errors.families.detailFailed',
     FAMILY_INVITE_FAILED: 'errors.families.inviteFailed',
+    FAMILY_INVITATION_CREATE_FAILED: 'errors.families.invitationCreateFailed',
+    FAMILY_INVITATION_INVALID: 'errors.families.invitationInvalid',
+    FAMILY_INVITATION_EXPIRED: 'errors.families.invitationExpired',
+    FAMILY_INVITATION_USED: 'errors.families.invitationUsed',
+    FAMILY_JOIN_FAILED: 'errors.families.joinFailed',
     FAMILY_REMOVE_FAILED: 'errors.families.removeFailed',
     FAMILY_DELETE_FAILED: 'errors.families.deleteFailed',
     FAMILY_NOT_FOUND: 'errors.families.notFound',
@@ -145,6 +150,10 @@ export function extractErrorCode(error, fallbackCode = null) {
 
 export function resolveError(errorCode, t, fallbackKey = 'common.error') {
     if (!errorCode) {
+        return t(fallbackKey);
+    }
+
+    if (typeof errorCode !== 'string') {
         return t(fallbackKey);
     }
 

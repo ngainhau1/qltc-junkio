@@ -13,11 +13,10 @@ import {
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { createFamily, fetchFamilies, setActiveFamily, removeMemberFromFamily } from "@/features/families/familySlice"
+import { createFamily, createFamilyInvitation, fetchFamilies, joinFamilyByCode, setActiveFamily, removeMemberFromFamily } from "@/features/families/familySlice"
 import { settleDebts, fetchTransactions } from "@/features/transactions/transactionSlice"
 import { fetchWallets } from "@/features/wallets/walletSlice"
-import { Users, Plus, ArrowRight, MoreHorizontal, LogOut, Check, Copy, Receipt, Target } from "lucide-react"
-import { simplifyDebts } from "@/utils/debtSimplification"
+import { Users, Plus, ArrowRight, MoreHorizontal, LogOut, Check, Copy, Receipt, Target, LogIn } from "lucide-react"
 import { toast } from "sonner"
 import { EmptyState } from "@/components/ui/empty-state"
 import { useTranslation } from "react-i18next"
@@ -25,6 +24,7 @@ import { SharedExpenseModal } from "@/components/features/families/SharedExpense
 import { formatCurrency } from "@/lib/utils"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { resolveError } from "@/utils/authErrors"
+import api from "@/lib/api"
 
 const getTransactionShares = (transaction) => {
     const shares = transaction?.Shares ?? transaction?.shares
@@ -90,6 +90,17 @@ export function Family() {
         return member ? member.name : t('common.unknown')
     }
 
+    const getSettlementUserId = (participant) => (
+        participant && typeof participant === 'object' ? participant.id : participant
+    )
+
+    const getSettlementUserName = (participant) => {
+        if (participant && typeof participant === 'object' && participant.name) {
+            return participant.name
+        }
+        return getMemberName(getSettlementUserId(participant))
+    }
+
     const [settlements, setSettlements] = useState([])
 
     const [createModalOpen, setCreateModalOpen] = useState(false)
@@ -97,12 +108,19 @@ export function Family() {
 
     const [inviteModalOpen, setInviteModalOpen] = useState(false)
     const [inviteCode, setInviteCode] = useState("")
+    const [inviteExpiresAt, setInviteExpiresAt] = useState(null)
+    const [isInviteLoading, setIsInviteLoading] = useState(false)
     const [copied, setCopied] = useState(false)
     const [associatedFamilyName, setAssociatedFamilyName] = useState("")
+    const [joinModalOpen, setJoinModalOpen] = useState(false)
+    const [joinCode, setJoinCode] = useState("")
+    const [isJoiningFamily, setIsJoiningFamily] = useState(false)
 
     const [settleModalOpen, setSettleModalOpen] = useState(false)
     const [selectedSettlement, setSelectedSettlement] = useState(null)
     const [selectedPaymentWalletId, setSelectedPaymentWalletId] = useState("")
+    const [isOptimizing, setIsOptimizing] = useState(false)
+    const [isSettling, setIsSettling] = useState(false)
 
     const [sharedExpenseModalOpen, setSharedExpenseModalOpen] = useState(false)
 
@@ -123,30 +141,86 @@ export function Family() {
         }
     }
 
-    const runSimplification = () => {
-        if (openFamilyDebts.length === 0) {
-            toast.info(t('family.toasts.optimizationEmpty'));
-            return;
+    const loadSimplifiedSettlements = async ({ notifyEmpty = true, showLoading = true } = {}) => {
+        if (!activeFamilyId) {
+            return []
         }
-        const results = simplifyDebts(openFamilyDebts)
-        if (results.length === 0) {
-            toast.success(t('family.toasts.optimizationZero'));
+
+        if (showLoading) {
+            setIsOptimizing(true)
         }
-        setSettlements(results)
+
+        try {
+            const { data } = await api.get(`/debts/simplified/${activeFamilyId}`)
+            const suggestions = Array.isArray(data?.suggestions) ? data.suggestions : []
+            setSettlements(suggestions)
+            if (notifyEmpty && suggestions.length === 0) {
+                toast.success(t('family.toasts.optimizationZero'))
+            }
+            return suggestions
+        } catch (error) {
+            console.error('Debt optimization error:', error)
+            toast.error(resolveError(error, t, 'errors.transactions.transferFailed'))
+            return []
+        } finally {
+            if (showLoading) {
+                setIsOptimizing(false)
+            }
+        }
     }
 
-    const handleOpenInvite = (family) => {
+    const runSimplification = () => {
+        loadSimplifiedSettlements()
+    }
+
+    const handleOpenInvite = async (family) => {
         setAssociatedFamilyName(family.name)
-        const code = Math.random().toString(36).substring(2, 8).toUpperCase()
-        setInviteCode(code)
+        setInviteCode("")
+        setInviteExpiresAt(null)
         setInviteModalOpen(true)
         setCopied(false)
+        setIsInviteLoading(true)
+
+        try {
+            const invitation = await dispatch(createFamilyInvitation({ familyId: family.id })).unwrap()
+            setInviteCode(invitation.code)
+            setInviteExpiresAt(invitation.expiresAt || invitation.expires_at)
+        } catch (error) {
+            console.error('Create invitation error:', error)
+            toast.error(resolveError(error, t, 'errors.families.invitationCreateFailed'))
+        } finally {
+            setIsInviteLoading(false)
+        }
     }
 
-    const copyToClipboard = () => {
-        navigator.clipboard.writeText(inviteCode)
+    const copyToClipboard = async () => {
+        if (!inviteCode) return
+
+        await navigator.clipboard.writeText(inviteCode)
         setCopied(true)
         setTimeout(() => setCopied(false), 2000)
+    }
+
+    const handleJoinFamily = async (event) => {
+        event.preventDefault()
+        if (!joinCode.trim()) return
+
+        setIsJoiningFamily(true)
+        try {
+            const joinedFamily = await dispatch(joinFamilyByCode({ code: joinCode.trim() })).unwrap()
+            await dispatch(fetchFamilies()).unwrap()
+            if (joinedFamily?.id) {
+                dispatch(setActiveFamily(joinedFamily.id))
+            }
+            setJoinCode("")
+            setJoinModalOpen(false)
+            toast.success(t('family.toasts.joinSuccess'))
+        } catch (error) {
+            console.error('Join family error:', error)
+            toast.error(resolveError(error, t, 'errors.families.joinFailed'))
+        } finally {
+            setIsJoiningFamily(false)
+        }
     }
 
     const handleSettleClick = (settlement) => {
@@ -158,7 +232,9 @@ export function Family() {
     const confirmSettle = async () => {
         if (!selectedSettlement) return;
 
-        const { from, to, amount } = selectedSettlement;
+        const from = getSettlementUserId(selectedSettlement.from);
+        const to = getSettlementUserId(selectedSettlement.to);
+        const { amount } = selectedSettlement;
 
         if (from !== user?.id) return;
 
@@ -167,6 +243,7 @@ export function Family() {
             return;
         }
 
+        setIsSettling(true)
         try {
             await dispatch(settleDebts({
                 to_user_id: to,
@@ -177,19 +254,17 @@ export function Family() {
 
             toast.success(t('family.toasts.paymentRecorded', { amount: formatCurrency(amount) }));
 
-            const [latestTransactionsResponse] = await Promise.all([
+            await Promise.all([
                 dispatch(fetchTransactions()).unwrap(),
                 dispatch(fetchWallets()).unwrap()
             ]);
-            const latestFamilyDebts = buildFamilyDebts(
-                latestTransactionsResponse?.transactions ?? [],
-                activeFamilyId
-            ).filter(tx => !isFullyPaidExpense(tx));
-            setSettlements(simplifyDebts(latestFamilyDebts));
+            await loadSimplifiedSettlements({ notifyEmpty: false, showLoading: false });
             setSettleModalOpen(false);
         } catch (error) {
             console.error('Settlement error:', error);
             toast.error(resolveError(error, t, 'errors.transactions.transferFailed'));
+        } finally {
+            setIsSettling(false)
         }
     }
 
@@ -199,9 +274,14 @@ export function Family() {
                 title={t('family.title')}
                 description={t('family.desc')}
                 actions={
-                    <Button onClick={() => setCreateModalOpen(true)} className="w-full sm:w-auto">
-                        <Plus className="mr-2 h-4 w-4" /> {t('family.createBtn')}
-                    </Button>
+                    <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                        <Button variant="outline" onClick={() => setJoinModalOpen(true)} className="w-full sm:w-auto">
+                            <LogIn className="mr-2 h-4 w-4" /> {t('family.actions.joinByCode')}
+                        </Button>
+                        <Button onClick={() => setCreateModalOpen(true)} className="w-full sm:w-auto">
+                            <Plus className="mr-2 h-4 w-4" /> {t('family.createBtn')}
+                        </Button>
+                    </div>
                 }
             />
 
@@ -353,8 +433,8 @@ export function Family() {
                                         </div>
                                     ))
                                 )}
-                                <Button onClick={runSimplification} className="w-full mt-4" disabled={openFamilyDebts.length === 0}>
-                                    {t('family.expenses.optimizeBtn')}
+                                <Button onClick={runSimplification} className="w-full mt-4" disabled={!activeFamilyId || isOptimizing}>
+                                    {isOptimizing ? t('common.loading') : t('family.expenses.optimizeBtn')}
                                 </Button>
                             </div>
                         </CardContent>
@@ -376,29 +456,34 @@ export function Family() {
                                 </div>
                             ) : (
                                 <div className="space-y-3">
-                                    {settlements.map((s, idx) => (
-                                        <div key={idx} className="flex flex-col gap-3 rounded-lg border border-green-200 bg-green-50 p-3 text-green-800 dark:border-green-800/50 dark:bg-green-900/20 dark:text-green-400 sm:flex-row sm:items-center sm:justify-between">
-                                            <div className="flex items-center gap-2 font-medium md:gap-4">
-                                                <div className="flex flex-col">
-                                                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">{t('family.settlement.debtor')}</span>
-                                                    <span className="text-sm font-semibold text-foreground truncate max-w-[80px] md:max-w-full">{getMemberName(s.from)}</span>
+                                    {settlements.map((s, idx) => {
+                                        const fromId = getSettlementUserId(s.from)
+                                        const toId = getSettlementUserId(s.to)
+
+                                        return (
+                                            <div key={`${fromId}-${toId}-${idx}`} className="flex flex-col gap-3 rounded-lg border border-green-200 bg-green-50 p-3 text-green-800 dark:border-green-800/50 dark:bg-green-900/20 dark:text-green-400 sm:flex-row sm:items-center sm:justify-between">
+                                                <div className="flex items-center gap-2 font-medium md:gap-4">
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">{t('family.settlement.debtor')}</span>
+                                                        <span className="text-sm font-semibold text-foreground truncate max-w-[80px] md:max-w-full">{getSettlementUserName(s.from)}</span>
+                                                    </div>
+                                                    <ArrowRight className="h-4 w-4 text-green-600 dark:text-green-500 shrink-0" />
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">{t('family.settlement.creditor')}</span>
+                                                        <span className="text-sm font-semibold text-foreground truncate max-w-[80px] md:max-w-full">{getSettlementUserName(s.to)}</span>
+                                                    </div>
                                                 </div>
-                                                <ArrowRight className="h-4 w-4 text-green-600 dark:text-green-500 shrink-0" />
-                                                <div className="flex flex-col">
-                                                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">{t('family.settlement.creditor')}</span>
-                                                    <span className="text-sm font-semibold text-foreground truncate max-w-[80px] md:max-w-full">{getMemberName(s.to)}</span>
+                                                <div className="flex flex-col gap-1 sm:items-end">
+                                                    <div className="font-bold">{formatCurrency(s.amount)}</div>
+                                                    {fromId === user?.id && (
+                                                        <Button size="sm" onClick={() => handleSettleClick(s)} className="h-6 text-[10px] px-2 bg-green-600 hover:bg-green-700 text-white shadow-sm" disabled={isSettling}>
+                                                            {t('family.settlement.payBtn')}
+                                                        </Button>
+                                                    )}
                                                 </div>
                                             </div>
-                                            <div className="flex flex-col gap-1 sm:items-end">
-                                                <div className="font-bold">{formatCurrency(s.amount)}</div>
-                                                {s.from === user?.id && (
-                                                    <Button size="sm" onClick={() => handleSettleClick(s)} className="h-6 text-[10px] px-2 bg-green-600 hover:bg-green-700 text-white shadow-sm">
-                                                        {t('family.settlement.payBtn')}
-                                                    </Button>
-                                                )}
-                                            </div>
-                                        </div>
-                                    ))}
+                                        )
+                                    })}
                                     <p className="text-xs text-muted-foreground pt-4 text-center">
                                         {t('family.settlement.algorithmNote')}
                                     </p>
@@ -418,14 +503,51 @@ export function Family() {
             <Modal isOpen={inviteModalOpen} onClose={() => setInviteModalOpen(false)} title={t('family.modals.invite.title', { name: associatedFamilyName })}>
                 <div className="space-y-4">
                     <p className="text-sm text-muted-foreground">{t('family.modals.invite.desc')}</p>
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                        <Input value={inviteCode} readOnly className="font-mono text-center text-lg tracking-widest uppercase bg-muted" />
-                        <Button size="icon" onClick={copyToClipboard} className="w-full sm:w-10">
-                            {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                    {isInviteLoading ? (
+                        <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+                            {t('family.modals.invite.loading')}
+                        </div>
+                    ) : (
+                        <>
+                            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                                <Input value={inviteCode} readOnly className="font-mono text-center text-lg tracking-widest uppercase bg-muted" />
+                                <Button size="icon" onClick={copyToClipboard} className="w-full sm:w-10" disabled={!inviteCode}>
+                                    {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                                </Button>
+                            </div>
+                            <p className="text-xs text-muted-foreground text-center">
+                                {inviteExpiresAt
+                                    ? t('family.modals.invite.expiresAt', { date: new Date(inviteExpiresAt).toLocaleString() })
+                                    : t('family.modals.invite.validity')
+                                }
+                            </p>
+                        </>
+                    )}
+                </div>
+            </Modal>
+
+            <Modal isOpen={joinModalOpen} onClose={() => setJoinModalOpen(false)} title={t('family.modals.join.title')}>
+                <form onSubmit={handleJoinFamily} className="space-y-4">
+                    <p className="text-sm text-muted-foreground">{t('family.modals.join.desc')}</p>
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium">{t('family.modals.join.codeLabel')}</label>
+                        <Input
+                            value={joinCode}
+                            onChange={(event) => setJoinCode(event.target.value.toUpperCase())}
+                            placeholder={t('family.modals.join.placeholder')}
+                            className="font-mono uppercase tracking-widest"
+                            autoFocus
+                        />
+                    </div>
+                    <div className="flex flex-col-reverse gap-2 border-t pt-2 sm:flex-row sm:justify-end">
+                        <Button type="button" variant="ghost" onClick={() => setJoinModalOpen(false)} className="w-full sm:w-auto">
+                            {t('family.modals.join.cancel')}
+                        </Button>
+                        <Button type="submit" disabled={isJoiningFamily || !joinCode.trim()} className="w-full sm:w-auto">
+                            {isJoiningFamily ? t('common.loading') : t('family.modals.join.submit')}
                         </Button>
                     </div>
-                    <p className="text-xs text-muted-foreground text-center">{t('family.modals.invite.validity')}</p>
-                </div>
+                </form>
             </Modal>
 
             <Modal isOpen={createModalOpen} onClose={() => setCreateModalOpen(false)} title={t('family.modals.create.title')}>
@@ -460,9 +582,9 @@ export function Family() {
                         <div className="flex flex-col gap-4 rounded-xl border border-green-200 bg-green-50 p-4 dark:border-green-800/50 dark:bg-green-900/20 sm:flex-row sm:items-center sm:justify-between">
                             <div className="flex flex-col items-center">
                                 <div className="h-12 w-12 rounded-full bg-background border flex items-center justify-center font-bold mb-2 shadow-sm text-foreground">
-                                    {getMemberName(selectedSettlement.from).charAt(0)}
+                                    {getSettlementUserName(selectedSettlement.from).charAt(0)}
                                 </div>
-                                <span className="font-semibold text-sm">{getMemberName(selectedSettlement.from)}</span>
+                                <span className="font-semibold text-sm">{getSettlementUserName(selectedSettlement.from)}</span>
                             </div>
                             <div className="flex flex-col items-center gap-1">
                                 <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground bg-muted px-2 py-0.5 rounded-full">{t('family.modals.settle.payTo')}</span>
@@ -471,9 +593,9 @@ export function Family() {
                             </div>
                             <div className="flex flex-col items-center">
                                 <div className="h-12 w-12 rounded-full bg-background border flex items-center justify-center font-bold mb-2 shadow-sm text-foreground">
-                                    {getMemberName(selectedSettlement.to).charAt(0)}
+                                    {getSettlementUserName(selectedSettlement.to).charAt(0)}
                                 </div>
-                                <span className="font-semibold text-sm">{getMemberName(selectedSettlement.to)}</span>
+                                <span className="font-semibold text-sm">{getSettlementUserName(selectedSettlement.to)}</span>
                             </div>
                         </div>
                         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 p-4 rounded-xl">
@@ -498,7 +620,9 @@ export function Family() {
                         </div>
                         <div className="flex flex-col-reverse gap-3 border-t pt-2 sm:flex-row sm:justify-end">
                             <Button type="button" variant="ghost" onClick={() => setSettleModalOpen(false)} className="w-full sm:w-auto">{t('family.modals.settle.cancel')}</Button>
-                            <Button onClick={confirmSettle} className="w-full bg-green-600 text-white hover:bg-green-700 sm:w-auto">{t('family.modals.settle.submit')}</Button>
+                            <Button onClick={confirmSettle} disabled={isSettling} className="w-full bg-green-600 text-white hover:bg-green-700 sm:w-auto">
+                                {isSettling ? t('common.loading') : t('family.modals.settle.submit')}
+                            </Button>
                         </div>
                     </div>
                 )}

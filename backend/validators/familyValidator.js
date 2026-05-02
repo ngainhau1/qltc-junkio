@@ -31,6 +31,25 @@ exports.validateFamilyParam = [
     buildValidationHandler(['params']),
 ];
 
+exports.validateCreateInvitation = [
+    param('id').isUUID().withMessage(createValidationCode('id', 'INVALID_UUID')),
+    buildValidationHandler(['params']),
+];
+
+exports.validateJoinInvitation = [
+    body('code')
+        .customSanitizer((value) => String(value || '').trim().toUpperCase())
+        .notEmpty()
+        .withMessage(createValidationCode('code', 'REQUIRED'))
+        .bail()
+        .isLength({ min: 6, max: 16 })
+        .withMessage(createValidationCode('code', 'INVALID_LENGTH'))
+        .bail()
+        .matches(/^[A-Z0-9]+$/)
+        .withMessage(createValidationCode('code', 'INVALID_FORMAT')),
+    buildValidationHandler(['body']),
+];
+
 exports.validateRemoveMember = [
     param('id').isUUID().withMessage(createValidationCode('id', 'INVALID_UUID')),
     param('userIdToRemove')

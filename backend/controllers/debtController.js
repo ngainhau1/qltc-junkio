@@ -356,7 +356,7 @@ exports.getSimplifiedDebts = async (req, res) => {
         const mappedDebts = shares.map(share => ({
             debtor: share.user_id,
             creditor: share.Transaction.user_id,
-            amount: share.amount
+            amount: toMoney(share.amount)
         }));
 
         const { simplifyDebts } = require('../services/debtService');

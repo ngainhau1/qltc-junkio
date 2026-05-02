@@ -66,6 +66,30 @@ export const inviteMember = createAsyncThunk(
     }
 );
 
+export const createFamilyInvitation = createAsyncThunk(
+    'families/createInvitation',
+    async ({ familyId }, { rejectWithValue }) => {
+        try {
+            const response = await api.post(`/families/${familyId}/invitations`);
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || 'FAMILY_INVITATION_CREATE_FAILED');
+        }
+    }
+);
+
+export const joinFamilyByCode = createAsyncThunk(
+    'families/joinByCode',
+    async ({ code }, { rejectWithValue }) => {
+        try {
+            const response = await api.post('/families/join', { code });
+            return normalizeFamily(response.data);
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || 'FAMILY_JOIN_FAILED');
+        }
+    }
+);
+
 export const removeMemberFromFamily = createAsyncThunk(
     'families/removeMember',
     async ({ familyId, userId }, { rejectWithValue }) => {
@@ -125,6 +149,16 @@ const familySlice = createSlice({
                     family.members = Array.isArray(family.members) ? family.members : [];
                     family.members.push(member);
                 }
+            })
+            .addCase(joinFamilyByCode.fulfilled, (state, action) => {
+                const family = normalizeFamily(action.payload);
+                const index = state.families.findIndex((item) => item.id === family.id);
+                if (index === -1) {
+                    state.families.push(family);
+                } else {
+                    state.families[index] = { ...state.families[index], ...family };
+                }
+                state.activeFamilyId = family.id;
             })
             .addCase(removeMemberFromFamily.fulfilled, (state, action) => {
                 const { familyId, userId } = action.payload;

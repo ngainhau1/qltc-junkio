@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { ResponsiveTabs } from "@/components/ui/responsive-tabs"
 import { TableSwitch } from "@/components/ui/table-switch"
@@ -51,6 +52,27 @@ export function AdminDashboard() {
         if (role === 'staff') return t('admin.roleStaff')
         return role
     }
+
+    const roleOptions = [
+        { value: 'admin', label: t("admin.roleAdmin") },
+        { value: 'staff', label: t("admin.roleStaff", "Staff") },
+        { value: 'member', label: t("admin.roleMember") },
+    ]
+
+    const statusOptions = [
+        { value: 'all', label: t("admin.all") },
+        { value: 'active', label: t("admin.statusActive") },
+        { value: 'locked', label: t("admin.statusLocked") },
+    ]
+
+    const logActionOptions = [
+        { value: 'ALL', label: `${t("admin.filterByAction")} (${t("admin.all")})` },
+        { value: 'USER_LOGIN', label: t("admin.action_USER_LOGIN") },
+        { value: 'USER_REGISTER', label: t("admin.action_USER_REGISTER") },
+        { value: 'ROLE_CHANGED', label: t("admin.action_ROLE_CHANGED") },
+        { value: 'USER_LOCKED_UNLOCKED', label: t("admin.action_USER_LOCKED_UNLOCKED") },
+        { value: 'USER_DELETED', label: t("admin.action_USER_DELETED") },
+    ]
 
     const getLogActionLabel = (action) => {
         const actionKeyMap = {
@@ -419,25 +441,27 @@ export function AdminDashboard() {
                             />
                         </div>
                         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:w-auto">
-                            <select
-                                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 lg:min-w-[144px]"
-                                value={roleFilter}
-                                onChange={(e) => { setRoleFilter(e.target.value); setPage(1); }}
-                            >
-                                <option value="all">{t("admin.all")}</option>
-                                <option value="admin">{t("admin.roleAdmin")}</option>
-                                <option value="staff">{t("admin.roleStaff")}</option>
-                                <option value="member">{t("admin.roleMember")}</option>
-                            </select>
-                            <select
-                                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 lg:min-w-[144px]"
-                                value={statusFilter}
-                                onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-                            >
-                                <option value="all">{t("admin.all")}</option>
-                                <option value="active">{t("admin.statusActive")}</option>
-                                <option value="locked">{t("admin.statusLocked")}</option>
-                            </select>
+                            <Select value={roleFilter} onValueChange={(value) => { setRoleFilter(value); setPage(1); }}>
+                                <SelectTrigger className="lg:min-w-[144px]">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">{t("admin.all")}</SelectItem>
+                                    {roleOptions.map((option) => (
+                                        <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <Select value={statusFilter} onValueChange={(value) => { setStatusFilter(value); setPage(1); }}>
+                                <SelectTrigger className="lg:min-w-[144px]">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {statusOptions.map((option) => (
+                                        <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
                     </div>
                 </div>
@@ -469,15 +493,16 @@ export function AdminDashboard() {
                                                 <div className="space-y-1">
                                                     <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t("admin.colRole")}</p>
                                                     {u.id !== user?.id ? (
-                                                        <select
-                                                            className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                                            value={u.role}
-                                                            onChange={(e) => changeRole(u.id, e.target.value)}
-                                                        >
-                                                            <option value="admin">{t("admin.roleAdmin")}</option>
-                                                            <option value="staff">{t("admin.roleStaff", "Staff")}</option>
-                                                            <option value="member">{t("admin.roleMember")}</option>
-                                                        </select>
+                                                        <Select value={u.role} onValueChange={(value) => changeRole(u.id, value)}>
+                                                            <SelectTrigger className="w-full">
+                                                                <SelectValue />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                {roleOptions.map((option) => (
+                                                                    <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                                                                ))}
+                                                            </SelectContent>
+                                                        </Select>
                                                     ) : (
                                                         <Badge variant="default">{roleLabel(u.role)}</Badge>
                                                     )}
@@ -540,15 +565,16 @@ export function AdminDashboard() {
                                                     <td className="py-3 px-2 text-muted-foreground">{u.email}</td>
                                                     <td className="py-3 px-2">
                                                         {u.id !== user?.id ? (
-                                                            <select
-                                                                className="text-xs rounded border p-1 bg-transparent"
-                                                                value={u.role}
-                                                                onChange={(e) => changeRole(u.id, e.target.value)}
-                                                            >
-                                                                <option value="admin">{t("admin.roleAdmin")}</option>
-                                                                <option value="staff">{t("admin.roleStaff", "Staff")}</option>
-                                                                <option value="member">{t("admin.roleMember")}</option>
-                                                            </select>
+                                                            <Select value={u.role} onValueChange={(value) => changeRole(u.id, value)}>
+                                                                <SelectTrigger className="h-8 w-[132px] text-xs">
+                                                                    <SelectValue />
+                                                                </SelectTrigger>
+                                                                <SelectContent>
+                                                                    {roleOptions.map((option) => (
+                                                                        <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                                                                    ))}
+                                                                </SelectContent>
+                                                            </Select>
                                                         ) : (
                                                             <Badge variant="default">{roleLabel(u.role)}</Badge>
                                                         )}
@@ -617,18 +643,16 @@ export function AdminDashboard() {
                             <Activity className="h-5 w-5" />
                             {t("admin.activityLogs")}
                         </h2>
-                        <select
-                            className="flex h-10 w-full sm:w-64 items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                            value={logAction}
-                            onChange={(e) => { setLogAction(e.target.value); setLogPage(1); }}
-                        >
-                            <option value="ALL">{t("admin.filterByAction")} ({t("admin.all")})</option>
-                            <option value="USER_LOGIN">{t("admin.action_USER_LOGIN")}</option>
-                            <option value="USER_REGISTER">{t("admin.action_USER_REGISTER")}</option>
-                            <option value="ROLE_CHANGED">{t("admin.action_ROLE_CHANGED")}</option>
-                            <option value="USER_LOCKED_UNLOCKED">{t("admin.action_USER_LOCKED_UNLOCKED")}</option>
-                            <option value="USER_DELETED">{t("admin.action_USER_DELETED")}</option>
-                        </select>
+                        <Select value={logAction} onValueChange={(value) => { setLogAction(value); setLogPage(1); }}>
+                            <SelectTrigger className="w-full sm:w-64">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {logActionOptions.map((option) => (
+                                    <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
 
                     {logs.length === 0 ? (

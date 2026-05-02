@@ -3,11 +3,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { Family } from '@/pages/Family'
 import { setActiveFamily } from '@/features/families/familySlice'
 
-const { mockDispatch, mockSettleDebts, mockFetchTransactions, mockFetchWallets, mockState } = vi.hoisted(() => ({
+const { mockDispatch, mockSettleDebts, mockFetchTransactions, mockFetchWallets, mockApiGet, mockApiPost, mockState } = vi.hoisted(() => ({
     mockDispatch: vi.fn(),
     mockSettleDebts: vi.fn((payload) => ({ type: 'transactions/settleDebts', payload })),
     mockFetchTransactions: vi.fn(() => ({ type: 'transactions/fetchTransactions' })),
     mockFetchWallets: vi.fn(() => ({ type: 'wallets/fetchWallets' })),
+    mockApiGet: vi.fn(),
+    mockApiPost: vi.fn(),
     mockState: {}
 }))
 
@@ -84,6 +86,13 @@ vi.mock('@/lib/utils', () => ({
     formatCurrency: (amount) => String(amount)
 }))
 
+vi.mock('@/lib/api', () => ({
+    default: {
+        get: mockApiGet,
+        post: mockApiPost
+    }
+}))
+
 vi.mock('sonner', () => ({
     toast: {
         success: vi.fn(),
@@ -101,7 +110,9 @@ vi.mock('react-i18next', () => ({
 
 vi.mock('@/features/families/familySlice', () => ({
     createFamily: vi.fn(() => ({ type: 'families/createFamily' })),
+    createFamilyInvitation: vi.fn(() => ({ type: 'families/createInvitation' })),
     fetchFamilies: vi.fn(() => ({ type: 'families/fetchFamilies' })),
+    joinFamilyByCode: vi.fn(() => ({ type: 'families/joinByCode' })),
     setActiveFamily: vi.fn((id) => ({ type: 'families/setActiveFamily', payload: id })),
     removeMemberFromFamily: vi.fn(() => ({ type: 'families/removeMember' }))
 }))
@@ -120,8 +131,21 @@ describe('Family shared expense settlement flow', () => {
         mockSettleDebts.mockClear()
         mockFetchTransactions.mockClear()
         mockFetchWallets.mockClear()
+        mockApiGet.mockReset()
+        mockApiPost.mockReset()
         setActiveFamily.mockClear()
         mockDispatch.mockReset()
+        mockApiGet.mockResolvedValue({
+            data: {
+                suggestions: [
+                    {
+                        from: { id: 'u1', name: 'Alice' },
+                        to: { id: 'u2', name: 'Bob' },
+                        amount: 50000
+                    }
+                ]
+            }
+        })
         mockDispatch.mockImplementation((action) => ({
             unwrap: () => Promise.resolve(
                 action.type === 'transactions/fetchTransactions'
@@ -186,7 +210,7 @@ describe('Family shared expense settlement flow', () => {
         })
     })
 
-    it('uses backend Shares alias and lets every member optimize approved shares to the payer', async () => {
+    it('uses backend simplified debts and renders approved-share settlement suggestions', async () => {
         mockState.transactions.transactions = [
             {
                 id: 'tx-shares-alias',
@@ -211,8 +235,11 @@ describe('Family shared expense settlement flow', () => {
         render(<Family />)
         fireEvent.click(screen.getByText('family.expenses.optimizeBtn'))
 
-        expect(screen.getByText('family.settlement.debtor')).toBeTruthy()
-        expect(screen.getAllByText('Bob').length).toBeGreaterThan(0)
+        await waitFor(() => {
+            expect(mockApiGet).toHaveBeenCalledWith('/debts/simplified/fam1')
+            expect(screen.getByText('family.settlement.debtor')).toBeTruthy()
+            expect(screen.getAllByText('Bob').length).toBeGreaterThan(0)
+        })
     })
 
     it('hides shared expenses when all shares are paid', () => {
@@ -249,7 +276,8 @@ describe('Family shared expense settlement flow', () => {
         expect(screen.queryByText('Paid dinner')).toBeNull()
     })
 
-    it('does not optimize family fund expenses without debt shares', () => {
+    it('lets backend decide there are no optimized debts for family fund expenses without debt shares', async () => {
+        mockApiGet.mockResolvedValueOnce({ data: { suggestions: [] } })
         mockState.transactions.transactions = [
             {
                 id: 'tx-family-fund',
@@ -265,7 +293,13 @@ describe('Family shared expense settlement flow', () => {
         render(<Family />)
 
         expect(screen.queryByText('Family groceries')).toBeNull()
-        expect(screen.getByText('family.expenses.optimizeBtn').disabled).toBe(true)
+        expect(screen.getByText('family.expenses.optimizeBtn').disabled).toBe(false)
+
+        fireEvent.click(screen.getByText('family.expenses.optimizeBtn'))
+
+        await waitFor(() => {
+            expect(mockApiGet).toHaveBeenCalledWith('/debts/simplified/fam1')
+        })
     })
 
     it('keeps the active family selected when the active switch button is clicked again', () => {
@@ -281,21 +315,23 @@ describe('Family shared expense settlement flow', () => {
         })
     })
 
-    it('shows optimized settlements to owners without pay action when they are not the debtor', () => {
+    it('shows optimized settlements to owners without pay action when they are not the debtor', async () => {
         mockState.auth.user = { id: 'owner-id', name: 'Owner' }
         render(<Family />)
 
         fireEvent.click(screen.getByText('family.expenses.optimizeBtn'))
 
-        expect(screen.getByText('family.settlement.debtor')).toBeTruthy()
-        expect(screen.queryByText('family.settlement.payBtn')).toBeNull()
+        await waitFor(() => {
+            expect(screen.getByText('family.settlement.debtor')).toBeTruthy()
+            expect(screen.queryByText('family.settlement.payBtn')).toBeNull()
+        })
     })
 
     it('lets the debtor settle with personal wallet and refresh transactions plus wallets', async () => {
         render(<Family />)
 
         fireEvent.click(screen.getByText('family.expenses.optimizeBtn'))
-        fireEvent.click(screen.getByText('family.settlement.payBtn'))
+        fireEvent.click(await screen.findByText('family.settlement.payBtn'))
         fireEvent.click(screen.getByText('family.modals.settle.submit'))
 
         await waitFor(() => {

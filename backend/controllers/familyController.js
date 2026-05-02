@@ -1,5 +1,9 @@
-const { Family, FamilyMember, User, Wallet, sequelize } = require('../models');
+const crypto = require('crypto');
+const { Family, FamilyMember, FamilyInvitation, User, Wallet, sequelize } = require('../models');
 const { success, created, error: sendError, notFound, serverError } = require('../utils/responseHelper');
+
+const INVITATION_TTL_DAYS = 7;
+const INVITATION_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
 const familyListInclude = [
     {
@@ -56,6 +60,45 @@ function normalizeFamilyRecord(familyRecord, myRole = null) {
         my_role: myRole || familyJson.my_role || null,
         createdAt: familyJson.createdAt,
         updatedAt: familyJson.updatedAt,
+    };
+}
+
+function serializeInvitation(invitation) {
+    const payload = invitation.toJSON ? invitation.toJSON() : invitation;
+    return {
+        id: payload.id,
+        family_id: payload.family_id,
+        familyId: payload.family_id,
+        code: payload.code,
+        role: payload.role,
+        expires_at: payload.expires_at,
+        expiresAt: payload.expires_at,
+        used_at: payload.used_at,
+        usedAt: payload.used_at,
+    };
+}
+
+function generateInvitationCode() {
+    const bytes = crypto.randomBytes(8);
+    return Array.from(bytes)
+        .map((byte) => INVITATION_ALPHABET[byte % INVITATION_ALPHABET.length])
+        .join('');
+}
+
+async function isFamilyAdmin(familyId, userId) {
+    const [family, caller] = await Promise.all([
+        Family.findByPk(familyId),
+        FamilyMember.findOne({ where: { family_id: familyId, user_id: userId } }),
+    ]);
+
+    if (!family) {
+        return { family: null, caller: null, allowed: false };
+    }
+
+    return {
+        family,
+        caller,
+        allowed: String(family.owner_id) === String(userId) || caller?.role === 'ADMIN',
     };
 }
 
@@ -215,6 +258,111 @@ exports.addMember = async (req, res) => {
     } catch (error) {
         console.error('Error adding member:', error);
         return serverError(res, 'FAMILY_INVITE_FAILED');
+    }
+};
+
+exports.createInvitation = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { family, allowed } = await isFamilyAdmin(id, req.user.id);
+
+        if (!family) {
+            return notFound(res, 'FAMILY_NOT_FOUND');
+        }
+
+        if (!allowed) {
+            return sendError(res, 'FAMILY_ADMIN_REQUIRED', 403);
+        }
+
+        let code = null;
+        for (let attempt = 0; attempt < 10; attempt += 1) {
+            const candidate = generateInvitationCode();
+            const existing = await FamilyInvitation.findOne({ where: { code: candidate } });
+            if (!existing) {
+                code = candidate;
+                break;
+            }
+        }
+
+        if (!code) {
+            return serverError(res, 'FAMILY_INVITATION_CREATE_FAILED');
+        }
+
+        const expiresAt = new Date(Date.now() + INVITATION_TTL_DAYS * 24 * 60 * 60 * 1000);
+        const invitation = await FamilyInvitation.create({
+            family_id: id,
+            code,
+            role: 'MEMBER',
+            created_by: req.user.id,
+            expires_at: expiresAt,
+        });
+
+        return created(res, serializeInvitation(invitation), 'FAMILY_INVITATION_CREATED');
+    } catch (error) {
+        console.error('Error creating family invitation:', error);
+        return serverError(res, 'FAMILY_INVITATION_CREATE_FAILED');
+    }
+};
+
+exports.joinByInvitation = async (req, res) => {
+    try {
+        const code = String(req.body.code || '').trim().toUpperCase();
+
+        const result = await sequelize.transaction(async (transaction) => {
+            const invitation = await FamilyInvitation.findOne({
+                where: { code },
+                transaction,
+            });
+
+            if (!invitation) {
+                return { error: 'FAMILY_INVITATION_INVALID', statusCode: 404 };
+            }
+
+            if (invitation.used_at) {
+                return { error: 'FAMILY_INVITATION_USED', statusCode: 400 };
+            }
+
+            if (new Date(invitation.expires_at).getTime() < Date.now()) {
+                return { error: 'FAMILY_INVITATION_EXPIRED', statusCode: 400 };
+            }
+
+            const family = await Family.findByPk(invitation.family_id, { transaction });
+            if (!family) {
+                return { error: 'FAMILY_NOT_FOUND', statusCode: 404 };
+            }
+
+            const existingMember = await FamilyMember.findOne({
+                where: { family_id: invitation.family_id, user_id: req.user.id },
+                transaction,
+            });
+
+            if (existingMember) {
+                return { error: 'FAMILY_MEMBER_ALREADY_EXISTS', statusCode: 400 };
+            }
+
+            await FamilyMember.create({
+                family_id: invitation.family_id,
+                user_id: req.user.id,
+                role: invitation.role || 'MEMBER',
+                joined_at: new Date(),
+            }, { transaction });
+
+            invitation.used_at = new Date();
+            invitation.used_by = req.user.id;
+            await invitation.save({ transaction });
+
+            const familySummary = await loadFamilySummary(invitation.family_id, req.user.id, transaction);
+            return { family: familySummary };
+        });
+
+        if (result.error) {
+            return sendError(res, result.error, result.statusCode);
+        }
+
+        return created(res, result.family, 'FAMILY_JOIN_SUCCESS');
+    } catch (error) {
+        console.error('Error joining family by invitation:', error);
+        return serverError(res, 'FAMILY_JOIN_FAILED');
     }
 };
 

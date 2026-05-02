@@ -10,6 +10,7 @@ module.exports = (sequelize, DataTypes) => {
             Family.hasMany(models.Wallet, { foreignKey: 'family_id' });
             Family.hasMany(models.Budget, { foreignKey: 'family_id' });
             Family.hasMany(models.Transaction, { foreignKey: 'family_id' });
+            Family.hasMany(models.FamilyInvitation, { foreignKey: 'family_id' });
         }
     }
     Family.init({
