@@ -5,8 +5,6 @@ const { Op } = require('sequelize');
 const { User, Family, FamilyMember } = require('../models');
 const sendEmail = require('../services/emailService');
 const { success, error: sendError } = require('../utils/responseHelper');
-
-// GHI CHÚ HỌC TẬP - Phần xác thực của Thành Đạt:
 // Controller này là trung tâm xử lý đăng ký, đăng nhập, làm mới phiên,
 // đăng xuất và khôi phục mật khẩu. Khi trình bày, nên đi theo luồng:
 // dữ liệu từ request -> kiểm tra -> thao tác cơ sở dữ liệu -> trả response chuẩn.
@@ -57,7 +55,9 @@ const buildAuthUser = (user) => ({
     name: user.name,
     email: user.email,
     role: user.role,
-    avatar: user.avatar || null
+    avatar: user.avatar || null,
+    phone: user.phone || null,
+    dateOfBirth: user.dateOfBirth || null
 });
 
 exports.register = async (req, res) => {
@@ -157,7 +157,7 @@ exports.refreshToken = async (req, res) => {
         // verify vừa kiểm tra chữ ký, vừa kiểm tra thời hạn của refresh token.
         const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET || 'refresh_secret_b6d9677116aa4');
         const user = await User.findByPk(decoded.user.id, {
-            attributes: ['id', 'name', 'email', 'role', 'avatar', 'is_locked']
+            attributes: ['id', 'name', 'email', 'role', 'avatar', 'phone', 'dateOfBirth', 'is_locked']
         });
 
         if (!user) {

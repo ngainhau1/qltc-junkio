@@ -1,9 +1,5 @@
 name: Junkio CI/CD Pipeline
-
-# GHI CHÚ HỌC TẬP - Phần hạ tầng của Thành Đạt:
-# Quy trình này tự kiểm tra code khi có push hoặc pull request vào main/dev.
 # Luồng chính: cài thư viện -> lint -> test -> build frontend.
-
 on:
   push:
     branches: [ "main", "dev" ]

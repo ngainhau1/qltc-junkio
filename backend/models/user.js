@@ -28,6 +28,11 @@ module.exports = (sequelize, DataTypes) => {
         reset_password_expires: DataTypes.DATE,
         role: DataTypes.STRING,
         avatar: DataTypes.STRING,
+        phone: DataTypes.STRING(32),
+        dateOfBirth: {
+            type: DataTypes.DATEONLY,
+            field: 'date_of_birth',
+        },
         is_locked: {
             type: DataTypes.BOOLEAN,
             defaultValue: false

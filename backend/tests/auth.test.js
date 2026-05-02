@@ -32,6 +32,8 @@ const mockUser = mockSequelize.define('User', {
     reset_password_expires: { type: DataTypes.DATE, allowNull: true },
     role: { type: DataTypes.ENUM('admin', 'member', 'staff'), defaultValue: 'member' },
     avatar: { type: DataTypes.STRING, allowNull: true },
+    phone: { type: DataTypes.STRING(32), allowNull: true },
+    dateOfBirth: { type: DataTypes.DATEONLY, allowNull: true, field: 'date_of_birth' },
     is_locked: { type: DataTypes.BOOLEAN, defaultValue: false }
 });
 
@@ -109,6 +111,8 @@ describe('Auth API Endpoints', () => {
         expect(res.body.data).toHaveProperty('token');
         expect(res.body.data.user.email).toEqual('testauth@example.com');
         expect(res.body.data.user.role).toEqual('member');
+        expect(res.body.data.user.phone).toBeNull();
+        expect(res.body.data.user.dateOfBirth).toBeNull();
         expect(res.headers['set-cookie']).toBeDefined();
     });
 
@@ -139,6 +143,8 @@ describe('Auth API Endpoints', () => {
         expect(profileRes.statusCode).toEqual(200);
         expect(profileRes.body.data.email).toEqual('testauth@example.com');
         expect(profileRes.body.data.role).toEqual('member');
+        expect(profileRes.body.data).toHaveProperty('phone');
+        expect(profileRes.body.data).toHaveProperty('dateOfBirth');
     });
 
     it('refreshes access token while preserving role', async () => {

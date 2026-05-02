@@ -17,6 +17,11 @@ jest.mock('../services/goldPriceSnapshotService', () => ({
 
 const { client } = require('../config/redis');
 const { getGoldPriceHistory, upsertGoldPriceSnapshot } = require('../services/goldPriceSnapshotService');
+const {
+    DEMO_GOLD_POINT_COUNT,
+    SEEDED_HISTORY_EDGE_BUFFER_MS,
+    generateDemoGoldHistorySnapshots,
+} = require('../scripts/lib/seed-gold-history-demo');
 const marketRoutes = require('../routes/marketRoutes');
 
 const app = express();
@@ -273,5 +278,26 @@ describe('Market API', () => {
         expect(response.statusCode).toBe(500);
         expect(response.body.status).toBe('error');
         expect(response.body.message).toBe('GOLD_PRICE_HISTORY_FETCH_FAILED');
+    });
+
+    it('generates seeded gold history ending at the seed reference time', () => {
+        const referenceTime = new Date('2026-05-02T08:30:00.000Z');
+        const rows = generateDemoGoldHistorySnapshots({
+            source: 'sjc',
+            branch: 'Ho Chi Minh',
+            productName: 'Vang SJC 1L, 10L, 1KG',
+            buy: 168500000,
+            sell: 172000000,
+            currency: 'VND',
+            unit: 'VND_PER_LUONG',
+            updatedAt: '2026-04-16T08:30:00.000Z',
+        }, referenceTime);
+
+        expect(rows).toHaveLength(DEMO_GOLD_POINT_COUNT);
+        expect(rows[rows.length - 1].capturedAt.toISOString()).toBe(referenceTime.toISOString());
+        expect(rows[0].capturedAt.getTime()).toBe(
+            referenceTime.getTime() - 168 * 60 * 60 * 1000 + SEEDED_HISTORY_EDGE_BUFFER_MS
+        );
+        expect(rows.every((row) => row.capturedAt <= referenceTime)).toBe(true);
     });
 });

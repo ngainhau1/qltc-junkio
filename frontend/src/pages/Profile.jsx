@@ -49,7 +49,6 @@ export function Profile() {
                 name: formData.name,
                 phone: formData.phone,
                 dateOfBirth: formData.dateOfBirth,
-                avatarUrl: formData.avatarUrl,
             })).unwrap();
 
             toast.success(t('profile.successMsg'));
@@ -119,9 +118,10 @@ export function Profile() {
                                         id="avatarUrl"
                                         name="avatarUrl"
                                         value={formData.avatarUrl}
-                                        onChange={handleChange}
+                                        readOnly
+                                        aria-readonly="true"
                                         placeholder="https://..."
-                                        className="text-xs h-8"
+                                        className="h-8 text-xs text-muted-foreground"
                                     />
                                 </form>
                                 <Input

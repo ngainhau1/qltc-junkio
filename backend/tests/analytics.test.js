@@ -62,10 +62,18 @@ jest.mock('../middleware/authMiddleware', () => (req, res, next) => {
 });
 
 const analyticsRoutes = require('../routes/analyticsRoutes');
+const { client } = require('../config/redis');
 
 const app = express();
 app.use(express.json());
 app.use('/api/analytics', analyticsRoutes);
+
+const formatDateKey = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
 
 describe('Analytics API', () => {
     let userId, familyId;
@@ -101,6 +109,13 @@ describe('Analytics API', () => {
         await mockSequelize.close();
     });
 
+    beforeEach(async () => {
+        const cacheKeys = await client.keys('dashboardStats:*');
+        if (cacheKeys.length > 0) {
+            await client.del(cacheKeys);
+        }
+    });
+
     describe('GET /api/analytics/dashboard', () => {
         it('should return aggregated dashboard stats', async () => {
             mockUserId = userId;
@@ -116,6 +131,83 @@ describe('Analytics API', () => {
 
             expect(res.body.data.recentTransactions.length).toBe(2);
             expect(res.body.data.recentTransactions[0].Category.name).toBe('Food');
+        });
+
+        it('should return the standard response envelope on a dashboard cache hit', async () => {
+            mockUserId = userId;
+
+            const firstRes = await request(app).get('/api/analytics/dashboard');
+            expect(firstRes.statusCode).toEqual(200);
+
+            await new Promise((resolve) => setImmediate(resolve));
+
+            const cachedRes = await request(app).get('/api/analytics/dashboard');
+            expect(cachedRes.statusCode).toEqual(200);
+            expect(cachedRes.body.status).toBe('success');
+            expect(cachedRes.body.message).toBe('DASHBOARD_CACHE_HIT');
+            expect(cachedRes.body.success).toBeUndefined();
+            expect(cachedRes.body.cached).toBeUndefined();
+            expect(cachedRes.body.data.stats.totalIncome).toBe(2000);
+            expect(cachedRes.body.data.stats.totalExpense).toBe(500);
+        });
+
+        it('fills requested cashflow date ranges and keeps dashboard stats month-to-date', async () => {
+            const crypto = require('crypto');
+            const rangeUserId = crypto.randomUUID();
+            const wallet = await mockWallet.create({ user_id: rangeUserId, balance: 9000 });
+            const catId = crypto.randomUUID();
+            await mockCategory.create({ id: catId, name: 'Range Food', icon: 'burger' });
+
+            const today = new Date();
+            await mockTransaction.create({
+                wallet_id: wallet.id,
+                category_id: catId,
+                amount: 5000,
+                type: 'INCOME',
+                date: today,
+            });
+
+            await mockTransaction.create({
+                wallet_id: wallet.id,
+                category_id: catId,
+                amount: 700,
+                type: 'EXPENSE',
+                date: new Date('2026-04-22T12:00:00'),
+            });
+
+            await mockTransaction.create({
+                wallet_id: wallet.id,
+                category_id: catId,
+                amount: 900,
+                type: 'EXPENSE',
+                date: new Date('2026-04-26T23:30:00'),
+            });
+
+            mockUserId = rangeUserId;
+            const res = await request(app)
+                .get('/api/analytics/dashboard?context=personal&startDate=2026-04-20&endDate=2026-04-26');
+
+            expect(res.statusCode).toEqual(200);
+            expect(res.body.data.cashflowSeries).toHaveLength(7);
+            expect(res.body.data.cashflowSeries[0]).toEqual({
+                date: '2026-04-20',
+                income: 0,
+                expense: 0,
+            });
+            expect(res.body.data.cashflowSeries.map((item) => item.date)).toEqual([
+                '2026-04-20',
+                '2026-04-21',
+                '2026-04-22',
+                '2026-04-23',
+                '2026-04-24',
+                '2026-04-25',
+                '2026-04-26',
+            ]);
+            expect(res.body.data.cashflowSeries[2].expense).toBe(700);
+            expect(res.body.data.cashflowSeries[6].expense).toBe(900);
+            expect(res.body.data.stats.totalIncome).toBe(5000);
+            expect(res.body.data.stats.totalExpense).toBe(0);
+            expect(formatDateKey(today)).toMatch(/^\d{4}-\d{2}-\d{2}$/);
         });
     });
 

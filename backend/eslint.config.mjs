@@ -1,17 +1,13 @@
 import globals from 'globals';
 import pluginJs from '@eslint/js';
-
-// GHI CHÚ HỌC TẬP - Phần hạ tầng của Thành Đạt:
-// File này đặt luật kiểm tra code backend. Mục tiêu là phát hiện lỗi cú pháp,
-// biến không dùng, thiếu dấu chấm phẩy và sai định dạng trước khi đưa mã lên kho chung.
 export default [
     {
-        languageOptions: { 
+        languageOptions: {
             globals: {
                 // Backend chạy trong Node.js và test chạy bằng Jest nên cần khai báo cả hai nhóm biến toàn cục.
                 ...globals.node,
                 ...globals.jest,
-            } 
+            }
         }
     },
     pluginJs.configs.recommended,
