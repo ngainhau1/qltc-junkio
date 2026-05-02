@@ -15,6 +15,7 @@ const { SEEDED_DATA_ORIGIN } = require('../../services/goldPriceSnapshotService'
 const DEMO_GOLD_HISTORY_HOURS = 168;
 const DEMO_GOLD_POINT_COUNT = DEMO_GOLD_HISTORY_HOURS + 1;
 const GOLD_HISTORY_RANDOM_SEED = 20260416;
+const SEEDED_HISTORY_EDGE_BUFFER_MS = 30 * 60 * 1000;
 const DEFAULT_GOLD_ANCHOR = {
     source: TARGET_SOURCE,
     branch: TARGET_BRANCH,
@@ -56,9 +57,9 @@ const resolveGoldAnchor = async () => {
     }
 };
 
-const generateDemoGoldHistorySnapshots = (anchor) => {
+const generateDemoGoldHistorySnapshots = (anchor, referenceTime = new Date()) => {
     const random = mulberry32(GOLD_HISTORY_RANDOM_SEED);
-    const anchorTime = new Date(anchor.updatedAt || new Date());
+    const anchorTime = new Date(referenceTime);
     const spread = Math.max(10000, Number(anchor.sell || 0) - Number(anchor.buy || 0));
     const reverseRows = [
         {
@@ -76,7 +77,7 @@ const generateDemoGoldHistorySnapshots = (anchor) => {
         const previousBuy = roundToTenThousand(Math.min(previousSell - 10000, previousSell - spread + spreadRandom));
 
         reverseRows.push({
-            capturedAt: new Date(anchorTime.getTime() - step * 60 * 60 * 1000),
+            capturedAt: new Date(anchorTime.getTime() - step * 60 * 60 * 1000 + SEEDED_HISTORY_EDGE_BUFFER_MS),
             buy: previousBuy,
             sell: previousSell,
         });
@@ -100,9 +101,9 @@ const generateDemoGoldHistorySnapshots = (anchor) => {
         }));
 };
 
-const seedGoldHistoryDemo = async () => {
+const seedGoldHistoryDemo = async (referenceTime = new Date()) => {
     const anchor = await resolveGoldAnchor();
-    const rows = generateDemoGoldHistorySnapshots(anchor);
+    const rows = generateDemoGoldHistorySnapshots(anchor, referenceTime);
 
     await GoldPriceSnapshot.destroy({
         where: {
@@ -123,6 +124,7 @@ module.exports = {
     DEFAULT_GOLD_ANCHOR,
     DEMO_GOLD_HISTORY_HOURS,
     DEMO_GOLD_POINT_COUNT,
+    SEEDED_HISTORY_EDGE_BUFFER_MS,
     generateDemoGoldHistorySnapshots,
     resolveGoldAnchor,
     roundToTenThousand,

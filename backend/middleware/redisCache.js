@@ -9,7 +9,9 @@ const cacheDashboard = (duration = 300) => {
         const userId = req.user.id;
         const familyId = req.query.family_id || 'personal';
         const context = req.query.context || 'personal';
-        const rawKey = `dashboardStats:userId_${userId}:family_${familyId}:context_${context}`;
+        const startDate = req.query.startDate || 'all';
+        const endDate = req.query.endDate || 'all';
+        const rawKey = `dashboardStats:userId_${userId}:family_${familyId}:context_${context}:start_${startDate}:end_${endDate}`;
 
         try {
             const cachedResponse = await client.get(rawKey);

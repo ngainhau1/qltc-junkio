@@ -7,6 +7,21 @@ import {
 } from "./helpers/app";
 import { assertNoHorizontalOverflow, attachQaMonitor } from "./helpers/qa";
 
+const formatDateParam = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+};
+
+const buildRangeQuery = (days) => {
+    const endDate = new Date();
+    const startDate = new Date(endDate);
+    startDate.setDate(endDate.getDate() - (days - 1));
+
+    return `startDate=${formatDateParam(startDate)}&endDate=${formatDateParam(endDate)}`;
+};
+
 test("dashboard shows seeded month-to-date data and usable live widgets", async ({ page, request }) => {
     const monitor = attachQaMonitor(page, "dashboard");
 
@@ -25,11 +40,28 @@ test("dashboard shows seeded month-to-date data and usable live widgets", async 
     expect(Number(goldResult.json.data?.buy || 0)).toBeGreaterThan(0);
     expect(Number(goldResult.json.data?.sell || 0)).toBeGreaterThan(0);
 
+    const goldHistoryResult = await fetchJson(page, request, "/market/gold/history?range=24H");
+    expect(goldHistoryResult.response.ok()).toBeTruthy();
+    expect(goldHistoryResult.json.status).toBe("success");
+    expect(goldHistoryResult.json.data?.points?.length || 0).toBeGreaterThanOrEqual(2);
+
+    const cashflow7d = await fetchJson(page, request, `/analytics/dashboard?context=personal&${buildRangeQuery(7)}`);
+    expect(cashflow7d.response.ok()).toBeTruthy();
+    expect(cashflow7d.json.data?.cashflowSeries || []).toHaveLength(7);
+
+    const cashflow30d = await fetchJson(page, request, `/analytics/dashboard?context=personal&${buildRangeQuery(30)}`);
+    expect(cashflow30d.response.ok()).toBeTruthy();
+    expect(cashflow30d.json.data?.cashflowSeries || []).toHaveLength(30);
+
     await page.goto("/");
     await expect(page.getByRole("heading", { name: /dashboard|t.ng quan/i }).first()).toBeVisible();
     await expect(page.getByText(/gi. v.ng live|gold/i).first()).toBeVisible();
     await expect(page.getByText(/giao d.ch g.n .*y|recent transactions/i).first()).toBeVisible();
-    await expect(page.getByText(/\+?25\.180\.000|25,180,000|25\.18/i).first()).toBeVisible();
+    await expect(page.getByRole("button", { name: "7D" })).toBeVisible();
+    await page.getByRole("button", { name: "30D" }).click();
+    await expect(page.getByRole("button", { name: "30D" })).toBeVisible();
+    await page.getByRole("button", { name: "ALL" }).click();
+    await expect(page.getByRole("button", { name: "ALL" })).toBeVisible();
 
     await openAddTransactionModal(page);
     await expect(page.getByTestId("form-EXPENSE")).toBeVisible();

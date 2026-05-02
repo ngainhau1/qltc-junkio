@@ -5,25 +5,78 @@ const { getAccessibleWallets, getAccessibleWalletIds } = require('../utils/acces
 
 const toNumber = (value) => Number(value || 0);
 
+const formatDateKey = (date) => {
+    const parsedDate = new Date(date);
+    const year = parsedDate.getFullYear();
+    const month = String(parsedDate.getMonth() + 1).padStart(2, '0');
+    const day = String(parsedDate.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
+const parseDateBoundary = (dateValue, boundary) => {
+    if (!dateValue) {
+        return null;
+    }
+
+    const [year, month, day] = String(dateValue).split('-').map(Number);
+    if (!year || !month || !day) {
+        const fallback = new Date(dateValue);
+        if (boundary === 'end') {
+            fallback.setHours(23, 59, 59, 999);
+        } else {
+            fallback.setHours(0, 0, 0, 0);
+        }
+        return fallback;
+    }
+
+    if (boundary === 'end') {
+        return new Date(year, month - 1, day, 23, 59, 59, 999);
+    }
+
+    return new Date(year, month - 1, day, 0, 0, 0, 0);
+};
+
 const buildDateWhere = (startDate, endDate) => {
     if (startDate && endDate) {
-        return { date: { [Op.between]: [new Date(startDate), new Date(endDate)] } };
+        return { date: { [Op.between]: [parseDateBoundary(startDate, 'start'), parseDateBoundary(endDate, 'end')] } };
     }
 
     if (startDate) {
-        return { date: { [Op.gte]: new Date(startDate) } };
+        return { date: { [Op.gte]: parseDateBoundary(startDate, 'start') } };
     }
 
     if (endDate) {
-        return { date: { [Op.lte]: new Date(endDate) } };
+        return { date: { [Op.lte]: parseDateBoundary(endDate, 'end') } };
     }
 
     return {};
 };
 
-const buildCashflowSeries = (transactions) => {
+const buildEmptyDateRange = (startDate, endDate) => {
+    const start = parseDateBoundary(startDate, 'start');
+    const end = parseDateBoundary(endDate, 'start');
+    const rows = [];
+
+    if (!start || !end || start > end) {
+        return rows;
+    }
+
+    const cursor = new Date(start);
+    while (cursor <= end) {
+        rows.push({
+            date: formatDateKey(cursor),
+            income: 0,
+            expense: 0,
+        });
+        cursor.setDate(cursor.getDate() + 1);
+    }
+
+    return rows;
+};
+
+const buildCashflowSeries = (transactions, { startDate, endDate } = {}) => {
     const grouped = transactions.reduce((accumulator, transaction) => {
-        const sortKey = new Date(transaction.date).toISOString().split('T')[0];
+        const sortKey = formatDateKey(transaction.date);
 
         if (!accumulator[sortKey]) {
             accumulator[sortKey] = {
@@ -41,6 +94,14 @@ const buildCashflowSeries = (transactions) => {
 
         return accumulator;
     }, {});
+
+    if (startDate && endDate) {
+        return buildEmptyDateRange(startDate, endDate).map((row) => ({
+            ...row,
+            income: grouped[row.date]?.income || 0,
+            expense: grouped[row.date]?.expense || 0,
+        }));
+    }
 
     return Object.values(grouped).sort((a, b) => a.date.localeCompare(b.date));
 };
@@ -124,7 +185,7 @@ exports.getDashboardStats = async (req, res) => {
                     transactionsThisMonthCount: currentMonthTransactions.length,
                 },
                 recentTransactions,
-                cashflowSeries: buildCashflowSeries(cashflowTransactions),
+                cashflowSeries: buildCashflowSeries(cashflowTransactions, { startDate, endDate }),
             },
             'ANALYTICS_OVERVIEW_LOADED'
         );
@@ -177,7 +238,7 @@ exports.getReports = async (req, res) => {
             {
                 summary,
                 expenseByCategory: buildExpenseByCategory(transactions),
-                cashflowSeries: buildCashflowSeries(transactions),
+                cashflowSeries: buildCashflowSeries(transactions, { startDate, endDate }),
             },
             'ANALYTICS_REPORT_LOADED'
         );

@@ -67,8 +67,10 @@ describe('seedGoldHistoryDemo helper', () => {
             updatedAt: '2026-04-16T10:00:00+07:00',
         });
 
-        await helper.seedGoldHistoryDemo();
-        await helper.seedGoldHistoryDemo();
+        const referenceTime = new Date('2026-05-02T05:30:00.000Z');
+
+        await helper.seedGoldHistoryDemo(referenceTime);
+        await helper.seedGoldHistoryDemo(referenceTime);
 
         const rows = (await GoldPriceSnapshot.findAll()).sort(
             (left, right) => new Date(left.capturedAt) - new Date(right.capturedAt)
@@ -76,7 +78,8 @@ describe('seedGoldHistoryDemo helper', () => {
 
         expect(rows).toHaveLength(169);
         expect(rows[0].dataOrigin).toBe('seeded');
-        expect(rows[168].capturedAt.toISOString()).toBe('2026-04-16T03:00:00.000Z');
+        expect(rows[0].capturedAt.toISOString()).toBe('2026-04-25T06:00:00.000Z');
+        expect(rows[168].capturedAt.toISOString()).toBe(referenceTime.toISOString());
     });
 
     it('falls back to the built-in baseline when SJC is unavailable', async () => {

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import {
     Area,
     AreaChart,
@@ -31,35 +31,22 @@ const CustomTooltip = ({ active, payload, label }) => {
     return null;
 };
 
-export function FinancialChart({ data }) {
+export function FinancialChart({ data, range = '7D', onRangeChange = () => {} }) {
     const { t } = useTranslation();
-    const [range, setRange] = useState('ALL');
 
     const chartData = useMemo(() => {
         if (!Array.isArray(data) || data.length === 0) {
             return [];
         }
 
-        const now = new Date();
-        let cutoffDate = new Date('2000-01-01');
-
-        if (range === '7D') {
-            cutoffDate = new Date();
-            cutoffDate.setDate(now.getDate() - 7);
-        } else if (range === '30D') {
-            cutoffDate = new Date();
-            cutoffDate.setDate(now.getDate() - 30);
-        }
-
         return data
-            .filter((item) => new Date(item.date) >= cutoffDate)
             .map((item) => ({
                 ...item,
                 label: formatDateString(item.date, { day: '2-digit', month: '2-digit' }),
                 income: Number(item.income || 0),
                 expense: Number(item.expense || 0),
             }));
-    }, [data, range]);
+    }, [data]);
 
     return (
         <Card className="col-span-4 border-muted/40 shadow-md">
@@ -76,7 +63,7 @@ export function FinancialChart({ data }) {
                             {['7D', '30D', 'ALL'].map((item) => (
                                 <button
                                     key={item}
-                                    onClick={() => setRange(item)}
+                                    onClick={() => onRangeChange(item)}
                                     className={`touch-target min-w-[88px] shrink-0 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${range === item ? 'border border-border bg-background text-primary shadow-sm' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}
                                 >
                                     {item}
