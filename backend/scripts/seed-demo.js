@@ -348,10 +348,14 @@ async function seedHistoricalTransactions({ user, wallets, catMap, balanceLedger
     }
 }
 
-async function seedFamilyTransactions({ family, wallets, members, catMap, balanceLedger, count, offset = 0 }) {
+async function seedFamilyTransactions({ family, personalWalletsByUserId, members, catMap, balanceLedger, count, offset = 0 }) {
     for (let index = 0; index < count; index += 1) {
         const payer = members[(index + offset) % members.length];
-        const wallet = wallets[(index + offset) % wallets.length];
+        const payerWallets = personalWalletsByUserId.get(payer.id) || [];
+        const wallet = payerWallets[(index + offset) % payerWallets.length];
+        if (!wallet) {
+            throw new Error(`Missing personal wallet for family payer ${payer.email}`);
+        }
         const template = EXPENSE_TEMPLATES[(index + offset) % EXPENSE_TEMPLATES.length];
         const amount = template.amount + ((index % 4) * 50000);
         const transaction = await createTransaction({
@@ -546,6 +550,23 @@ async function main() {
         ],
     });
 
+    const memberWalletEntries = [];
+    for (let index = 1; index <= 9; index += 1) {
+        const member = users[`member${index}`];
+        const memberWallets = await createWallets({
+            owner: member,
+            balanceLedger,
+            specs: [{ name: `Vi ${member.name}`, balance: 12000000 + (index * 750000) }],
+        });
+        memberWalletEntries.push([member.id, memberWallets]);
+    }
+    const personalWalletsByUserId = new Map([
+        [users.demo.id, demoWallets],
+        [users.staff.id, staffWallets],
+        [users.admin.id, adminWallets],
+        ...memberWalletEntries,
+    ]);
+
     console.log('\n=== BUOC 5: Tao families ===');
     const demoFamily = await Family.create({ id: uuidv4(), name: 'Gia Đình Demo', owner_id: users.demo.id });
     const officeFamily = await Family.create({ id: uuidv4(), name: 'Nhóm Văn Phòng Junkio', owner_id: users.staff.id });
@@ -567,13 +588,13 @@ async function main() {
                 id: uuidv4(),
                 family_id: group.family.id,
                 user_id: member.id,
-                role: member.id === group.owner.id ? 'owner' : 'member',
+                role: member.id === group.owner.id ? 'ADMIN' : 'MEMBER',
                 joined_at: DEMO_BASE_DATE,
             });
         }
     }
 
-    const demoFamilyWallets = await createWallets({
+    await createWallets({
         owner: users.demo,
         family: demoFamily,
         balanceLedger,
@@ -582,13 +603,13 @@ async function main() {
             { name: 'Quỹ Du Lịch Gia Đình', balance: 24000000 },
         ],
     });
-    const officeFamilyWallets = await createWallets({
+    await createWallets({
         owner: users.staff,
         family: officeFamily,
         balanceLedger,
         specs: [{ name: 'Quỹ Văn Phòng', balance: 18000000 }],
     });
-    const adminFamilyWallets = await createWallets({
+    await createWallets({
         owner: users.admin,
         family: adminFamily,
         balanceLedger,
@@ -602,9 +623,9 @@ async function main() {
     await seedHistoricalTransactions({ user: users.demo, wallets: demoWallets, catMap, balanceLedger, count: 8, offset: 0 });
     await seedHistoricalTransactions({ user: users.staff, wallets: staffWallets, catMap, balanceLedger, count: 6, offset: 8 });
     await seedHistoricalTransactions({ user: users.admin, wallets: adminWallets, catMap, balanceLedger, count: 4, offset: 14 });
-    await seedFamilyTransactions({ family: demoFamily, wallets: demoFamilyWallets, members: demoFamilyMembers, catMap, balanceLedger, count: 12, offset: 20 });
-    await seedFamilyTransactions({ family: officeFamily, wallets: officeFamilyWallets, members: officeFamilyMembers, catMap, balanceLedger, count: 6, offset: 40 });
-    await seedFamilyTransactions({ family: adminFamily, wallets: adminFamilyWallets, members: adminFamilyMembers, catMap, balanceLedger, count: 6, offset: 55 });
+    await seedFamilyTransactions({ family: demoFamily, personalWalletsByUserId, members: demoFamilyMembers, catMap, balanceLedger, count: 12, offset: 20 });
+    await seedFamilyTransactions({ family: officeFamily, personalWalletsByUserId, members: officeFamilyMembers, catMap, balanceLedger, count: 6, offset: 40 });
+    await seedFamilyTransactions({ family: adminFamily, personalWalletsByUserId, members: adminFamilyMembers, catMap, balanceLedger, count: 6, offset: 55 });
     await flushWalletBalances(balanceLedger);
     console.log('  176 giao dich ca nhan thang 05, 18 giao dich lich su, 24 giao dich family/shared da tao.');
 
@@ -636,7 +657,7 @@ async function main() {
     console.log(`  Demo User : ${DEMO_EMAIL}   / ${DEMO_PASS}`);
     console.log(`  Staff     : ${STAFF_EMAIL}  / ${STAFF_PASS}`);
     console.log(`  Admin     : ${ADMIN_EMAIL}  / ${ADMIN_PASS}`);
-    console.log('  12 users, 3 families, 15 wallets, 218 transactions, 18 goals, 24 budgets, 13 recurring patterns');
+    console.log('  12 users, 3 families, 24 wallets, 218 transactions, 18 goals, 24 budgets, 13 recurring patterns');
     console.log('============================================');
 
     await sequelize.close();

@@ -149,3 +149,55 @@ test.describe.serial("member finance smoke", () => {
         await expect(page.getByText(personalWalletName)).toBeVisible();
     });
 });
+
+test.describe.serial("admin seeded family debt smoke", () => {
+    test("admin can settle backend-simplified debts in seeded demo families", async ({ page, request }) => {
+        await login(page, "admin");
+
+        const currentUserResult = await fetchJson(page, request, "/users/me");
+        expect(currentUserResult.response.ok()).toBeTruthy();
+        const adminId = currentUserResult.json.data?.id;
+        expect(adminId).toBeTruthy();
+
+        const familiesResult = await fetchJson(page, request, "/families");
+        expect(familiesResult.response.ok()).toBeTruthy();
+        const families = familiesResult.json.data || familiesResult.json.families || [];
+
+        for (const familyName of ["Gia Đình Demo", "Quỹ Quản Trị Junkio"]) {
+            const family = families.find((item) => item.name === familyName);
+            expect(family, `${familyName} should exist in seeded data`).toBeTruthy();
+
+            const simplifiedBefore = await fetchJson(page, request, `/debts/simplified/${family.id}`);
+            expect(simplifiedBefore.response.ok()).toBeTruthy();
+            const suggestion = (simplifiedBefore.json.data?.suggestions || [])
+                .find((item) => item.from.id === adminId);
+            expect(suggestion, `${familyName} should have an admin-payable suggestion`).toBeTruthy();
+
+            await page.goto("/family");
+            await page.waitForLoadState("networkidle");
+            const familyCard = page.locator('[data-testid="family-card"]').filter({
+                has: page.getByText(familyName, { exact: true }),
+            }).first();
+            await expect(familyCard).toBeVisible();
+            await familyCard.getByTestId("family-switch-button").click();
+
+            await page.getByTestId("family-optimize-debts").click();
+            const payButton = page.getByTestId("family-settlement-pay").first();
+            await expect(payButton).toBeVisible();
+            await payButton.click();
+
+            await expect(page.getByTestId("family-settlement-modal")).toBeVisible();
+            await page.getByTestId("family-settlement-submit").click();
+            await expect(page.getByTestId("family-settlement-modal")).toBeHidden();
+
+            const simplifiedAfter = await fetchJson(page, request, `/debts/simplified/${family.id}`);
+            expect(simplifiedAfter.response.ok()).toBeTruthy();
+            const matchingAfter = (simplifiedAfter.json.data?.suggestions || [])
+                .find((item) => item.from.id === adminId && item.to.id === suggestion.to.id);
+            expect(
+                !matchingAfter || Number(matchingAfter.amount) < Number(suggestion.amount),
+                `${familyName} settlement should reduce or remove the paid suggestion`
+            ).toBeTruthy();
+        }
+    });
+});

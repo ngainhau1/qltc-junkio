@@ -279,6 +279,201 @@ describe('Debt API Endpoints', () => {
             expect(res.body.data.suggestions[0].amount).toBe(500);
         });
 
+        it('returns suggestions that can be submitted directly to settlement', async () => {
+            const crypto = require('crypto');
+            const settleableFamilyId = crypto.randomUUID();
+            const settleableCreditorId = crypto.randomUUID();
+            const settleableDebtorId = crypto.randomUUID();
+
+            await mockUser.bulkCreate([
+                { id: settleableCreditorId, name: 'Settleable Creditor' },
+                { id: settleableDebtorId, name: 'Settleable Debtor' }
+            ]);
+            await mockFamily.create({
+                id: settleableFamilyId,
+                name: 'Settleable Family',
+                owner_id: settleableCreditorId
+            });
+            await mockFamilyMember.bulkCreate([
+                { family_id: settleableFamilyId, user_id: settleableCreditorId },
+                { family_id: settleableFamilyId, user_id: settleableDebtorId }
+            ]);
+
+            const creditorWallet = await mockWallet.create({
+                name: 'Settleable Creditor Wallet',
+                user_id: settleableCreditorId,
+                balance: 1000
+            });
+            const debtorWallet = await mockWallet.create({
+                name: 'Settleable Debtor Wallet',
+                user_id: settleableDebtorId,
+                balance: 1000
+            });
+            const transaction = await mockTransaction.create({
+                user_id: settleableCreditorId,
+                wallet_id: creditorWallet.id,
+                amount: 200,
+                type: 'EXPENSE',
+                description: 'Settleable dinner',
+                family_id: settleableFamilyId
+            });
+            await mockTransactionShare.create({
+                transaction_id: transaction.id,
+                user_id: settleableDebtorId,
+                amount: 200,
+                status: 'UNPAID',
+                approval_status: 'APPROVED'
+            });
+
+            mockUserId = settleableCreditorId;
+            const simplifiedRes = await request(app).get(`/api/debts/simplified/${settleableFamilyId}`);
+
+            expect(simplifiedRes.statusCode).toEqual(200);
+            expect(simplifiedRes.body.data.simplifiedTransactions).toBe(1);
+
+            const suggestion = simplifiedRes.body.data.suggestions[0];
+            mockUserId = suggestion.from.id;
+            const settleRes = await request(app).post('/api/debts/settle').send({
+                to_user_id: suggestion.to.id,
+                amount: suggestion.amount,
+                from_wallet_id: debtorWallet.id,
+                family_id: settleableFamilyId
+            });
+
+            expect(settleRes.statusCode).toEqual(200);
+            expect(settleRes.body.message).toBe('DEBT_SETTLED');
+        });
+
+        it('caps net suggestions to the path-settleable amount', async () => {
+            const crypto = require('crypto');
+            const capFamilyId = crypto.randomUUID();
+            const debtorAId = crypto.randomUUID();
+            const debtorBId = crypto.randomUUID();
+            const creditorCId = crypto.randomUUID();
+            const creditorDId = crypto.randomUUID();
+
+            await mockUser.bulkCreate([
+                { id: debtorAId, name: 'Cap Debtor A' },
+                { id: debtorBId, name: 'Cap Debtor B' },
+                { id: creditorCId, name: 'Cap Creditor C' },
+                { id: creditorDId, name: 'Cap Creditor D' }
+            ]);
+            await mockFamily.create({ id: capFamilyId, name: 'Cap Family', owner_id: creditorCId });
+            await mockFamilyMember.bulkCreate([
+                { family_id: capFamilyId, user_id: debtorAId },
+                { family_id: capFamilyId, user_id: debtorBId },
+                { family_id: capFamilyId, user_id: creditorCId },
+                { family_id: capFamilyId, user_id: creditorDId }
+            ]);
+            mockUserId = creditorCId;
+
+            const walletC = await mockWallet.create({ name: 'Cap Wallet C', user_id: creditorCId, balance: 1000 });
+            const walletD = await mockWallet.create({ name: 'Cap Wallet D', user_id: creditorDId, balance: 1000 });
+            const txCForA = await mockTransaction.create({
+                user_id: creditorCId,
+                wallet_id: walletC.id,
+                amount: 70,
+                type: 'EXPENSE',
+                description: 'C paid for A',
+                family_id: capFamilyId
+            });
+            const txDForA = await mockTransaction.create({
+                user_id: creditorDId,
+                wallet_id: walletD.id,
+                amount: 30,
+                type: 'EXPENSE',
+                description: 'D paid for A',
+                family_id: capFamilyId
+            });
+            const txCForB = await mockTransaction.create({
+                user_id: creditorCId,
+                wallet_id: walletC.id,
+                amount: 30,
+                type: 'EXPENSE',
+                description: 'C paid for B',
+                family_id: capFamilyId
+            });
+
+            await mockTransactionShare.bulkCreate([
+                {
+                    transaction_id: txCForA.id,
+                    user_id: debtorAId,
+                    amount: 70,
+                    status: 'UNPAID',
+                    approval_status: 'APPROVED'
+                },
+                {
+                    transaction_id: txDForA.id,
+                    user_id: debtorAId,
+                    amount: 30,
+                    status: 'UNPAID',
+                    approval_status: 'APPROVED'
+                },
+                {
+                    transaction_id: txCForB.id,
+                    user_id: debtorBId,
+                    amount: 30,
+                    status: 'UNPAID',
+                    approval_status: 'APPROVED'
+                }
+            ]);
+
+            const res = await request(app).get(`/api/debts/simplified/${capFamilyId}`);
+
+            expect(res.statusCode).toEqual(200);
+            expect(res.body.data.originalTransactions).toBe(3);
+            expect(res.body.data.simplifiedTransactions).toBe(1);
+            expect(res.body.data.suggestions[0].from.id).toBe(debtorAId);
+            expect(res.body.data.suggestions[0].to.id).toBe(creditorCId);
+            expect(res.body.data.suggestions[0].amount).toBe(70);
+        });
+
+        it('omits legacy suggestions that would credit a family wallet', async () => {
+            const crypto = require('crypto');
+            const legacyFamilyId = crypto.randomUUID();
+            const legacyCreditorId = crypto.randomUUID();
+            const legacyDebtorId = crypto.randomUUID();
+
+            await mockUser.bulkCreate([
+                { id: legacyCreditorId, name: 'Legacy Creditor' },
+                { id: legacyDebtorId, name: 'Legacy Debtor' }
+            ]);
+            await mockFamily.create({ id: legacyFamilyId, name: 'Legacy Family', owner_id: legacyCreditorId });
+            await mockFamilyMember.bulkCreate([
+                { family_id: legacyFamilyId, user_id: legacyCreditorId },
+                { family_id: legacyFamilyId, user_id: legacyDebtorId }
+            ]);
+            mockUserId = legacyCreditorId;
+
+            const familyWallet = await mockWallet.create({
+                name: 'Legacy Family Wallet',
+                family_id: legacyFamilyId,
+                balance: 1000
+            });
+            const transaction = await mockTransaction.create({
+                user_id: legacyCreditorId,
+                wallet_id: familyWallet.id,
+                amount: 100,
+                type: 'EXPENSE',
+                description: 'Legacy shared expense',
+                family_id: legacyFamilyId
+            });
+            await mockTransactionShare.create({
+                transaction_id: transaction.id,
+                user_id: legacyDebtorId,
+                amount: 100,
+                status: 'UNPAID',
+                approval_status: 'APPROVED'
+            });
+
+            const res = await request(app).get(`/api/debts/simplified/${legacyFamilyId}`);
+
+            expect(res.statusCode).toEqual(200);
+            expect(res.body.data.originalTransactions).toBe(1);
+            expect(res.body.data.simplifiedTransactions).toBe(0);
+            expect(res.body.data.suggestions).toEqual([]);
+        });
+
         it('does not include unapproved shares in settlement suggestions', async () => {
             const crypto = require('crypto');
             const unapprovedFamilyId = crypto.randomUUID();

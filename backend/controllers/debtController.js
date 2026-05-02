@@ -10,94 +10,16 @@ const {
 } = require('../models');
 const { success, error: sendError, serverError } = require('../utils/responseHelper');
 const { serializeNotification } = require('../utils/notificationPresenter');
-
-const SETTLEMENT_EPSILON = 0.01;
-
-const toMoney = (value) => Math.round((parseFloat(value) || 0) * 100) / 100;
-
-const getShareDebt = (share) => ({
-    share,
-    debtor: share.user_id,
-    creditor: share.Transaction.user_id,
-    creditorWalletId: share.Transaction.wallet_id,
-    amount: toMoney(share.amount)
-});
+const {
+    SETTLEMENT_EPSILON,
+    toMoney,
+    simplifyDebts,
+    buildPathSettlementPlan
+} = require('../services/debtService');
 
 const getUserDisplayName = async (userId) => {
     const user = await User.findByPk(userId, { attributes: ['id', 'name'] });
     return user?.name || userId;
-};
-
-const findSettlementPath = (debts, fromUserId, toUserId, toWalletId = null) => {
-    const queue = [{ userId: fromUserId, path: [] }];
-    const visited = new Set([fromUserId]);
-
-    while (queue.length > 0) {
-        const current = queue.shift();
-        const outgoing = debts.filter((debt) => (
-            debt.debtor === current.userId &&
-            debt.amount > SETTLEMENT_EPSILON
-        ));
-
-        for (const debt of outgoing) {
-            const path = [...current.path, debt];
-
-            if (debt.creditor === toUserId && (!toWalletId || debt.creditorWalletId === toWalletId)) {
-                return path;
-            }
-
-            if (!visited.has(debt.creditor)) {
-                visited.add(debt.creditor);
-                queue.push({ userId: debt.creditor, path });
-            }
-        }
-    }
-
-    return null;
-};
-
-const buildPathSettlementPlan = (shares, fromUserId, toUserId, amount, toWalletId = null) => {
-    const debts = shares.map(getShareDebt);
-    const reductions = new Map();
-    const creditAllocations = new Map();
-    let remainingAmount = toMoney(amount);
-
-    while (remainingAmount > SETTLEMENT_EPSILON) {
-        const path = findSettlementPath(debts, fromUserId, toUserId, toWalletId);
-
-        if (!path) {
-            return {
-                reductions,
-                creditAllocations,
-                exceeded: reductions.size > 0
-            };
-        }
-
-        const pathCapacity = Math.min(...path.map((debt) => debt.amount));
-        const settledAmount = Math.min(remainingAmount, pathCapacity);
-        const terminalDebt = path[path.length - 1];
-
-        for (const debt of path) {
-            debt.amount = toMoney(debt.amount - settledAmount);
-            reductions.set(
-                debt.share.id,
-                toMoney((reductions.get(debt.share.id) || 0) + settledAmount)
-            );
-        }
-
-        creditAllocations.set(
-            terminalDebt.creditorWalletId,
-            toMoney((creditAllocations.get(terminalDebt.creditorWalletId) || 0) + settledAmount)
-        );
-
-        remainingAmount = toMoney(remainingAmount - settledAmount);
-    }
-
-    return {
-        reductions,
-        creditAllocations,
-        exceeded: false
-    };
 };
 
 const applyShareReductions = async (shares, reductions, transaction) => {
@@ -359,17 +281,63 @@ exports.getSimplifiedDebts = async (req, res) => {
             amount: toMoney(share.amount)
         }));
 
-        const { simplifyDebts } = require('../services/debtService');
         const suggestions = simplifyDebts(mappedDebts);
+        const walletIds = [...new Set(
+            shares
+                .map((share) => share.Transaction?.wallet_id)
+                .filter(Boolean)
+        )];
+        const wallets = walletIds.length > 0
+            ? await Wallet.findAll({
+                where: { id: walletIds },
+                attributes: ['id', 'user_id', 'family_id']
+            })
+            : [];
+        const walletById = new Map(wallets.map((wallet) => [wallet.id, wallet]));
+        const settleableSuggestions = suggestions
+            .map((suggestion) => {
+                const plan = buildPathSettlementPlan(
+                    shares,
+                    suggestion.from,
+                    suggestion.to,
+                    suggestion.amount
+                );
+                const allocationEntries = Array.from(plan.creditAllocations.entries())
+                    .filter(([, value]) => value > SETTLEMENT_EPSILON);
 
-        const userIds = [...new Set(suggestions.flatMap(s => [s.from, s.to]))];
-        const users = await User.findAll({
-            where: { id: userIds },
-            attributes: ['id', 'name', 'avatar']
-        });
+                const allAllocationsArePersonalRecipientWallets = allocationEntries.length > 0 &&
+                    allocationEntries.every(([walletId]) => {
+                        const wallet = walletById.get(walletId);
+                        return wallet &&
+                            String(wallet.user_id) === String(suggestion.to) &&
+                            !wallet.family_id;
+                    });
+
+                if (
+                    plan.reductions.size === 0 ||
+                    plan.settledAmount <= SETTLEMENT_EPSILON ||
+                    !allAllocationsArePersonalRecipientWallets
+                ) {
+                    return null;
+                }
+
+                return {
+                    ...suggestion,
+                    amount: toMoney(plan.settledAmount)
+                };
+            })
+            .filter(Boolean);
+
+        const userIds = [...new Set(settleableSuggestions.flatMap(s => [s.from, s.to]))];
+        const users = userIds.length > 0
+            ? await User.findAll({
+                where: { id: userIds },
+                attributes: ['id', 'name', 'avatar']
+            })
+            : [];
         const userMap = Object.fromEntries(users.map(u => [u.id, { id: u.id, name: u.name, avatar: u.avatar }]));
 
-        const result = suggestions.map(s => ({
+        const result = settleableSuggestions.map(s => ({
             from: userMap[s.from] || { id: s.from, name: s.from },
             to: userMap[s.to] || { id: s.to, name: s.to },
             amount: s.amount

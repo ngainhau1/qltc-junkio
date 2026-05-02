@@ -433,7 +433,7 @@ export function Family() {
                                         </div>
                                     ))
                                 )}
-                                <Button onClick={runSimplification} className="w-full mt-4" disabled={!activeFamilyId || isOptimizing}>
+                                <Button data-testid="family-optimize-debts" onClick={runSimplification} className="w-full mt-4" disabled={!activeFamilyId || isOptimizing}>
                                     {isOptimizing ? t('common.loading') : t('family.expenses.optimizeBtn')}
                                 </Button>
                             </div>
@@ -461,7 +461,7 @@ export function Family() {
                                         const toId = getSettlementUserId(s.to)
 
                                         return (
-                                            <div key={`${fromId}-${toId}-${idx}`} className="flex flex-col gap-3 rounded-lg border border-green-200 bg-green-50 p-3 text-green-800 dark:border-green-800/50 dark:bg-green-900/20 dark:text-green-400 sm:flex-row sm:items-center sm:justify-between">
+                                            <div key={`${fromId}-${toId}-${idx}`} data-testid="family-settlement-suggestion" className="flex flex-col gap-3 rounded-lg border border-green-200 bg-green-50 p-3 text-green-800 dark:border-green-800/50 dark:bg-green-900/20 dark:text-green-400 sm:flex-row sm:items-center sm:justify-between">
                                                 <div className="flex items-center gap-2 font-medium md:gap-4">
                                                     <div className="flex flex-col">
                                                         <span className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">{t('family.settlement.debtor')}</span>
@@ -476,7 +476,7 @@ export function Family() {
                                                 <div className="flex flex-col gap-1 sm:items-end">
                                                     <div className="font-bold">{formatCurrency(s.amount)}</div>
                                                     {fromId === user?.id && (
-                                                        <Button size="sm" onClick={() => handleSettleClick(s)} className="h-6 text-[10px] px-2 bg-green-600 hover:bg-green-700 text-white shadow-sm" disabled={isSettling}>
+                                                        <Button data-testid="family-settlement-pay" size="sm" onClick={() => handleSettleClick(s)} className="h-6 text-[10px] px-2 bg-green-600 hover:bg-green-700 text-white shadow-sm" disabled={isSettling}>
                                                             {t('family.settlement.payBtn')}
                                                         </Button>
                                                     )}
@@ -578,7 +578,7 @@ export function Family() {
 
             <Modal isOpen={settleModalOpen} onClose={() => setSettleModalOpen(false)} title={t('family.modals.settle.title')}>
                 {selectedSettlement && (
-                    <div className="space-y-6">
+                    <div data-testid="family-settlement-modal" className="space-y-6">
                         <div className="flex flex-col gap-4 rounded-xl border border-green-200 bg-green-50 p-4 dark:border-green-800/50 dark:bg-green-900/20 sm:flex-row sm:items-center sm:justify-between">
                             <div className="flex flex-col items-center">
                                 <div className="h-12 w-12 rounded-full bg-background border flex items-center justify-center font-bold mb-2 shadow-sm text-foreground">
@@ -620,7 +620,7 @@ export function Family() {
                         </div>
                         <div className="flex flex-col-reverse gap-3 border-t pt-2 sm:flex-row sm:justify-end">
                             <Button type="button" variant="ghost" onClick={() => setSettleModalOpen(false)} className="w-full sm:w-auto">{t('family.modals.settle.cancel')}</Button>
-                            <Button onClick={confirmSettle} disabled={isSettling} className="w-full bg-green-600 text-white hover:bg-green-700 sm:w-auto">
+                            <Button data-testid="family-settlement-submit" onClick={confirmSettle} disabled={isSettling} className="w-full bg-green-600 text-white hover:bg-green-700 sm:w-auto">
                                 {isSettling ? t('common.loading') : t('family.modals.settle.submit')}
                             </Button>
                         </div>
