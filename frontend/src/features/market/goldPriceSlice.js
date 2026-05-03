@@ -1,7 +1,6 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import api from '@/lib/api';
 
-// GHI CHÚ HỌC TẬP - Phần giá vàng SJC của Thành Đạt:
 // Slice này giữ giá vàng hiện tại và lịch sử giá vàng ở frontend.
 // GoldPriceCard đọc state này để hiển thị giá, trend và biểu đồ nhỏ.
 

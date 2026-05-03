@@ -1,6 +1,5 @@
 import axios from 'axios';
 
-// GHI CHÚ HỌC TẬP - Phần xác thực của Thành Đạt:
 // File này cấu hình cách frontend gọi backend. Điểm quan trọng là tự gắn access token,
 // tự làm mới token khi gặp 401 và chuẩn hóa response để component dùng response.data gọn hơn.
 
@@ -14,7 +13,7 @@ const api = axios.create({
     // Cho phép trình duyệt gửi cookie httpOnly refresh_token khi gọi refresh-token.
     withCredentials: true
 });
-
+//tự động đính kèm token
 api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('auth_token');
@@ -42,7 +41,7 @@ const processQueue = (error, token = null) => {
     });
     failedQueue = [];
 };
-
+// Gọi lại token lại 1 lần và đợi lấy chúng
 api.interceptors.response.use(
     (response) => {
         const payload = response.data;
@@ -63,20 +62,20 @@ api.interceptors.response.use(
     },
     async (error) => {
         const originalRequest = error.config;
-
+        //Nếu gặp lỗi 401 do token hết hạn
         if (error.response?.status === 401 && !originalRequest._retry) {
             if (originalRequest.url === '/auth/refresh-token' || originalRequest.url === '/auth/login') {
                 // Không tự refresh khi chính request refresh/login bị lỗi để tránh vòng lặp vô hạn.
                 return Promise.reject(error);
             }
-
+            // Nếu đã refresh
             if (isRefreshing) {
                 return new Promise((resolve, reject) => {
-                    failedQueue.push({ resolve, reject });
+                    failedQueue.push({ resolve, reject }); // Cho vào queue
                 })
                     .then((token) => {
                         originalRequest.headers['Authorization'] = `Bearer ${token}`;
-                        return api(originalRequest);
+                        return api(originalRequest); // Gọi lại request trước đó
                     })
                     .catch((refreshError) => Promise.reject(refreshError));
             }
@@ -95,13 +94,13 @@ api.interceptors.response.use(
                 }
 
                 localStorage.setItem('auth_token', newToken);
-                processQueue(null, newToken);
+                processQueue(null, newToken); // Xả Queue
 
                 // Chạy lại request ban đầu bằng access token mới.
                 originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
                 return api(originalRequest);
             } catch (refreshError) {
-                // Refresh thất bại nghĩa là phiên đăng nhập không còn hợp lệ.
+                // Refresh thất bại nghĩa là phiên đăng nhập không còn hợp lệ. Tự động trả về login
                 processQueue(refreshError, null);
                 localStorage.removeItem('auth_token');
                 localStorage.removeItem('user');

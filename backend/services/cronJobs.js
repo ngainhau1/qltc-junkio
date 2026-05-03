@@ -3,7 +3,6 @@ const { checkBudgetAlerts } = require('./budgetAlertService');
 const { captureLatestGoldPriceSnapshot, pruneOldGoldPriceSnapshots } = require('./goldPriceSnapshotService');
 const { executeDueRecurringPatterns } = require('./recurringExecutionService');
 
-// GHI CHÚ HỌC TẬP - Phần lịch tự động và giá vàng SJC của Thành Đạt:
 // File này đăng ký các tác vụ chạy theo lịch. Trong phần giá vàng, cron job lấy snapshot mỗi 5 phút
 // và dọn snapshot cũ mỗi ngày để biểu đồ có dữ liệu mà không cần user bấm làm mới.
 

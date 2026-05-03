@@ -2,8 +2,6 @@ const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../middleware/authMiddleware');
 const marketController = require('../controllers/marketController');
-
-// GHI CHÚ HỌC TẬP - Phần giá vàng SJC của Thành Đạt:
 // Các route market cung cấp dữ liệu giá vàng cho dashboard. Tất cả route đều cần đăng nhập
 // vì đây là tiện ích nằm trong ứng dụng sau khi user đã vào hệ thống.
 router.use(authMiddleware);

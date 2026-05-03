@@ -75,7 +75,7 @@ exports.getAnalytics = async (req, res) => {
         sixMonthsAgo.setHours(0, 0, 0, 0);
 
         const isSqlite = sequelize?.getDialect && sequelize.getDialect() === 'sqlite';
-  
+        // sử dụng Sequelize aggregate functions kết hợp với Date/Time functions của Database engine
         const monthExpr = isSqlite
             ? fn('strftime', '%Y-%m', col('createdAt'))
             : fn('date_trunc', 'month', col('createdAt'));
@@ -211,7 +211,7 @@ exports.deleteUser = async (req, res) => {
     try {
         const user = await User.findByPk(req.params.id);
         if (!user) return sendError(res, 'USER_NOT_FOUND', 404);
-        // Chặn admin tự xóa chính mình để tránh mất tài khoản quản trị cuối cùng đang dùng.
+        // Chặn admin tự xóa chính mình
         if (user.id === req.user.id) return sendError(res, 'CANNOT_DELETE_SELF', 400);
 
         await user.destroy();
@@ -361,7 +361,7 @@ exports.getFinancialOverview = async (req, res) => {
             ...item,
             total_spent: parseFloat(item.total_spent) || 0
         }));
-
+        // Đo lường sức khỏe tài chính của hệ thống bằng cách xem có bao nhiêu % ngân sách bị vượt chi.
         const budgets = await Budget.findAll();
         let overBudgetCount = 0;
 

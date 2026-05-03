@@ -21,8 +21,6 @@ import {
     setGoldHistoryRange,
 } from '@/features/market/goldPriceSlice';
 import { GoldPriceMiniChart } from './GoldPriceMiniChart';
-
-// GHI CHÚ HỌC TẬP - Phần giá vàng SJC của Thành Đạt:
 // Component này là thẻ hiển thị giá vàng trên dashboard. Nó tự tải giá hiện tại mỗi 60 giây,
 // tải lịch sử mỗi 5 phút và đổi màu trend theo mức tăng/giảm giá bán.
 
@@ -252,8 +250,8 @@ export function GoldPriceCard() {
                         </div>
 
                         <div className="inline-flex w-fit rounded-lg bg-amber-500/10 p-1">
-                        {GOLD_HISTORY_RANGE_OPTIONS.map((range) => (
-                            <button
+                            {GOLD_HISTORY_RANGE_OPTIONS.map((range) => (
+                                <button
                                     key={range}
                                     type="button"
                                     className={cn(

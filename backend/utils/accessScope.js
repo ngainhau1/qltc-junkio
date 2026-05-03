@@ -21,14 +21,14 @@ const getFamilyIdsForUser = async (userId, transaction) => {
 
 const buildWalletWhere = ({ userId, context, familyId, familyIds }) => {
     const normalizedContext = normalizeContext(context);
-
+    //cá nhân
     if (normalizedContext === 'personal') {
         return {
             user_id: userId,
             family_id: null
         };
     }
-
+    //gia đình
     if (normalizedContext === 'family') {
         const scopedFamilyIds = familyId
             ? familyIds.filter((id) => id === familyId)
@@ -42,7 +42,7 @@ const buildWalletWhere = ({ userId, context, familyId, familyIds }) => {
             family_id: { [Op.in]: scopedFamilyIds }
         };
     }
-
+    // tất cả
     return {
         [Op.or]: [
             { user_id: userId },

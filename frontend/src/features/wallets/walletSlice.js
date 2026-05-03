@@ -1,9 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '@/lib/api';
 
-// GHI CHÚ HỌC TẬP - Phần ví của Thành Đạt:
-// Slice này giữ danh sách ví ở frontend và gọi các API /wallets.
-// Backend vẫn là nơi kiểm quyền ví cá nhân/ví gia đình; frontend chỉ phản ánh kết quả lên UI.
+// Slice này giữ danh sách ví ở frontend và gọi các API /wallets Và phản ánh lên UI
 
 const initialState = {
     wallets: [],
@@ -66,6 +64,7 @@ const walletSlice = createSlice({
     name: 'wallets',
     initialState,
     reducers: {
+        // Khi hoàn thành 1 giao dịch sẽ trực tiếp +/- thẳng vào UI của ví mà không cần phải reload trang
         updateWalletBalanceLocal: (state, action) => {
             const { id, amount, type } = action.payload;
             const wallet = state.wallets.find(w => w.id === id);
@@ -93,6 +92,7 @@ const walletSlice = createSlice({
         }
     },
     extraReducers: (builder) => {
+        //Xử lý các Async Thunks
         builder
             .addCase(fetchWallets.pending, (state) => {
                 state.loading = true;
@@ -112,6 +112,7 @@ const walletSlice = createSlice({
                 state.loading = true;
                 state.error = null;
             })
+            // Đẩy ví mới lên đầu UI
             .addCase(createWallet.fulfilled, (state, action) => {
                 state.loading = false;
                 state.wallets.unshift(action.payload);
@@ -120,7 +121,6 @@ const walletSlice = createSlice({
                 state.loading = false;
                 state.error = action.payload;
             })
-
             .addCase(editWallet.fulfilled, (state, action) => {
                 const index = state.wallets.findIndex(w => w.id === action.payload.id);
                 if (index !== -1) {

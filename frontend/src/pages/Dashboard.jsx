@@ -52,8 +52,8 @@ export function Dashboard() {
                 description={t('dashboard.desc')}
                 actions={<img src="/logo.png" alt="Logo" className="h-8 w-8 md:hidden" />}
             />
-
             <DashboardStats stats={stats} />
+            //giá vàng
             <GoldPriceCard />
 
             {loading ? (

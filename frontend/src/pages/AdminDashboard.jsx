@@ -228,365 +228,289 @@ export function AdminDashboard() {
             {activeTab === 'overview' ? (
                 <div className="space-y-6">
                     {analytics?.stats && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <Card className="p-6">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-lg bg-blue-500/10">
-                                <Users className="h-5 w-5 text-blue-500" />
-                            </div>
-                            <div>
-                                <p className="text-sm text-muted-foreground">{t("admin.totalUsers")}</p>
-                                <p className="text-2xl font-bold">{derivedTotalUsers}</p>
-                            </div>
-                        </div>
-                    </Card>
-                    <Card className="p-6">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-lg bg-emerald-500/10">
-                                <WalletIcon className="h-5 w-5 text-emerald-500" />
-                            </div>
-                            <div>
-                                <p className="text-sm text-muted-foreground">{t("admin.totalWallets")}</p>
-                                <p className="text-2xl font-bold">{analytics.stats.totalWallets}</p>
-                            </div>
-                        </div>
-                    </Card>
-                    <Card className="p-6">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-lg bg-purple-500/10">
-                                <HomeIcon className="h-5 w-5 text-purple-500" />
-                            </div>
-                            <div>
-                                <p className="text-sm text-muted-foreground">{t("admin.totalFamilies")}</p>
-                                <p className="text-2xl font-bold">{analytics.stats.totalFamilies || 12}</p>
-                            </div>
-                        </div>
-                    </Card>
-                    <Card className="p-6">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-lg bg-orange-500/10">
-                                <Target className="h-5 w-5 text-orange-500" />
-                            </div>
-                            <div>
-                                <p className="text-sm text-muted-foreground">{t("admin.totalGoals")}</p>
-                                <p className="text-2xl font-bold">{analytics.stats.totalGoals}</p>
-                            </div>
-                        </div>
-                    </Card>
-                    <Card className="p-6">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-lg bg-cyan-500/10">
-                                <PiggyBank className="h-5 w-5 text-cyan-500" />
-                            </div>
-                            <div>
-                                <p className="text-sm text-muted-foreground">{t("admin.totalBudgets")}</p>
-                                <p className="text-2xl font-bold">{analytics.stats.totalBudgets}</p>
-                            </div>
-                        </div>
-                    </Card>
-                    <Card className="p-6">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-lg bg-green-500/10">
-                                <ArrowRightLeft className="h-5 w-5 text-green-500" />
-                            </div>
-                            <div>
-                                <p className="text-sm text-muted-foreground">{t("admin.totalTransactions")}</p>
-                                <p className="text-2xl font-bold">{derivedTotalTransactions}</p>
-                            </div>
-                        </div>
-                    </Card>
-                </div>
-            )}
-
-            {analytics && (
-                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                    <Card className="p-6 col-span-1 lg:col-span-2 xl:col-span-1">
-                        <h2 className="text-lg font-semibold mb-4">{t("admin.userGrowth")}</h2>
-                        <ResponsiveContainer width="100%" height={250}>
-                            <BarChart data={analytics.userGrowth}>
-                                <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                                <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
-                                <Tooltip cursor={{ fill: 'rgba(0,0,0,0.1)' }} contentStyle={{ borderRadius: '8px' }} />
-                                <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </Card>
-
-                    <Card className="p-6 col-span-1 xl:col-span-1">
-                        <h2 className="text-lg font-semibold mb-4">{t("admin.weeklyActivity")}</h2>
-                        <ResponsiveContainer width="100%" height={250}>
-                            <AreaChart data={analytics.weeklyActivity}>
-                                <defs>
-                                    <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                                        <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                                <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                                <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
-                                <Tooltip contentStyle={{ borderRadius: '8px' }} />
-                                <Area type="monotone" dataKey="count" stroke="#10b981" fillOpacity={1} fill="url(#colorCount)" />
-                            </AreaChart>
-                        </ResponsiveContainer>
-                    </Card>
-
-                    <Card className="p-6 col-span-1 lg:col-span-2 xl:col-span-1">
-                        <h2 className="text-lg font-semibold mb-4">{t("admin.topCategories")}</h2>
-                        <ResponsiveContainer width="100%" height={250}>
-                            <PieChart>
-                                <Pie
-                                    data={analytics.topCategories}
-                                    dataKey="total"
-                                    nameKey="name"
-                                    cx="50%"
-                                    cy="50%"
-                                    outerRadius={80}
-                                    fill="#8884d8"
-                                    label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                                >
-                                    {analytics.topCategories.map((entry, index) => {
-                                        const colors = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#a855f7'];
-                                        return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
-                                    })}
-                                </Pie>
-                                <Tooltip formatter={(value) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value)} />
-                            </PieChart>
-                        </ResponsiveContainer>
-                    </Card>
-                </div>
-            )}
-
-            {financial && (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-                    <Card className="p-6">
-                        <h2 className="text-lg font-semibold mb-4">{t("admin.revenueOverview")}</h2>
-                        <ResponsiveContainer width="100%" height={250}>
-                            <LineChart data={financial.revenueTrends}>
-                                <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                                <YAxis tick={{ fontSize: 12 }} allowDecimals={false} width={80} tickFormatter={(val) => new Intl.NumberFormat('vi-VN', { notation: "compact" }).format(val)} />
-                                <Tooltip formatter={(value) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value)} />
-                                <Line type="monotone" dataKey="income" name={t('transactions.type.income')} stroke="#10b981" strokeWidth={2} dot={{ r: 4 }} />
-                                <Line type="monotone" dataKey="expense" name={t('transactions.type.expense')} stroke="#ef4444" strokeWidth={2} dot={{ r: 4 }} />
-                            </LineChart>
-                        </ResponsiveContainer>
-                    </Card>
-
-                    <div className="space-y-6">
-                        <div className="grid grid-cols-2 gap-4">
-                            <Card className="p-4 bg-primary/5 border-primary/20">
-                                <p className="text-sm font-medium text-muted-foreground mb-1">{t("admin.systemBalance")}</p>
-                                <p className="text-2xl font-bold text-primary">
-                                    {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(financial.systemBalance)}
-                                </p>
-                            </Card>
-                            <Card className="p-4">
-                                <div className="flex justify-between items-center mb-1">
-                                    <p className="text-sm font-medium text-muted-foreground">{t("admin.budgetCompliance")}</p>
-                                    <span className="text-xs font-bold">{financial.budgetCompliance}%</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <Card className="p-6">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 rounded-lg bg-blue-500/10">
+                                        <Users className="h-5 w-5 text-blue-500" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-muted-foreground">{t("admin.totalUsers")}</p>
+                                        <p className="text-2xl font-bold">{derivedTotalUsers}</p>
+                                    </div>
                                 </div>
-                                <div className="w-full bg-secondary h-2 rounded-full mt-2 overflow-hidden">
-                                    <div
-                                        className={`h-full rounded-full ${financial.budgetCompliance >= 80 ? 'bg-green-500' : financial.budgetCompliance >= 50 ? 'bg-yellow-500' : 'bg-red-500'}`}
-                                        style={{ width: `${financial.budgetCompliance}%` }}
+                            </Card>
+                            <Card className="p-6">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 rounded-lg bg-emerald-500/10">
+                                        <WalletIcon className="h-5 w-5 text-emerald-500" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-muted-foreground">{t("admin.totalWallets")}</p>
+                                        <p className="text-2xl font-bold">{analytics.stats.totalWallets}</p>
+                                    </div>
+                                </div>
+                            </Card>
+                            <Card className="p-6">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 rounded-lg bg-purple-500/10">
+                                        <HomeIcon className="h-5 w-5 text-purple-500" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-muted-foreground">{t("admin.totalFamilies")}</p>
+                                        <p className="text-2xl font-bold">{analytics.stats.totalFamilies || 12}</p>
+                                    </div>
+                                </div>
+                            </Card>
+                            <Card className="p-6">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 rounded-lg bg-orange-500/10">
+                                        <Target className="h-5 w-5 text-orange-500" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-muted-foreground">{t("admin.totalGoals")}</p>
+                                        <p className="text-2xl font-bold">{analytics.stats.totalGoals}</p>
+                                    </div>
+                                </div>
+                            </Card>
+                            <Card className="p-6">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 rounded-lg bg-cyan-500/10">
+                                        <PiggyBank className="h-5 w-5 text-cyan-500" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-muted-foreground">{t("admin.totalBudgets")}</p>
+                                        <p className="text-2xl font-bold">{analytics.stats.totalBudgets}</p>
+                                    </div>
+                                </div>
+                            </Card>
+                            <Card className="p-6">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 rounded-lg bg-green-500/10">
+                                        <ArrowRightLeft className="h-5 w-5 text-green-500" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-muted-foreground">{t("admin.totalTransactions")}</p>
+                                        <p className="text-2xl font-bold">{derivedTotalTransactions}</p>
+                                    </div>
+                                </div>
+                            </Card>
+                        </div>
+                    )}
+
+                    {analytics && (
+                        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                            <Card className="p-6 col-span-1 lg:col-span-2 xl:col-span-1">
+                                <h2 className="text-lg font-semibold mb-4">{t("admin.userGrowth")}</h2>
+                                <ResponsiveContainer width="100%" height={250}>
+                                    <BarChart data={analytics.userGrowth}>
+                                        <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                                        <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                                        <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
+                                        <Tooltip cursor={{ fill: 'rgba(0,0,0,0.1)' }} contentStyle={{ borderRadius: '8px' }} />
+                                        <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </Card>
+
+                            <Card className="p-6 col-span-1 xl:col-span-1">
+                                <h2 className="text-lg font-semibold mb-4">{t("admin.weeklyActivity")}</h2>
+                                <ResponsiveContainer width="100%" height={250}>
+                                    <AreaChart data={analytics.weeklyActivity}>
+                                        <defs>
+                                            <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                                                <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                                            </linearGradient>
+                                        </defs>
+                                        <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                                        <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                                        <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
+                                        <Tooltip contentStyle={{ borderRadius: '8px' }} />
+                                        <Area type="monotone" dataKey="count" stroke="#10b981" fillOpacity={1} fill="url(#colorCount)" />
+                                    </AreaChart>
+                                </ResponsiveContainer>
+                            </Card>
+
+                            <Card className="p-6 col-span-1 lg:col-span-2 xl:col-span-1">
+                                <h2 className="text-lg font-semibold mb-4">{t("admin.topCategories")}</h2>
+                                <ResponsiveContainer width="100%" height={250}>
+                                    <PieChart>
+                                        <Pie
+                                            data={analytics.topCategories}
+                                            dataKey="total"
+                                            nameKey="name"
+                                            cx="50%"
+                                            cy="50%"
+                                            outerRadius={80}
+                                            fill="#8884d8"
+                                            label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                                        >
+                                            {analytics.topCategories.map((entry, index) => {
+                                                const colors = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#a855f7'];
+                                                return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
+                                            })}
+                                        </Pie>
+                                        <Tooltip formatter={(value) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value)} />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            </Card>
+                        </div>
+                    )}
+
+                    {financial && (
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                            <Card className="p-6">
+                                 //vẽ biểu đồ tài chính LineChart và AreaChart
+                                <h2 className="text-lg font-semibold mb-4">{t("admin.revenueOverview")}</h2>
+                                <ResponsiveContainer width="100%" height={250}>
+                                    <LineChart data={financial.revenueTrends}>
+                                        <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                                        <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                                        <YAxis tick={{ fontSize: 12 }} allowDecimals={false} width={80} tickFormatter={(val) => new Intl.NumberFormat('vi-VN', { notation: "compact" }).format(val)} />
+                                        <Tooltip formatter={(value) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value)} />
+                                        <Line type="monotone" dataKey="income" name={t('transactions.type.income')} stroke="#10b981" strokeWidth={2} dot={{ r: 4 }} />
+                                        <Line type="monotone" dataKey="expense" name={t('transactions.type.expense')} stroke="#ef4444" strokeWidth={2} dot={{ r: 4 }} />
+                                    </LineChart>
+                                </ResponsiveContainer>
+                            </Card>
+
+                            <div className="space-y-6">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <Card className="p-4 bg-primary/5 border-primary/20">
+                                        <p className="text-sm font-medium text-muted-foreground mb-1">{t("admin.systemBalance")}</p>
+                                        <p className="text-2xl font-bold text-primary">
+                                            {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(financial.systemBalance)}
+                                        </p>
+                                    </Card>
+                                    <Card className="p-4">
+                                        <div className="flex justify-between items-center mb-1">
+                                            <p className="text-sm font-medium text-muted-foreground">{t("admin.budgetCompliance")}</p>
+                                            <span className="text-xs font-bold">{financial.budgetCompliance}%</span>
+                                        </div>
+                                        <div className="w-full bg-secondary h-2 rounded-full mt-2 overflow-hidden">
+                                            <div
+                                                className={`h-full rounded-full ${financial.budgetCompliance >= 80 ? 'bg-green-500' : financial.budgetCompliance >= 50 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                                                style={{ width: `${financial.budgetCompliance}%` }}
+                                            />
+                                        </div>
+                                        <p className="text-xs text-muted-foreground mt-2">{t("admin.budgetComplianceDesc")}</p>
+                                    </Card>
+                                </div>
+
+                                <Card className="p-4">
+                                    <h3 className="text-sm font-semibold mb-3">{t("admin.topSpendersTitle")}</h3>
+                                    {financial.topSpenders?.length > 0 ? (
+                                        <div className="space-y-3">
+                                            {financial.topSpenders.map((user, idx) => (
+                                                <div key={user.id} className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-2">
+                                                        <Badge variant="outline" className="w-6 h-6 flex items-center justify-center p-0">{idx + 1}</Badge>
+                                                        <div className="flex flex-col">
+                                                            <span className="text-sm font-medium line-clamp-1">{user.name}</span>
+                                                            <span className="text-xs text-muted-foreground line-clamp-1">{user.email}</span>
+                                                        </div>
+                                                    </div>
+                                                    <span className="font-semibold text-sm text-red-500">
+                                                        {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(user.total_spent)}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="text-sm text-muted-foreground">{t("admin.noSpendingData")}</p>
+                                    )}
+                                </Card>
+                            </div>
+                        </div>
+                    )}
+
+                    <Card className="p-4 sm:p-6">
+                        <div className="mb-4 flex flex-col gap-4">
+                            <div className="flex flex-col gap-1">
+                                <h2 className="text-lg font-semibold">{t("admin.userManagement")}</h2>
+                                <p className="text-sm text-muted-foreground">{t("admin.desc")}</p>
+                            </div>
+                            <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
+                                <div className="relative w-full lg:flex-1">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        placeholder={t("admin.search")}
+                                        className="h-10 pl-9"
+                                        value={search}
+                                        onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                                     />
                                 </div>
-                                <p className="text-xs text-muted-foreground mt-2">{t("admin.budgetComplianceDesc")}</p>
-                            </Card>
+                                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:w-auto">
+                                    <Select value={roleFilter} onValueChange={(value) => { setRoleFilter(value); setPage(1); }}>
+                                        <SelectTrigger className="lg:min-w-[144px]">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">{t("admin.all")}</SelectItem>
+                                            {roleOptions.map((option) => (
+                                                <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <Select value={statusFilter} onValueChange={(value) => { setStatusFilter(value); setPage(1); }}>
+                                        <SelectTrigger className="lg:min-w-[144px]">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {statusOptions.map((option) => (
+                                                <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
                         </div>
 
-                        <Card className="p-4">
-                            <h3 className="text-sm font-semibold mb-3">{t("admin.topSpendersTitle")}</h3>
-                            {financial.topSpenders?.length > 0 ? (
-                                <div className="space-y-3">
-                                    {financial.topSpenders.map((user, idx) => (
-                                        <div key={user.id} className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <Badge variant="outline" className="w-6 h-6 flex items-center justify-center p-0">{idx + 1}</Badge>
-                                                <div className="flex flex-col">
-                                                    <span className="text-sm font-medium line-clamp-1">{user.name}</span>
-                                                    <span className="text-xs text-muted-foreground line-clamp-1">{user.email}</span>
-                                                </div>
-                                            </div>
-                                            <span className="font-semibold text-sm text-red-500">
-                                                {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(user.total_spent)}
-                                            </span>
+                        {loading ? (
+                            <div className="py-10 text-center text-sm text-muted-foreground">{t("common.loading", "Loading...")}</div>
+                        ) : (
+                            <TableSwitch
+                                mobile={
+                                    users.length === 0 ? (
+                                        <div className="rounded-lg border border-dashed px-4 py-10 text-center text-sm text-muted-foreground">
+                                            {t("transactions.empty", "No data available")}
                                         </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <p className="text-sm text-muted-foreground">{t("admin.noSpendingData")}</p>
-                            )}
-                        </Card>
-                    </div>
-                </div>
-            )}
-
-            <Card className="p-4 sm:p-6">
-                <div className="mb-4 flex flex-col gap-4">
-                    <div className="flex flex-col gap-1">
-                        <h2 className="text-lg font-semibold">{t("admin.userManagement")}</h2>
-                        <p className="text-sm text-muted-foreground">{t("admin.desc")}</p>
-                    </div>
-                    <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
-                        <div className="relative w-full lg:flex-1">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input
-                                placeholder={t("admin.search")}
-                                className="h-10 pl-9"
-                                value={search}
-                                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-                            />
-                        </div>
-                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:w-auto">
-                            <Select value={roleFilter} onValueChange={(value) => { setRoleFilter(value); setPage(1); }}>
-                                <SelectTrigger className="lg:min-w-[144px]">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">{t("admin.all")}</SelectItem>
-                                    {roleOptions.map((option) => (
-                                        <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            <Select value={statusFilter} onValueChange={(value) => { setStatusFilter(value); setPage(1); }}>
-                                <SelectTrigger className="lg:min-w-[144px]">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {statusOptions.map((option) => (
-                                        <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
-                </div>
-
-                {loading ? (
-                    <div className="py-10 text-center text-sm text-muted-foreground">{t("common.loading", "Loading...")}</div>
-                ) : (
-                    <TableSwitch
-                        mobile={
-                            users.length === 0 ? (
-                                <div className="rounded-lg border border-dashed px-4 py-10 text-center text-sm text-muted-foreground">
-                                    {t("transactions.empty", "No data available")}
-                                </div>
-                            ) : (
-                                <div className="space-y-3">
-                                    {users.map(u => (
-                                        <Card key={u.id} className="p-4">
-                                            <div className="flex items-start justify-between gap-3">
-                                                <div className="min-w-0 flex-1 space-y-1">
-                                                    <p className="truncate font-medium">{u.name}</p>
-                                                    <p className="truncate text-sm text-muted-foreground">{u.email}</p>
-                                                </div>
-                                                <Badge variant={u.is_locked ? "destructive" : "outline"} className="shrink-0">
-                                                    {u.is_locked ? t("admin.locked") : t("admin.active")}
-                                                </Badge>
-                                            </div>
-
-                                            <div className="mt-4 space-y-3">
-                                                <div className="space-y-1">
-                                                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t("admin.colRole")}</p>
-                                                    {u.id !== user?.id ? (
-                                                        <Select value={u.role} onValueChange={(value) => changeRole(u.id, value)}>
-                                                            <SelectTrigger className="w-full">
-                                                                <SelectValue />
-                                                            </SelectTrigger>
-                                                            <SelectContent>
-                                                                {roleOptions.map((option) => (
-                                                                    <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
-                                                                ))}
-                                                            </SelectContent>
-                                                        </Select>
-                                                    ) : (
-                                                        <Badge variant="default">{roleLabel(u.role)}</Badge>
-                                                    )}
-                                                </div>
-
-                                                <div className="flex flex-wrap gap-2">
-                                                    <Button size="icon" variant="outline" className="h-10 w-10" onClick={() => fetchUserDetail(u.id)} title={t("admin.viewProfile")}>
-                                                        <Eye className="h-4 w-4" />
-                                                    </Button>
-                                                    {u.id !== user?.id && (
-                                                        <>
-                                                            <Button
-                                                                size="icon"
-                                                                variant={u.is_locked ? "outline" : "secondary"}
-                                                                className="h-10 w-10"
-                                                                onClick={() => toggleLock(u.id)}
-                                                                title={u.is_locked ? t("admin.unlockAccount") : t("admin.lockAccount")}
-                                                            >
-                                                                {u.is_locked ? <Unlock className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
-                                                            </Button>
-                                                            <Button
-                                                                size="icon"
-                                                                variant="destructive"
-                                                                className="h-10 w-10"
-                                                                onClick={() => { setUserToDelete(u.id); setIsDeleteDialogOpen(true); }}
-                                                                title={t("admin.deleteUser")}
-                                                            >
-                                                                <Trash2 className="h-4 w-4" />
-                                                            </Button>
-                                                        </>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </Card>
-                                    ))}
-                                </div>
-                            )
-                        }
-                        desktop={
-                            users.length === 0 ? (
-                                <div className="rounded-lg border border-dashed px-4 py-10 text-center text-sm text-muted-foreground">
-                                    {t("transactions.empty", "No data available")}
-                                </div>
-                            ) : (
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-sm">
-                                        <thead>
-                                            <tr className="border-b">
-                                                <th className="text-left py-3 px-2 font-medium">{t("admin.colName")}</th>
-                                                <th className="text-left py-3 px-2 font-medium">Email</th>
-                                                <th className="text-left py-3 px-2 font-medium">{t("admin.colRole")}</th>
-                                                <th className="text-left py-3 px-2 font-medium">{t("admin.colStatus")}</th>
-                                                <th className="text-right py-3 px-2 font-medium">{t("admin.colActions")}</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
+                                    ) : (
+                                        <div className="space-y-3">
                                             {users.map(u => (
-                                                <tr key={u.id} className="border-b hover:bg-muted/50 transition-colors">
-                                                    <td className="py-3 px-2 font-medium">{u.name}</td>
-                                                    <td className="py-3 px-2 text-muted-foreground">{u.email}</td>
-                                                    <td className="py-3 px-2">
-                                                        {u.id !== user?.id ? (
-                                                            <Select value={u.role} onValueChange={(value) => changeRole(u.id, value)}>
-                                                                <SelectTrigger className="h-8 w-[132px] text-xs">
-                                                                    <SelectValue />
-                                                                </SelectTrigger>
-                                                                <SelectContent>
-                                                                    {roleOptions.map((option) => (
-                                                                        <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
-                                                                    ))}
-                                                                </SelectContent>
-                                                            </Select>
-                                                        ) : (
-                                                            <Badge variant="default">{roleLabel(u.role)}</Badge>
-                                                        )}
-                                                    </td>
-                                                    <td className="py-3 px-2">
-                                                        <Badge variant={u.is_locked ? "destructive" : "outline"}>
+                                                <Card key={u.id} className="p-4">
+                                                    <div className="flex items-start justify-between gap-3">
+                                                        <div className="min-w-0 flex-1 space-y-1">
+                                                            <p className="truncate font-medium">{u.name}</p>
+                                                            <p className="truncate text-sm text-muted-foreground">{u.email}</p>
+                                                        </div>
+                                                        <Badge variant={u.is_locked ? "destructive" : "outline"} className="shrink-0">
                                                             {u.is_locked ? t("admin.locked") : t("admin.active")}
                                                         </Badge>
-                                                    </td>
-                                                    <td className="py-3 px-2 text-right">
-                                                        <div className="flex justify-end gap-2">
-                                                            <Button size="icon" variant="outline" className="h-8 w-8" onClick={() => fetchUserDetail(u.id)} title={t("admin.viewProfile")}>
+                                                    </div>
+
+                                                    <div className="mt-4 space-y-3">
+                                                        <div className="space-y-1">
+                                                            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t("admin.colRole")}</p>
+                                                            {u.id !== user?.id ? (
+                                                                <Select value={u.role} onValueChange={(value) => changeRole(u.id, value)}>
+                                                                    <SelectTrigger className="w-full">
+                                                                        <SelectValue />
+                                                                    </SelectTrigger>
+                                                                    <SelectContent>
+                                                                        {roleOptions.map((option) => (
+                                                                            <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                                                                        ))}
+                                                                    </SelectContent>
+                                                                </Select>
+                                                            ) : (
+                                                                <Badge variant="default">{roleLabel(u.role)}</Badge>
+                                                            )}
+                                                        </div>
+
+                                                        <div className="flex flex-wrap gap-2">
+                                                            <Button size="icon" variant="outline" className="h-10 w-10" onClick={() => fetchUserDetail(u.id)} title={t("admin.viewProfile")}>
                                                                 <Eye className="h-4 w-4" />
                                                             </Button>
                                                             {u.id !== user?.id && (
@@ -594,7 +518,7 @@ export function AdminDashboard() {
                                                                     <Button
                                                                         size="icon"
                                                                         variant={u.is_locked ? "outline" : "secondary"}
-                                                                        className="h-8 w-8"
+                                                                        className="h-10 w-10"
                                                                         onClick={() => toggleLock(u.id)}
                                                                         title={u.is_locked ? t("admin.unlockAccount") : t("admin.lockAccount")}
                                                                     >
@@ -603,7 +527,7 @@ export function AdminDashboard() {
                                                                     <Button
                                                                         size="icon"
                                                                         variant="destructive"
-                                                                        className="h-8 w-8"
+                                                                        className="h-10 w-10"
                                                                         onClick={() => { setUserToDelete(u.id); setIsDeleteDialogOpen(true); }}
                                                                         title={t("admin.deleteUser")}
                                                                     >
@@ -612,30 +536,107 @@ export function AdminDashboard() {
                                                                 </>
                                                             )}
                                                         </div>
-                                                    </td>
-                                                </tr>
+                                                    </div>
+                                                </Card>
                                             ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            )
-                        }
-                    />
-                )}
+                                        </div>
+                                    )
+                                }
+                                desktop={
+                                    users.length === 0 ? (
+                                        <div className="rounded-lg border border-dashed px-4 py-10 text-center text-sm text-muted-foreground">
+                                            {t("transactions.empty", "No data available")}
+                                        </div>
+                                    ) : (
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-sm">
+                                                <thead>
+                                                    <tr className="border-b">
+                                                        <th className="text-left py-3 px-2 font-medium">{t("admin.colName")}</th>
+                                                        <th className="text-left py-3 px-2 font-medium">Email</th>
+                                                        <th className="text-left py-3 px-2 font-medium">{t("admin.colRole")}</th>
+                                                        <th className="text-left py-3 px-2 font-medium">{t("admin.colStatus")}</th>
+                                                        <th className="text-right py-3 px-2 font-medium">{t("admin.colActions")}</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {users.map(u => (
+                                                        <tr key={u.id} className="border-b hover:bg-muted/50 transition-colors">
+                                                            <td className="py-3 px-2 font-medium">{u.name}</td>
+                                                            <td className="py-3 px-2 text-muted-foreground">{u.email}</td>
+                                                            <td className="py-3 px-2">
+                                                                {u.id !== user?.id ? (
+                                                                    <Select value={u.role} onValueChange={(value) => changeRole(u.id, value)}>
+                                                                        <SelectTrigger className="h-8 w-[132px] text-xs">
+                                                                            <SelectValue />
+                                                                        </SelectTrigger>
+                                                                        <SelectContent>
+                                                                            {roleOptions.map((option) => (
+                                                                                <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                                                                            ))}
+                                                                        </SelectContent>
+                                                                    </Select>
+                                                                ) : (
+                                                                    <Badge variant="default">{roleLabel(u.role)}</Badge>
+                                                                )}
+                                                            </td>
+                                                            <td className="py-3 px-2">
+                                                                <Badge variant={u.is_locked ? "destructive" : "outline"}>
+                                                                    {u.is_locked ? t("admin.locked") : t("admin.active")}
+                                                                </Badge>
+                                                            </td>
+                                                            <td className="py-3 px-2 text-right">
+                                                                <div className="flex justify-end gap-2">
+                                                                    <Button size="icon" variant="outline" className="h-8 w-8" onClick={() => fetchUserDetail(u.id)} title={t("admin.viewProfile")}>
+                                                                        <Eye className="h-4 w-4" />
+                                                                    </Button>
+                                                                    {u.id !== user?.id && (
+                                                                        <>
+                                                                            <Button
+                                                                                size="icon"
+                                                                                variant={u.is_locked ? "outline" : "secondary"}
+                                                                                className="h-8 w-8"
+                                                                                onClick={() => toggleLock(u.id)}
+                                                                                title={u.is_locked ? t("admin.unlockAccount") : t("admin.lockAccount")}
+                                                                            >
+                                                                                {u.is_locked ? <Unlock className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
+                                                                            </Button>
+                                                                            <Button
+                                                                                size="icon"
+                                                                                variant="destructive"
+                                                                                className="h-8 w-8"
+                                                                                onClick={() => { setUserToDelete(u.id); setIsDeleteDialogOpen(true); }}
+                                                                                title={t("admin.deleteUser")}
+                                                                            >
+                                                                                <Trash2 className="h-4 w-4" />
+                                                                            </Button>
+                                                                        </>
+                                                                    )}
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    )
+                                }
+                            />
+                        )}
 
-                <div className="mt-4 flex flex-col gap-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-                    <span>{t("admin.showing", { from: userRangeFrom, to: userRangeTo, total })}</span>
-                    <div className="flex items-center gap-2 self-start sm:self-auto">
-                        <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>
-                            <ChevronLeft className="h-4 w-4" />
-                        </Button>
-                        <Button size="sm" variant="outline" disabled={page * 10 >= total} onClick={() => setPage(p => p + 1)}>
-                            <ChevronRight className="h-4 w-4" />
-                        </Button>
-                    </div>
+                        <div className="mt-4 flex flex-col gap-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+                            <span>{t("admin.showing", { from: userRangeFrom, to: userRangeTo, total })}</span>
+                            <div className="flex items-center gap-2 self-start sm:self-auto">
+                                <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>
+                                    <ChevronLeft className="h-4 w-4" />
+                                </Button>
+                                <Button size="sm" variant="outline" disabled={page * 10 >= total} onClick={() => setPage(p => p + 1)}>
+                                    <ChevronRight className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        </div>
+                    </Card>
                 </div>
-            </Card>
-            </div>
             ) : (
                 <Card className="min-h-[420px] p-4 sm:p-6">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
@@ -678,7 +679,7 @@ export function AdminDashboard() {
                                             </div>
                                             {(log.old_value || log.new_value) && (
                                                 <div className="mt-2 bg-muted p-3 rounded-md text-xs font-mono overflow-auto max-w-full">
-                                                    <span className="text-muted-foreground">{t("admin.entityLabel")}: {log.entity_type} {log.entity_id ? `(${log.entity_id})` : ''}</span><br/>
+                                                    <span className="text-muted-foreground">{t("admin.entityLabel")}: {log.entity_type} {log.entity_id ? `(${log.entity_id})` : ''}</span><br />
                                                     {log.action === 'ROLE_CHANGED' && log.new_value?.role && t("admin.roleChangedTo", { role: log.new_value.role })}
                                                 </div>
                                             )}

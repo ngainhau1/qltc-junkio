@@ -6,7 +6,7 @@ const { User, Family, FamilyMember } = require('../models');
 const sendEmail = require('../services/emailService');
 const { success, error: sendError } = require('../utils/responseHelper');
 // Controller này là trung tâm xử lý đăng ký, đăng nhập, làm mới phiên,
-// đăng xuất và khôi phục mật khẩu. Khi trình bày, nên đi theo luồng:
+// đăng xuất và khôi phục mật khẩu.
 // dữ liệu từ request -> kiểm tra -> thao tác cơ sở dữ liệu -> trả response chuẩn.
 
 /**
@@ -84,7 +84,6 @@ exports.register = async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const password_hash = await bcrypt.hash(password, salt);
 
-        // Chỉ lưu password_hash, không lưu mật khẩu gốc.
         user = await User.create({
             name,
             email,
@@ -92,7 +91,6 @@ exports.register = async (req, res) => {
             role: 'member'
         });
 
-        // Mỗi tài khoản mới có sẵn một Family mặc định để các tính năng ví/giao dịch gia đình hoạt động ngay.
         const family = await Family.create({
             name: `${name}'s Family`,
             owner_id: user.id
@@ -121,7 +119,7 @@ exports.login = async (req, res) => {
     try {
         const user = await User.findOne({ where: { email } });
         if (!user) {
-            // Dùng một mã lỗi chung để không tiết lộ email nào đang tồn tại.
+
             return sendError(res, 'INVALID_CREDENTIALS', 400);
         }
 
@@ -131,14 +129,14 @@ exports.login = async (req, res) => {
 
         const isMatch = await bcrypt.compare(password, user.password_hash);
         if (!isMatch) {
-            // Không so sánh mật khẩu bằng chuỗi thường vì DB chỉ lưu password_hash.
+            // Không so sánh mật khẩu bằng chuỗi thường
             return sendError(res, 'INVALID_CREDENTIALS', 400);
         }
 
         const accessToken = generateAccessToken(user);
         const refreshToken = generateRefreshToken(user);
         setRefreshTokenCookie(res, refreshToken);
-
+        //trả accesstoken qua JSON body
         success(res, { token: accessToken, user: buildAuthUser(user) }, 'LOGIN_SUCCESS');
     } catch (err) {
         console.error(err.message);

@@ -2,7 +2,6 @@ const { Wallet, Transaction, FamilyMember } = require('../models');
 const { Op, fn, col, where } = require('sequelize');
 const { success, error, notFound, serverError, created } = require('../utils/responseHelper');
 
-// GHI CHÚ HỌC TẬP - Phần ví của Thành Đạt:
 // Controller này xử lý ví cá nhân và ví gia đình. Điểm quan trọng nhất là mọi thao tác
 // đều phải kiểm tra phạm vi truy cập để người dùng không xem/sửa/xóa ví của người khác.
 
@@ -71,7 +70,7 @@ exports.getUserWallets = async (req, res) => {
         serverError(res, 'WALLET_LOAD_FAILED');
     }
 };
-
+// Tạo ví mới
 exports.createWallet = async (req, res) => {
     try {
         const userId = req.user.id;
@@ -83,7 +82,7 @@ exports.createWallet = async (req, res) => {
             // Không cho tạo ví trong một gia đình mà user không thuộc về.
             return error(res, 'WALLET_FAMILY_FORBIDDEN', 403);
         }
-
+        // Tránh trùng tên ví
         const duplicated = await hasDuplicateWalletName({
             name: normalizedName,
             userId,
@@ -97,7 +96,7 @@ exports.createWallet = async (req, res) => {
             name: normalizedName,
             balance: balance || 0,
             currency: currency || 'VND',
-            // Ví gia đình dùng family_id và để user_id null; ví cá nhân làm ngược lại.
+            // tự động switch user/family id
             user_id: family_id ? null : userId,
             family_id: family_id || null
         });
@@ -111,7 +110,7 @@ exports.createWallet = async (req, res) => {
         serverError(res, 'WALLET_CREATE_FAILED');
     }
 };
-
+// Cập nhật ví
 exports.updateWallet = async (req, res) => {
     try {
         const { id } = req.params;
@@ -155,14 +154,14 @@ exports.updateWallet = async (req, res) => {
         serverError(res, 'WALLET_UPDATE_FAILED');
     }
 };
-
+// Xóa ví
 exports.deleteWallet = async (req, res) => {
     try {
         const { id } = req.params;
         const userId = req.user.id;
 
         const familyIds = await getUserFamilyIds(userId);
-
+        // Áp dụng scope để tìm ví
         const wallet = await Wallet.findOne({
             where: buildWalletAccessWhere(id, userId, familyIds)
         });

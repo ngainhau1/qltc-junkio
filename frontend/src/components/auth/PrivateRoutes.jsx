@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next"
 export const PrivateRoutes = () => {
     const { t } = useTranslation()
     const { isAuthenticated, token } = useSelector((state) => state.auth)
-
+    //Nếu có token nhưng chưa fetch xong Api user/me
     if (token && !isAuthenticated) {
         return (
             <div className="flex h-screen items-center justify-center">
@@ -16,6 +16,6 @@ export const PrivateRoutes = () => {
             </div>
         )
     }
-
+    // Nếu có user data, render ra màn hình con, ngược lại, trả về trang login
     return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />
 }

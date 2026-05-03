@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '@/lib/api';
 
-// GHI CHÚ HỌC TẬP - Phần danh mục của Thành Đạt:
 // Slice này tải danh mục thu/chi từ backend để các màn hình giao dịch, ví và báo cáo dùng chung.
 // Danh mục có thể là INCOME hoặc EXPENSE và có thể có parent_id để tạo cấu trúc cha-con.
 

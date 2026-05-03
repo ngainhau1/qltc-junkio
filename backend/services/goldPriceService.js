@@ -81,9 +81,8 @@ const normalizeSjcResponse = (payload) => {
         updatedLabel,
     };
 };
-
+//  Gửi HTTP POST với các header mạo danh trình duyệt (User-Agent, Origin)
 const fetchSjcGoldPrice = async () => {
-    // API SJC dùng POST dạng form cũ, nên body cần method=GetCurrentGoldPrice.
     const response = await fetch(SJC_PRICE_SERVICE_URL, {
         method: 'POST',
         headers: SJC_REQUEST_HEADERS,
@@ -99,7 +98,7 @@ const fetchSjcGoldPrice = async () => {
 
     return normalizeSjcResponse(payload);
 };
-
+//Dùng Redis để lưu dữ liệu lấy về
 const getGoldPrice = async () => {
     try {
         const cachedValue = await client.get(CACHE_KEY);
@@ -111,7 +110,7 @@ const getGoldPrice = async () => {
     } catch (error) {
         console.error('Gold price cache read error:', error);
     }
-
+    //nếu không có, gọi lại api SJC
     const freshData = await fetchSjcGoldPrice();
 
     try {
@@ -122,8 +121,8 @@ const getGoldPrice = async () => {
     }
 
     try {
-        // Snapshot phục vụ biểu đồ lịch sử; nếu ghi snapshot lỗi thì vẫn trả giá hiện tại cho user.
         const { upsertGoldPriceSnapshot } = require('./goldPriceSnapshotService');
+        //lưu vào data
         await upsertGoldPriceSnapshot(freshData);
     } catch (error) {
         console.error('Gold price snapshot write error:', error);

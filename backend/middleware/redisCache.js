@@ -11,10 +11,11 @@ const cacheDashboard = (duration = 300) => {
         const context = req.query.context || 'personal';
         const startDate = req.query.startDate || 'all';
         const endDate = req.query.endDate || 'all';
-        //Thay vì dùng 1 Key chung chungCache Key được tạo động bằng Template Literal:
+        // 1. Tạo Key dựa theo tất cả các bộ lọc của User
         const rawKey = `dashboardStats:userId_${userId}:family_${familyId}:context_${context}:start_${startDate}:end_${endDate}`;
 
         try {
+            //tìm cache
             const cachedResponse = await client.get(rawKey);
 
             if (cachedResponse) {
@@ -40,7 +41,7 @@ const cacheDashboard = (duration = 300) => {
                 //trả về dữ liệu về client
                 return originalSend(body);
             };
-
+            //chuyển quyền cho controller
             next();
         } catch (error) {
             console.error('Redis Middleware Error:', error);

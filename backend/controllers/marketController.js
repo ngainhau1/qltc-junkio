@@ -2,7 +2,6 @@ const { success, error: sendError } = require('../utils/responseHelper');
 const { getGoldPrice } = require('../services/goldPriceService');
 const { getGoldPriceHistory } = require('../services/goldPriceSnapshotService');
 
-// GHI CHÚ HỌC TẬP - Phần giá vàng SJC của Thành Đạt:
 // Controller này là lớp mỏng giữa route và service. Route nhận request,
 // controller gọi service, service mới xử lý cache, gọi SJC và truy vấn lịch sử.
 
@@ -16,7 +15,7 @@ exports.getGoldPrice = async (req, res) => {
         sendError(res, 'GOLD_PRICE_FETCH_FAILED', 502);
     }
 };
-
+//lấy lịch sử giá vàng
 exports.getGoldPriceHistory = async (req, res) => {
     try {
         // range hợp lệ hiện tại là 24H hoặc 7D, được kiểm tra trong service.
