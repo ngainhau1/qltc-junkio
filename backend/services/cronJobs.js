@@ -3,8 +3,8 @@ const { checkBudgetAlerts } = require('./budgetAlertService');
 const { captureLatestGoldPriceSnapshot, pruneOldGoldPriceSnapshots } = require('./goldPriceSnapshotService');
 const { executeDueRecurringPatterns } = require('./recurringExecutionService');
 
-// File này đăng ký các tác vụ chạy theo lịch. Trong phần giá vàng, cron job lấy snapshot mỗi 5 phút
-// và dọn snapshot cũ mỗi ngày để biểu đồ có dữ liệu mà không cần user bấm làm mới.
+// Tác vụ chạy ngầm định kì, được thiết lập chạy ngầm vào một khoảng thời gian nhất định 
+// (Snapshot giá vàng 5 phút 1 lần) ( Dọn data lịch sử trên 90 ngày vào 2h15 sáng hàng ngày )
 
 const startCronJobs = () => {
     console.log('Starting recurring transaction and budget alert schedulers...');

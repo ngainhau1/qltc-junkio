@@ -2,6 +2,8 @@ const { User, Transaction, Wallet, Family, Goal, Budget, Category, sequelize } =
 const { Op, fn, col } = require('sequelize');
 const { success, error: sendError } = require('../utils/responseHelper');
 
+// Controller này dùng hàm aggregate của Sequelize để tính toán 3 con số quan trọng: Tổng thu nhập toàn sàn, Tổng chi tiêu toàn sàn, Tỉ lệ người dùng hoạt động trong 30 ngày qua.
+
 const buildSearchWhere = (search) => {
     if (!search) {
         return {};

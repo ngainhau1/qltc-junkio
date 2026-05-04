@@ -21,8 +21,7 @@ import {
     setGoldHistoryRange,
 } from '@/features/market/goldPriceSlice';
 import { GoldPriceMiniChart } from './GoldPriceMiniChart';
-// Component này là thẻ hiển thị giá vàng trên dashboard. Nó tự tải giá hiện tại mỗi 60 giây,
-// tải lịch sử mỗi 5 phút và đổi màu trend theo mức tăng/giảm giá bán.
+// Giao diện giá vàng
 
 const CURRENT_REFRESH_INTERVAL_MS = 60_000;
 const HISTORY_REFRESH_INTERVAL_MS = 5 * 60_000;

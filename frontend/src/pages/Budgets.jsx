@@ -80,6 +80,9 @@ const categoryIconMap = {
 
 const getCategoryIcon = (iconName) => categoryIconMap[iconName] || Tag;
 
+// Khi người dùng muốn thiết lập hạn mức chi tiêu (Ví dụ: Không tiêu quá 2.000.000đ cho Tiền ăn), 
+// họ phải chọn một Category từ Dropdown để hệ thống biết mà gán mức Budget.
+
 export function Budgets() {
     const { t } = useTranslation();
     const dispatch = useDispatch();

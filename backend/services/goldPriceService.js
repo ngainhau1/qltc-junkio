@@ -104,7 +104,7 @@ const getGoldPrice = async () => {
         const cachedValue = await client.get(CACHE_KEY);
 
         if (cachedValue) {
-            // Có cache thì trả ngay, không gọi SJC để giảm độ trễ và giảm phụ thuộc nguồn ngoài.
+            // Nếu redis có dữ liệu sẵn, nó sẽ lấy từ chính redis chứ không gọi từ bên trang web thứ 3 (để tránh lấy dữ liệu trang web thứ 3 bị quá tải và bị chặn)
             return JSON.parse(cachedValue);
         }
     } catch (error) {
@@ -114,7 +114,8 @@ const getGoldPrice = async () => {
     const freshData = await fetchSjcGoldPrice();
 
     try {
-        // setEx tự xóa cache sau CACHE_TTL_SECONDS.
+        // Nếu không có cache hoặc quá 60s, nó sẽ gọi API bên thứ 3 (chỉ 1 lần).
+        // Trước khi đưa dữ liệu cho người dùng sau khi lấy, nó sẽ sử dụng setEx để lưu vào redis trước.
         await client.setEx(CACHE_KEY, CACHE_TTL_SECONDS, JSON.stringify(freshData));
     } catch (error) {
         console.error('Gold price cache write error:', error);

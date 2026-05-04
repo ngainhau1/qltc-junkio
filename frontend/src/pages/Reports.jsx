@@ -131,6 +131,7 @@ export function Reports() {
                         </CardHeader>
                         <CardContent className="h-[240px] sm:h-[280px] md:h-[300px]">
                             <ResponsiveContainer width="100%" height="100%">
+                                {/* Đây là nơi Category "tỏa sáng" nhất về mặt giao diện. Dữ liệu danh mục được tổng hợp để vẽ thành Biểu đồ tròn (Pie Chart) thông qua thư viện Recharts, giúp người dùng nhìn ngay được "Top các danh mục tiêu tiền nhiều nhất tháng này". */}
                                 <PieChart>
                                     <Pie
                                         data={localizedExpenseByCategory}

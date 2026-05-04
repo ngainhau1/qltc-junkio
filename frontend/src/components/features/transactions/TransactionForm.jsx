@@ -263,6 +263,7 @@ export function TransactionForm({ onSuccess }) {
                         <label htmlFor="transaction-category" className="mb-1 block text-sm font-medium">
                             {t('transactionForm.category')}
                         </label>
+                        {/* Khi bạn bấm thêm mới một Khoản Thu/Chi, sẽ có một Dropdown bắt buộc để bạn chọn Danh mục (VD: Lương, Ăn uống, Điện nước). Nơi đây gọi hàm localizeCategoryName để vẽ các lựa chọn bằng ngôn ngữ hiện tại của app. */}
                         <select
                             id="transaction-category"
                             name="categoryId"

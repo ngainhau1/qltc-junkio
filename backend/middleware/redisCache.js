@@ -1,5 +1,9 @@
 const { client } = require('../config/redis');
 
+// Giải quyết 2 bài toán hiệu năng: (1) Tránh nghẽn cổ chai khi lấy dữ liệu từ bên thứ ba (Giá vàng SJC) 
+// và (2) Tối ưu hóa các câu truy vấn cơ sở dữ liệu nặng (Thống kê Dashboard).
+// Middleware này tự động lo việc bọc Cache bên ngoài, giúp mã nguồn sạch. Controller không cần biết Redis có tồn tại hay không.
+
 const cacheDashboard = (duration = 300) => {
     return async (req, res, next) => {
         if (process.env.DISABLE_CACHE === 'true') {

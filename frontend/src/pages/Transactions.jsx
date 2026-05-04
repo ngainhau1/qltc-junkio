@@ -238,6 +238,7 @@ export function Transactions() {
                     ))}
                 </select>
 
+                {/* Ở trang lịch sử, phía trên danh sách có một thanh Filter (Bộ lọc). Ở đây có một <select> cho phép người dùng lọc toàn bộ giao dịch theo từng danh mục cụ thể. Danh sách này được lấy từ Redux (state.categories). */}
                 <select
                     className="h-10 w-full rounded-md border bg-background px-3 text-sm"
                     value={filter.categoryId}

@@ -1,7 +1,7 @@
 # GHI CHÚ HỌC TẬP - Phần hạ tầng của Thành Đạt:
 # File này mô tả cách chạy toàn bộ ứng dụng Junkio bằng Docker Compose.
-# Thứ tự cần nhớ khi trình bày: db và redis sẵn sàng trước, api chạy sau,
-# cuối cùng web mới phục vụ giao diện cho người dùng.
+# Docker chạy theo cấu trúc: database (cổng 5432) -> redis -> api (cổng 5000) -> web (cổng 80).
+# Thứ tự khởi động: db và redis sẵn sàng trước, api chạy sau, cuối cùng web mới phục vụ giao diện.
 services:
   db:
     image: postgres:15-alpine

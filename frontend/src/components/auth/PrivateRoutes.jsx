@@ -3,6 +3,7 @@ import { useSelector } from "react-redux"
 import { useTranslation } from "react-i18next"
 
 export const PrivateRoutes = () => {
+    // Component bọc ngoài mọi trang của hệ thống để bảo vệ khỏi user chưa đăng nhập
     const { t } = useTranslation()
     const { isAuthenticated, token } = useSelector((state) => state.auth)
     //Nếu có token nhưng chưa fetch xong Api user/me

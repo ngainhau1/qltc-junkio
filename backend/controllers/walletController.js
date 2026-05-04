@@ -2,8 +2,7 @@ const { Wallet, Transaction, FamilyMember } = require('../models');
 const { Op, fn, col, where } = require('sequelize');
 const { success, error, notFound, serverError, created } = require('../utils/responseHelper');
 
-// Controller này xử lý ví cá nhân và ví gia đình. Điểm quan trọng nhất là mọi thao tác
-// đều phải kiểm tra phạm vi truy cập để người dùng không xem/sửa/xóa ví của người khác.
+// Controller này xử lý ví cá nhân và ví gia đình. Mọi thao tác chỉ phải kiểm tra phạm vi sử dụng ví của người khác.
 
 /**
  * Lấy danh sách family_id mà user đang tham gia.

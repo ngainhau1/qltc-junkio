@@ -2,8 +2,7 @@ const { success, error: sendError } = require('../utils/responseHelper');
 const { getGoldPrice } = require('../services/goldPriceService');
 const { getGoldPriceHistory } = require('../services/goldPriceSnapshotService');
 
-// Controller này là lớp mỏng giữa route và service. Route nhận request,
-// controller gọi service, service mới xử lý cache, gọi SJC và truy vấn lịch sử.
+// Bóc tách Controller lấy giá vàng ra khỏi api
 
 exports.getGoldPrice = async (req, res) => {
     try {

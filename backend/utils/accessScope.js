@@ -1,6 +1,7 @@
 const { Op } = require('sequelize');
 const { FamilyMember, Wallet } = require('../models');
 
+// Định nghĩa 3 ngữ cảnh personal, family và all
 const normalizeContext = (context) => {
     if (context === 'personal' || context === 'family') {
         return context;

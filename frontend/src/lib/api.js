@@ -1,7 +1,19 @@
 import axios from 'axios';
 
-// File này cấu hình cách frontend gọi backend. Điểm quan trọng là tự gắn access token,
-// tự làm mới token khi gặp 401 và chuẩn hóa response để component dùng response.data gọn hơn.
+// File này cấu hình cách frontend gọi backend, tự gắn access token, tự làm mới token 
+// và chuẩn hóa response để các component sử dụng gọn hơn.
+
+/*
+ * LUỒNG XỬ LÝ ĐĂNG NHẬP VÀ REFRESH TOKEN (KHÔNG LÀM PHIỀN NGƯỜI DÙNG):
+ * 1. User nhập email/password -> authSlice.loginUser -> /api/auth/login.
+ * 2. Backend kiểm tra bCrypt -> Cấp JWT Token (json body) + Refresh Token (httpOnly Cookie).
+ * 3. Redux lưu Access Token vào Local Storage. Component <PrivateRoutes/> cho phép user vào app.
+ * 4. Sau 15 phút, gọi API lấy Transaction bị lỗi 401.
+ * 5. Axios Interceptor chặn lỗi 401 -> Âm thầm gọi /api/auth/refresh-token (gửi kèm httpOnly cookie).
+ * 6. Backend kiểm tra Refresh Token -> Cấp Access Token mới.
+ * 7. Axios tự lấy Token mới gắn vào API Transaction bị fail ban nãy và gọi lại.
+ * -> User hoàn toàn không cảm nhận được quá trình này và không bị văng ra trang đăng nhập.
+ */
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 

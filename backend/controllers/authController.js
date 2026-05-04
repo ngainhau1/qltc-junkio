@@ -6,7 +6,7 @@ const { User, Family, FamilyMember } = require('../models');
 const sendEmail = require('../services/emailService');
 const { success, error: sendError } = require('../utils/responseHelper');
 // Controller này là trung tâm xử lý đăng ký, đăng nhập, làm mới phiên,
-// đăng xuất và khôi phục mật khẩu.
+// đăng xuất và khôi phục mật khẩu. Xử lí đăng kí, đăng nhập, xử lí các phiên.
 // dữ liệu từ request -> kiểm tra -> thao tác cơ sở dữ liệu -> trả response chuẩn.
 
 /**

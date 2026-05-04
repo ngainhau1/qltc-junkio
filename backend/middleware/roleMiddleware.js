@@ -1,7 +1,8 @@
 const { forbidden } = require('../utils/responseHelper');
 
-// Middleware này chạy sau authMiddleware. authMiddleware gắn req.user,
-// còn roleMiddleware kiểm tra req.user.role có nằm trong danh sách được phép hay không.
+// Phân quyền Role - Base Access Control(RBAC). Middleware này chặn các API quản trị, 
+// chỉ cho phép user có role === 'admin' đi qua. Nếu ai đó cố tình gọi API bằng Postman 
+// mà không phải admin, nó sẽ trả về 403 Forbidden.
 
 module.exports = (...allowedRoles) => {
     return (req, res, next) => {

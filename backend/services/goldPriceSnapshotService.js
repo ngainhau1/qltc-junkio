@@ -8,8 +8,7 @@ const {
     TARGET_UNIT,
     fetchSjcGoldPrice,
 } = require('./goldPriceService');
-// Service này quản lý lịch sử giá vàng. Nó lưu snapshot, lấy dữ liệu theo khoảng 24H/7D,
-// tính tăng giảm và xóa dữ liệu quá cũ để bảng không tăng mãi.
+// Sử dụng cronjobs tự động lưu 5p/lần. Tự động tính Trend . Dọn data cũ trên 90 ngày
 
 const GOLD_HISTORY_RANGES = Object.freeze({
     '24H': 24 * 60 * 60 * 1000,

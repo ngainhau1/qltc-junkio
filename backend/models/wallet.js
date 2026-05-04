@@ -3,6 +3,7 @@ const {
     Model
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
+    // Xác thực rằng 1 ví hệ thống có thể dành cho cả cá nhân và gia đình
     class Wallet extends Model {
         static associate(models) {
             Wallet.belongsTo(models.User, { foreignKey: 'user_id' });

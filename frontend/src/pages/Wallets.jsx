@@ -15,6 +15,7 @@ import { getFinanceScopeLabels } from "@/features/finance/context"
 import { toast } from "sonner"
 import { PageHeader } from "@/components/layout/PageHeader"
 
+// Giao diện của ví
 // Trang này hiển thị ví theo phạm vi tài chính đang chọn: cá nhân hoặc gia đình.
 // Dữ liệu ví đến từ walletSlice; thao tác xóa/tạo/sửa vẫn đi qua backend để kiểm quyền.
 

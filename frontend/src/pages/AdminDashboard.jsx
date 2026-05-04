@@ -13,6 +13,7 @@ import { Users, ArrowRightLeft, Home as HomeIcon, Search, Lock, Unlock, Shield, 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, LineChart, Line } from "recharts"
 import api from "@/lib/api"
 
+// Giao diện quản trị, chỉ Admin mới thấy
 export function AdminDashboard() {
     const { t } = useTranslation()
     const { user } = useSelector(state => state.auth)
@@ -36,6 +37,8 @@ export function AdminDashboard() {
     const [logPage, setLogPage] = useState(1)
     const [logTotal, setLogTotal] = useState(0)
     const [logAction, setLogAction] = useState('ALL')
+
+    // Tính toán tổng số lượng dựa trên dữ liệu phân tích trả về từ backend, dùng làm fallback nếu dữ liệu stats bị thiếu
     const derivedTotalUsers = analytics?.stats?.totalUsers || analytics?.userGrowth?.reduce((acc, curr) => acc + curr.count, 0) || 0
     const derivedTotalTransactions =
         analytics?.stats?.totalTransactions || (analytics?.weeklyActivity?.reduce((acc, curr) => acc + curr.count, 0) || 0) * 10
@@ -105,6 +108,7 @@ export function AdminDashboard() {
         }
     }, [activeTab, logPage, logAction]) // eslint-disable-line react-hooks/exhaustive-deps
 
+    // Lấy lịch sử hoạt động hệ thống (Audit Logs), hỗ trợ lọc theo hành động (đăng nhập, đổi quyền, khóa user...)
     async function fetchLogs() {
         try {
             const { data } = await api.get(`/admin/logs?page=${logPage}&limit=20&action=${logAction}`)
@@ -120,6 +124,7 @@ export function AdminDashboard() {
         }
     }
 
+    // Tải dữ liệu phân tích: biểu đồ tăng trưởng người dùng, hoạt động tuần và danh mục chi tiêu nhiều nhất
     async function fetchAnalytics() {
         try {
             const { data } = await api.get("/admin/analytics")
@@ -227,6 +232,7 @@ export function AdminDashboard() {
 
             {activeTab === 'overview' ? (
                 <div className="space-y-6">
+                    {/* Phần 1: Hiển thị 6 thẻ thống kê tổng quan (Người dùng, Ví, Gia đình, Mục tiêu, Ngân sách, Giao dịch) */}
                     {analytics?.stats && (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                             <Card className="p-6">
@@ -300,6 +306,7 @@ export function AdminDashboard() {
 
                     {analytics && (
                         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                            {/* Biểu đồ cột (BarChart) thể hiện sự tăng trưởng người dùng mới theo tháng */}
                             <Card className="p-6 col-span-1 lg:col-span-2 xl:col-span-1">
                                 <h2 className="text-lg font-semibold mb-4">{t("admin.userGrowth")}</h2>
                                 <ResponsiveContainer width="100%" height={250}>
@@ -361,7 +368,7 @@ export function AdminDashboard() {
                     {financial && (
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
                             <Card className="p-6">
-                                 //vẽ biểu đồ tài chính LineChart và AreaChart
+                                {/* Phần 2: Biểu đồ đường (LineChart) so sánh Tổng Thu (Income) và Tổng Chi (Expense) trong 6 tháng gần nhất */}
                                 <h2 className="text-lg font-semibold mb-4">{t("admin.revenueOverview")}</h2>
                                 <ResponsiveContainer width="100%" height={250}>
                                     <LineChart data={financial.revenueTrends}>
@@ -399,6 +406,7 @@ export function AdminDashboard() {
                                 </div>
 
                                 <Card className="p-4">
+                                    {/* Danh sách Top 5 người dùng chi tiêu nhiều nhất hệ thống, giúp admin nắm bắt tệp người dùng năng động */}
                                     <h3 className="text-sm font-semibold mb-3">{t("admin.topSpendersTitle")}</h3>
                                     {financial.topSpenders?.length > 0 ? (
                                         <div className="space-y-3">
@@ -426,6 +434,7 @@ export function AdminDashboard() {
                     )}
 
                     <Card className="p-4 sm:p-6">
+                        {/* Phần 3: Quản lý người dùng - Bảng danh sách, phân trang, bộ lọc (Role, Status) và các hành động (Đổi quyền, Khóa, Xem ví) */}
                         <div className="mb-4 flex flex-col gap-4">
                             <div className="flex flex-col gap-1">
                                 <h2 className="text-lg font-semibold">{t("admin.userManagement")}</h2>
@@ -639,6 +648,7 @@ export function AdminDashboard() {
                 </div>
             ) : (
                 <Card className="min-h-[420px] p-4 sm:p-6">
+                    {/* Phần 4: Tab Nhật ký hoạt động (Audit Logs) - Thể hiện dạng Timeline dọc (Timeline UI) với biểu tượng màu sắc tùy theo loại hành động */}
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
                         <h2 className="text-lg font-semibold flex items-center gap-2">
                             <Activity className="h-5 w-5" />

@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '@/lib/api';
 
-// Slice này lưu trạng thái đăng nhập ở frontend. Nó không tự kiểm mật khẩu,
+// Slice này lưu trạng thái đăng nhập ở frontend. Nó không tự kiểm mật khẩu, 
 // mà gọi API backend rồi lưu token/user để các màn hình khác biết người dùng là ai.
 
 const initialState = {

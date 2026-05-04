@@ -7,6 +7,8 @@ module.exports = (sequelize, DataTypes) => {
         static associate(models) {
             Category.hasMany(models.Transaction, { foreignKey: 'category_id' });
             Category.hasMany(models.Budget, { foreignKey: 'category_id' });
+            // Cho phép tạo danh mục cha-con: Nếu parent_id bằng null, đây là danh mục gốc (Root Category).
+            // Nếu parent_id trỏ đến UUID của một Category khác, nó sẽ trở thành danh mục con (ví dụ: Parent="Ăn uống", Child="Cà phê").
             Category.belongsTo(models.Category, { as: 'Parent', foreignKey: 'parent_id' });
             Category.hasMany(models.Category, { as: 'Children', foreignKey: 'parent_id' });
         }

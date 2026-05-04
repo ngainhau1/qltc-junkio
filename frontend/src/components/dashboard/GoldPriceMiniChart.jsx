@@ -10,8 +10,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { formatDateString } from '@/lib/utils';
 
-// Component này chỉ vẽ biểu đồ nhỏ cho GoldPriceCard. Nó không tự gọi API,
-// mà nhận points/range/color từ component cha để giữ trách nhiệm rõ ràng.
+// Mini Chart nhỏ thể hiện tăng giảm (Trend) của giá vàng. Sử dụng ReCharts
 
 const buildAxisLabel = (capturedAt, range) => {
     // Trục X đổi cách hiển thị theo range: 7D hiển thị ngày, 24H hiển thị giờ.
