@@ -1,9 +1,9 @@
 const jwt = require('jsonwebtoken');
 const { error: sendError } = require('../utils/responseHelper');
 
-// GHI CHÚ HỌC TẬP - Phần xác thực của Thành Đạt:
 // Middleware này bảo vệ các API cần đăng nhập. Nó đọc Bearer token từ header,
 // xác thực JWT, rồi gắn thông tin người dùng vào req.user cho controller phía sau dùng.
+
 
 const jwtSecret =
     process.env.JWT_SECRET || (process.env.NODE_ENV === 'test' ? 'test-secret' : undefined);

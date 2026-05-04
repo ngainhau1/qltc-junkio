@@ -2,7 +2,6 @@ const { User, Transaction, Wallet, Family, Goal, Budget, Category, sequelize } =
 const { Op, fn, col } = require('sequelize');
 const { success, error: sendError } = require('../utils/responseHelper');
 
-// GHI CHÚ HỌC TẬP - Phần quản trị của Thành Đạt:
 // Controller này chỉ dành cho admin. Nó gom dữ liệu toàn hệ thống, quản lý user,
 // đổi quyền, khóa tài khoản, xóa user và đọc nhật ký hoạt động.
 

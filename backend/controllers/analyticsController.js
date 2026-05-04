@@ -12,7 +12,7 @@ const formatDateKey = (date) => {
     const day = String(parsedDate.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
 };
-
+// Hàm xác định ngày đầu hay ngày cuối
 const parseDateBoundary = (dateValue, boundary) => {
     if (!dateValue) {
         return null;
@@ -51,7 +51,7 @@ const buildDateWhere = (startDate, endDate) => {
 
     return {};
 };
-
+//Tạo danh sách ngày liên tục 
 const buildEmptyDateRange = (startDate, endDate) => {
     const start = parseDateBoundary(startDate, 'start');
     const end = parseDateBoundary(endDate, 'start');

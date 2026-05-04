@@ -1,7 +1,6 @@
 const { body, param } = require('express-validator');
 const { buildValidationHandler, createValidationCode } = require('./validationHelper');
 
-// GHI CHÚ HỌC TẬP - Phần ví của Thành Đạt:
 // Validator bảo vệ API ví trước dữ liệu sai định dạng. Controller vẫn kiểm quyền,
 // còn file này tập trung kiểm name, balance, currency, family_id và id trên URL.
 

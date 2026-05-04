@@ -2,7 +2,6 @@ const { Wallet, Transaction, FamilyMember } = require('../models');
 const { Op, fn, col, where } = require('sequelize');
 const { success, error, notFound, serverError, created } = require('../utils/responseHelper');
 
-// GHI CHÚ HỌC TẬP - Phần ví của Thành Đạt:
 // Controller này xử lý ví cá nhân và ví gia đình. Điểm quan trọng nhất là mọi thao tác
 // đều phải kiểm tra phạm vi truy cập để người dùng không xem/sửa/xóa ví của người khác.
 

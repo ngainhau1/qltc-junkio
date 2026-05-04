@@ -9,7 +9,6 @@ const {
     fetchSjcGoldPrice,
 } = require('./goldPriceService');
 
-// GHI CHÚ HỌC TẬP - Phần giá vàng SJC của Thành Đạt:
 // Service này quản lý lịch sử giá vàng. Nó lưu snapshot, lấy dữ liệu theo khoảng 24H/7D,
 // tính tăng giảm và xóa dữ liệu quá cũ để bảng không tăng mãi.
 

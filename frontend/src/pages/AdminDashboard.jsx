@@ -16,6 +16,7 @@ export function AdminDashboard() {
     const { t } = useTranslation()
     const { user } = useSelector(state => state.auth)
     // Các state bên dưới tách theo từng vùng của trang: thống kê, tài chính, user, modal và audit log.
+    
     const [analytics, setAnalytics] = useState(null)
     const [financial, setFinancial] = useState(null)
     const [users, setUsers] = useState([])

@@ -10,7 +10,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { formatDateString } from '@/lib/utils';
 
-// GHI CHÚ HỌC TẬP - Phần giá vàng SJC của Thành Đạt:
+
 // Component này chỉ vẽ biểu đồ nhỏ cho GoldPriceCard. Nó không tự gọi API,
 // mà nhận points/range/color từ component cha để giữ trách nhiệm rõ ràng.
 

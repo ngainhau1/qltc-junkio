@@ -1,10 +1,10 @@
 const { client } = require('../config/redis');
-
 // Service này lấy giá vàng hiện tại từ SJC, chuẩn hóa dữ liệu về một cấu trúc ổn định,
 // lưu Redis trong 60 giây và ghi thêm snapshot lịch sử nếu lấy dữ liệu mới.
 
 const CACHE_KEY = 'market:gold:sjc:hcm:current';
 const CACHE_TTL_SECONDS = 60;
+const SNAPSHOT_FALLBACK_CACHE_TTL_SECONDS = 5 * 60;
 const SJC_PRICE_SERVICE_URL = 'https://sjc.com.vn/GoldPrice/Services/PriceService.ashx';
 const SJC_REQUEST_HEADERS = Object.freeze({
     'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
@@ -24,6 +24,27 @@ const createGoldPriceError = (code) => {
     const error = new Error(code);
     error.code = code;
     return error;
+};
+//nếu false thì trả về null, nếu true thì trả về chuỗi định dạng "HH:mm DD/MM/YYYY" theo múi giờ Việt Nam.
+const formatSnapshotUpdatedLabel = (value) => {
+    const date = value instanceof Date ? value : new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return null;
+    }
+
+    const parts = new Intl.DateTimeFormat('vi-VN', {
+        timeZone: 'Asia/Ho_Chi_Minh',
+        hour: '2-digit',
+        minute: '2-digit',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour12: false,
+    }).formatToParts(date);
+    const getPart = (type) => parts.find((part) => part.type === type)?.value;
+
+    return `${getPart('hour')}:${getPart('minute')} ${getPart('day')}/${getPart('month')}/${getPart('year')}`;
 };
 
 // SJC trả thời gian dạng "HH:mm DD/MM/YYYY"; hàm này đổi sang chuỗi ISO có múi giờ Việt Nam.
@@ -100,7 +121,56 @@ const fetchSjcGoldPrice = async () => {
     return normalizeSjcResponse(payload);
 };
 
-const getGoldPrice = async () => {
+const getLatestSnapshotFallback = async () => {
+    const { GoldPriceSnapshot } = require('../models');
+    let snapshot = await GoldPriceSnapshot.findOne({
+        where: {
+            source: TARGET_SOURCE,
+            branch: TARGET_BRANCH,
+            productName: TARGET_PRODUCT,
+        },
+        order: [['capturedAt', 'DESC']],
+    });
+
+    if (!snapshot) {
+        snapshot = await GoldPriceSnapshot.findOne({
+            where: { source: TARGET_SOURCE },
+            order: [['capturedAt', 'DESC']],
+        });
+    }
+
+    if (!snapshot) {
+        throw createGoldPriceError('GOLD_PRICE_SNAPSHOT_FALLBACK_NOT_FOUND');
+    }
+
+    const capturedAt = snapshot.capturedAt instanceof Date
+        ? snapshot.capturedAt
+        : new Date(snapshot.capturedAt);
+
+    return {
+        source: TARGET_SOURCE,
+        branch: snapshot.branch || TARGET_BRANCH,
+        productName: snapshot.productName || TARGET_PRODUCT,
+        buy: Number(snapshot.buy || 0),
+        sell: Number(snapshot.sell || 0),
+        currency: snapshot.currency || TARGET_CURRENCY,
+        unit: snapshot.unit || TARGET_UNIT,
+        updatedAt: Number.isNaN(capturedAt.getTime()) ? null : capturedAt.toISOString(),
+        updatedLabel: formatSnapshotUpdatedLabel(capturedAt),
+        dataOrigin: snapshot.dataOrigin || 'snapshot',
+        isFallback: true,
+    };
+};
+
+const cacheGoldPrice = async (data, ttlSeconds = CACHE_TTL_SECONDS) => {
+    try {
+        await client.setEx(CACHE_KEY, ttlSeconds, JSON.stringify(data));
+    } catch (error) {
+        console.error('Gold price cache write error:', error);
+    }
+};
+
+const getGoldPriceLiveOnly = async () => {
     try {
         const cachedValue = await client.get(CACHE_KEY);
 
@@ -131,10 +201,24 @@ const getGoldPrice = async () => {
 
     return freshData;
 };
+// Hàm chính để gọi từ controller; ưu tiên lấy giá live, nếu lỗi thì fallback về snapshot gần nhất.
+const getGoldPrice = async () => {
+    try {
+        return await getGoldPriceLiveOnly();
+    } catch (error) {
+        console.error('Gold price live fetch error, falling back to latest snapshot:', error);
+
+        const fallbackData = await getLatestSnapshotFallback();
+        await cacheGoldPrice(fallbackData, SNAPSHOT_FALLBACK_CACHE_TTL_SECONDS);
+
+        return fallbackData;
+    }
+};
 
 module.exports = {
     CACHE_KEY,
     CACHE_TTL_SECONDS,
+    SNAPSHOT_FALLBACK_CACHE_TTL_SECONDS,
     SJC_REQUEST_HEADERS,
     TARGET_BRANCH,
     TARGET_CURRENCY,
@@ -142,7 +226,9 @@ module.exports = {
     TARGET_SOURCE,
     TARGET_UNIT,
     fetchSjcGoldPrice,
+    getLatestSnapshotFallback,
     getGoldPrice,
+    getGoldPriceLiveOnly,
     normalizeSjcResponse,
     parseSjcLatestDate,
     selectGoldRecord,

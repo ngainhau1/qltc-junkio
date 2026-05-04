@@ -5,7 +5,6 @@ const cacheDashboard = (duration = 300) => {
         if (process.env.DISABLE_CACHE === 'true') {
             return next();
         }
-
         const userId = req.user.id;
         const familyId = req.query.family_id || 'personal';
         const context = req.query.context || 'personal';

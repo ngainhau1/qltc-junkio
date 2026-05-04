@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '@/lib/api';
 
-// GHI CHÚ HỌC TẬP - Phần ví của Thành Đạt:
 // Slice này giữ danh sách ví ở frontend và gọi các API /wallets.
 // Backend vẫn là nơi kiểm quyền ví cá nhân/ví gia đình; frontend chỉ phản ánh kết quả lên UI.
 

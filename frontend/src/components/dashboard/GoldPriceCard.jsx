@@ -85,6 +85,7 @@ export function GoldPriceCard() {
         // Tải ngay khi thẻ xuất hiện, sau đó tự làm mới giá hiện tại mỗi 60 giây.
         dispatch(fetchGoldPrice());
 
+        
         const intervalId = window.setInterval(() => {
             dispatch(fetchGoldPrice());
         }, CURRENT_REFRESH_INTERVAL_MS);

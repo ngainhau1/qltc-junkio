@@ -9,6 +9,7 @@ const { success, error: sendError } = require('../utils/responseHelper');
 // đăng xuất và khôi phục mật khẩu. Khi trình bày, nên đi theo luồng:
 // dữ liệu từ request -> kiểm tra -> thao tác cơ sở dữ liệu -> trả response chuẩn.
 
+
 /**
  * Tạo access token sống ngắn trong 15 phút.
  * Token này được frontend gửi trong header Authorization để gọi các API cần đăng nhập.

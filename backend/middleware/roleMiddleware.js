@@ -1,6 +1,5 @@
 const { forbidden } = require('../utils/responseHelper');
 
-// GHI CHÚ HỌC TẬP - Phần quản trị của Thành Đạt:
 // Middleware này chạy sau authMiddleware. authMiddleware gắn req.user,
 // còn roleMiddleware kiểm tra req.user.role có nằm trong danh sách được phép hay không.
 

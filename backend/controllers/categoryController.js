@@ -1,7 +1,7 @@
 const { Category } = require('../models');
 const { success, notFound, serverError, created } = require('../utils/responseHelper');
 
-// GHI CHÚ HỌC TẬP - Phần danh mục của Thành Đạt:
+
 // Danh mục dùng để phân loại giao dịch thu/chi. parent_id cho phép tạo danh mục cha-con,
 // ví dụ "Ăn uống" là cha và "Cà phê" là con.
 

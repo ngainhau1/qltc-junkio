@@ -1,7 +1,6 @@
 const { body } = require('express-validator');
 const { buildValidationHandler, createValidationCode } = require('./validationHelper');
 
-// GHI CHÚ HỌC TẬP - Phần xác thực của Thành Đạt:
 // Validator chặn dữ liệu sai trước khi vào controller. Nhờ vậy controller chỉ tập trung vào nghiệp vụ.
 // createValidationCode tạo mã lỗi thống nhất để frontend dịch ra thông báo dễ hiểu.
 
